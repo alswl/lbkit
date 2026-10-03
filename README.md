@@ -46,7 +46,7 @@ The consuming repository owns its project logs, `AGENTS.md`, `.agents/lb.yaml`, 
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
-docs/<shared>.md     -> ../.lbkit/contracts/<shared>.md
+docs/<shared>.md     -> ../.lbkit/docs/<shared>.md
 ```
 
 Only entry points are linked. The CLI implementation (`scripts/lb.py`, `src/logbook_cli`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
@@ -87,17 +87,19 @@ bin/lb task note|artifact    # annotate tasks with notes or evidence
 bin/lb sync                  # refresh stage emojis from task state
 ```
 
-All write commands require the SHA-256 `version_token` returned by `context --json`; writes are rejected on any concurrent change. See the [lb CLI contract](contracts/lb-cli.md) for the full contract.
+All write commands require the SHA-256 `version_token` returned by `context --json`; writes are rejected on any concurrent change. See the [lb CLI contract](docs/lb-cli.md) for the full contract.
 
 ## Shared contracts (installed into consuming repositories)
 
-- [Lifecycle & skill entries](contracts/lifecycle.md)
-- [Coordination contracts](contracts/coordination.md)
-- [Logbook format](contracts/logbook-format.md)
-- [Evidence rules](contracts/evidence.md)
-- [Configuration & runtime adapters](contracts/configuration.md)
-- [Skill parameters](contracts/skill-params.md)
-- [`lb` CLI reference](contracts/lb-cli.md)
+Two documentation directories live in this repo: `docs/` holds the shared contracts distributed to consuming repositories (linked into their `docs/` on install), while `dev-docs/` holds lbkit's own development documentation and is **not** installed.
+
+- [Lifecycle & skill entries](docs/lifecycle.md)
+- [Coordination contracts](docs/coordination.md)
+- [Logbook format](docs/logbook-format.md)
+- [Evidence rules](docs/evidence.md)
+- [Configuration & runtime adapters](docs/configuration.md)
+- [Skill parameters](docs/skill-params.md)
+- [`lb` CLI reference](docs/lb-cli.md)
 
 ## lbkit development
 

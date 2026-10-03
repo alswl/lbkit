@@ -37,9 +37,9 @@ def repository_root(path: Path) -> Path:
 
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
-    contracts = kit / "contracts"
+    docs = kit / "docs"
     required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "SKILL-PARAMS.template.yaml", kit / "AGENTS.template.md"]
-    if any(not path.exists() for path in required) or not skills.is_dir() or not contracts.is_dir():
+    if any(not path.exists() for path in required) or not skills.is_dir() or not docs.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
         Path("bin/lb"): Path(".lbkit/bin/lb"),
@@ -50,8 +50,8 @@ def manifest(kit: Path) -> dict[Path, Path]:
         if skill.is_dir() and (skill / "SKILL.md").is_file():
             mapping[Path(".agents/skills") / skill.name] = Path(".lbkit/skills") / skill.name
             mapping[Path(".claude/skills") / skill.name] = Path(".lbkit/skills") / skill.name
-    for doc in sorted(contracts.glob("*.md")):
-        mapping[Path("docs") / doc.name] = Path(".lbkit/contracts") / doc.name
+    for doc in sorted(docs.glob("*.md")):
+        mapping[Path("docs") / doc.name] = Path(".lbkit/docs") / doc.name
     return mapping
 
 

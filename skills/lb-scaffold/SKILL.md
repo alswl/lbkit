@@ -9,7 +9,7 @@ description: 从 workflows/<工作流>/ 的运行实例模板填空初始化新 
 
 ## 前置
 
-1. 读取 [配置契约](../../contracts/configuration.md) 解析 documents；读取 [lb-plan 规划流程](../lb-plan/references/planning.md)（模板优先条款）、[日志格式](../../contracts/logbook-format.md) 与 [文档适配流程](../lb-update/references/document-adapters.md)。
+1. 读取 [配置契约](../../docs/configuration.md) 解析 documents；读取 [lb-plan 规划流程](../lb-plan/references/planning.md)（模板优先条款）、[日志格式](../../docs/logbook-format.md) 与 [文档适配流程](../lb-update/references/document-adapters.md)。
 2. 定位模板：`workflows/<name>/docs/` 下带「运行实例模板」节的文章及其 prompt 契约。工作流不存在、模板节或既定裁定缺失时停止并说明缺口，不代写模板、不转自由起草。
 
 ## 必经流程

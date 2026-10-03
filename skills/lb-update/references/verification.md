@@ -1,6 +1,6 @@
 # 验收与收尾流程
 
-处理新结果、已确认决定或最终收尾前必须读取。证据术语见 [证据模型](../../../contracts/evidence.md)，日志显示见 [格式](../../../contracts/logbook-format.md)。
+处理新结果、已确认决定或最终收尾前必须读取。证据术语见 [证据模型](../../../docs/evidence.md)，日志显示见 [格式](../../../docs/logbook-format.md)。
 
 ## 先核验，再写入
 

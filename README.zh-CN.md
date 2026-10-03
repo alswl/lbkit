@@ -46,7 +46,7 @@ install 检测到 `.lbkit` 已是注册的子模块后会跳过 Git 操作，直
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
-docs/<shared>.md     -> ../.lbkit/contracts/<shared>.md
+docs/<shared>.md     -> ../.lbkit/docs/<shared>.md
 ```
 
 只链接入口。CLI 实现（`scripts/lb.py`、`src/logbook_cli`）留在 `.lbkit` 子模块内——`bin/lb` 通过自身路径解析到它们。
@@ -87,17 +87,19 @@ bin/lb task note|artifact    # 为任务附加备注或证据
 bin/lb sync                  # 按任务状态刷新阶段 emoji
 ```
 
-所有写命令都必须携带 `context --json` 返回的 SHA-256 `version_token`；文件有任何并发变化即拒绝写入。完整契约见 [lb-cli 契约](contracts/lb-cli.md)。
+所有写命令都必须携带 `context --json` 返回的 SHA-256 `version_token`；文件有任何并发变化即拒绝写入。完整契约见 [lb-cli 契约](docs/lb-cli.md)。
 
 ## 共享契约（随安装分发至使用方仓库）
 
-- [生命周期与技能入口](contracts/lifecycle.md)
-- [协调契约](contracts/coordination.md)
-- [日志格式](contracts/logbook-format.md)
-- [证据规则](contracts/evidence.md)
-- [配置与运行适配器](contracts/configuration.md)
-- [技能参数](contracts/skill-params.md)
-- [`lb` CLI 参考](contracts/lb-cli.md)
+本仓库有两个文档目录：`docs/` 存放分发给使用方仓库的共享契约（安装时链接进其 `docs/`）；`dev-docs/` 存放 lbkit 自身的开发文档，**不**随安装分发。
+
+- [生命周期与技能入口](docs/lifecycle.md)
+- [协调契约](docs/coordination.md)
+- [日志格式](docs/logbook-format.md)
+- [证据规则](docs/evidence.md)
+- [配置与运行适配器](docs/configuration.md)
+- [技能参数](docs/skill-params.md)
+- [`lb` CLI 参考](docs/lb-cli.md)
 
 ## lbkit 开发
 
