@@ -1,0 +1,29 @@
+{
+  "skill_name": "lb-preflight",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "sources/demo-log-preflight.md 中步骤二的卡点（needs-discussion：第一遍是否 commit）已由人类在对话中当场裁定，见 conversation-ruling.md。按 lb-preflight 的卡点处理规则收口：更新预检汇总记录裁定，并决定主日志是否需要 🔮 写回；需要改任务细节行的，给出建议或按裁定更正第二行。",
+      "expected_output": "汇总记录裁定与解除；已当场裁定的卡点不以 🔮 写回主日志；不改待办首行；check 不出现 PREFLIGHT_BLOCKER。",
+      "files": [],
+      "expectations": [
+        "更新 sources 汇总：该待办 verdict 转为已裁定解除并记录出处",
+        "主日志中不写入任何 🔮 行",
+        "不改待办首行文字；细节行按裁定更正为不 commit 或给出更正建议",
+        "写后运行 lb.py check 且无 PREFLIGHT_BLOCKER"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "按 lb-preflight 对日志前两步（归档资料、拉取远程会议数据）各派发一个只读分析 Agent；工作目录为内部敏感仓。按配置契约与 SKILL 选择启动方案并通过控制面启动，随后等待即可；不采业务数据。",
+      "expected_output": "两步各启动一个分析 Agent，使用内部部署 no-w 候选（internal-reader，不带 -w、不另建工作树）；不出现外部候选。",
+      "files": [],
+      "expectations": [
+        "控制面出现两次 tab create 且 pane run 启动的包装器为 internal-reader",
+        "启动命令不带 -w（不建工作树）",
+        "不出现 external-* 或任何外部候选",
+        "引用了 .agents/lb.yaml 或配置契约作为候选来源依据"
+      ]
+    }
+  ]
+}

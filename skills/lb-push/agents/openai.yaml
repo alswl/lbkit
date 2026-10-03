@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-push"
+  short_description: "沿已确认清单持续推进，核实接收、监听与验收，到人工关口或严重卡点停止"

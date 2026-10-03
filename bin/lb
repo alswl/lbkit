@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""Run the Logbook CLI from an uninstalled checkout."""
+
+import sys
+from pathlib import Path
+
+source_root = Path(__file__).resolve().parent.parent / "src"
+sys.path.insert(0, str(source_root))
+
+from logbook_cli.cli import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-update"
+  short_description: "核验候选与原始证据，更新日志结果、阻塞及已经确认的人工决定"

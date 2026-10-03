@@ -1,0 +1,31 @@
+{
+  "skill_name": "lb-scaffold",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "用 workflows/demo/docs/demo-daily.md 的运行实例模板初始化 projects/demo/docs/demo-20261008-logbook.md：目标日 2026-10-08，其余槽默认沿用；documents.adapter=markdown，无需向人再发问。",
+      "expected_output": "日志按模板填空成型：标题、front matter、单 Stage 4 项两行制待办、人工关口保留；不增删项、不加波次注释；markdown 后端不建 prompts/thinking；答复给出槽值一览。",
+      "files": [],
+      "expectations": [
+        "目标文件被替换为模板形态：# 2026-10-08 日报、单 Stage 01、4 项待办逐项与模板一致",
+        "front matter 含 workflow/prev-run/skills，skills 为模板两命令",
+        "保留人工关口，不新增任务、不写波次注释段",
+        "无产出物前不写「链接：」块",
+        "不创建 prompts/ 或 thinking/ 绑定文件（markdown 后端）",
+        "答复包含三个槽的取值说明"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "用 workflows/demo/docs/demo-flow.md 为目标日 2026-10-08 初始化运行实例到 projects/demo/docs/demo-20261008-logbook.md。",
+      "expected_output": "停止并报告缺口：该工作流没有「运行实例模板」节，不能填空；建议补模板或转 lb-plan；不代写模板、不自由起草日志。",
+      "files": [],
+      "expectations": [
+        "明确指出缺口：工作流缺运行实例模板节",
+        "目标文件保持原样不被改写",
+        "不自行起草 logbook，不代写模板",
+        "给出可行下一步（人工补模板或转 lb-plan）"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Run the consuming repository's bin/lb from any subdirectory.
+#
+# Link this script once from any consuming repository, e.g.:
+#   ln -s /path/to/repo/bin/lb-anywhere ~/.local/bin/lb
+# The nearest bin/lb up the directory tree is executed with that
+# repository root as the working directory, so the repository's
+# pinned lbkit revision stays in charge.
+
+set -eu
+
+dir=$(pwd)
+while [ "$dir" != "/" ]; do
+    if [ -x "$dir/bin/lb" ]; then
+        cd "$dir"
+        exec "$dir/bin/lb" "$@"
+    fi
+    dir=$(dirname "$dir")
+done
+echo "lb: no bin/lb found in any parent directory; run inside a Logbook repository" >&2
+exit 1

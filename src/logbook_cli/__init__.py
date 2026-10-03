@@ -1,0 +1,1 @@
+"""Logbook Markdown CLI implementation."""

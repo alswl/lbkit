@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Install lbkit as a submodule and expose its shared entry points."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+class InstallError(Exception):
+    pass
+
+
+def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if check and result.returncode:
+        raise InstallError(result.stderr.strip() or f"git {' '.join(args)} failed")
+    return result
+
+
+def repository_root(path: Path) -> Path:
+    root = Path(git(path, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
+    if root != path.resolve():
+        raise InstallError(f"--repo must be the Git repository root: {root}")
+    return root
+
+
+def manifest(kit: Path) -> dict[Path, Path]:
+    skills = kit / "skills"
+    contracts = kit / "contracts"
+    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "SKILL-PARAMS.template.yaml"]
+    if any(not path.exists() for path in required) or not skills.is_dir() or not contracts.is_dir():
+        raise InstallError(f"incomplete lbkit checkout: {kit}")
+    mapping = {
+        Path("bin/lb"): Path(".lbkit/bin/lb"),
+        Path("bin/lb-anywhere"): Path(".lbkit/bin/lb-anywhere"),
+        Path("bin/lbkit"): Path(".lbkit/bin/lbkit"),
+        Path("scripts/lb.py"): Path(".lbkit/scripts/lb.py"),
+        Path("src/logbook_cli"): Path(".lbkit/src/logbook_cli"),
+    }
+    for skill in sorted(skills.iterdir()):
+        if skill.is_dir() and (skill / "SKILL.md").is_file():
+            mapping[Path(".agents/skills") / skill.name] = Path(".lbkit/skills") / skill.name
+    for doc in sorted(contracts.glob("*.md")):
+        mapping[Path("docs") / doc.name] = Path(".lbkit/contracts") / doc.name
+    return mapping
+
+
+def relative_link(link: Path, target: Path) -> str:
+    return os.path.relpath(target, link.parent)
+
+
+def conflicts(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
+    blocked = []
+    for link_rel, target_rel in mapping.items():
+        link = repo / link_rel
+        expected = relative_link(link, repo / target_rel)
+        if link.is_symlink():
+            if os.readlink(link) != expected:
+                blocked.append(link_rel)
+        elif link.exists():
+            blocked.append(link_rel)
+    return blocked
+
+
+def install_links(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
+    created = []
+    for link_rel, target_rel in mapping.items():
+        link = repo / link_rel
+        if link.is_symlink():
+            continue
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(relative_link(link, repo / target_rel), target_is_directory=(repo / target_rel).is_dir())
+        created.append(link_rel)
+    return created
+
+
+def source_url(kit: Path, supplied: str | None) -> str:
+    if supplied:
+        return supplied
+    result = git(kit, "remote", "get-url", "origin", check=False)
+    if result.returncode or not result.stdout.strip():
+        raise InstallError("supply --source with the lbkit Git URL")
+    return result.stdout.strip()
+
+
+def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
+    repo = repository_root(repo)
+    planned = manifest(kit)
+    blocked = conflicts(repo, planned)
+    if blocked:
+        raise InstallError("existing paths would be replaced: " + ", ".join(map(str, blocked)))
+
+    destination = repo / ".lbkit"
+    indexed = git(repo, "ls-files", "--stage", "--", ".lbkit").stdout.strip()
+    registered = indexed.startswith("160000 ")
+    if destination.exists() and not registered:
+        raise InstallError(".lbkit exists but is not an indexed submodule")
+    if not registered:
+        url = source_url(kit, source)
+        if dry_run:
+            print(f"git submodule add {url} .lbkit")
+        else:
+            git(repo, "submodule", "add", url, ".lbkit")
+    elif not (destination / "bin/lb").exists():
+        if dry_run:
+            print("git submodule update --init .lbkit")
+        else:
+            git(repo, "submodule", "update", "--init", ".lbkit")
+
+    if dry_run:
+        for link_rel, target_rel in planned.items():
+            print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
+        if not (repo / "SKILL-PARAMS.yaml").exists():
+            print("SKILL-PARAMS.yaml <- .lbkit/SKILL-PARAMS.template.yaml")
+        return
+
+    actual = manifest(destination)
+    blocked = conflicts(repo, actual)
+    if blocked:
+        raise InstallError("installed lbkit conflicts with existing paths: " + ", ".join(map(str, blocked)))
+    created = install_links(repo, actual)
+    if not (repo / "SKILL-PARAMS.yaml").exists():
+        with (repo / "SKILL-PARAMS.yaml").open("x", encoding="utf-8") as target:
+            target.write((destination / "SKILL-PARAMS.template.yaml").read_text(encoding="utf-8"))
+    result = subprocess.run([str(repo / "bin/lb"), "--help"], cwd=repo, capture_output=True, text=True)
+    if result.returncode:
+        raise InstallError(f"bin/lb validation failed: {result.stderr.strip()}")
+    print(f"lbkit ready at {destination}; installed {len(created)} links")
+    print("Fill SKILL-PARAMS.yaml as needed; keep AGENTS.md and .agents/lb.yaml in the consuming repository.")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    command = subparsers.add_parser("install", help="add .lbkit submodule and shared links")
+    command.add_argument("--repo", type=Path, default=Path.cwd(), help="target Git repository root")
+    command.add_argument("--source", help="lbkit Git URL; defaults to this checkout's origin")
+    command.add_argument("--dry-run", action="store_true", help="show planned operations without writing")
+    args = parser.parse_args(argv)
+    try:
+        install(args.repo, Path(__file__).resolve().parents[1], args.source, args.dry_run)
+    except InstallError as exc:
+        print(f"lbkit: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
