@@ -36,7 +36,7 @@ def repository_root(path: Path) -> Path:
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
     contracts = kit / "contracts"
-    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "SKILL-PARAMS.template.yaml"]
+    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "SKILL-PARAMS.template.yaml", kit / "AGENTS.template.md"]
     if any(not path.exists() for path in required) or not skills.is_dir() or not contracts.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
@@ -120,6 +120,10 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
             print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
         if not (repo / "SKILL-PARAMS.yaml").exists():
             print("SKILL-PARAMS.yaml <- .lbkit/SKILL-PARAMS.template.yaml")
+        if not (repo / "AGENTS.md").exists():
+            print("AGENTS.md <- lbkit stub (fill in local rules)")
+        if not (repo / "CLAUDE.md").exists() and not (repo / "CLAUDE.md").is_symlink():
+            print("CLAUDE.md -> AGENTS.md")
         return
 
     actual = manifest(destination)
@@ -130,10 +134,17 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if not (repo / "SKILL-PARAMS.yaml").exists():
         with (repo / "SKILL-PARAMS.yaml").open("x", encoding="utf-8") as target:
             target.write((destination / "SKILL-PARAMS.template.yaml").read_text(encoding="utf-8"))
+    if not (repo / "AGENTS.md").exists():
+        (repo / "AGENTS.md").write_text((destination / "AGENTS.template.md").read_text(encoding="utf-8"), encoding="utf-8")
+        created.append(Path("AGENTS.md"))
+    claude_md = repo / "CLAUDE.md"
+    if not claude_md.exists() and not claude_md.is_symlink():
+        claude_md.symlink_to("AGENTS.md")
+        created.append(Path("CLAUDE.md"))
     result = subprocess.run([str(repo / "bin/lb"), "--help"], cwd=repo, capture_output=True, text=True)
     if result.returncode:
         raise InstallError(f"bin/lb validation failed: {result.stderr.strip()}")
-    print(f"lbkit ready at {destination}; installed {len(created)} links")
+    print(f"lbkit ready at {destination}; installed {len(created)} entries")
     print("Fill SKILL-PARAMS.yaml as needed; keep AGENTS.md and .agents/lb.yaml in the consuming repository.")
 
 
