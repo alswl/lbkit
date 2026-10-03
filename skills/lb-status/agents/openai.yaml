@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-status"
+  short_description: "查看项目进展、阻塞与下一项，维护 emoji 和少量事实片段；明确只读时不写入"

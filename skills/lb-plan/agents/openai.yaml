@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-plan"
+  short_description: "核对人类目标、起草待办供确认，设计阶段、分工、验收及工作包"
