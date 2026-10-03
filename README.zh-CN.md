@@ -33,10 +33,10 @@
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
-scripts/lb.py        -> ../.lbkit/scripts/lb.py
-src/logbook_cli      -> ../.lbkit/src/logbook_cli
 docs/<shared>.md     -> ../.lbkit/contracts/<shared>.md
 ```
+
+只链接入口。CLI 实现（`scripts/lb.py`、`src/logbook_cli`）留在 `.lbkit` 子模块内——`bin/lb` 通过自身路径解析到它们。
 
 ### 任意目录运行
 

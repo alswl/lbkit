@@ -33,10 +33,10 @@ The consuming repository owns its project logs, `AGENTS.md`, `.agents/lb.yaml`, 
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
-scripts/lb.py        -> ../.lbkit/scripts/lb.py
-src/logbook_cli      -> ../.lbkit/src/logbook_cli
 docs/<shared>.md     -> ../.lbkit/contracts/<shared>.md
 ```
+
+Only entry points are linked. The CLI implementation (`scripts/lb.py`, `src/logbook_cli`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
 
 ### Run from anywhere
 

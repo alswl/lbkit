@@ -43,8 +43,6 @@ def manifest(kit: Path) -> dict[Path, Path]:
         Path("bin/lb"): Path(".lbkit/bin/lb"),
         Path("bin/lb-anywhere"): Path(".lbkit/bin/lb-anywhere"),
         Path("bin/lbkit"): Path(".lbkit/bin/lbkit"),
-        Path("scripts/lb.py"): Path(".lbkit/scripts/lb.py"),
-        Path("src/logbook_cli"): Path(".lbkit/src/logbook_cli"),
     }
     for skill in sorted(skills.iterdir()):
         if skill.is_dir() and (skill / "SKILL.md").is_file():
