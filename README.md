@@ -26,10 +26,23 @@ From a checkout of this repository, install it into another Git repository with 
 
 The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `SKILL-PARAMS.template.yaml` when no `SKILL-PARAMS.yaml` exists, then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
 
+### Without a separate checkout
+
+When no lbkit checkout exists on the machine, add the submodule to the target repository manually, then run install from inside `.lbkit`:
+
+```sh
+cd /path/to/logbooks
+git submodule add https://github.com/alswl/lbkit.git .lbkit
+./.lbkit/bin/lbkit install
+```
+
+Once it detects `.lbkit` is already a registered submodule, install skips the Git operations and only adds the links and template. `--repo` defaults to the current directory, so it can be omitted when run from the repository root.
+
 The consuming repository owns its project logs, `AGENTS.md`, `.agents/lb.yaml`, and `SKILL-PARAMS.yaml`; lbkit owns the shared implementation and instructions. Installed links:
 
 ```text
 .agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
+.claude/skills/lb-*  -> ../../.lbkit/skills/lb-*
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit

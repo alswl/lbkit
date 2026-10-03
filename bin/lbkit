@@ -47,6 +47,7 @@ def manifest(kit: Path) -> dict[Path, Path]:
     for skill in sorted(skills.iterdir()):
         if skill.is_dir() and (skill / "SKILL.md").is_file():
             mapping[Path(".agents/skills") / skill.name] = Path(".lbkit/skills") / skill.name
+            mapping[Path(".claude/skills") / skill.name] = Path(".lbkit/skills") / skill.name
     for doc in sorted(contracts.glob("*.md")):
         mapping[Path("docs") / doc.name] = Path(".lbkit/contracts") / doc.name
     return mapping

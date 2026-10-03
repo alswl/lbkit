@@ -26,10 +26,23 @@
 
 该命令会添加 `.lbkit` 子模块、链接 CLI / 技能 / 共享文档、在缺失时复制 `SKILL-PARAMS.template.yaml`，最后检查 `bin/lb --help`。它拒绝覆盖已有文件，也不会代替你提交或推送任何一个仓库。
 
+### 不依赖单独检出
+
+机器上没有 lbkit 检出时，先在目标仓库手动添加子模块，再从 `.lbkit` 内运行 install：
+
+```sh
+cd /path/to/logbooks
+git submodule add https://github.com/alswl/lbkit.git .lbkit
+./.lbkit/bin/lbkit install
+```
+
+install 检测到 `.lbkit` 已是注册的子模块后会跳过 Git 操作，直接补链接和模板；`--repo` 默认是当前目录，在仓库根目录运行时可省略。
+
 使用方仓库拥有项目日志、`AGENTS.md`、`.agents/lb.yaml` 和 `SKILL-PARAMS.yaml`；lbkit 拥有共享实现与指令。安装后的链接结构：
 
 ```text
 .agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
+.claude/skills/lb-*  -> ../../.lbkit/skills/lb-*
 bin/lb               -> ../.lbkit/bin/lb
 bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
