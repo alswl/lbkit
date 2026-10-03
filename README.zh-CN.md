@@ -24,7 +24,7 @@
 
 当前检出已有 `origin` 远端时可省略 `--source`。先加 `--dry-run` 可以预览全部 Git 与链接操作。
 
-该命令会添加 `.lbkit` 子模块、链接 CLI / 技能 / 共享文档、在缺失时复制 `SKILL-PARAMS.template.yaml`，最后检查 `bin/lb --help`。它拒绝覆盖已有文件，也不会代替你提交或推送任何一个仓库。
+该命令会添加 `.lbkit` 子模块、链接 CLI / 技能 / 共享文档、在缺失时复制 `SKILL-PARAMS.template.yaml`、在缺失时生成 `AGENTS.md` 桩（内容为占位协作约定，需按本仓实际规则补充）并创建 `CLAUDE.md -> AGENTS.md` 链接，最后检查 `bin/lb --help`。它拒绝覆盖已有文件，也不会代替你提交或推送任何一个仓库。
 
 ### 不依赖单独检出
 

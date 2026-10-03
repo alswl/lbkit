@@ -34,8 +34,16 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertIn(".agents/skills/lb-init -> ../../.lbkit/skills/lb-init", result.stdout)
         self.assertIn("docs/configuration.md -> ../.lbkit/contracts/configuration.md", result.stdout)
         self.assertIn("SKILL-PARAMS.yaml <- .lbkit/SKILL-PARAMS.template.yaml", result.stdout)
+        self.assertIn("AGENTS.md <- lbkit stub (fill in local rules)", result.stdout)
+        self.assertIn("CLAUDE.md -> AGENTS.md", result.stdout)
         self.assertFalse((self.repo / ".lbkit").exists())
         self.assertFalse((self.repo / ".gitmodules").exists())
+
+    def test_existing_agents_md_is_not_replaced(self):
+        (self.repo / "AGENTS.md").write_text("local rules", encoding="utf-8")
+        result = self.run_install("--dry-run")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("AGENTS.md <- lbkit stub", result.stdout)
 
     def test_existing_skill_refuses_install_before_submodule_add(self):
         skill = self.repo / ".agents/skills/lb-plan"
