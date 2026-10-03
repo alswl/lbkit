@@ -1,5 +1,7 @@
 """Installer checks that do not create commits or contact a remote."""
 
+import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -7,6 +9,7 @@ from pathlib import Path
 
 
 INSTALLER = Path(__file__).resolve().parents[1] / "bin/lbkit"
+KIT = INSTALLER.parents[1]
 
 
 class LbkitInstallTest(unittest.TestCase):
@@ -17,13 +20,52 @@ class LbkitInstallTest(unittest.TestCase):
         self.repo.mkdir()
         subprocess.run(["git", "-C", str(self.repo), "init", "-q"], check=True)
 
-    def run_install(self, *args):
+    def run_install(self, *args, env=None):
         return subprocess.run(
             [str(INSTALLER), "install", "--repo", str(self.repo), "--source", "example.invalid/lbkit.git", *args],
             text=True,
             capture_output=True,
             check=False,
+            env=env,
         )
+
+    def prepare_initialized_submodule(self):
+        """Stage the working-tree kit as an initialized .lbkit submodule."""
+        dest = self.repo / ".lbkit"
+        shutil.copytree(KIT, dest, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        sha = subprocess.run(["git", "-C", str(KIT), "rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
+        subprocess.run(
+            ["git", "-C", str(self.repo), "update-index", "--add", "--cacheinfo", f"160000,{sha},.lbkit"],
+            check=True,
+        )
+
+    def test_install_initializes_mind_forge_repo_when_mf_available(self):
+        self.prepare_initialized_submodule()
+        fakebin = Path(self.temp.name) / "fakebin"
+        fakebin.mkdir()
+        fake = fakebin / "mf"
+        fake.write_text(
+            '#!/bin/sh\n[ "$1" = init ] || exit 1\nmkdir -p "$2/projects"\nprintf "schema: \'1\'\\nprojects: []\\n" > "$2/minds.yaml"\n',
+            encoding="utf-8",
+        )
+        fake.chmod(0o755)
+        result = self.run_install(env=dict(os.environ, PATH=f"{fakebin}:{os.environ['PATH']}"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.repo / "minds.yaml").exists())
+        self.assertTrue((self.repo / "projects").is_dir())
+
+    def test_install_reports_missing_mf_without_failing(self):
+        self.prepare_initialized_submodule()
+        minimal = Path(self.temp.name) / "minimal"
+        minimal.mkdir()
+        for tool in ("git", "python3"):
+            src = shutil.which(tool)
+            self.assertIsNotNone(src)
+            os.symlink(src, minimal / tool)
+        result = self.run_install(env=dict(os.environ, PATH=str(minimal)))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("mf not found", result.stdout)
+        self.assertFalse((self.repo / "minds.yaml").exists())
 
     def test_dry_run_shows_submodule_cli_skills_and_docs_without_writing(self):
         result = self.run_install("--dry-run")
