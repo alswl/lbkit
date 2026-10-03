@@ -74,7 +74,7 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertIn("bin/lbkit -> ../.lbkit/bin/lbkit", result.stdout)
         self.assertIn("bin/lb-anywhere -> ../.lbkit/bin/lb-anywhere", result.stdout)
         self.assertIn(".agents/skills/lb-init -> ../../.lbkit/skills/lb-init", result.stdout)
-        self.assertIn("docs/configuration.md -> ../.lbkit/contracts/configuration.md", result.stdout)
+        self.assertIn("docs/configuration.md -> ../.lbkit/docs/configuration.md", result.stdout)
         self.assertIn("SKILL-PARAMS.yaml <- .lbkit/SKILL-PARAMS.template.yaml", result.stdout)
         self.assertIn("AGENTS.md <- lbkit stub (fill in local rules)", result.stdout)
         self.assertIn("CLAUDE.md -> AGENTS.md", result.stdout)

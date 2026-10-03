@@ -10,7 +10,7 @@ description: 对一份 logbook 做面向运行的全流程预检：按文档顺�
 ## 输入与前置条件
 
 - 定位唯一目标日志并运行 `context --json` 与 `check --json`（见 [CLI 读取流程](../lb-update/references/document-adapters.md#本仓-cli-调用)），阅读原文。`preflight_clear` 为 false 时已存在卡点：先向人类汇总未决项，本轮不做新分析。
-- 读取 [配置契约](../../contracts/configuration.md) 解析本轮 documents；读取 [规划流程](../lb-plan/references/planning.md)、[协调契约](../../contracts/coordination.md) 和 [证据模型](../../contracts/evidence.md)。写回卡点前读取 [日志格式](../../contracts/logbook-format.md) 与 [文档适配流程](../lb-update/references/document-adapters.md)。
+- 读取 [配置契约](../../docs/configuration.md) 解析本轮 documents；读取 [规划流程](../lb-plan/references/planning.md)、[协调契约](../../docs/coordination.md) 和 [证据模型](../../docs/evidence.md)。写回卡点前读取 [日志格式](../../docs/logbook-format.md) 与 [文档适配流程](../lb-update/references/document-adapters.md)。
 - 三要素（工作目录、Stage 划分、待办清单）不全的日志先回 lb-plan 补齐，本技能不代写目标、不替人类新增待办。
 
 ## 必经流程
@@ -46,6 +46,6 @@ description: 对一份 logbook 做面向运行的全流程预检：按文档顺�
 
 ## 边界
 
-- 分析 Agent 只读、限定在已登记工作目录；数据敏感性按 [配置契约](../../contracts/configuration.md) 的模型与部署规则选择，跨仓按最严格输入处理。
+- 分析 Agent 只读、限定在已登记工作目录；数据敏感性按 [配置契约](../../docs/configuration.md) 的模型与部署规则选择，跨仓按最严格输入处理。
 - 能力缺口（技能不存在、环境不可达、凭据缺失）如实回报 needs-input，不自行换工具或降级。
 - 本技能不判断执行授权本身；获准与否由日志记载与 [AGENTS.md](../../AGENTS.md) 决定。预检通过不授权任何推进，推进仍须进入获准的 lb-push。

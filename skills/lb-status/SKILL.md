@@ -13,7 +13,7 @@ mode 为 recorded（依据记录）或 live（加入获准的实时观测）。�
 
 ## 输入与前置条件
 
-定位指定或唯一可识别的日志，读取 [配置契约](../../contracts/configuration.md)。项目不唯一才澄清，不搜索业务仓库补上下文。运行态观测前读取 [观测流程](references/observation.md)；局部写入前读取 [日志格式](../../contracts/logbook-format.md) 和 [文档适配流程](../lb-update/references/document-adapters.md)。同轮已读且未变的规范无需重复加载。
+定位指定或唯一可识别的日志，读取 [配置契约](../../docs/configuration.md)。项目不唯一才澄清，不搜索业务仓库补上下文。运行态观测前读取 [观测流程](references/observation.md)；局部写入前读取 [日志格式](../../docs/logbook-format.md) 和 [文档适配流程](../lb-update/references/document-adapters.md)。同轮已读且未变的规范无需重复加载。
 
 ## 流程
 
@@ -25,4 +25,4 @@ mode 为 recorded（依据记录）或 live（加入获准的实时观测）。�
 
 ## 输出与停止
 
-按问题给出简报；涉及运行状态时包含执行者名称和 workspace/tab/pane、观测时间或最近活动、阻塞及下一动作。单问一个事实不强制完整模板，不报告焦点。若有局部写入，简述改动及未验证项；除上述自动 GC 外，纯查询不反向进入验收或推进流程。人类负责人需要人工扫视日志时，可用 `bin/lb todo` 在日志旁首次开启 TODO.md 人工视图（🚨/👱/下一项/进行中），开启后写命令自动刷新，详见 [CLI 说明](../../contracts/lb-cli.md)。只读筛选待办可用 `bin/lb task list`，下一项用 `bin/lb task next`；仍须结合日志原文核实调度语义。
+按问题给出简报；涉及运行状态时包含执行者名称和 workspace/tab/pane、观测时间或最近活动、阻塞及下一动作。单问一个事实不强制完整模板，不报告焦点。若有局部写入，简述改动及未验证项；除上述自动 GC 外，纯查询不反向进入验收或推进流程。人类负责人需要人工扫视日志时，可用 `bin/lb todo` 在日志旁首次开启 TODO.md 人工视图（🚨/👱/下一项/进行中），开启后写命令自动刷新，详见 [CLI 说明](../../docs/lb-cli.md)。只读筛选待办可用 `bin/lb task list`，下一项用 `bin/lb task next`；仍须结合日志原文核实调度语义。
