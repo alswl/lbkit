@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -91,6 +93,23 @@ def source_url(kit: Path, supplied: str | None) -> str:
     return result.stdout.strip()
 
 
+def init_mind_forge(repo: Path, dry_run: bool) -> str | None:
+    """Best-effort mind-forge init; `mf init` itself refuses non-empty directories."""
+    if (repo / "minds.yaml").exists():
+        return None
+    if shutil.which("mf") is None:
+        return "mf not found; skipped mind-forge init (run `mf init` after installing mind-forge)"
+    if dry_run:
+        return "mind-forge init (minds.yaml + projects/)"
+    with tempfile.TemporaryDirectory() as scratch:
+        result = subprocess.run(["mf", "init", scratch], capture_output=True, text=True)
+        if result.returncode:
+            return f"mf init failed (continuing): {result.stderr.strip()}"
+        shutil.copytree(Path(scratch) / "projects", repo / "projects", dirs_exist_ok=True)
+        shutil.copy2(Path(scratch) / "minds.yaml", repo / "minds.yaml")
+    return None
+
+
 def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     repo = repository_root(repo)
     planned = manifest(kit)
@@ -124,6 +143,8 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
             print("AGENTS.md <- lbkit stub (fill in local rules)")
         if not (repo / "CLAUDE.md").exists() and not (repo / "CLAUDE.md").is_symlink():
             print("CLAUDE.md -> AGENTS.md")
+        if not (repo / "minds.yaml").exists():
+            print("mind-forge init (minds.yaml + projects/) via mf, or skipped when mf is absent")
         return
 
     actual = manifest(destination)
@@ -141,6 +162,12 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if not claude_md.exists() and not claude_md.is_symlink():
         claude_md.symlink_to("AGENTS.md")
         created.append(Path("CLAUDE.md"))
+    had_minds = (repo / "minds.yaml").exists()
+    note = init_mind_forge(repo, dry_run=False)
+    if note:
+        print(note)
+    elif not had_minds:
+        created.append(Path("minds.yaml"))
     result = subprocess.run([str(repo / "bin/lb"), "--help"], cwd=repo, capture_output=True, text=True)
     if result.returncode:
         raise InstallError(f"bin/lb validation failed: {result.stderr.strip()}")

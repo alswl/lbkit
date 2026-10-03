@@ -24,7 +24,7 @@ From a checkout of this repository, install it into another Git repository with 
 
 `--source` may be omitted when this checkout has an `origin` remote. Add `--dry-run` to inspect the Git and link operations first.
 
-The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `SKILL-PARAMS.template.yaml` when no `SKILL-PARAMS.yaml` exists, generates an `AGENTS.md` stub when missing (placeholder collaboration rules to be filled in locally) and creates a `CLAUDE.md -> AGENTS.md` link, then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
+The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `SKILL-PARAMS.template.yaml` when no `SKILL-PARAMS.yaml` exists, generates an `AGENTS.md` stub when missing (placeholder collaboration rules to be filled in locally), creates a `CLAUDE.md -> AGENTS.md` link, and initializes a mind-forge repo when `minds.yaml` is absent (`minds.yaml` + `projects/`, produced via `mf init`; skipped with a hint when `mf` is not installed), then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
 
 ### Without a separate checkout
 
