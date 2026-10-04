@@ -10,7 +10,7 @@
 
 本机（local）由 logbook 派发的子 Agent 必须创建在协调者当前的 Herdr workspace。创建 tab 前读取宿主 `SKILL-PARAMS.yaml` 的 `runtime.herdr.workspace_id_env`，取得环境变量实际值并显式传入 `--workspace <值>`；缺失且只读核实无法补齐时咨询人类，不依赖 TUI 当前焦点。同一仓库通常只保留一个适用的 Agent session，连续工作包优先恢复并复用它；不得为每个任务重复创建 session。只有独立检查需要实施者隔离、现有上下文或模型/数据边界不再适用，或用户批准的并行批次确需独立执行者时才另建，并在交接中记录理由。复用前仍须核对实际模型、部署、工作目录、未结责任和当前任务是否兼容。
 
-凡 logbook 创建的 Herdr named session、tab label 与 pane label，使用宿主 `SKILL-PARAMS.yaml` 的 `runtime.herdr.label_prefix`；执行、监控和临时门禁窗格均适用。创建后立即核对实际 label，命名失败就修正原资源，不复制出一个同用途资源。Herdr Agent identifier 受工具自身格式限制，不强加标签前缀；仍使用稳定、唯一且可定位的 Agent 名。
+凡 logbook 创建的 Herdr named session、tab label 与 pane label，使用宿主 `SKILL-PARAMS.yaml` 的 `runtime.herdr.label_prefix`；模板默认 `^`，方便人类区分 Agent 创建的资源。执行、监控和临时门禁窗格均适用。创建后立即核对实际 label，命名失败就修正原资源，不复制出一个同用途资源。Herdr Agent identifier 受工具自身格式限制，不强加标签前缀；仍使用稳定、唯一且可定位的 Agent 名。
 
 人类需要查看的 Agent 可保留状态标记。内部基础设施若需隔离可见性，应在已授权的独立工作区或命名会话中运行；不要因为清空名字就假定隐藏状态。缺少必要布局时报告阻塞，不能塞入主窗格。每个执行包的可见监控仍须满足根规则。
 

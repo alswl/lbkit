@@ -6,7 +6,7 @@
 |---|---|
 | `roles.human_owner_label`、`roles.coordinator_label` | 人类负责人和协调者的展示称谓；身份及授权仍以宿主 `AGENTS.md` 为准 |
 | `runtime.herdr.workspace_id_env` | 选用 Herdr 且需在协调者工作区创建标签页时，读取环境变量名 |
-| `runtime.herdr.label_prefix` | 宿主要求统一标签前缀时用于新建会话、标签页和窗格 |
+| `runtime.herdr.label_prefix` | 新建 Herdr 会话、标签页和窗格的标签前缀；模板默认 `^`，宿主可按自身约定修改 |
 | `runtime.herdr.shell` | 包装启动器是 shell 函数、需要在交互 shell 中核实时 |
 | `runtime.herdr.permission_mode` | 宿主已授权自动放行时使用的工具模式；不能凭此字段扩大授权 |
 | `browser.profile` | 获准的浏览器工作确需指定 Agent 专用 profile 时 |
