@@ -16,6 +16,7 @@ from logbook_cli.document import (
 )
 
 CATALOG = "lbkit-skills.json"
+SCHEMA_REF = ".lbkit/schemas/lbkit-skills.schema.json"
 FIELDS = {"name", "scope", "chain", "actions", "companions", "description"}
 REQUIRED = ("name", "scope")
 TASK_RE = re.compile(r"^- \[(?P<state>.)\] (?P<text>(?P<action>[^：:\s]+)[：:].*?)\s*$")
@@ -30,8 +31,10 @@ def catalog_path(root: Path) -> Path:
 
 
 def validate(data: object) -> list[dict]:
-    if not isinstance(data, dict) or set(data) - {"skills"}:
+    if not isinstance(data, dict) or set(data) - {"$schema", "skills"}:
         raise LbError(f'{CATALOG}: top level must be {{"skills": [...]}}', EXIT_PATH)
+    if not isinstance(data.get("$schema", ""), str):
+        raise LbError(f"{CATALOG}: $schema must be a string", EXIT_PATH)
     entries = data.get("skills", [])
     if not isinstance(entries, list):
         raise LbError(f"{CATALOG}: skills must be an array", EXIT_PATH)
@@ -78,16 +81,20 @@ def validate(data: object) -> list[dict]:
     return entries
 
 
-def load(root: Path) -> list[dict]:
+def read_document(root: Path) -> dict:
     path = catalog_path(root)
     if path.is_symlink() or (path.exists() and not path.is_file()):
         raise LbError(f"{CATALOG} must be a regular file", EXIT_PATH)
     if not path.exists():
-        return []
+        return {"$schema": SCHEMA_REF, "skills": []}
     try:
-        return validate(json.loads(path.read_text(encoding="utf-8")))
+        return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise LbError(f"{CATALOG}: invalid JSON: {exc}", EXIT_PATH) from exc
+
+
+def load(root: Path) -> list[dict]:
+    return validate(read_document(root))
 
 
 def dump(value: object, indent: int = 0) -> str:
@@ -106,14 +113,15 @@ def dump(value: object, indent: int = 0) -> str:
 
 
 def add(root: Path, entry: dict, dry_run: bool) -> dict:
-    entries = load(root)
+    document = read_document(root)
+    entries = validate(document)
     if any(e["name"] == entry["name"] for e in entries):
         raise LbError(f"already listed: {entry['name']}", EXIT_REFUSED)
     entry = {k: v for k, v in entry.items() if v}
-    validate({"skills": [*entries, entry]})
+    document = {**document, "skills": [*entries, entry]}
+    validate(document)
     if not dry_run:
-        text = dump({"skills": [*entries, entry]})
-        catalog_path(root).write_text(text + "\n", encoding="utf-8")
+        catalog_path(root).write_text(dump(document) + "\n", encoding="utf-8")
     return entry
 
 

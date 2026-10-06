@@ -297,6 +297,64 @@
         "获得用户认可后新增",
         "不自行改写已有任务首行"
       ]
+    },
+    {
+      "id": 30,
+      "prompt": "仓库根目录有 lbkit-skills.json，其中「speckit 按任务区间实现」的 scope 写明「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」。为 Stage 04 起草或补全待办「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @vlog-trimmer」的技能子行；该待办尚无「技能：」，规格分支的 tasks.md 有 T027（断言工具清单恰为 16 项）与 T028（回放 MCP 基线）。",
+      "expected_output": "运行 bin/lb skills --json 读全部条目，按 scope 判断归属；待办文字看不出是否属于 speckit，先读 tasks.md 再定，建议「技能：`speckit-implement`（tasks.md T027–T028）」，随草案交人类确认后才写入。",
+      "files": [],
+      "expectations": [
+        "读取全部清单条目而非只按「测试」前缀过滤",
+        "依据 scope 判断，并查 tasks.md 或工作包确认任务区间",
+        "建议子行写明 speckit-implement 与任务编号",
+        "不改待办首行，写入前取得人类确认"
+      ]
+    },
+    {
+      "id": 31,
+      "prompt": "仓库根目录没有 lbkit-skills.json。起草一个新 Stage 的待办：「开发：为博客新增 RSS 全文输出。」，需要给出技能子行建议。",
+      "expected_output": "没有清单时按原有规则判断，查无技能依据不硬填，不因此创建 lbkit-skills.json。",
+      "files": [],
+      "expectations": [
+        "不创建 lbkit-skills.json，也不调用 skills add",
+        "没有依据时不硬填技能子行",
+        "其余规划流程照常"
+      ]
+    },
+    {
+      "id": 32,
+      "prompt": "lbkit-skills.json 中「speckit 功能规格设计」与「speckit 按任务区间实现」的 actions 都含「开发」。为 skm 日志起草「开发：验证并在 README 固化一条命令：克隆 matt skills 到本地并安装到全部本地 agent targets。 @skm」的技能子行；skm 仓库有 .specify/，但这项工作没有对应的 spec 或 tasks.md，工作包是 E2E 验证加 README 修改。",
+      "expected_output": "动作前缀与仓库有 .specify/ 都只是提示；按 scope 判断这不是 speckit 任务，README 只是补一段也不适用 create-readme，因此不填，并在草案中说明原因。",
+      "files": [],
+      "expectations": [
+        "不因动作前缀「开发」机械推荐 speckit-implement",
+        "不因仓库存在 .specify/ 就判定适用",
+        "说明不填的理由",
+        "不编造清单里没有的技能"
+      ]
+    },
+    {
+      "id": 33,
+      "prompt": "lbkit-skills.json 有一条「博客导出与发布（blog.alswl.com）」，scope 限定 blog.alswl.com，技能链为 mf-cli → agent-browser，description 指向该仓库 AGENTS.md 的流程。现在为另一个站点仓库 docs.example.com 起草「部署：发布文档站到线上。」的技能子行。",
+      "expected_output": "该条目限定 blog.alswl.com，不适用于其他仓库；不把它套到 docs.example.com，按无匹配处理并可提示是否需要为该仓库登记新条目。",
+      "files": [],
+      "expectations": [
+        "识别该条目只适用于 blog.alswl.com",
+        "不推荐该条目的技能链",
+        "可建议另行登记，但不自行写入清单"
+      ]
+    },
+    {
+      "id": 34,
+      "prompt": "lbkit-skills.json 中「speckit 按任务区间实现」带 companions：spec-status（派发前和回传后核对进度）、comment-prune（实现完成提交前）、spec-update（换执行者前写回规格）。为「开发：Electron 内嵌 Pi 导演替换 claude -p…」准备工作包，执行者将从智谱换成 Codex。",
+      "expected_output": "主技能链写 speckit-implement；按 when 把相关随行技能写进同一技能子行或工作包（换执行者前 spec-update、派发前 spec-status、完成后 comment-prune），不把随行技能拆成独立待办。",
+      "files": [],
+      "expectations": [
+        "主技能链为 speckit-implement",
+        "随行技能按 when 写进技能子行或工作包",
+        "不为随行技能新增待办",
+        "换执行者场景提到 spec-update"
+      ]
     }
   ]
 }

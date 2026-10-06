@@ -49,7 +49,7 @@ bin/lb task list projects/example/docs/logbook.md --human --json
 bin/lb task list --status in-progress --json
 bin/lb task next projects/example/docs/logbook.md --json
 
-# 可选的仓库根目录 lbkit-skills.json：按工作类型登记技能链，字段 name、scope（使用范围）、chain、actions（动作前缀提示）、companions（随行技能：skill + when）、description
+# 可选的仓库根目录 lbkit-skills.json（JSON Schema：.lbkit/schemas/lbkit-skills.schema.json，文件首键 "$schema" 引用它）：按工作类型登记技能链，字段 name、scope（使用范围）、chain、actions（动作前缀提示）、companions（随行技能：skill + when）、description
 bin/lb skills --json
 bin/lb skills --action 开发 --json
 bin/lb skills add --name 'speckit 功能实现' --scope '适用：…；不适用：…' --chain speckit-implement --action 开发 --companion 'comment-prune=实现完成、提交前' --dry-run

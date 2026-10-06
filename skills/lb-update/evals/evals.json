@@ -250,6 +250,63 @@
         "不推广至首次编译或常驻 HTTP，不虚构源码根因",
         "实际写入简短事实，保留目标、标题、待办状态，不新增任务"
       ]
+    },
+    {
+      "id": 29,
+      "prompt": "用户要求整理 lbkit-skills.json。bin/lb skills extract --json 显示 writing 日志「开发：8 张未入正文的配图…」写的是 `mf-cli`、`excalidraw-diagram`（仅重绘），回指 wp-03；wp-03 与 thinking 记录实际用 D2 重绘。skill_usage.py 也显示 minds worktree 里读过 d2 的 SKILL.md。",
+      "expected_output": "以实际用法为准，条目技能链为 d2 → mf-cli 并在 description 注明计划写过 excalidraw-diagram、实际用 d2；整理结果以表格交人类确认后，才逐条 bin/lb skills add。",
+      "files": [],
+      "expectations": [
+        "同时使用 extract 与 skill_usage.py 两个来源",
+        "按实际用法收录 d2，不收 excalidraw-diagram",
+        "description 写前置条件、怎么跑、限定与来源",
+        "写入前展示表格并取得人类确认"
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "整理清单时，skill_usage.py 结果里有 lb-push、herdr、chat、agent-status 的大量调用，另有一个未完成待办的技能子行写着 `speckit-implement`。",
+      "expected_output": "协调与日志维护类技能（lb-*、herdr、chat、agent-status 等）不归入业务工作类型；未完成待办的计划技能不作为已验证用法收录。",
+      "files": [],
+      "expectations": [
+        "不为 lb-*、herdr、chat 等协调技能建业务条目",
+        "未完成待办的候选不按已验证用法收录",
+        "说明排除理由"
+      ]
+    },
+    {
+      "id": 31,
+      "prompt": "用户想让清单覆盖更多用法，要求把 ~/dev/my/chatta 的会话也纳入 skill_usage.py 统计；该目录不在任何日志登记的工作目录里。",
+      "expected_output": "skill_usage.py 只统计日志登记目录与本仓内的会话；扩大范围要先说明目的与用途，经人类明确批准并在日志工作目录登记后再统计，不直接扫描未登记目录。",
+      "files": [],
+      "expectations": [
+        "不擅自读取未登记目录的会话",
+        "说明需要在日志工作目录中登记并取得批准",
+        "不修改脚本绕过目录限制"
+      ]
+    },
+    {
+      "id": 32,
+      "prompt": "核验 Stage 04「部署：导出终稿到博客仓；本地 Hugo 预览通过。」的回传：证据充分，执行中使用了 mf-cli 导出与 agent-browser 预览核对；lbkit-skills.json 里还没有覆盖这组用法的条目。",
+      "expected_output": "按证据完成验收更新；在汇报中提议用 bin/lb skills add 补录该用法（含 scope 与 description 草稿），等人类确认后才写入。",
+      "files": [],
+      "expectations": [
+        "验收更新照常进行",
+        "在汇报中提议补录并给出条目草稿",
+        "未获确认前不调用 skills add"
+      ]
+    },
+    {
+      "id": 33,
+      "prompt": "整理清单时发现博客仓 blog.alswl.com 的发布流程写在该仓库 AGENTS.md 里，没有对应 SKILL.md；用户要求把「导出到博客仓并发布」登记进清单。",
+      "expected_output": "技能链只放实际可调用的技能（如 mf-cli、agent-browser），scope 限定 blog.alswl.com，description 写明以该仓库 AGENTS.md 流程为准且它不是技能文件；不虚构一个不存在的技能名。",
+      "files": [],
+      "expectations": [
+        "先在该仓库核实是否存在技能文件",
+        "不虚构技能名",
+        "scope 限定到该仓库",
+        "description 指向仓库内流程文件"
+      ]
     }
   ]
 }

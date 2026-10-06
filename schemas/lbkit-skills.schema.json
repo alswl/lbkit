@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alswl/lbkit/schemas/lbkit-skills.schema.json",
+  "title": "lbkit-skills.json",
+  "description": "可选的仓库根目录技能清单：按工作类型登记技能链，供 lb-plan 起草待办的「技能：」子行时参考。由 bin/lb skills 读取与追加。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "指向本 schema 的路径，便于编辑器校验。"
+    },
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/kind" }
+    }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "pattern": "\\S" },
+    "kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scope", "chain"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmpty",
+          "description": "工作类型，语义化命名，在清单内唯一。"
+        },
+        "scope": {
+          "$ref": "#/$defs/nonEmpty",
+          "description": "使用范围，写成「适用：…；不适用：…」，按工作性质区分，不以动作前缀或仓库名代替。"
+        },
+        "chain": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmpty" },
+          "description": "按调用顺序排列的技能名；可包含只存在于某个业务仓库内的技能。"
+        },
+        "actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "常见待办动作前缀（如 设计、开发），只作提示，不用于机械匹配。"
+        },
+        "companions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["skill", "when"],
+            "properties": {
+              "skill": { "$ref": "#/$defs/nonEmpty" },
+              "when": {
+                "$ref": "#/$defs/nonEmpty",
+                "description": "什么时候顺带使用。"
+              }
+            }
+          },
+          "description": "随主技能链顺带使用、不单独对应待办的技能。"
+        },
+        "description": {
+          "type": "string",
+          "description": "给下一位协调者的背景：前置条件、怎么跑、限定与不用什么、来源日志或工作包。"
+        }
+      }
+    }
+  }
+}
