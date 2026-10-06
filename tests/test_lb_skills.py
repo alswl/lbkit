@@ -7,7 +7,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CLI = Path(__file__).resolve().parents[1] / "scripts" / "lb.py"
+KIT = Path(__file__).resolve().parents[1]
+CLI = KIT / "scripts" / "lb.py"
+sys.path.insert(0, str(KIT / "src"))
+
+from logbook_cli import skills  # noqa: E402
 
 LOG = """# Demo
 
@@ -114,6 +118,25 @@ class SkillsTest(unittest.TestCase):
         text = self.run_cli().stdout
         self.assertIn("范围：适用：新页面", text)
         self.assertIn("随行：comment-prune（实现完成、提交前）", text)
+
+    def test_new_file_references_schema_and_add_keeps_it(self):
+        self.add("a", "x")
+        self.assertEqual(
+            json.loads(self.catalog.read_text(encoding="utf-8"))["$schema"],
+            ".lbkit/schemas/lbkit-skills.schema.json",
+        )
+        self.catalog.write_text('{"$schema": "custom.json", "skills": []}', encoding="utf-8")
+        self.add("b", "y")
+        self.assertEqual(json.loads(self.catalog.read_text(encoding="utf-8"))["$schema"], "custom.json")
+
+    def test_schema_file_matches_validator(self):
+        path = KIT / skills.SCHEMA_REF.removeprefix(".lbkit/")
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(set(schema["properties"]), {"$schema", "skills"})
+        kind = schema["$defs"]["kind"]
+        self.assertEqual(set(kind["properties"]), skills.FIELDS)
+        self.assertEqual(set(kind["required"]), {*skills.REQUIRED, "chain"})
+        self.assertEqual(set(kind["properties"]["companions"]["items"]["required"]), {"skill", "when"})
 
     def test_add_refuses_duplicate_name_and_dry_run_does_not_write(self):
         result = self.add("a", "x", dry_run=True)
