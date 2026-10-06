@@ -38,7 +38,7 @@ def repository_root(path: Path) -> Path:
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
     docs = kit / "docs"
-    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "SKILL-PARAMS.template.yaml", kit / "AGENTS.template.md"]
+    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "lbkit-agents.template.yaml", kit / "AGENTS.template.md"]
     if any(not path.exists() for path in required) or not skills.is_dir() or not docs.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
@@ -110,6 +110,12 @@ def init_mind_forge(repo: Path, dry_run: bool) -> str | None:
     return None
 
 
+def legacy_config_hint(repo: Path) -> None:
+    """lbkit-agents.yaml used to live at .agents/lb.yaml; never move it silently."""
+    if (repo / ".agents/lb.yaml").exists() and not (repo / "lbkit-agents.yaml").exists():
+        print("Move the agent config to the repository root: git mv .agents/lb.yaml lbkit-agents.yaml")
+
+
 def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     repo = repository_root(repo)
     planned = manifest(kit)
@@ -137,14 +143,15 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if dry_run:
         for link_rel, target_rel in planned.items():
             print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
-        if not (repo / "SKILL-PARAMS.yaml").exists():
-            print("SKILL-PARAMS.yaml <- .lbkit/SKILL-PARAMS.template.yaml")
+        if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
+            print("lbkit-agents.yaml <- .lbkit/lbkit-agents.template.yaml")
         if not (repo / "AGENTS.md").exists():
             print("AGENTS.md <- lbkit stub (fill in local rules)")
         if not (repo / "CLAUDE.md").exists() and not (repo / "CLAUDE.md").is_symlink():
             print("CLAUDE.md -> AGENTS.md")
         if not (repo / "minds.yaml").exists():
             print("mind-forge init (minds.yaml + projects/) via mf, or skipped when mf is absent")
+        legacy_config_hint(repo)
         return
 
     actual = manifest(destination)
@@ -152,9 +159,9 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if blocked:
         raise InstallError("installed lbkit conflicts with existing paths: " + ", ".join(map(str, blocked)))
     created = install_links(repo, actual)
-    if not (repo / "SKILL-PARAMS.yaml").exists():
-        with (repo / "SKILL-PARAMS.yaml").open("x", encoding="utf-8") as target:
-            target.write((destination / "SKILL-PARAMS.template.yaml").read_text(encoding="utf-8"))
+    if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
+        with (repo / "lbkit-agents.yaml").open("x", encoding="utf-8") as target:
+            target.write((destination / "lbkit-agents.template.yaml").read_text(encoding="utf-8"))
     if not (repo / "AGENTS.md").exists():
         (repo / "AGENTS.md").write_text((destination / "AGENTS.template.md").read_text(encoding="utf-8"), encoding="utf-8")
         created.append(Path("AGENTS.md"))
@@ -172,7 +179,8 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if result.returncode:
         raise InstallError(f"bin/lb validation failed: {result.stderr.strip()}")
     print(f"lbkit ready at {destination}; installed {len(created)} entries")
-    print("Fill SKILL-PARAMS.yaml as needed; keep AGENTS.md and .agents/lb.yaml in the consuming repository.")
+    print("Fill lbkit-agents.yaml as needed; keep AGENTS.md and lbkit-agents.yaml in the consuming repository.")
+    legacy_config_hint(repo)
 
 
 def main(argv: list[str] | None = None) -> int:

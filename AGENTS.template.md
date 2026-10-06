@@ -1,6 +1,6 @@
 # 协作约定（由 lbkit 生成，请按本仓实际约定补充）
 
-本仓以项目 logbook 为目标、任务、授权和验收的共同入口，接入 [lbkit](.lbkit/README.md) 共享的技能、契约与 CLI。角色称谓可在 `SKILL-PARAMS.yaml` 的 `roles` 中按本仓文化配置（如 Admiral / Captain / 船员）；称谓不改变权限边界。
+本仓以项目 logbook 为目标、任务、授权和验收的共同入口，接入 [lbkit](.lbkit/README.md) 共享的技能、契约与 CLI。角色称谓可在 `lbkit-agents.yaml` 的 `roles` 中按本仓文化配置（如 Admiral / Captain / 船员）；称谓不改变权限边界。
 
 ## 角色分工
 
@@ -14,7 +14,7 @@
 
 - 仓库负责人：
 - 授权的工作目录与机器归属：
-- 敏感性分级与模型部署约束（对应 `.agents/lb.yaml`）：
+- 敏感性分级与模型部署约束（对应 `lbkit-agents.yaml`）：
 
 未列出的仓库或目录一律不得访问；需要扩大范围时先说明目标与用途，经人类明确确认。
 
@@ -36,4 +36,4 @@
 
 - 共享实现与指令由 `.lbkit/` 子模块提供，背景见 [.lbkit/AGENTS.md](.lbkit/AGENTS.md)；根目录 `CLAUDE.md` 是指向本文件的链接。
 - `lb-*` 技能入口链接在 `.claude/skills/` 与 `.agents/skills/`，共享契约链接在 `docs/`，日志格式见 [日志格式](docs/logbook-format.md)。
-- 本仓自有文件：项目日志、本文件、`.agents/lb.yaml`（模型与运行时配置）、`SKILL-PARAMS.yaml`（角色称谓与技能参数）。
+- 本仓自有文件：项目日志、本文件、`lbkit-agents.yaml`（模型、运行时与协作参数），以及可选的 `lbkit-skills.json`（按工作类型登记的技能清单，由 `bin/lb skills` 读写）。

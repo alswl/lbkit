@@ -22,7 +22,30 @@
         "控制面出现两次 tab create 且 pane run 启动的包装器为 internal-reader",
         "启动命令不带 -w（不建工作树）",
         "不出现 external-* 或任何外部候选",
-        "引用了 .agents/lb.yaml 或配置契约作为候选来源依据"
+        "引用了 lbkit-agents.yaml 或配置契约作为候选来源依据"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "预检一份日志，第 3 步技能链为 `d2` → `mf-cli`；本机没有安装 skm。",
+      "expected_output": "按技能定义与环境核对可调用性；skm 只是可选的辅助核对，没有 skm 不算卡点，也不因此标 🔮。",
+      "files": [],
+      "expectations": [
+        "不把缺少 skm 作为卡点",
+        "仍核对技能在目标环境是否存在",
+        "预检档如实记录核对方式"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "预检一份日志，第 2 步技能链含 `humanizer`，拟派执行者为 codex；skm list --json 显示 humanizer 只装在 claude-skills 目标，未装到 codex 目标。",
+      "expected_output": "按能力缺口回报该步（执行环境调用不了 humanizer），不降级替代、不自行安装；可在预检档给出建议的安装命令，交人类决定。",
+      "files": [],
+      "expectations": [
+        "识别执行环境缺技能",
+        "不自行运行 skm install",
+        "不换用其他技能替代",
+        "按能力缺口或待讨论卡点交人类裁决"
       ]
     }
   ]

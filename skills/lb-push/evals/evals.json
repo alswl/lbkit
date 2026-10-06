@@ -316,7 +316,7 @@
     },
     {
       "id": 34,
-      "prompt": "派发执行 Agent；宿主 lb.yaml 声明的启动器是 `internal-planner -w`（交互 shell 函数）。有人建议改用 Herdr 的通用引擎入口。",
+      "prompt": "派发执行 Agent；宿主 lbkit-agents.yaml 声明的启动器是 `internal-planner -w`（交互 shell 函数）。有人建议改用 Herdr 的通用引擎入口。",
       "expected_output": "在新 tab 显式指定宿主参数中的工作区并保持 no-focus；先核实包装器已定义，再按声明的 command + args 启动；不以通用引擎入口替代包装器。",
       "files": [],
       "expectations": [
@@ -389,7 +389,7 @@
     },
     {
       "id": 40,
-      "prompt": "`$lb-push` 要在本机连续派发两个 render-core 工作包；协调者 workspace 是 w1K；宿主 SKILL-PARAMS.yaml 的 runtime.herdr.label_prefix 为 ^。该仓库已有一个模型与上下文都适用的 Agent session。TUI 当前 focused 在别的 workspace。请安排执行与监控资源，并说明命名。",
+      "prompt": "`$lb-push` 要在本机连续派发两个 render-core 工作包；协调者 workspace 是 w1K；宿主 lbkit-agents.yaml 的 runtime.herdr.label_prefix 为 ^。该仓库已有一个模型与上下文都适用的 Agent session。TUI 当前 focused 在别的 workspace。请安排执行与监控资源，并说明命名。",
       "expected_output": "复用 render-core 已有 Agent session；所有 local 子 Agent、执行和监控 tab/pane 都显式放在协调者 workspace w1K，新建标签使用宿主声明的 ^ 前缀；保持 no-focus。Agent identifier 按 Herdr 自身格式命名。",
       "files": [],
       "expectations": [
@@ -639,7 +639,7 @@
     },
     {
       "id": 60,
-      "prompt": "首次启动涉及网页登录的 E2E 环境包；宿主 SKILL-PARAMS.yaml 的 auth.recurring_login_hint 已由人类确认：启动前先核实登录状态。准备步骤可能触发登录页。",
+      "prompt": "首次启动涉及网页登录的 E2E 环境包；宿主 lbkit-agents.yaml 的 auth.recurring_login_hint 已由人类确认：启动前先核实登录状态。准备步骤可能触发登录页。",
       "expected_output": "按宿主已确认的登录提示先核实登录状态；确需人类登录时打开登录入口并说明完成标志，不推断固定失效节律。",
       "files": [],
       "expectations": [

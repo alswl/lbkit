@@ -1,5 +1,6 @@
 ---
 name: lb-status
+version: 0.1.0
 description: 查看项目进展、执行者状态、阻塞与下一项，维护 emoji 和少量事实片段；发现上下文超过 80% 时交 lb-push 自动 GC。明确只读时仅报告，不改复选框或验收结论；深度计划审查用 lb-plan。
 ---
 
