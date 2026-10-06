@@ -52,7 +52,7 @@ bin/lb task artifact '<日志相对路径>' --stage '<阶段原文，不含状�
 
 ## documents.adapter=mind-forge
 
-从宿主 `SKILL-PARAMS.yaml` 的 `documents.mind_forge_guide` 读取文档映射指南，并与当前环境的 mf-cli 技能一起定位规范文章、唯一绑定 prompt 及对应 thinking。指南缺失且无法在宿主仓库只读核实时咨询人类；元数据为准，project_root 只作发现范围，不硬编码项目名称或文件名。
+从宿主 `lbkit-agents.yaml` 的 `documents.mind_forge_guide` 读取文档映射指南，并与当前环境的 mf-cli 技能一起定位规范文章、唯一绑定 prompt 及对应 thinking。指南缺失且无法在宿主仓库只读核实时咨询人类；元数据为准，project_root 只作发现范围，不硬编码项目名称或文件名。
 
 保留用户内容；持久写作约束放 prompt，来源、决策及证据索引放 thinking，主日志保留结果。
 

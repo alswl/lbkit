@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 # Direct script execution sets sys.path to scripts/, while test imports use the
@@ -35,6 +36,7 @@ from logbook_cli.document import (
     stage_state,
     summary_lines,
 )
+from logbook_cli import skills, usage
 from logbook_cli.edit import NOTE_KINDS, add_task, append_note, require_valid_candidate
 from logbook_cli.views import (
     refresh_todo,
@@ -153,6 +155,69 @@ def cmd_list(args: argparse.Namespace) -> int:
         ],
         args.json,
     )
+    return 0
+
+
+def print_skills(entries: list[dict]) -> None:
+    for e in entries:
+        actions = f"  [{'、'.join(e['actions'])}]" if e.get("actions") else ""
+        print(f"{e['name']}: {' → '.join(e['chain'])}{actions}")
+        print(f"    范围：{e['scope']}")
+        for companion in e.get("companions", []):
+            print(f"    随行：{companion['skill']}（{companion['when']}）")
+        if e.get("description"):
+            print(f"    {e['description']}")
+
+
+def cmd_skills_list(args: argparse.Namespace) -> int:
+    entries = skills.load(root_path(args.root))
+    if args.action:
+        entries = [e for e in entries if args.action in e.get("actions", [])]
+    if args.json:
+        emit({"skills": entries}, True)
+    else:
+        print_skills(entries)
+    return 0
+
+
+def cmd_skills_add(args: argparse.Namespace) -> int:
+    entry = {
+        "name": args.name,
+        "scope": args.scope,
+        "chain": args.chain,
+        "actions": args.action or [],
+        "companions": [
+            {"skill": skill.strip(), "when": when.strip()}
+            for skill, _, when in (c.partition("=") for c in args.companion or [])
+        ],
+        "description": args.description or "",
+    }
+    added = skills.add(root_path(args.root), entry, args.dry_run)
+    emit({"path": skills.CATALOG, "dry_run": args.dry_run, "added": added}, True)
+    return 0
+
+
+def cmd_skills_extract(args: argparse.Namespace) -> int:
+    found = skills.extract(root_path(args.root), args.projects_dir)
+    if args.json:
+        emit({"candidates": found}, True)
+        return 0
+    for c in found:
+        mark = "x" if c["done"] else " "
+        print(f"[{mark}] {c['action']}: {c['raw']}  ({c['source']})")
+        for path in c["work_packages"]:
+            print(f"    wp: {path}")
+    return 0
+
+
+def cmd_skills_usage(args: argparse.Namespace) -> int:
+    events = usage.usage(root_path(args.root), args.projects_dir, args.since)
+    if args.json:
+        emit({"events": events}, True)
+        return 0
+    counts = Counter((e["skill"], e["cwd"]) for e in events)
+    for (skill, cwd), n in counts.most_common():
+        print(f"{n:4} {skill}  {cwd}")
     return 0
 
 
@@ -366,6 +431,11 @@ def parser() -> argparse.ArgumentParser:
         epilog="Example: bin/lb context projects/demo/logbook.md --json",
     )
     add_root_option(p, top_level=True)
+    p.add_argument(
+        "--version",
+        action="version",
+        version=(Path(__file__).resolve().parents[2] / "VERSION").read_text().strip(),
+    )
     sub = p.add_subparsers(dest="command", required=True)
     q = sub.add_parser("list", help="list project logbooks")
     add_root_option(q)
@@ -410,6 +480,64 @@ def parser() -> argparse.ArgumentParser:
     add_write_options(q)
     add_output_option(q)
     q.set_defaults(func=cmd_sync)
+    q = sub.add_parser(
+        "skills", help=f"list or edit the optional {skills.CATALOG} kinds-of-work skill list"
+    )
+    add_root_option(q)
+    q.add_argument("--action", help="only entries hinting this todo action prefix")
+    add_output_option(q)
+    q.set_defaults(func=cmd_skills_list)
+    skills_sub = q.add_subparsers(dest="skills_command")
+    command = skills_sub.add_parser("add", help="append one kind of work")
+    add_root_option(command)
+    command.add_argument("--name", required=True, help="kind of work, unique")
+    command.add_argument(
+        "--scope", required=True, help="where it applies and where it does not"
+    )
+    command.add_argument(
+        "--action", action="append", help="todo action prefix hint; repeatable"
+    )
+    command.add_argument(
+        "--chain",
+        required=True,
+        action="append",
+        help="skill name; repeat in call order",
+    )
+    command.add_argument(
+        "--companion",
+        action="append",
+        metavar="SKILL=WHEN",
+        help="skill used alongside the chain and when; repeatable",
+    )
+    command.add_argument(
+        "--description",
+        help="background: preconditions, how to run it, limits, sources",
+    )
+    command.add_argument(
+        "--dry-run", action="store_true", help="show the block without writing"
+    )
+    add_output_option(command)
+    command.set_defaults(func=cmd_skills_add)
+    command = skills_sub.add_parser(
+        "extract",
+        help="list 技能： sub-lines whose chain is unlisted, with todo and work packages",
+    )
+    add_root_option(command)
+    add_projects_dir_option(command)
+    add_output_option(command)
+    command.set_defaults(func=cmd_skills_extract)
+    command = skills_sub.add_parser(
+        "usage",
+        help="skills invoked in Claude Code / Codex sessions inside logbook work dirs",
+        description="Reads ~/.claude/projects and ~/.codex/sessions (outside --root); "
+        "only sessions whose cwd lies in a logbook work directory or the repository "
+        "itself are reported.",
+    )
+    add_root_option(command)
+    add_projects_dir_option(command)
+    command.add_argument("--since", default="", help="ISO date lower bound")
+    add_output_option(command)
+    command.set_defaults(func=cmd_skills_usage)
     q = sub.add_parser("task", help="add, update, or annotate a task")
     add_root_option(q)
     task_sub = q.add_subparsers(dest="task_command", required=True)

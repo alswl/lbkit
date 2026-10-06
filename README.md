@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-Reusable Logbook coordination skills, Markdown contracts, and the `lb` CLI for human–agent collaborative delivery.
+Reusable Logbook coordination skills, Markdown contracts, and the `lb` CLI for human–agent collaborative delivery. Current version: see [VERSION](VERSION) (`bin/lb --version`).
 
 ## Overview
 
@@ -24,7 +24,7 @@ From a checkout of this repository, install it into another Git repository with 
 
 `--source` may be omitted when this checkout has an `origin` remote. Add `--dry-run` to inspect the Git and link operations first.
 
-The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `SKILL-PARAMS.template.yaml` when no `SKILL-PARAMS.yaml` exists, generates an `AGENTS.md` stub when missing (placeholder collaboration rules to be filled in locally), creates a `CLAUDE.md -> AGENTS.md` link, and initializes a mind-forge repo when `minds.yaml` is absent (`minds.yaml` + `projects/`, produced via `mf init`; skipped with a hint when `mf` is not installed), then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
+The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `lbkit-agents.template.yaml` when no `lbkit-agents.yaml` exists, generates an `AGENTS.md` stub when missing (placeholder collaboration rules to be filled in locally), creates a `CLAUDE.md -> AGENTS.md` link, and initializes a mind-forge repo when `minds.yaml` is absent (`minds.yaml` + `projects/`, produced via `mf init`; skipped with a hint when `mf` is not installed), then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
 
 ### Without a separate checkout
 
@@ -38,7 +38,7 @@ git submodule add https://github.com/alswl/lbkit.git .lbkit
 
 Once it detects `.lbkit` is already a registered submodule, install skips the Git operations and only adds the links and template. `--repo` defaults to the current directory, so it can be omitted when run from the repository root.
 
-The consuming repository owns its project logs, `AGENTS.md`, `.agents/lb.yaml`, and `SKILL-PARAMS.yaml`; lbkit owns the shared implementation and instructions. Installed links:
+The consuming repository owns its project logs, `AGENTS.md`, `lbkit-agents.yaml`, and the optional `lbkit-skills.json`; lbkit owns the shared implementation and instructions. Installed links:
 
 ```text
 .agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
@@ -73,6 +73,19 @@ The wrapper walks up to the nearest `bin/lb`, switches to that repository root, 
 | [lb-update](skills/lb-update/SKILL.md) | Verify evidence, maintain records, close out human decisions |
 | [lb-status](skills/lb-status/SKILL.md) | Observe logbooks and the control plane, report status briefs |
 
+### Skills list (optional)
+
+An optional `lbkit-skills.json` at the consuming repository root records skill chains by kind of work; lb-plan consults it when drafting a todo's `技能：` sub-line. Each entry has:
+
+- `name`: the kind of work, e.g. "speckit implementation by task range"
+- `scope`: where it applies and where it does not; lb-plan decides by scope, not by mechanically matching action prefixes
+- `chain`: the skill chain, which may include skills that live only inside a business repository
+- `actions`: common todo action prefixes, as hints only
+- `companions`: skills used alongside the chain, each with a `when`
+- `description`: preconditions, how to run it, limits, and sources
+
+[schemas/lbkit-skills.schema.json](schemas/lbkit-skills.schema.json) describes the format; the file references it via a leading `"$schema"` key and records its format version in `"version"` (currently `0.1.0`). Without the file, lb-* behave as before. lb-update curates it from the logbooks' `技能：` sub-lines (`lb skills extract`) and the skills actually invoked in sessions (`lb skills usage`), preferring real usage, and writes entries with `lb skills add` after human confirmation.
+
 ## CLI
 
 Run the CLI from the consuming repository root with `bin/lb`; it treats the current directory as the document root unless `--root` is supplied.
@@ -85,6 +98,10 @@ bin/lb task list|next        # filter tasks / show next delivery task
 bin/lb task add|update       # write tasks (requires --token from context)
 bin/lb task note|artifact    # annotate tasks with notes or evidence
 bin/lb sync                  # refresh stage emojis from task state
+bin/lb skills [--action 开发]  # list lbkit-skills.json entries
+bin/lb skills add            # append a kind of work (--name --scope --chain ...)
+bin/lb skills extract        # 技能： sub-lines in logbooks not yet covered by the list
+bin/lb skills usage          # skills actually invoked in sessions (the one read-only command outside --root)
 ```
 
 All write commands require the SHA-256 `version_token` returned by `context --json`; writes are rejected on any concurrent change. See the [lb CLI contract](docs/lb-cli.md) for the full contract.
@@ -98,7 +115,6 @@ Two documentation directories live in this repo: `docs/` holds the shared contra
 - [Logbook format](docs/logbook-format.md)
 - [Evidence rules](docs/evidence.md)
 - [Configuration & runtime adapters](docs/configuration.md)
-- [Skill parameters](docs/skill-params.md)
 - [`lb` CLI reference](docs/lb-cli.md)
 
 ## lbkit development

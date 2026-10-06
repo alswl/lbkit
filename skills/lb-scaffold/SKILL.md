@@ -1,5 +1,6 @@
 ---
 name: lb-scaffold
+version: 0.1.0
 description: 从 workflows/<工作流>/ 的运行实例模板填空初始化新 logbook：只填目标日、工作目录与运行裁定三个可变槽并一次收齐，不自由起草、不改结构粒度；三要素齐备并经人类确认后交 lb-push。无模板或需变更目标与结构时走 lb-plan，不套本技能。
 ---
 

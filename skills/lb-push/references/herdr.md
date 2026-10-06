@@ -8,15 +8,15 @@
 
 执行 Agent 使用不同于协调者主标签页的专用标签页，保留工作目录。创建时使用 `--no-focus`，后台操作必须显式定位 Agent、标签页或窗格。无法避免夺取焦点的操作交人类完成。
 
-本机（local）由 logbook 派发的子 Agent 必须创建在协调者当前的 Herdr workspace。创建 tab 前读取宿主 `SKILL-PARAMS.yaml` 的 `runtime.herdr.workspace_id_env`，取得环境变量实际值并显式传入 `--workspace <值>`；缺失且只读核实无法补齐时咨询人类，不依赖 TUI 当前焦点。同一仓库通常只保留一个适用的 Agent session，连续工作包优先恢复并复用它；不得为每个任务重复创建 session。只有独立检查需要实施者隔离、现有上下文或模型/数据边界不再适用，或用户批准的并行批次确需独立执行者时才另建，并在交接中记录理由。复用前仍须核对实际模型、部署、工作目录、未结责任和当前任务是否兼容。
+本机（local）由 logbook 派发的子 Agent 必须创建在协调者当前的 Herdr workspace。创建 tab 前读取宿主 `lbkit-agents.yaml` 的 `runtime.herdr.workspace_id_env`，取得环境变量实际值并显式传入 `--workspace <值>`；缺失且只读核实无法补齐时咨询人类，不依赖 TUI 当前焦点。同一仓库通常只保留一个适用的 Agent session，连续工作包优先恢复并复用它；不得为每个任务重复创建 session。只有独立检查需要实施者隔离、现有上下文或模型/数据边界不再适用，或用户批准的并行批次确需独立执行者时才另建，并在交接中记录理由。复用前仍须核对实际模型、部署、工作目录、未结责任和当前任务是否兼容。
 
-凡 logbook 创建的 Herdr named session、tab label 与 pane label，使用宿主 `SKILL-PARAMS.yaml` 的 `runtime.herdr.label_prefix`；模板默认 `^`，方便人类区分 Agent 创建的资源。执行、监控和临时门禁窗格均适用。创建后立即核对实际 label，命名失败就修正原资源，不复制出一个同用途资源。Herdr Agent identifier 受工具自身格式限制，不强加标签前缀；仍使用稳定、唯一且可定位的 Agent 名。
+凡 logbook 创建的 Herdr named session、tab label 与 pane label，使用宿主 `lbkit-agents.yaml` 的 `runtime.herdr.label_prefix`；模板默认 `^`，方便人类区分 Agent 创建的资源。执行、监控和临时门禁窗格均适用。创建后立即核对实际 label，命名失败就修正原资源，不复制出一个同用途资源。Herdr Agent identifier 受工具自身格式限制，不强加标签前缀；仍使用稳定、唯一且可定位的 Agent 名。
 
 人类需要查看的 Agent 可保留状态标记。内部基础设施若需隔离可见性，应在已授权的独立工作区或命名会话中运行；不要因为清空名字就假定隐藏状态。缺少必要布局时报告阻塞，不能塞入主窗格。每个执行包的可见监控仍须满足根规则。
 
-启动选择见 宿主 `.agents/lb.yaml`，用户明确选择只在候选范围内生效。先按敏感性过滤，再按任务需求选择模型；记录方案与部署依据。按 [配置契约](../../../docs/configuration.md) 解析本轮 runtime 参数；配置不授权其他仓库、发布或修改。默认包装命令不能据名字推断引擎或权限，必须检查实际进程。
+启动选择见 宿主 `lbkit-agents.yaml`，用户明确选择只在候选范围内生效。先按敏感性过滤，再按任务需求选择模型；记录方案与部署依据。按 [配置契约](../../../docs/configuration.md) 解析本轮 runtime 参数；配置不授权其他仓库、发布或修改。默认包装命令不能据名字推断引擎或权限，必须检查实际进程。
 
-派发执行 Agent 使用宿主 `.agents/lb.yaml` 声明的完整包装命令及参数，不以 `herdr agent start --kind` 的通用引擎替代。包装器若为 shell 函数，按 `runtime.herdr.shell` 在目标交互 shell 中核实其存在，再按当前 Herdr 接口启动；找不到就报告缺口。启动后核实实际模型和部署归属，再命名、交包及监听。删除已完成 worktree 时，可选择已声明的无工作树启动方案；不借此授权删除分支、fetch 或其他 Git 管理操作。
+派发执行 Agent 使用宿主 `lbkit-agents.yaml` 声明的完整包装命令及参数，不以 `herdr agent start --kind` 的通用引擎替代。包装器若为 shell 函数，按 `runtime.herdr.shell` 在目标交互 shell 中核实其存在，再按当前 Herdr 接口启动；找不到就报告缺口。启动后核实实际模型和部署归属，再命名、交包及监听。删除已完成 worktree 时，可选择已声明的无工作树启动方案；不借此授权删除分支、fetch 或其他 Git 管理操作。
 
 仓库信任门按根规则由协调者处理：弹窗路径核对为 logbook 已登记、当前任务已授权的仓库或其合法 worktree 后，默认接受 workspace trust，再重试原包装启动方案；未登记或不明路径不得自动接受。信任通过只解除启动门禁，不等于业务包已接收，也不扩大登录或审批权限。
 

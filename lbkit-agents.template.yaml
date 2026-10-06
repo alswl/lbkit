@@ -1,0 +1,28 @@
+version: 0.1.0
+# Copy to the consuming repository as lbkit-agents.yaml and fill only the
+# values that apply. null means the skill must ask when the value is needed.
+# Field meanings: .lbkit/docs/configuration.md (documents, runtime adapter and
+# launchers, limits, and the collaboration parameters below).
+documents:
+  adapter: markdown
+  project_root: projects
+  mind_forge_guide: null
+roles:
+  human_owner_label: null
+  coordinator_label: null
+runtime:
+  adapter: null
+  launcher: null
+  launcher_alternatives: []
+  herdr:
+    workspace_id_env: HERDR_WORKSPACE_ID
+    label_prefix: ^
+    shell: null
+    permission_mode: null
+browser:
+  profile: null
+auth:
+  recurring_login_hint: null
+limits:
+  wait_seconds: 30
+  review_rounds: null

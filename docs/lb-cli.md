@@ -48,6 +48,13 @@ bin/lb task note projects/example/docs/logbook.md \
 bin/lb task list projects/example/docs/logbook.md --human --json
 bin/lb task list --status in-progress --json
 bin/lb task next projects/example/docs/logbook.md --json
+
+# 可选的仓库根目录 lbkit-skills.json（JSON Schema：.lbkit/schemas/lbkit-skills.schema.json，文件首键 "$schema" 引用它，"version" 为格式版本，目前仅支持 0.1.0）：按工作类型登记技能链，字段 name、scope（使用范围）、chain、actions（动作前缀提示）、companions（随行技能：skill + when）、description
+bin/lb skills --json
+bin/lb skills --action 开发 --json
+bin/lb skills add --name 'speckit 功能实现' --scope '适用：…；不适用：…' --chain speckit-implement --action 开发 --companion 'comment-prune=实现完成、提交前' --dry-run
+bin/lb skills usage --since 2026-10-01   # Claude Code 与 Codex 会话里实际调用的技能；唯一读 --root 外（~/.claude、~/.codex）的命令，只统计工作目录落在日志登记目录或本仓内的会话
+bin/lb skills extract --json   # 技能未被任何条目（技能链或随行技能）覆盖的「技能：」子行原样列出，附待办原文、完成状态与回指它的工作包
 ```
 
 `--root` 默认为当前目录，可把每条路径限制在合成仓库或工作树内：
@@ -71,7 +78,7 @@ bin/lb --root /tmp/fixture context projects/demo/docs/log.md --json
 
 写入会在临时文件 fsync 后、`os.replace` 前再次检查 root containment 和源文件字节，随后才作同目录原子替换。这缩小常规并发编辑的覆盖窗口，但不是跨任意编辑器或恶意进程的 CAS/锁保证；冲突仍应以拒绝写入后重新读取 context 为准。
 
-路径在读取和写入时都会解析符号链接，目标必须仍位于 `--root` 内。编辑保持 UTF-8、原有 CRLF/LF 风格及所有未触及字节；`sync` 只改可确定状态的交付阶段 H2 emoji，空阶段、含 `[-]` 的阶段和未知状态不会被判完成。`[-]` 会在检查中报告为显式不适用/跳过记录，而不是未开始或批准信号。
+路径在读取和写入时都会解析符号链接，目标必须仍位于 `--root` 内。例外是只读的 `skills usage`：它读取 `~/.claude/projects` 与 `~/.codex/sessions` 的会话记录，只报告工作目录落在日志登记目录或本仓内的会话。编辑保持 UTF-8、原有 CRLF/LF 风格及所有未触及字节；`sync` 只改可确定状态的交付阶段 H2 emoji，空阶段、含 `[-]` 的阶段和未知状态不会被判完成。`[-]` 会在检查中报告为显式不适用/跳过记录，而不是未开始或批准信号。
 
 ## 检查、状态与限制
 
