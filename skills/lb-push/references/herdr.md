@@ -18,6 +18,8 @@
 
 派发执行 Agent 使用宿主 `lbkit-agents.yaml` 声明的完整包装命令及参数，不以 `herdr agent start --kind` 的通用引擎替代。包装器若为 shell 函数，按 `runtime.herdr.shell` 在目标交互 shell 中核实其存在，再按当前 Herdr 接口启动；找不到就报告缺口。启动后核实实际模型和部署归属，再命名、交包及监听。删除已完成 worktree 时，可选择已声明的无工作树启动方案；不借此授权删除分支、fetch 或其他 Git 管理操作。
 
+包装器为 shell 函数时的实际启动序列（2026-10-09 实测）：`herdr tab create --workspace <ws> --cwd <仓库根> --label '<前缀> <名>' --no-focus` 建出 shell pane，`herdr pane run <pane> '<函数名>'` 在该交互 shell 里启动包装器（`pane run` 原样送达，不做展开），随后 `herdr agent rename <pane-id> <名>` 命名（rename 接受 pane id 作为目标；名字未占用即可），`herdr agent read --source visible` 读 TUI 页脚核实实际模型，最后 `herdr agent prompt` 交包。codex 系常见的两个启动对话框由协调者处置：后台 daemon 的 feature-settings 冲突选「Run without daemon this time」（不改共享设置）；周限流的换模型建议选「Keep current model (never show again)」——周额度是账户级共享池，切模型不省量，选它只为不再被打断。
+
 仓库信任门按根规则由协调者处理：弹窗路径核对为 logbook 已登记、当前任务已授权的仓库或其合法 worktree 后，默认接受 workspace trust，再重试原包装启动方案；未登记或不明路径不得自动接受。信任通过只解除启动门禁，不等于业务包已接收，也不扩大登录或审批权限。
 
 ## 权限模式
