@@ -1,40 +1,40 @@
-# Logbook 生命周期
+# Logbook Lifecycle
 
-lb-* 入口服务同一份日志。遵守 [仓库边界](../AGENTS.md)，共用定义见 [协调](coordination.md)、[格式](logbook-format.md)、[证据](evidence.md) 与 [配置](configuration.md)；操作顺序由技能主文件及条件必读的 references 约束，不要求所有请求遍历全部流程。
+The lb-* entries serve the same logbook. Follow the [repository boundaries](../AGENTS.md); shared definitions live in [Coordination](coordination.md), [Format](logbook-format.md), [Evidence](evidence.md), and [Configuration](configuration.md). Operation order is constrained by each skill's main file and its conditionally required references; not every request needs to traverse the full flow.
 
-| 入口 | 职责 | 停止位置 |
+| Entry | Responsibility | Where it stops |
 |---|---|---|
-| [lb-plan](../skills/lb-plan/SKILL.md) | 核对人类目标、澄清、协作设计、任务拆分与就绪检查 | 可审阅的计划或准确缺口；不派发 |
-| [lb-push](../skills/lb-push/SKILL.md) | 核对当前授权、派发或恢复、监听与处理执行阻塞 | 授权终点、人工关口或严重卡点；授权内连续串行推进 |
-| [lb-update](../skills/lb-update/SKILL.md) | 核验证据、维护记录、记录人工决定及项目收尾 | 有依据的更新；不派发 |
-| [lb-status](../skills/lb-status/SKILL.md) | 观察日志和已授权的控制平面，维护少量状态片段 | 状态简报及局部差异；不改变验收结论或控制 Agent |
-| [lb-preflight](../skills/lb-preflight/SKILL.md) | 运行前全流程预检：路线规划与逐步只读可行性分析 | 机读预检档与 🔮 待讨论卡点；不派发，不解除卡点 |
+| [lb-plan](../skills/lb-plan/SKILL.md) | Verify human goals, clarify, design collaboration, split tasks, and check readiness | A reviewable plan or a precise gap; no dispatch |
+| [lb-push](../skills/lb-push/SKILL.md) | Verify current authorization, dispatch or resume, monitor, and handle execution blockers | End of authorization, a human gate, or a severe blocker; continuous serial progress within authorization |
+| [lb-update](../skills/lb-update/SKILL.md) | Verify evidence, maintain records, log human decisions, and close out projects | Grounded updates; no dispatch |
+| [lb-status](../skills/lb-status/SKILL.md) | Observe logbooks and the authorized control plane, maintain a few status snippets | Status briefs and local diffs; does not change acceptance verdicts or control agents |
+| [lb-preflight](../skills/lb-preflight/SKILL.md) | Full pre-run preflight: route planning and step-by-step read-only feasibility analysis | A machine-readable preflight report and 🔮 pending-discussion blockers; no dispatch, no unblocking |
 
-## 阶段与入口
+## Stages and Entries
 
-本仓只暴露 lb-* 协调入口；Spec Kit 的规格与实现流程留给业务仓库执行 Agent。本仓保留的 `.specify/` 材料仅供设计参考，不作为可执行协调流程，也不运行其 hooks。lb-plan 核对人类目标，起草待办供确认，不代写大段项目正文。执行阶段通过 lb-push 委派，回传与人工收尾通过 lb-update 处理。lb-status 可在任意阶段使用。计划质量检查证明准备程度，不证明交付完成。
+This repository only exposes the lb-* coordination entries; Spec Kit's spec and implementation flows are left to the project repository's executor agents. The `.specify/` material kept here is for design reference only — it is not an executable coordination flow, and its hooks are not run. lb-plan verifies human goals and drafts todos for confirmation; it does not ghostwrite large blocks of project prose. Execution is delegated through lb-push; returns and human close-out go through lb-update. lb-status can be used at any stage. A plan-quality check proves readiness, not delivered completion.
 
-生命周期不是日志的章节模板。`Stage 01` 等编号沿用真实项目的交付拆分，不机械写成“计划、推进、更新、状态”。复用有效产物，接管或断线恢复时不从头规划。
+The lifecycle is not a chapter template for logbooks. Numbers like `Stage 01` follow the real project's delivery breakdown; do not mechanically write "plan, push, update, status". Reuse valid artifacts, and do not plan from scratch when taking over or recovering from a disconnect.
 
-## 交接与变更
+## Handoffs and Changes
 
-- 目标、范围、依赖、归属或验收标准变化：lb-plan 明确影响与授权，将未确认提案和现行路径分开。
-- 准备就绪且本项获授权：lb-push 开始执行。计划存在、已展示或分析通过，均不自动授权启动。
-- 存在 🔮 待讨论项：lb-preflight 预检发现的卡点未经人类裁决前整本日志停止推进；人类在日志中改写或移除 🔮 后恢复。
-- 当前执行包回传：lb-push 可在同一次授权中使用 lb-update 的核验流程；不需要人类重新输入技能名，不另建一套验收规则。
-- 缺少证据或实现失败：lb-update 将缺口记录在原项。原工作包内已获授权的检查或返工可由 lb-push 继续；新范围另行确认。
-- 用户只请求更新或状态：不反向自动进入 lb-push。状态查询可按日志写入边界维护 emoji 和少量事实片段，不改复选框、验收结论或恢复执行；用户明确要求只读时不写文件。
-- 已批准拆分并收口：按 [拆分流程](../skills/lb-plan/references/planning.md#拆分与收口) 迁移阶段、绑定与写入入口；相关协调者收悉后向承接日志回传。原日志收口、阶段验收、整体目标达标分别记录，跳过和未完成事实保留。
-- 全部结果和适用的人工决定齐备：lb-update 记录项目完成。取消或异常终止如实记录，不能冒充交付成功；会话清理另按已授权的运行约定处理。
+- Goals, scope, dependencies, ownership, or acceptance criteria change: lb-plan states the impact and authorization, keeping unconfirmed proposals separate from the current path.
+- Ready and this item is authorized: lb-push starts execution. A plan existing, having been shown, or having passed analysis does not by itself authorize the start.
+- A 🔮 pending-discussion item exists: the whole logbook stops advancing until a human adjudicates the blockers found by lb-preflight; it resumes after the human rewrites or removes the 🔮 in the logbook.
+- The current work package is returned: within the same authorization, lb-push may use lb-update's verification flow; the human need not retype the skill name, and no separate acceptance rule set is created.
+- Evidence is missing or implementation failed: lb-update records the gap on the original item. Inspection or rework already authorized within the original work package can continue via lb-push; new scope requires separate confirmation.
+- The user only requests an update or status: do not automatically fall through into lb-push. A status query may maintain emoji and a few fact snippets within the logbook write boundaries, without changing checkboxes, acceptance verdicts, or resuming execution; when the user explicitly asks for read-only, no files are written.
+- A split has been approved and closed: migrate stages, bindings, and write entries per the [split flow](../skills/lb-plan/references/planning.md#拆分与收口); after the relevant coordinator acknowledges, report back to the receiving logbook. The original logbook's closure, stage acceptance, and overall goal attainment are recorded separately, preserving facts about skips and unfinished work.
+- All results and applicable human decisions are in: lb-update records project completion. Cancellations and abnormal terminations are recorded truthfully and must not masquerade as successful delivery; session cleanup follows the separately authorized runtime conventions.
 
-明确的授权不会因技能切换失效；授权范围也不会因切换而扩大。技能交接只传递任务身份、已有产物、证据及决定，不递归加载整个技能组合。
+Explicit authorization does not lapse on skill switches, nor does the scope of authorization widen because of them. A skill handoff passes only task identity, existing artifacts, evidence, and decisions — it does not recursively load the whole skill stack.
 
-## 状态分层
+## State Layering
 
-分别掌握授权、运行、工作包、验收四类事实。真实工具状态沿用控制平面原名；“工作包已回传”是协调判断，不是 Herdr 新枚举。`idle`、`done` 或 `blocked` 只触发检查回传，不自动改变验收结论。
+Keep four kinds of facts distinct: authorization, runtime, work package, and acceptance. Real tool state keeps its control-plane name; "work package returned" is a coordination judgment, not a new Herdr enum. `idle`, `done`, or `blocked` only trigger a verification pass-back; they never automatically change acceptance verdicts.
 
-项目日志是唯一调度依据；配套记录（mind-forge 中为 thinking）保存来源、授权、提案与交接；实时会话细节留在控制平面。交接至少可关联项目检查项、工作包与本次派发、负责人、授权依据、候选和证据。复用已有标识，无需为历史日志批量编号或建立第二套任务数据库。
+The project logbook is the sole scheduling authority; companion records (thinking in mind-forge) hold sources, authorizations, proposals, and handoffs; live session details stay in the control plane. A handoff must at least link the project checklist item, the work package and this dispatch, the owner, the authorization basis, the candidate, and the evidence. Reuse existing identifiers; there is no need to bulk-number historical logbooks or build a second task database.
 
-## 泛化边界
+## Generalization Boundaries
 
-技能流程适用于代码、报告和环境等成果，阶段与证据按实际项目选择。文档后端和运行适配器属于参数；授权、身份、证据、隔离和人类焦点不是可关闭选项。当前随包提供 markdown / mind-forge 文档适配与 Herdr 运行适配；其他运行环境未实现，不可声称自动支持。
+The skill flows apply to outcomes such as code, reports, and environments; stages and evidence are chosen per actual project. Document backends and runtime adapters are parameters; authorization, identity, evidence, isolation, and human focus are not switchable options. Markdown / mind-forge document adaptation and Herdr runtime adaptation ship with the kit today; other runtimes are unimplemented and must not be claimed as automatically supported.

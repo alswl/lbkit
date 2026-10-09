@@ -1,44 +1,44 @@
 ---
 name: lb-update
 version: 0.1.0
-description: 根据新证据或已确认决定核验并更新项目日志，处理格式修正、验收结果及人工收尾。不派发任务，不把口头完成声明直接勾选；目标变化由人类亲自写定，范围或验收设计变化用 lb-plan。支持普通 Markdown 与配置的文档后端。
+description: Verify and update the project logbook against new evidence or confirmed decisions, handling format fixes, acceptance results, and human wrap-up. Does not dispatch tasks, and never checks a box on a verbal completion claim alone; goal changes are written by the human personally, and scope or acceptance-design changes go to lb-plan. Supports plain Markdown and configured document backends.
 ---
 
-# 核验并更新日志
+# Verify and update the logbook
 
-mode 为 format（文档维护）、evidence（结果更新）或 close（记录项目收尾）。出现新的完成结论必须进入 evidence 核验，不能以 format 参数绕过。
+mode is format (document maintenance), evidence (result updates), or close (recording project wrap-up). Any new completion conclusion must go through evidence verification; it cannot be smuggled through the format mode.
 
-## 输入与前置条件
+## Inputs and prerequisites
 
-输入为日志位置、本次变更依据、候选与原始证据或明确的人类决定。开始前必须读取 [配置契约](../../docs/configuration.md)，解析 documents；写入前必须读取 [日志格式](../../docs/logbook-format.md) 和 [文档适配流程](references/document-adapters.md)。
+Input is the logbook location, the basis for this change, and candidates plus original evidence or an explicit human decision. Before starting you must read the [configuration contract](../../docs/configuration.md) and resolve documents; before writing you must read the [logbook format](../../docs/logbook-format.md) and the [document adapter workflow](references/document-adapters.md).
 
-evidence/close 还必须读取 [验收与收尾流程](references/verification.md) 及 [证据模型](../../docs/evidence.md)。缺少必要规则或证据时不改变完成结论；所缺内容不能由默认配置代替。
+evidence/close must also read the [acceptance and wrap-up workflow](references/verification.md) and the [evidence model](../../docs/evidence.md). Without the required rules or evidence, do not change completion conclusions; missing content cannot be replaced by defaults.
 
-已有待办首行文字不得改写、追加或删减，仅按证据更新复选框状态。任务下只补极简状态、阻塞或产物链接；过程、技术细节和详细证据放入对应 Thinking，不以格式整理或验收为由扩写首行或子项。
+The first line of an existing todo must never be rewritten, appended to, or trimmed — only update checkbox state per evidence. Under a task, add only minimal status, blocker, or artifact links; process notes, technical detail, and detailed evidence go into the corresponding Thinking. Never expand the first line or sub-items on format or acceptance grounds.
 
-## 必经流程
+## Required workflow
 
-1. 按 [CLI 读取流程](references/document-adapters.md#本仓-cli-调用) 获取当前日志的 `context --json`，同时重读原文和对应事项，核对版本与用户同期修改。原事项已改变或删除时先确认对应关系，不能按旧位置覆盖。
-2. 确定模式和影响：format 保护顺序、阈值、依赖、归属和完成语义；工作目录的机器归属或条目增删不是排版修正，需用户维护或确认；已确认条目仅按 [工作目录格式](../../docs/logbook-format.md#工作目录) 规范展示。范围或验收设计改变归 lb-plan，不当排版处理。总览及各阶段的「目标：」只由人类亲自写定；已有标题文字和编号不得改写，阶段状态 emoji 按规则同步除外。少量状态和事实片段的位置与表达由模型判断，不逐段确认；大段正文由人类编写，不重组章节或整页改写。
-3. evidence/close 按验收参考逐门核对身份、原始记录、独立检查和适用的合并或运行证据，判断通过、未通过、证据不足或待人工决定。根据交付类型选择身份，不强制所有结果都有提交或 PR。
-4. 写入完成状态前，逐项对齐当前任务的验收条件、候选身份和证明该候选通过的原始记录。候选或验收语义变化后，旧通过结论默认不支持新任务；新 token 只说明读到了新版文件，不证明新版已验收。缺少对应证据就保留未完成状态并说明缺口；证据充分且已有授权时直接完成更新，不重复索取确认。未合并不勾合入结果。
-5. close 核对最终成果、偏差、未结责任与人类决定。已有适用决定直接记录；缺少决定则待验收。取消记为取消，不伪装为成功，不清理进程。
+1. Follow the [CLI read workflow](references/document-adapters.md#本仓-cli-调用) to get the current logbook's `context --json`, re-read the source and the relevant items, and verify versions and the user's concurrent edits. If an item has changed or been deleted, first confirm the correspondence; never overwrite by stale position.
+2. Determine mode and impact: format protects ordering, thresholds, dependencies, ownership, and completion semantics; changing a working directory's machine ownership or adding/removing entries is not typesetting — the user must maintain or confirm it; confirmed entries are displayed per the [working directory format](../../docs/logbook-format.md#工作目录) spec. Scope or acceptance-design changes belong to lb-plan, not to typesetting. The 「目标：」 lines of the overview and each stage are written only by the human personally; existing heading text and numbering must not be rewritten, except stage-status emoji synced per the rules. The placement and wording of small status and fact fragments is left to the model, without per-fragment confirmation; large prose is written by the human — do not reorganize sections or rewrite whole pages.
+3. evidence/close checks each gate against the acceptance reference: identity, original records, independent checks, and applicable merge or runtime evidence; then judge pass, fail, insufficient evidence, or pending human decision. Choose identity by deliverable type; not every result requires a commit or PR.
+4. Before writing completion state, align item by item with the current task's acceptance criteria, the candidate identity, and the original records proving that candidate passed. After a candidate or acceptance-semantics change, an old pass conclusion does not by default support the new task; a new token only proves the new file version was read, not that it was accepted. Without matching evidence, keep the incomplete state and state the gap; with sufficient evidence and existing authorization, complete the update directly without re-asking. Unmerged means the merge result is not checked.
+5. close verifies final deliverables, deviations, open responsibilities, and human decisions. Record an existing applicable decision directly; without one, remain pending acceptance. Record cancellation as cancellation — never disguise it as success — and do not clean up processes.
 
-待办格式约束：保持线性执行路径；同一负责人交付同一结果的操作不拆项，负责人或验收关口变化时拆成顺序任务。已有清单的拆分须有确认依据，不借结果更新自行重排。一个任务只能由人或 Agent 负责，不能同时出现两种责任角色。责任仓库使用 `@仓库` 标记，置于任务文字末尾、责任角色 emoji 之前；写回时保持该顺序。
+Todo format constraints: keep a linear execution path; do not split an operation where one owner delivers one result — split into sequential tasks when the owner or the acceptance gate changes. Splitting an existing manifest requires a confirmed basis; never reshuffle under cover of a result update. A task is owned either by a human or by an agent, never both roles at once. Mark the responsible repository with `@仓库` at the end of the task text, before the responsibility-role emoji; preserve that order when writing back.
 
-交接产物约束：Agent 任务产生报告、测试入口、证据索引或复现说明时，在该 Agent 任务项下用缩进 4 个空格写一条极简产物路径；不得直接写入人负责的任务项，交接信息放在上一执行环节。缺少真实位置或无法确认内容身份时报告缺口，不编造路径、“最终版”或产物摘要；文件存在、产物行写入成功都不等于验收通过。
-6. 证据核验通过后用 CLI `task update --status x` 改状态，Agent 产物用 `task artifact`；任务下必要的简短事实可用 `task note`。每一步先预览差异，写入后重取 context/token 再执行下一步，最后 `sync` 并 `check`。主日志只保留状态、真实产物位置及必要的简短事实；SHA、逐样本检查记录等核验细节留在已有证据文件，不另加正文审计段落。人类负责项不添加 Agent 产物；只修格式不改完成状态。按文档适配流程处理脚本不支持的局部编辑。依 documents.adapter 执行文档写入和对应检查：markdown 不要求 prompt/thinking 或 mf；mind-forge 按绑定关系维护。保护私有反馈，报告检查失败或未验证项。仓库根目录有 `lbkit-skills.json`、而本次验收的任务用了清单里没有的「动作前缀 + 技能链」组合时，可在汇报中提议补录，经人类确认后用 `bin/lb skills add` 写入。
+Handoff artifact constraints: when an agent task produces a report, test entry point, evidence index, or reproduction instructions, write one minimal artifact path indented 4 spaces under that agent task item; never write directly into a human-owned task item — handoff information belongs to the previous execution stage. When the real location is missing or content identity cannot be confirmed, report the gap; never invent paths, "final versions", or artifact summaries. A file existing or an artifact line written successfully is not acceptance passed.
+6. After evidence verification passes, change status with the CLI `task update --status x`; use `task artifact` for agent artifacts and `task note` for necessary brief facts under a task. Preview the diff at every step, re-fetch context/token after each write before the next step, and finish with `sync` and `check`. The main logbook keeps only status, real artifact locations, and necessary brief facts; verification detail such as SHAs and per-sample check records stays in the existing evidence files — do not add a body-level audit section. Do not add agent artifacts to human-owned items; format-only fixes do not change completion state. Handle local edits the script does not support via the document adapter workflow. Perform document writes and the corresponding checks per documents.adapter: markdown requires no prompt/thinking or mf; mind-forge maintains bindings per its mapping. Protect private feedback, and report check failures or unverified items. When the repository root has `lbkit-skills.json` and an accepted task this round used an "action prefix + skill chain" combination absent from the manifest, you may propose adding it in the report; after human confirmation, write it with `bin/lb skills add`.
 
-整理技能清单（用户要求时）：
-- 计划来源：`bin/lb skills extract --json` 给出 `技能：` 原文、待办、是否完成及回指的工作包。
-- 实际来源：`bin/lb skills usage [--since 日期] [--json]` 列出 Claude Code 与 Codex 会话中实际调用的技能，只含工作目录落在日志登记目录或本仓内的会话；按时间、工作目录与参数对到工作包和待办。
-- 以实际用法为准：计划与实际不同按实际收录；未完成待办不收；日志维护、协调类技能（lb-*、herdr 等）不归入业务工作。
-- 每条按「工作类型」登记：`name` 语义化命名工作类型；`scope` 写「适用：…；不适用：…」，以工作性质区分，不以动作前缀或仓库名代替；`actions` 只列常见动作前缀；随主技能链顺带使用、不单独对应待办的技能（如实现后清理、进度核对、过程记录）写进 `companions`，每项注明 `when`；`description` 写给下一位协调者的背景：前置条件、怎么跑、限定与不用什么、来源日志或工作包。
-- 技能链可包含只存在于某个业务仓库内的技能（如其 `.claude/skills/`），在 `scope` 限定到该仓库，并在 `description` 写明仓库与技能路径；执行 Agent 须在该仓库内运行才能调用。
-- 整理结果先以表格交人类确认，再逐条 `skills add`。
+Organizing the skill manifest (when the user asks):
+- Plan source: `bin/lb skills extract --json` gives the `技能：` original text, the todo, completion state, and a back-reference to the work package.
+- Actual source: `bin/lb skills usage [--since <date>] [--json]` lists skills actually invoked in Claude Code and Codex sessions, covering only sessions whose working directory falls inside a logbook-registered directory or this repository; match them to work packages and todos by time, working directory, and arguments.
+- Actual usage wins: where plan and actual differ, record by actual usage; do not record incomplete todos; do not classify logbook-maintenance and coordination skills (lb-*, herdr, etc.) as business work.
+- Register each entry by "work type": `name` names the work type semantically; `scope` is written as 「适用：…；不适用：…」 (applies-to / not-for), distinguished by the nature of the work — not replaced by action prefixes or repository names; `actions` lists only common action prefixes; skills used incidentally along a main skill chain with no todo of their own (post-implementation cleanup, progress checks, process notes) go into `companions`, each with a `when`; `description` gives the next coordinator background: prerequisites, how to run it, limits and what not to use, and the source logbook or work package.
+- A skill chain may include skills that exist only inside a business repository (e.g. its `.claude/skills/`); scope it to that repository in `scope` and state the repository and skill path in `description`; the executor agent must run inside that repository to invoke it.
+- Present the organized result as a table for human confirmation, then run `skills add` entry by entry.
 
-## 交付与停止
+## Delivery and stopping
 
-说明更新、依据、未完成项及下一项负责人。需要跨仓采证或重验时报告所需回传，不自行调查或派发。
+Summarize the updates, the basis, incomplete items, and who owns the next one. When cross-repository evidence gathering or re-verification is needed, report what must be sent back; do not investigate or dispatch on your own.
 
-本入口不反向调用 lb-push，也不关闭 Agent 或服务。若来自当前已授权的执行流程，返回本次核验结果交由原流程判断是否仍在其授权范围内。
+This entry point does not call lb-push in reverse, nor does it close agents or services. If it was invoked from an already-authorized execution flow, return the verification result and let that flow judge whether it is still within its authorization.

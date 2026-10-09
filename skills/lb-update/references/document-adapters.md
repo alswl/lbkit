@@ -1,63 +1,63 @@
-# 文档读取、写入与检查
+# Document reading, writing, and checking
 
-lb-plan、lb-push、lb-update、lb-status 及 lb-preflight 写入前读取本流程。lb-* 入口读取已有日志时也使用下述 CLI 定位与检查流程；纯读取不执行写入、索引或构建步骤。按 [配置契约](../../../docs/configuration.md) 选择 documents.adapter，不从内容主题猜测存储工具。
+lb-plan, lb-push, lb-update, lb-status, and lb-preflight read this workflow before writing. lb-* entry points also use the CLI location and check workflow below when reading existing logbooks; pure reads never run write, index, or build steps. Choose documents.adapter per the [configuration contract](../../../docs/configuration.md); do not guess the storage tool from content subject matter.
 
-## 共用步骤
+## Shared steps
 
-1. 解析实际日志位置与关联记录；用户指定路径优先，多个候选不能随意挑选。只访问本次获准范围。写入前的定位与编辑一律使用 `readlink -f` 解析后的真实路径——仓库根的 CLAUDE.md 与 `.claude/skills/**` 常为符号链接，直接编辑会拒写或改错文件。
-2. 写入前重读目标区块和关联决定，保留用户同期改动及私有反馈。遵守 [日志格式](../../../docs/logbook-format.md)，不借排版改变任务语义或顺序；总览及各阶段的「目标：」与已有标题文字、编号保持原样，阶段状态 emoji 可按规则同步。
-3. 只修改有依据的差异，使用稳定身份和链接。需要额外记录时复用现有位置，不自动创建第二份任务队列；少量事实片段由模型判断位置和表达，不逐段确认；保留人类正文与章节结构。大段正文由人类编写，不能把重写拆成多次局部修改。
-4. 按改动影响完成所选适配器的检查，确认写前写后目标文字及已有标题文字、编号未变（阶段状态 emoji 除外），明确失败、跳过和不适用项。检查工具不可用时保留可审阅差异并报告验证缺口，不自动安装工具或声称验证通过。
+1. Resolve the actual logbook location and related records; user-specified paths win, and among multiple candidates none may be picked arbitrarily. Access only this round's approved scope. Before writing, always resolve locations and edits through the `readlink -f` real path — the repository root's CLAUDE.md and `.claude/skills/**` are often symlinks, and editing directly can be refused or hit the wrong file.
+2. Before writing, re-read the target block and related decisions, preserving the user's concurrent edits and private feedback. Follow the [logbook format](../../../docs/logbook-format.md); never change task semantics or order through typesetting. The 「目标：」 lines of the overview and each stage, existing heading text, and numbering stay as-is; stage-status emoji may be synced per the rules.
+3. Change only evidence-backed differences, using stable identities and links. Reuse existing locations for additional records; never auto-create a second task queue. The placement and wording of small fact fragments is left to the model, without per-fragment confirmation; preserve human prose and section structure. Large prose is written by the human and must not be split into multiple local rewrites.
+4. Run the chosen adapter's checks proportional to the change's impact, confirming the target text, existing heading text, and numbering are unchanged before and after the write (stage-status emoji excepted), and state clearly what failed, was skipped, or did not apply. When check tooling is unavailable, keep a reviewable diff and report the verification gap; never auto-install tools or claim verification passed.
 
-## 本仓 CLI 调用
+## CLI invocation in this repository
 
-本仓的结构化读取、检查与受支持写入使用 [bin/lb](../../../bin/lb)，命令与退出码见 [CLI 说明](../../../docs/lb-cli.md)。由 Agent 通过终端工具调用，不会因加载技能自动执行。协调者可运行此本仓文档工具；它不属于跨仓业务或采证脚本。旧入口 `python3 scripts/lb.py` 仍可用。
+Structured reads, checks, and supported writes in this repository use [bin/lb](../../../bin/lb); commands and exit codes are in the [CLI reference](../../../docs/lb-cli.md). It is invoked by agents through terminal tools and does not run automatically from loading a skill. The coordinator may run this repository's document tool; it is not a cross-repository business or evidence-gathering script. The legacy entry point `python3 scripts/lb.py` still works.
 
-从 logbooks 根目录运行以下命令；若当前目录不同，使用 `bin/lb` 的绝对路径，并显式传 `--root <获准日志根目录>`。root 是路径保护边界，不是授权来源，不能扩大到父目录来绕过访问拒绝。
-
-```sh
-bin/lb context '<日志相对路径>' --json
-bin/lb check '<日志相对路径>' --json
-```
-
-- 用户已指定日志时直接 `context`；尚未定位且允许发现宿主项目时才用 `list --json`，并把 `documents.project_root` 非默认值通过 `--projects-dir` 传入。多个候选不能自行选一个。普通 Markdown 指定路径不必先被发现。
-- 同时阅读日志原文及授权依据。`context` 返回阶段、任务原文、行号、目录和 `version_token`，不包含完整目标与授权；`next_task` 只是解析出的候选，未知状态、跳过记录或歧义须结合原文核实，不能据此自动跳项。`bound_records` 仅是正文链接，不能替代 mind-forge 元数据绑定。
-- `check` 在计划审查、状态核对及写后验证中使用，按本次目标日志检查，不默认 `--all`。退出 1 时读取问题明细，区分结构错误与未验证链接；它既不证明完成，也不授予修复或新增任务的权限，不必把无关历史问题当作当前任务阻塞。
-
-已有阶段 emoji、任务状态和 Agent 产物的写入使用对应子命令：
+Run the following commands from the logbooks root directory; if the current directory differs, use the absolute path of `bin/lb` and pass `--root <approved logbook root>` explicitly. The root is a path-protection boundary, not a source of authorization, and must not be widened to parent directories to bypass access denial.
 
 ```sh
-bin/lb sync '<日志相对路径>' --token '<version_token>' --dry-run --json
-bin/lb task update '<日志相对路径>' --stage '<阶段原文，不含状态 emoji>' --task '<完整任务原文>' --status / --token '<version_token>' --dry-run --json
-bin/lb task artifact '<日志相对路径>' --stage '<阶段原文，不含状态 emoji>' --task '<完整任务原文>' --artifact '产物：[报告](report.md)' --token '<version_token>' --dry-run --json
+bin/lb context '<logbook-relative-path>' --json
+bin/lb check '<logbook-relative-path>' --json
 ```
 
-已获人类确认新增事项和顺序时，用 `task add --stage <阶段原文> --text <获准待办文字> --token <version_token>`；简短事实用 `task note --stage <阶段原文> --task <完整任务原文> --kind <产物|阻塞|状态|交接> --text <内容> --token <version_token>`。两者同样先 dry-run，再执行写入。只读查看可用 `task list`（支持 `--stage`、`--status`、`--human`）或 `task next`；人工扫视视图首次用 `todo` 生成。新增待办的执行批准仍以日志及人类确认结果为准，命令可用不代表自动授权。
+- When the user has already specified the logbook, call `context` directly; use `list --json` only when the logbook is not yet located and discovering the host project is allowed, passing a non-default `documents.project_root` via `--projects-dir`. Never pick one of several candidates yourself. For plain Markdown a specified path need not be discovered first.
+- Read the logbook source and the authorization basis alongside. `context` returns stages, task original text, line numbers, directories, and `version_token`; it does not contain full goals or authorization. `next_task` is only a parsed candidate — unknown states, skip records, or ambiguity must be verified against the source; never auto-skip items based on it. `bound_records` are body links only and cannot replace mind-forge metadata bindings.
+- `check` is used for plan review, status verification, and post-write validation, targeting this round's logbook — not `--all` by default. On exit 1, read the problem details and distinguish structural errors from unverified links; it neither proves completion nor grants permission to fix or add tasks, and unrelated historical problems need not block the current task.
 
-先检查 dry-run 差异，再去掉 `--dry-run` 执行同一获准写入，无需为已有授权另问一次。`/` 仅在确认接收后使用；`x` 仅在 lb-update 核验证据通过后使用。工具接受其他状态不代表技能获准取消、跳过或重开任务。严格只读和 plan review 不调用写子命令，包括其 dry-run。
+Writes to existing stage emoji, task status, and agent artifacts use the corresponding subcommands:
 
-任务定位使用 `context` 的阶段与完整任务原文，行号只用于汇报。文本可能含反引号或 `$()`，须作为字面 argv 安全传入，不拼成会执行展开的 shell 字符串。每次成功写入后重取 `context` 和 token，再做下一次 `artifact`、`sync` 或状态修改；写命令不返回新 token，多步更新不是事务。重试前先核对已成功的步骤和已有产物行，避免重复追加。
+```sh
+bin/lb sync '<logbook-relative-path>' --token '<version_token>' --dry-run --json
+bin/lb task update '<logbook-relative-path>' --stage '<stage original text, without status emoji>' --task '<full task original text>' --status / --token '<version_token>' --dry-run --json
+bin/lb task artifact '<logbook-relative-path>' --stage '<stage original text, without status emoji>' --task '<full task original text>' --artifact '产物：[report](report.md)' --token '<version_token>' --dry-run --json
+```
 
-恢复多步更新时，先读回已成功的操作，只补剩余且仍适用的步骤。恢复 `artifact → sync` 不授权新增 `task update --status x`；只有另有当前候选的验收证据且本次授权包含验收，才进入完成状态更新。产物已存在不重新追加，文件存在不代替验收。
+When a human has already confirmed new items and their order, use `task add --stage <stage original text> --text <approved todo text> --token <version_token>`; for brief facts use `task note --stage <stage original text> --task <full task original text> --kind <产物|阻塞|状态|交接> --text <content> --token <version_token>`. Both dry-run first, then execute the write. Read-only inspection is available via `task list` (supports `--stage`, `--status`, `--human`) or `task next`; generate the human-scannable view with `todo` on first use. Execution approval for new todos still rests on the logbook and the human's confirmation; a command being available does not mean automatic authorization.
 
-退出 2 时按实际 CLI 接口纠正参数；退出 3 时核实路径与授权；退出 4 时重读原文和 context，重新判断事项、证据及修改是否仍适用。候选或验收语义变化时先回到验收流程核对证据，不能只换 token 和任务原文就重试勾选。任务消失或不唯一时停止该写入并说明缺口，不改用行号、正则或整页覆盖绕过拒绝。真实副作用未知时先读回文件。
+Check the dry-run diff first, then rerun the same approved write without `--dry-run` — no need to ask again for already-granted authorization. `/` is used only after confirmed receipt; `x` only after lb-update verifies the evidence. That the tool accepts other statuses does not mean the skill is authorized to cancel, skip, or reopen tasks. Strict read-only and plan review never call write subcommands, including their dry-run.
 
-`sync` 只改可确定的阶段 H2 emoji 和已由 CLI 接管的页首机读状态摘要，不改人类注释或普通事实片段，也不替代验收。新建日志和脚本不支持的局部正文仍按共用写入保护编辑；已确认新增待办、任务状态、产物和简短任务备注优先用受保护的子命令。不得因为 CLI 不支持就整页重写。脚本缺失、Python 不可用或格式无法解析时，保留可读原文的查询与审查，报告检查缺口；受支持的状态写入不能静默换通道绕过保护。外部普通 Markdown 后端不强制安装本仓脚本，按其原有文档适配与授权维护。
+Locate tasks by stage and full task original text from `context`; line numbers are for reporting only. Text may contain backticks or `$()` — pass it as literal argv safely, never assembled into a shell string that would expand. After every successful write, re-fetch `context` and the token before the next `artifact`, `sync`, or status change; write commands do not return new tokens, and multi-step updates are not transactions. Before retrying, verify which steps already succeeded and which artifact lines exist, avoiding duplicate appends.
+
+When resuming a multi-step update, read back the operations that already succeeded and complete only the remaining steps that still apply. Resuming `artifact → sync` does not authorize adding `task update --status x`; entering completion-state updates requires current-candidate acceptance evidence plus authorization that includes acceptance. Do not re-append an existing artifact; a file existing is not acceptance.
+
+On exit 2, correct arguments per the actual CLI interface; on exit 3, verify path and authorization; on exit 4, re-read the source and context and re-judge whether the item, evidence, and edit still apply. When candidate or acceptance semantics changed, return to the acceptance workflow to re-check evidence first — never retry the checkbox by merely swapping token and task text. When a task has vanished or is ambiguous, stop that write and state the gap; never bypass refusal with line numbers, regexes, or whole-page overwrites. When real side effects are unknown, read the file back first.
+
+`sync` changes only determinable stage H2 emoji and the page-top machine-readable status summary already owned by the CLI; it does not touch human comments or ordinary fact fragments, and it does not replace acceptance. New logbooks and local body edits the script does not support still follow the shared write protections; confirmed new todos, task status, artifacts, and brief task notes prefer the protected subcommands. Never rewrite whole pages because the CLI lacks support. When the script is missing, Python is unavailable, or the format cannot be parsed, keep query and review of the readable source and report the check gap; supported status writes must not silently switch channels to bypass protection. External plain-Markdown backends are not forced to install this repository's scripts; maintain them per their existing document adaptation and authorization.
 
 ## documents.adapter=markdown
 
-直接维护给定的普通 Markdown 日志。没有绑定的 prompt/thinking 就不创建它们；决策依据写入现有的相应阶段或用户指定记录。
+Maintain the given plain Markdown logbook directly. Do not create bound prompts/thinking when none exist; write decision rationale into the existing corresponding stage or a user-designated record.
 
-写后检查 Markdown 结构、本地链接、检查项顺序及语义是否符合本次变更。不运行 mf、不要求 minds.yaml、不构建或发布站点。只读模式不执行写后步骤。
+After writing, check Markdown structure, local links, checklist item order, and semantic fit with this change. Do not run mf, do not require minds.yaml, and do not build or publish a site. Read-only mode skips the post-write steps.
 
 ## documents.adapter=mind-forge
 
-从宿主 `lbkit-agents.yaml` 的 `documents.mind_forge_guide` 读取文档映射指南，并与当前环境的 mf-cli 技能一起定位规范文章、唯一绑定 prompt 及对应 thinking。指南缺失且无法在宿主仓库只读核实时咨询人类；元数据为准，project_root 只作发现范围，不硬编码项目名称或文件名。
+Read the document mapping guide from the host's `lbkit-agents.yaml` key `documents.mind_forge_guide`, and together with the mf-cli skill in the current environment, locate the canonical article, its uniquely bound prompt, and the corresponding thinking. If the guide is missing and cannot be verified read-only in the host repository, consult the human; metadata is authoritative, project_root is only a discovery scope — never hard-code project names or file names.
 
-保留用户内容；持久写作约束放 prompt，来源、决策及证据索引放 thinking，主日志保留结果。
+Preserve user content: persistent writing constraints go in the prompt, sources/decisions/evidence indexes go in thinking, and the main logbook keeps the results.
 
-获准拆分文章时，先按 lb-plan 确认迁移映射；同步新旧文章的唯一 prompt 绑定、范围约束和对应 thinking。历史证据可留在原账本并由新账本引用，不复制成第二份任务清单。手工创建文件后先预演再更新项目级 article index，读回 article show 的绑定及标题，检查相对链接。不要把索引默认的 draft/published 状态当作任务验收，也不要把自动推导的文件名标题当作人类已修改正文标题。
+When splitting an article is approved, first confirm the migration mapping per lb-plan; sync the unique prompt bindings, scope constraints, and corresponding thinking between old and new articles. Historical evidence may stay in the original ledger and be referenced by the new one; never duplicate it into a second task list. After creating files manually, rehearse first, then update the project-level article index; read back the bindings and titles from article show and check relative links. Never treat the index's default draft/published status as task acceptance, and never treat an auto-derived file-name title as a human-edited body title.
 
-检查按改动影响选择：emoji 和简短事实片段至少核对差异、关联事项与保护字段；术语、链接或文章结构发生变化时运行适用的术语检查、文章检查、索引或构建预演。无需为每次状态片段改动重跑完整链路；具体命令以当前 CLI 能力为准，不能猜测参数。
+Choose checks proportional to the change's impact: for emoji and small fact fragments, at minimum verify the diff, related items, and protected fields; when terminology, links, or article structure change, run the applicable term check, article check, index, or build rehearsal. No need to rerun the full chain for every status-fragment change; specific commands follow current CLI capabilities — never guess parameters.
 
-根指令、技能或普通 docs 的修改不属于项目文章，不因此运行 mf。真实构建、发布、提交、推送及外部工作项修改需要相应授权，适配器选择不授权这些副作用。
+Changes to root instructions, skills, or ordinary docs are not project articles; do not run mf for them. Real builds, publishes, commits, pushes, and external work-item changes require their own authorization; adapter choice authorizes none of these side effects.

@@ -1,25 +1,25 @@
-# 日志结构与写入约定
+# Logbook Structure and Write Conventions
 
-编辑前读取 [仓库边界](../AGENTS.md)。根据新证据改变完成状态时，必须执行 [lb-update](../skills/lb-update/SKILL.md) 的核验流程，并应用 [证据模型](evidence.md)；修改依赖或范围时应用 [协调规则](coordination.md)。总览及各阶段的目标文字只能由人类亲自写定，Agent 可提出建议但不能代写。
+Read the [repository boundaries](../AGENTS.md) before editing. Changing completion status based on new evidence requires running the [lb-update](../skills/lb-update/SKILL.md) verification flow and applying the [evidence model](evidence.md); changing dependencies or scope requires applying the [coordination rules](coordination.md). Overview and per-stage goal text is written only by the human personally; agents may suggest but never ghostwrite it.
 
-## 页面结构
+## Page Structure
 
-一份日志使用一个 H1，主体优先 H2。确需 H3 时先说明用途并取得人类确认，避免 H4。项目大段正文由人类编写；Agent 可维护术语、SKILLS、已授权目录、经确认的待办及少量事实片段，具体局部尺度由模型判断，不机械限制字数。目标文字仍由人类亲自写定。新建时适配 [日志模板](../skills/lb-plan/assets/logbook-template.md)，不机械保留不适用阶段。
+A logbook uses one H1, with H2 preferred for the body. When an H3 is truly needed, explain why and get human confirmation first; avoid H4. Large blocks of project prose are written by the human; agents may maintain terminology, SKILLS, the authorized directories, confirmed todos, and a few fact snippets — the model judges the local scale rather than mechanically counting words. Goal text is still written by the human personally. When creating a logbook, adapt the [logbook template](../skills/lb-plan/assets/logbook-template.md) instead of mechanically keeping inapplicable stages.
 
-已有各级标题的文字和编号由人类维护；Agent 不得为重排、润色或修格式改写。唯一例外是按状态规则更换交付阶段 H2 标题前的 emoji，标题其余部分不变。
+Existing heading text and numbering at all levels are maintained by the human; agents must not rewrite them for reordering, polishing, or formatting. The one exception is swapping the emoji before a delivery-stage H2 heading per the status rules — the rest of the heading stays unchanged.
 
-H2 顺序：总览 → 项目交付或验收阶段 → 确有额外信息的项目收尾章节。
+H2 order: Overview → project delivery or acceptance stages → a project close-out section only when there is genuinely additional information.
 
-- 总览依次记录目标、非目标、`SKILLS`、项目级链接和工作目录；不添加全局进度复选清单。`SKILLS` 只列项目执行需要调用的仓库外部技能，不列仓库内部技能；按技能名列出，可简注用途。不抄录技能正文，也不在此分配 Agent 职责。职责通过对应待办的责任仓库标记表达。进展、阻塞和决定使用所属阶段的现有位置，避免出现两份下一项；没有现成位置时可在对应事项附近补充简短事实，不因此新增章节或改写大段正文。工作目录默认包含本日志所属项目目录及其既有内容；本机或远程机器上的其他具体目录仅在用户明确批准后登记，执行、克隆、报告与候选产物不超出已登记目录。
-- 只有交付与验收阶段用 `Stage 01` 等编号，沿用已有真实规格或工作流的名称和顺序；说明章节不编号，总纲规格不重复成为交付阶段。
-- 阶段内依次写 H2 标题与状态、`目标：`、`相关链接：`、`待办：` 和验收清单。目标是一句可测试结果或阈值，不是步骤列表。
-- 事实更新优先放在对应事项或已有记录位置；模型自行判断简短状态句、证据引用及少量片段的表达和位置，不为每个标签或小片段索要确认。大段解释性正文、章节新增与重组交人类处理。配套记录（mind-forge 为 thinking）同样保持简洁，不借配套记录代写大段项目正文。
+- The Overview records, in order, goals, non-goals, `SKILLS`, project-level links, and the working directories; do not add a global progress checklist. `SKILLS` lists only repository-external skills the project needs to invoke, not in-repo skills; list them by skill name, with a brief purpose note if helpful. Do not copy skill bodies, and do not assign agent responsibilities here. Responsibilities are expressed through the owning-repository markers on the corresponding todos. Progress, blockers, and decisions use the existing places in their stages, avoiding two "next item" lists; when no natural place exists, a brief fact may be added near the relevant item, without adding sections or rewriting large prose because of it. Working directories include by default the project directory this logbook belongs to and its existing contents; other specific directories on the local or remote machines are registered only after explicit user approval, and execution, clones, reports, and candidate artifacts never exceed the registered directories.
+- Only delivery and acceptance stages use numbers like `Stage 01`, following the names and order of the existing real specs or workflows; explanatory sections are not numbered, and an umbrella spec does not double as a delivery stage.
+- Within a stage, write in order: H2 heading with status, `目标：`, `相关链接：`, `待办：`, and the acceptance checklist. The goal is one testable outcome or threshold, not a step list.
+- Fact updates go first to the corresponding item or an existing record location; the model judges the wording and placement of short status sentences, evidence references, and small snippets itself, without seeking confirmation for every label or fragment. Large explanatory prose, new sections, and restructuring go to the human. Companion records (thinking in mind-forge) stay concise too; do not use them to ghostwrite large blocks of project prose.
 
-具体变更项目在实现前有变更计划关口，明确仓库和文件、精确变更、排除项、依赖、负责人、检查者、回退与审批约束。调查是输入，环境验证和发布证据放在真正负责该结果的交付阶段。没有已有拆分时，按候选、回归、性能或生产证据、可靠性回退及人工决定等适用关口组织，不强迫报告项目部署。
+Concrete change items pass a change-plan gate before implementation, specifying repositories and files, exact changes, exclusions, dependencies, owner, checkers, rollback, and approval constraints. Investigation is an input; environment verification and release evidence belong to the delivery stage actually responsible for that result. When no existing breakdown exists, organize by the applicable gates — candidate, regression, performance or production evidence, reliability rollback, human decisions — and do not force a reporting project through deployment.
 
-## 工作目录
+## Working Directories
 
-总览中的「工作目录：」固定为两级列表：一级只写 `local`（协调者所在机器）或 `remote \`机器名\``（一台远程机器一个分组）；二级每行只写一个用反引号包围的目录路径，缩进两个空格。同一路径即使在不同机器上存在，也必须分别列在各自机器下。
+The `工作目录：` block in the Overview is fixed as a two-level list: the first level holds only `local` (the coordinator's machine) or `remote \`machine-name\`` (one group per remote machine); the second level holds one backtick-wrapped directory path per line, indented two spaces. The same path existing on different machines must be listed separately under each machine.
 
 ```md
 工作目录：
@@ -30,44 +30,44 @@ H2 顺序：总览 → 项目交付或验收阶段 → 确有额外信息的项�
   - `~/ws/example.org/sample-app`
 ```
 
-目录路径使用该机器上的绝对路径或 `~/` 开头的 home 相对路径；`~` 始终指该分组机器的用户 home。路径写到获准的目录根，不写文件、通配符、仓库简称或未解析变量，末尾不加 `/`。不要在列表项里混入用途、状态或权限说明；必要说明放在列表外。没有目录的机器不列空分组。本日志项目目录默认在范围内，无须作为机器路径重复列出；若没有其他目录，整块固定写为 `工作目录：无额外目录（仅本日志项目目录）`。
+Directory paths are absolute paths on that machine or home-relative paths starting with `~/`; `~` always refers to the user home of the machine in that group. Paths go down to the approved directory root — no files, globs, repository shorthands, or unresolved variables — and no trailing `/`. Do not mix purpose, status, or permission notes into list items; necessary notes go outside the list. A machine with no directories gets no empty group. This logbook's project directory is in scope by default and need not be repeated as a machine path; if there are no other directories, the whole block reads exactly `工作目录：无额外目录（仅本日志项目目录）`.
 
-格式统一不等于授权扩大：新目录、删目录、换机器归属都须由用户维护或确认；仅对已确认条目补反引号、统一缩进或去掉末尾 `/`，且机器与实际目录身份不变时，才属于排版修正。旧日志未迁移前按原记录核实机器归属；不能凭本格式推定裸路径属于 `local` 或某台远程机器。
+Formatting normalization is not authorization expansion: adding directories, removing directories, and changing machine ownership are maintained or confirmed by the user. Only adding backticks to confirmed entries, unifying indentation, or removing a trailing `/` — with machine and actual directory identity unchanged — counts as a formatting fix. For old logbooks not yet migrated, verify machine ownership from the original records; this format alone must not be used to presume that a bare path belongs to `local` or to some remote machine.
 
-## 检查项与归属
+## Checklist Items and Ownership
 
-待办可由 Agent 起草，经人类确认后写入。同一负责人交付同一结果的操作不拆项；负责人或验收关口变化时拆成顺序任务，仍按清单顺序串行推进。
+Todos may be drafted by agents and written in after human confirmation. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, still advancing serially in checklist order.
 
-已有待办的第一行文字由人类维护，Agent 不得改写、追加或删减，包括措辞、技能名、链接、责任标记和任务 emoji；仅复选框状态可按对应技能及证据规则更新。**末尾标 `👱` 的人工项与 `人工验证：` 前缀项的复选框状态只能由人类亲自更新**：Agent 不得勾选、取消或回退，哪怕证据充分（合并、审批等事实已发生也一样，Agent 只在正文记录事实不碰状态）。需改首行时在对话中提出建议，由人类修改。Agent 可在任务下补充极简状态、阻塞或产物链接；操作过程、技术细节、历史和详细证据放入对应 Thinking，不堆在主日志子项中。
+The first line of an existing todo is maintained by the human; agents must not rewrite, append to, or trim it — including wording, skill names, links, ownership markers, and the task emoji. Only checkbox status may be updated, per the owning skill and the evidence rules. **Checkbox status of items marked with a trailing `👱` or with the `人工验证：` prefix may only be updated by the human in person**: agents must not check, uncheck, or revert them, even with sufficient evidence (facts like merges or approvals having happened make no difference — the agent records facts in the body and never touches status). When the first line needs changing, propose it in conversation and let the human edit. Agents may add minimal status, blocker, or artifact links under a task; operation process, technical detail, history, and detailed evidence go into the corresponding Thinking, not piled onto main-logbook sub-items.
 
-每项描述一个可证明且持久的项目结果，使用且仅使用一个分类前缀：`设计：`、`开发：`、`测试：`、`部署：`、`验证：`、`人工验证：`。按结果分类，不按临时方法分类；不要另建分类标题。操作型工作流运行实例的执行动作用 `执行：` 前缀，不套用分类前缀。
+Each item describes one provable, durable project result and uses exactly one category prefix: `设计：`, `开发：`, `测试：`, `部署：`, `验证：`, `人工验证：`. Categorize by result, not by transient method; do not create separate category headings. Execution actions of operational workflow-run instances use the `执行：` prefix instead of a category prefix.
 
-待办两行制：首行一句短句（动作与对象），路径、技能名与授权边界放 4 空格缩进子行；技能自带流程（lint、索引登记、反馈处理等）不写。`🔀` 并行批次：复选框后标 `🔀` 的相邻任务默认构成一个可并发批次，无标记任务为串行关卡；判定须核对跨仓读写依赖（一项读、另一项写同一文件时不得并发）；波次细说明记 prompt/thinking，不进正文。
+Todos are two-line: the first line is one short sentence (action and object), with paths, skill names, and authorization boundaries on a 4-space-indented sub-line; the skill's built-in routines (lint, index registration, feedback handling) are not written out. `🔀` parallel batches: adjacent tasks marked `🔀` after the checkbox form one concurrency batch by default, and unmarked tasks are serial gates; the judgment must check cross-repository read/write dependencies (when one reads and the other writes the same file, they must not run concurrently); detailed wave notes go into prompt/thinking, not the body.
 
-检查项默认由 Agent 执行，不加归属标记。人类负责的事项在末尾标 `👱`，或使用 `人工验证：` 前缀。历史日志中的 `🤖️` 按 Agent 归属解读，不必迁移删除。
+Checklist items are agent-executed by default, with no ownership marker. Human-owned items carry a trailing `👱` or the `人工验证：` prefix. `🤖️` in historical logbooks reads as agent ownership; it need not be migrated or removed.
 
-等待人类登录等协助不自动转移原结果的归属：原项保持未完成并写明阻塞；只有明确将结果交由人类负责时才调整分类和归属标示。不得为了表达阻塞而未经确认新建任务。
+Waiting on human help such as a login does not automatically transfer ownership of the original result: the original item stays incomplete with the blocker noted; classification and ownership markers change only when the result is explicitly handed to the human. Do not create new tasks without confirmation just to express a blocker.
 
-未启动的项为 `[ ]`；执行 Agent 已接收且尚未验收的项为 `[/]`，包括执行中、阻塞、失败待处理或回传待验收。阻塞原因用简短文字记录，不将已接收项退回未启动。证据充分后由 lb-update 改 `[x]`，运行状态不能直接决定勾选。可行时将证据链接或不可变标识放在对应项附近，标记仍放在行末。实现步骤留在业务仓库的规格或任务中。Agent 任务完成产生产物时，在该项下加一行缩进 4 空格的清单子项，极简描述产物内容与位置（是什么、在哪）；产物路径优先写本地实际路径（如 `~/ws/...`），文件在本地不存在或需对外分享时才用远程链接，且应指向清理后仍存在的稳定位置——仅存在于 worktree 内的临时候选，worktree 删除前须转移归档或改指不可变身份（分支/PR/提交记录），防止产物行随 worktree 腐烂；sha、commit、会话与引擎细节不进正文，留在配套记录。交付 PR 的链接登记在所属阶段「相关链接」区。
+Items not started are `[ ]`; items an executor agent has taken but that have not yet passed acceptance are `[/]`, including running, blocked, failed pending handling, or returned pending acceptance. Blocker reasons are recorded in short text; accepted items are not pushed back to not-started. Once evidence is sufficient, lb-update sets `[x]`; runtime state alone never decides a checkbox. Where feasible, put the evidence link or immutable identifier near the corresponding item, with the marker still at end of line. Implementation steps stay in the project repository's specs or tasks. When an agent task completes and produces an artifact, add one checklist sub-item indented 4 spaces under that item, minimally describing the artifact's content and location (what it is, where it is); artifact paths prefer the actual local path (e.g. `~/ws/...`), with remote links only when the file does not exist locally or must be shared externally, and they should point to a stable location that survives cleanup — temporary candidates that exist only inside a worktree must be migrated and archived or re-pointed to an immutable identity (branch/PR/commit) before the worktree is deleted, so artifact lines do not rot with the worktree; shas, commits, session, and engine details stay out of the body and live in the companion records. Delivered-PR links are registered in the owning stage's `相关链接` section.
 
-## 状态与链接
+## Status and Links
 
-阶段标题只用 `🛫` 未开始、`🚧` 进行中、`✅` 已验收三种；`⚠️` 阻塞与 `⏳` 等人类决定记在所属项内、不进标题。阶段状态只由该阶段的待办决定：全部 `[x]` 为 `✅`，已有 `[x]` 或 `[/]` 但尚未全部完成为 `🚧`，全部 `[ ]` 为 `🛫`；存在任一 `[-]` 显式跳过记录时阶段不自动判 `✅`（`lb.py` 硬行为，跳过不等于自动通过），阶段保持 `🚧` 直到人类处置跳过行。若 PR 合并是完成条件，必须将合并明确列为待办并凭合并证据勾选；不能因阶段仅关联未合并 PR 就阻止其他阶段标 `✅`。
+Stage headings use exactly three statuses: `🛫` not started, `🚧` in progress, `✅` accepted; `⚠️` blockers and `⏳`-style human decisions are recorded on the owning items, not in headings. Stage status is decided only by that stage's todos: all `[x]` means `✅`; any `[x]` or `[/]` with some unfinished means `🚧`; all `[ ]` means `🛫`. If any `[-]` explicit-skip record exists, the stage is not automatically judged `✅` (hardcoded `lb.py` behavior — a skip is not an automatic pass), and the stage stays `🚧` until a human disposes of the skip line. If a PR merge is a completion condition, the merge must be listed explicitly as a todo and checked off with merge evidence; the fact that a stage is merely linked to an unmerged PR must not block other stages from being marked `✅`.
 
-日志若已有页首派生状态摘要（如 `> 状态：…`），当前阶段或阶段状态变化时用 `lb.py sync` 同步更新，不手改机读段；没有该摘要的日志不要自动新建。状态行以第一个 `——` 分界：前半为脚本维护的机读段（`状态：<emoji> <首个未验收交付阶段>[ · 🔮 待讨论 N 项 · 下一项：<待办原文>]`），非 emoji 开头的叙事整行视作人类正文不动；后半为人类注释。摘要只反映有序清单与阶段状态，不成为第二份任务队列或独立完成依据。
+If the logbook already has a derived status summary at the top (e.g. `> 状态：…`), use `lb.py sync` to update it when the current stage or a stage status changes; do not hand-edit the machine-readable segment, and do not auto-create the summary for logbooks without one. The status line splits at the first `——`: the first half is the script-maintained machine-readable segment (`状态：<emoji> <首个未验收交付阶段>[ · 🔮 待讨论 N 项 · 下一项：<待办原文>]`), and a narrative line not starting with an emoji is treated as human prose and left untouched; the second half is human commentary. The summary only mirrors the ordered checklist and stage statuses — it is not a second task queue or an independent completion basis.
 
-`🚨` 表示需要人类负责人处理、未处理则无法推进的计划外事项：放在事项正文最前面，并写明需要人类完成的具体操作及解除条件，对话汇报不能替代写回。计划中已标 `👱` 的人工待办是预期关口，靠清单勾选状态可见，不另标 `🚨`；执行者自处理中的阻塞、等待回传只记普通阻塞事实。`🚨` 解除后立即移除标记，原结果交付验收前仍保持未勾选。
+`🚨` marks unplanned items that need the human owner's handling, without which progress is impossible: place it at the very front of the item body, stating the exact action the human must take and the clearing condition; reporting in conversation does not substitute for writing it back. Human todos already marked `👱` in the plan are expected gates, visible through checklist status, and get no extra `🚨`; blockers an executor is handling itself, or waiting on returns, are recorded as ordinary blocker facts. Once `🚨` clears, remove the marker immediately; the original result stays unchecked until its delivery acceptance.
 
-`🔮` 表示 [lb-preflight](../skills/lb-preflight/SKILL.md) 依据可行性分析产出、并经人类确认写入的待讨论卡点，写在对应待办附近或其缩进子项（`- [ ] 🔮 待讨论：<一句话> @<仓库>`）。任一待办或其子项带 `🔮` 时整本日志不得推进：`bin/lb` 的全部写命令（`sync`、`task update`、`task artifact`、`task add`、`task note`）一律拒绝，`check` 报 `PREFLIGHT_BLOCKER`。解除方式只有人类在日志中亲自裁决（改写成普通待办、另行处理或移除）；`🔮` 不改变所属事项的验收语义，也不是 `🚨` 或 `⏳`，三者不互换。preflight 的机读汇总放在项目 `sources/<主日志文件名>-preflight.md`，是证据索引，不成为第二份任务清单。
+`🔮` marks pending-discussion blockers produced by [lb-preflight](../skills/lb-preflight/SKILL.md) from feasibility analysis and written in after human confirmation, placed near the corresponding todo or as its indented sub-item (`- [ ] 🔮 待讨论：<一句话> @<仓库>`). While any todo or sub-item carries `🔮`, the whole logbook must not advance: every write command of `bin/lb` (`sync`, `task update`, `task artifact`, `task add`, `task note`) refuses, and `check` reports `PREFLIGHT_BLOCKER`. The only way to clear it is the human adjudicating in the logbook in person (rewriting it as an ordinary todo, handling it separately, or removing it); `🔮` does not change the owning item's acceptance semantics and is neither `🚨` nor `⏳` — the three are not interchangeable. preflight's machine-readable summary goes to the project's `sources/<主日志文件名>-preflight.md`; it is an evidence index, not a second task list.
 
-关键链接放在使用它的阶段，项目级入口才放页首。`相关链接` 每行一个可访问 Markdown 链接，链接规划与交接要求见 [lb-plan](../skills/lb-plan/SKILL.md) 和 [lb-push](../skills/lb-push/SKILL.md)。不要放裸路径、裸编号或“待补”；缺失链接暂记已有配套记录。正文用稳定身份关联证据，不反复粘贴 URL。模板中的示例地址须替换或移除，不能当作实际证据。工作流运行实例的模板信息（`workflow`、`prev-run`、`skills` 等）放页首 front matter，正文不设 SKILLS 章节；「链接：」只登记本次运行的产出物（归档、PR、日报等），尚未产出时不写该块。
+Key links live in the stage that uses them; only project-level entries go at the top. `相关链接` holds one accessible Markdown link per line; link planning and handoff requirements are in [lb-plan](../skills/lb-plan/SKILL.md) and [lb-push](../skills/lb-push/SKILL.md). No bare paths, bare numbers, or "to be added" placeholders; for missing links, note the existing companion record for now. The body links evidence by stable identity instead of pasting URLs repeatedly. Sample addresses from templates must be replaced or removed and never count as real evidence. For workflow-run instances, template info (`workflow`, `prev-run`, `skills`, etc.) goes in the front matter at the top and the body has no SKILLS section; `链接：` registers only this run's outputs (archives, PRs, daily reports, etc.), and the block is omitted when nothing has been produced yet.
 
-## 写入保护
+## Write Protection
 
-写入前重读目标区块，保留用户修改和私有反馈。回传对应事项已被改写或删除时，先核对归属，不凭旧行号更新。
+Re-read the target block before writing, preserving user edits and private feedback. When the item a return corresponds to has been rewritten or deleted, verify ownership first — never update by a stale line number.
 
-写回以局部差异为单位，保留人类正文和既有结构。状态查询允许同步 emoji 和少量事实片段，不改复选框或验收结论；明确只读时不写入。模型自行判断哪些局部维护有必要，不能用多次小改累计重写大段正文。需要大范围调整时说明缺口并交人类编写。
+Write-backs happen as local diffs, preserving human prose and existing structure. Status queries may sync emoji and a few fact snippets but not checkboxes or acceptance verdicts; when read-only is explicit, nothing is written. The model judges which local maintenance is necessary; repeated small edits must not accumulate into rewriting large prose. For wide-ranging adjustments, state the gap and hand writing to the human.
 
-排版不得改变检查项顺序、阈值、依赖、归属或完成语义。顺序就是执行路径；用户要求此类语义变更时转入计划或证据核验，不能以润色为名偷偷完成。并行回传按原顺序更新，不按完成时间重排。
+Formatting must not change checklist order, thresholds, dependencies, ownership, or completion semantics. Order is the execution path; when the user requests such semantic changes, route them into planning or evidence verification — never sneak them through as polishing. Parallel returns update in their original order, not reordered by completion time.
 
-用短句、熟悉的词和简短列表，必要表格不超过三列。首次解释本地缩写和基准名，数字、阈值与标识保持准确。删除规格、工作包或链接证据已覆盖的叙述，不写“今天”“下一步行动”的会话流水账。按 [配置契约](configuration.md) 选择文档后端；mind-forge 的对应位置由宿主 `lbkit-agents.yaml` 的 `documents.mind_forge_guide` 指定，普通 Markdown 不强制创建配套目录。
+Use short sentences, familiar words, and short lists; tables, when needed, have at most three columns. Explain local abbreviations and benchmark names on first use; keep numbers, thresholds, and identifiers accurate. Delete narration already covered by specs, work packages, or linked evidence; do not write "today"/"next steps" session chatter. Choose the document backend per the [configuration contract](configuration.md); the mind-forge location is given by the host's `lbkit-agents.yaml` key `documents.mind_forge_guide`, and plain Markdown does not require creating a companion directory.

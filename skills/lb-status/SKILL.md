@@ -1,29 +1,29 @@
 ---
 name: lb-status
 version: 0.1.0
-description: 查看项目进展、执行者状态、阻塞与下一项，维护 emoji 和少量事实片段；发现上下文超过 80% 时交 lb-push 自动 GC。明确只读时仅报告，不改复选框或验收结论；深度计划审查用 lb-plan。
+description: Check project progress, executor status, blockers, and the next item, maintaining emoji and a few fact fragments; when context usage is found above 80%, hand off to lb-push for automatic GC. When the user explicitly asks read-only, report only — no checkbox or acceptance changes; deep plan review belongs to lb-plan.
 ---
 
-# 查看项目状态
+# Check project status
 
-mode 为 recorded（依据记录）或 live（加入获准的实时观测）。用户明确只看记录时用 recorded；普通进度查询若有可标识的已派发执行者，默认 live，否则依据记录。明确请求实时观测也用 live。查询能力不可用时报告“实时未知”，不修复运行环境。
+mode is recorded (per the records) or live (joining approved live observation). When the user explicitly wants records only, use recorded; for ordinary progress queries, default to live when an identifiable dispatched executor exists, otherwise recorded. An explicit request for live observation also uses live. When query capability is unavailable, report "live status unknown"; do not repair the runtime environment.
 
-观测模式与写入权限分开：recorded/live 均可维护 emoji 和少量事实片段；用户明确“只读/不修改”时不写任何文件。
+Observation mode and write permission are separate: both recorded/live may maintain emoji and a few fact fragments; when the user explicitly says "read-only / no changes", write no files.
 
-已有待办首行文字不得改写、追加或删减，本入口也不改复选框。任务下只补极简状态、阻塞或产物链接；观测过程和详细证据放入对应 Thinking，不堆在主日志子项中。
+The first line of an existing todo must never be rewritten, appended to, or trimmed, and this entry point never touches checkboxes. Under a task, add only minimal status, blocker, or artifact links; observation process and detailed evidence go into the corresponding Thinking, never piled into main-logbook sub-items.
 
-## 输入与前置条件
+## Inputs and prerequisites
 
-定位指定或唯一可识别的日志，读取 [配置契约](../../docs/configuration.md)。项目不唯一才澄清，不搜索业务仓库补上下文。运行态观测前读取 [观测流程](references/observation.md)；局部写入前读取 [日志格式](../../docs/logbook-format.md) 和 [文档适配流程](../lb-update/references/document-adapters.md)。同轮已读且未变的规范无需重复加载。
+Locate the designated or uniquely identifiable logbook and read the [configuration contract](../../docs/configuration.md). Clarify only when the project is not unique; do not search business repositories for context. Before live observation, read the [observation workflow](references/observation.md); before local writes, read the [logbook format](../../docs/logbook-format.md) and the [document adapter workflow](../lb-update/references/document-adapters.md). Specs already read this round and unchanged need not be reloaded.
 
-## 流程
+## Workflow
 
-1. 按 [CLI 读取流程](../lb-update/references/document-adapters.md#本仓-cli-调用) 对当前日志运行 `context --json`、`check --json`，并阅读原文、授权与相关回传，核实阶段及首项。脚本输出不代表实时进程或验收状态。
-2. live 模式用适配器只读接口查询指定执行者的状态与最近活动。区分历史记录与本次观测；单次快照不足以证明长期停滞，结合时间和输出判断。无法确认时如实标未知，不能把没有会话标识当成没有在跑的任务。
-3. 按问题范围核对阶段状态、事项证据及缺口，按日志格式同步派生 emoji，必要时维护简短状态或事实片段。具体局部尺度由模型判断，保护人类正文、目标、标题文字及清单顺序；不整页重写，不改复选框或验收结论。阶段 emoji 使用 CLI `sync`，携带当前 token 先预览再写入并检查；其他片段按局部写入保护维护。明确只读时仅报告差异，不调用 `sync`、`task update` 或 `task artifact`（包括 dry-run）。
-4. `idle`、`done` 或 `blocked` 不证明验收完成。live 观测同时检查上下文占用；超过 80% 时自动转交 lb-push 的会话 GC 流程，无需再次确认，不以账户额度或累计 token 代替上下文比例，未知则报告未知。明确只读时仅报告，不触发 GC。其他停滞或未交接回传报告依据及恢复条件；本入口自身不发送按键、任务，不新建监听，也不运行业务检查。
-5. 报告首个未勾选项、负责人和前置条件，不把更紧急的后项当作下一项，不因任务就绪自动派发。
+1. Per the [CLI read workflow](../lb-update/references/document-adapters.md#本仓-cli-调用), run `context --json` and `check --json` on the current logbook, and read the source, authorization, and relevant returns to verify stages and the first item. Script output does not represent live processes or acceptance state.
+2. In live mode, query the designated executor's status and recent activity through the adapter's read-only interface. Distinguish historical records from this observation; a single snapshot does not prove long-term stagnation — judge with time and output. When it cannot be confirmed, mark it unknown faithfully; never treat a missing session identifier as proof that nothing is running.
+3. Per the question's scope, verify stage status, item evidence, and gaps; sync derived emoji per the logbook format, maintaining brief status or fact fragments when needed. The exact local scale is left to the model, protecting human prose, goals, heading text, and manifest order; never rewrite whole pages, change checkboxes, or alter acceptance conclusions. Stage emoji use the CLI `sync` — carry the current token, preview, then write and check; other fragments follow local write protection. When explicitly read-only, report the diff only and never call `sync`, `task update`, or `task artifact` (including dry-run).
+4. `idle`, `done`, or `blocked` does not prove acceptance completion. Live observation also checks context usage; above 80%, hand off automatically to lb-push's session GC flow without re-confirmation — never substitute account quota or cumulative tokens for the context ratio, and report unknown when unknown. When explicitly read-only, report only and do not trigger GC. For other stalls or unreturned handoffs, report the basis and recovery conditions; this entry point itself never sends keystrokes or tasks, creates no listeners, and runs no business checks.
+5. Report the first unchecked item, its owner, and its prerequisites; never present a more urgent later item as the next one, and never auto-dispatch just because a task is ready.
 
-## 输出与停止
+## Output and stopping
 
-按问题给出简报；涉及运行状态时包含执行者名称和 workspace/tab/pane、观测时间或最近活动、阻塞及下一动作。单问一个事实不强制完整模板，不报告焦点。若有局部写入，简述改动及未验证项；除上述自动 GC 外，纯查询不反向进入验收或推进流程。人类负责人需要人工扫视日志时，可用 `bin/lb todo` 在日志旁首次开启 TODO.md 人工视图（🚨/👱/下一项/进行中），开启后写命令自动刷新，详见 [CLI 说明](../../docs/lb-cli.md)。只读筛选待办可用 `bin/lb task list`，下一项用 `bin/lb task next`；仍须结合日志原文核实调度语义。
+Give a briefing per the question; when runtime state is involved, include the executor name and workspace/tab/pane, observation time or recent activity, blockers, and the next action. A single factual question does not require the full template, and focus is not reported. If local writes occurred, briefly describe the changes and unverified items; apart from the automatic GC above, pure queries never reverse into acceptance or advancement flows. When the human owner wants a manual scan of the logbook, `bin/lb todo` can open the TODO.md human view (🚨/👱/next item/in progress) beside the logbook on first use; write commands auto-refresh it afterwards — see the [CLI reference](../../docs/lb-cli.md). For read-only todo filtering use `bin/lb task list`, and for the next item `bin/lb task next`; still verify scheduling semantics against the logbook source.

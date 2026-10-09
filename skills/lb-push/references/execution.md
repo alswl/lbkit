@@ -1,41 +1,41 @@
-# 执行、复核与恢复
+# Execution, Review, and Recovery
 
-派发、恢复或授权清理前读取。这里定义运行流程，工具命令由所选适配器提供；[仓库边界](../../../AGENTS.md) 与 [配置契约](../../../docs/configuration.md) 始终适用。
+Read before dispatching, resuming, or authorized cleanup. This file defines the operating process; tool commands come from the selected adapter. The [Repository Boundaries](../../../AGENTS.md) and the [Configuration Contract](../../../docs/configuration.md) always apply.
 
-## 运行适配器契约
+## Runtime Adapter Contract
 
-执行前核实所选适配器能提供：显式定位执行者、保持人类焦点、隔离执行空间、提交并确认任务、独立可见只读状态等待、关联本次派发的回传。缺一项就报告具体缺口，不虚构能力或用轮询冒充监听。
+Before execution, verify the selected adapter provides: explicit executor targeting, preserved human focus, an isolated execution space, task submission with receipt confirmation, independent visible read-only status waiting, and report-backs tied to this dispatch. Report the specific gap if any is missing; never fabricate capabilities or pass polling off as monitoring.
 
-当前提供 [Herdr 适配](herdr.md)，仅在 runtime.adapter=herdr 时必须读取并按其规则操作。其他环境必须提供可靠的适配文档与能力证据，不能自动切换；宿主仓库声明的可见监听要求不能被配置绕过。
+The [Herdr Adapter](herdr.md) is currently provided and must be read and followed only when runtime.adapter=herdr. Other environments must supply reliable adapter documentation and capability evidence; no automatic switching. The visible monitoring requirement declared by the host repository cannot be configured away.
 
-已存在且符合要求的会话可以复用，不为参数化而重启。新建或替换进程才要求解析 launcher；按需求从声明的候选中选择，command 和 args 原子替换，不混用旧参数。复用也须在发送材料前核对实际模型与数据边界；启动失败不授权直接调用其他模型。
+Existing sessions that meet requirements may be reused; do not restart just to re-parameterize. Only new or replaced processes require parsing a launcher; choose from the declared candidates per need, replacing command and args atomically without mixing in old parameters. Reuse still requires verifying the actual model and data boundary before sending material; a failed launch does not authorize calling some other model directly.
 
-## 派发闭环
+## Dispatch Loop
 
-1. 定位工作包、执行者、授权及隔离空间，确认输入与依赖就绪，原范围内的发布前置证据已经核查或明确安排。
-2. 将完整任务交给所属执行者，取得接收证明，观察真实状态。启动门禁与任务接收、业务执行分别汇报。
-3. 接收后建立独立可见监听并关联本次派发，完成监听就绪核实。运行成功但监听失败属于部分完成；修复监听，不重复提交业务任务。
-4. 状态等待每次不超过 limits.wait_seconds；这不是任务执行时限，也不因一次等待到期就杀掉执行者。每次等待结束后立即读取最新状态和输出：若已 `idle`、`done` 或 `blocked`，停止等待并处理回传或阻塞；若仍 `working`，报告新的命令、产物或证据，或报告确切的停滞依据。禁止在未刷新状态和输出时连续重复等待，也不得把一次 `working` 快照当作持续运行。保持人类可见进展。
-5. 收到回传交给 lb-update 的证据流程。缺口要关联原包；验收后重读日志，沿已有推进授权进入下一项；明确单项或批次终点、人工关口或严重卡点处停止，不把验收本身当作扩权。
+1. Locate the work package, executor, authorization, and isolated space; confirm inputs and dependencies are ready, and that release prerequisite evidence within the original scope has been checked or explicitly scheduled.
+2. Hand the full task to the owning executor, obtain proof of receipt, and observe real status. Report the launch gate, task receipt, and business execution separately.
+3. After receipt, establish independent visible monitoring tied to this dispatch and verify monitoring readiness. A successful run with failed monitoring is a partial completion; fix the monitoring, and do not resubmit the business task.
+4. Each status wait is at most limits.wait_seconds; this is not a task execution deadline, and one expired wait never justifies killing the executor. Immediately after each wait, read the latest status and output: if `idle`, `done`, or `blocked`, stop waiting and handle the report-back or blocker; if still `working`, report the new command, artifact, or evidence, or the concrete basis for calling it stalled. Never repeat waits without refreshing status and output, and never treat one `working` snapshot as continuous operation. Keep progress human-visible.
+5. Hand received report-backs to lb-update's evidence process. Tie gaps to the original package; after acceptance, re-read the logbook and move to the next item within the existing advancement authorization; stop at an explicit single-item or batch endpoint, a human gate, or a severe blocker — acceptance itself is not an authorization expansion.
 
-## 独立检查与有限返工
+## Independent Checks and Finite Rework
 
-需独立检查时，先由实施者固定候选，再把同一身份交给不同检查者。检查者不修改交付物，返回 pass、fail 或证据关联缺口。每次候选交给独立检查算一轮，首轮计入 limits.review_rounds；多个检查者审同一候选属于同一轮。
+When independent checks are needed, the implementer first fixes a candidate, then the same identity goes to different checkers. Checkers do not modify deliverables; they return pass, fail, or evidence-linked gaps. Each time a candidate goes to an independent check counts as one round; the first round counts against limits.review_rounds; multiple checkers reviewing the same candidate are one round.
 
-只把相关缺口回交实施者，新候选重验受影响结果；保留已用轮数。达到上限、缺少必要授权或出现重大取舍时停止并交人类，不能换技能、重启会话或拆新包逃避上限。`review_rounds` 约束的是候选交独立检查的轮次；同一 PR 的人工评审回归轮次（评审→修复→CI→回应）不消耗该额度，但同类评审反复无实质收敛时按停滞规则报告人类负责人，不无限回应。
+Return only relevant gaps to the implementer, and re-verify affected results with the new candidate; preserve rounds already used. Stop and hand to the human at the cap, when required authorization is missing, or on major tradeoffs — never dodge the cap by switching skills, restarting sessions, or splitting new packages. `review_rounds` bounds the rounds a candidate goes to independent check; human review rework rounds on the same PR (review → fix → CI → respond) do not consume that quota, but when the same kind of review repeats without substantive convergence, report to the human owner per the stalled rules instead of responding indefinitely.
 
-## 阻塞与恢复
+## Blockers and Recovery
 
-重试前通过控制平面或所属 Agent 核实已有候选、外部状态与未完成操作，避免重复副作用。CLI、MCP 或网络调用设置适用工具超时；limits.wait_seconds 不直接套作业务命令总时限。
+Before retrying, verify existing candidates, external state, and unfinished operations via the control plane or the owning agent to avoid duplicate side effects. Set applicable tool timeouts for CLI, MCP, or network calls; limits.wait_seconds does not directly cap total business command time.
 
-根据任务特点判断超时，通常以连续 10 分钟无有效进展为极限；有效进展应有新事实、命令结果、产物或证据，重复状态文字不重置计时。明确耗时的构建、测试按任务特点设置期限，不将 10 分钟当任务总时长。到限后核实现场、停止继续尝试并向人类报告，不因一次等待到期直接杀进程。
+Judge timeouts per the task's nature, usually with 10 consecutive minutes without effective progress as the limit; effective progress means new facts, command results, artifacts, or evidence — repeated status text does not reset the clock. For builds or tests of known duration, set deadlines per the task's nature; do not treat 10 minutes as the total task budget. At the limit, verify the scene, stop retrying, and report to the human; never kill the process just because one wait expired.
 
-缺少关键信息时由所属 Agent 在授权范围内调查；范围外信息或无法取得的关键输入咨询人类。外部平台的工作项状态等以平台实读为准，不做流程/必填字段类的推测性归因——实证是什么就报什么。偏离已确认方案可纠正后继续；方案本身方向错误、重大决策或范围变化时停止并交人类判断。常规恢复在已有授权内处理，不为恢复自动新建任务。
+When key information is missing, the owning agent investigates within authorization; consult the human for out-of-scope information or key inputs that cannot be obtained. For external platform work-item status and the like, trust an actual platform read — no speculative attribution about process or required fields; report exactly what the evidence shows. Deviation from the confirmed plan can be corrected and continued; when the plan itself is wrong in direction, on major decisions, or the scope changes, stop and hand to the human for judgment. Handle routine recovery within existing authorization; do not auto-create tasks for recovery.
 
-登录、身份、审批或上层拒绝直接交人类；更换工具或自动放行参数不是绕过批准的办法。需要提前安排登录时读取宿主 `lbkit-agents.yaml` 的 `auth.recurring_login_hint`；没有可靠提示就核对实际登录状态，不能推断固定失效节律。恢复执行前确认原任务仍获授权、候选和输入未失效、监听已重新就绪。
+Hand logins, identity, approvals, or upstream rejections straight to the human; switching tools or auto-approving parameters is not a way around approval. When login must be arranged in advance, read `auth.recurring_login_hint` from the host's `lbkit-agents.yaml`; without a reliable hint, check the actual login state — never infer a fixed expiry rhythm. Before resuming execution, confirm the original task is still authorized, the candidate and inputs are still valid, and monitoring is ready again.
 
-## 清理分支
+## Cleanup Branch
 
-明确请求清理时只处理获准会话或资源，不强制选择首个未勾选业务项，也不顺便派发任务。已完成 worktree 可由所属执行 Agent 删除，按根规则保护成果和用户改动，不因此获得删除分支等其他权限。会话与监控的保留、复用和清理由模型结合未结责任及上下文价值判断。
+When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. A completed worktree may be deleted by the owning executor agent, protecting deliverables and user changes per the root rules — this grants no other permissions such as branch deletion. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
 
-异常关闭或人类要求终止时，先保存交接、未完成责任与恢复条件。会话关闭、任务失败、项目取消和交付完成分别记录；组管理不自动包含旧服务清理。
+On abnormal shutdown or a human-requested termination, first save the handoff, open responsibilities, and recovery conditions. Record session closure, task failure, project cancellation, and delivery completion separately; managing a group does not automatically include cleaning up old services.

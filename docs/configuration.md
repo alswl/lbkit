@@ -1,87 +1,87 @@
-# 配置与调用参数契约
+# Configuration and Invocation Parameter Contract
 
-lb-* 技能使用宿主仓库根目录的 `lbkit-agents.yaml`（旧版位于 `.agents/lb.yaml`，内容不变，升级时移到根目录即可），由技能按本契约读取和解释；宿主称谓、Herdr、浏览器与登录提示等协作参数也在同一文件，见下文「协作参数」。本文件不声明存在自动加载或执行配置的后台程序。配置用于选择实现和补齐默认值，不授予权限；宿主仓库 `AGENTS.md` 的授权、隔离、焦点、监听和证据边界不能通过配置关闭。
+lb-* skills use `lbkit-agents.yaml` at the consuming repository root (older versions live at `.agents/lb.yaml`; content unchanged — just move it to the root when upgrading), read and interpreted by the skills per this contract. Collaboration parameters such as host titles, Herdr, browser, and login hints live in the same file; see "Collaboration Parameters" below. This file does not declare any background program that auto-loads or executes configuration. Configuration selects implementations and fills in defaults; it grants no permissions. The authorization, isolation, focus, monitoring, and evidence boundaries in the consuming repository's `AGENTS.md` cannot be switched off through configuration.
 
-## 默认值与本轮参数
+## Defaults and Per-Run Parameters
 
-每次调用先明确目标日志与操作模式，再解析本次会用到的字段。优先级：用户本次明确指定 → 当前获准工作包中明确记录的参数 → 仓库默认值。启动器覆盖只能选择已声明的候选，不能提供任意命令。只有符合当前授权和仓库硬约束的值才有效；不能通过把覆盖值写进工作包自行制造批准。
+Each call first pins down the target logbook and operation mode, then resolves the fields this run will use. Priority: explicit user specification this run → parameters explicitly recorded in the currently authorized work package → repository defaults. Launcher overrides may only pick declared candidates, never supply arbitrary commands. Only values matching the current authorization and the repository's hard constraints are valid; approval cannot be self-manufactured by writing override values into a work package.
 
-不存在隐式的额外项目配置文件、环境变量覆盖或“最新文件优先”。自然语言参数也要在本轮上下文中明确成同名字段与来源，影响后续交接的选择写入已有工作包或交接记录。普通调用不改仓库默认配置，lb-status 和只读规划尤其不能补写配置。
+There are no implicit extra project config files, environment-variable overrides, or "newest file wins". Natural-language parameters must also be made explicit within this run's context as same-named fields with sources, and choices affecting later handoffs are written into the existing work package or handoff record. Ordinary calls do not change repository default configuration; lb-status and read-only planning in particular must not write configuration back.
 
-映射按字段覆盖，列表整体替换。`runtime.launcher` 是原子值，覆盖时必须同时给出 `command` 和 `args`，不能把旧启动器参数拼给新命令。`runtime.launcher` 与 `launcher_alternatives` 共同构成可选范围；显式选择的 command + args 必须精确匹配其中一个方案，模型和部署元数据从该方案读取，不由调用方临时伪造。没有显式选择时按任务需求在该范围内选择并记录理由；同等适配时优先默认方案。不得自动故障切换。
+Mapping overrides field by field; lists are replaced wholesale. `runtime.launcher` is an atomic value — an override must supply both `command` and `args` together, and old launcher arguments are never spliced onto a new command. `runtime.launcher` and `launcher_alternatives` together form the selectable range; an explicitly chosen command + args must exactly match one of the options, and model and deployment metadata are read from that option, never improvised by the caller. Without an explicit choice, pick within the range per task needs and record the reason; prefer the default option when adaptability ties. No automatic failover.
 
-所有相对路径相对于被管理的仓库根目录，不是技能目录或当前 shell 目录。优先使用用户指定的现有日志，其次使用当前明确绑定的日志；`project_root` 只辅助发现，不把根目录当作具体项目。多个项目无法唯一确定时澄清，不扫描业务仓库。没有配置也可以处理唯一明确的现有普通 Markdown 文件；不能因此猜测运行适配器或启动命令。
+All relative paths resolve against the managed repository root, not the skills directory or the current shell directory. Prefer the user-specified existing logbook, then the currently explicitly bound logbook; `project_root` only aids discovery — the root is not itself a project. When multiple projects cannot be uniquely determined, clarify instead of scanning the project repository. Without configuration, a uniquely identified existing plain Markdown file can still be processed; that never licenses guessing the runtime adapter or launch command.
 
-## 字段
+## Fields
 
-| 字段 | 类型与含义 | 使用者 |
+| Field | Type and meaning | Used by |
 |---|---|---|
-| version | 语义化版本字符串，目前仅支持 0.1.0；旧写法 `schema: 1` 视同 0.1.0，读取时提示改写 | 读取配置的入口 |
-| documents.adapter | mind-forge 或 markdown；选择文档维护方式 | lb-* 入口的文档读取及获准写入 |
-| documents.project_root | 非空路径；本仓库为 projects，可覆盖为获准目录 | 需要发现项目的入口 |
-| runtime.adapter | 非空适配器名；当前随包提供 herdr | push；请求实时状态的 status |
-| runtime.launcher | 默认启动方案：command 非空字符串、args 字符串数组，以及下述模型元数据 | 需要新建或替换会话的 push |
-| runtime.launcher_alternatives | 同结构的候选方案数组；按需求选择，不自动依次试跑 | push |
-| limits.wait_seconds | 1–60 的整数；单次观察等待的上限，默认 30 秒，不是业务任务超时或停滞极限 | push 的等待步骤 |
-| limits.review_rounds | 正整数或 null；候选提交给独立检查的最大轮数，包含首轮 | plan 的检查设计、push 的复核控制、update 的回传判断 |
+| version | Semantic version string; currently only 0.1.0 is supported. The legacy `schema: 1` is treated as 0.1.0, with a rewrite prompt on read | Entries that read the configuration |
+| documents.adapter | mind-forge or markdown; selects how documents are maintained | Document reading and authorized writing by lb-* entries |
+| documents.project_root | Non-empty path; `projects` in this repository, overridable to an approved directory | Entries that need project discovery |
+| runtime.adapter | Non-empty adapter name; `herdr` ships with the kit today | push; status when requesting live state |
+| runtime.launcher | Default launch option: `command` a non-empty string, `args` a string array, plus the model metadata below | push when creating or replacing a session |
+| runtime.launcher_alternatives | Array of candidate options with the same structure; chosen per need, never auto-tried in sequence | push |
+| limits.wait_seconds | Integer in 1–60; the wait cap for a single observation, default 30 seconds — not a project-task timeout or stagnation limit | push's waiting steps |
+| limits.review_rounds | Positive integer or null; maximum rounds a candidate is submitted to independent inspection, including the first | plan's inspection design, push's review control, update's return judgment |
 
-`review_rounds: null` 表示未配置，不是无限循环，也不表示无需复核。需独立检查的当前工作包在派发前必须有有限轮数：可根据任务明确提出并随工作包获得确认；已有明确限制则直接沿用。不需要复核的任务不为填这个字段而创建检查者。轮数增加或重置不能由重启会话、切换技能、换候选自动产生。
+`review_rounds: null` means unconfigured — not an infinite loop, and not "no review needed". A current work package requiring independent inspection must have a finite round count before dispatch: it can be proposed explicitly per the task and confirmed along with the work package, or an existing explicit limit is carried over as-is. Tasks that need no review do not get checkers created just to fill this field. Round increases or resets never arise automatically from restarting sessions, switching skills, or changing candidates.
 
-启动命令与参数按 argv 使用，不当作 shell 片段拼接，不做 eval、命令替换或从材料推断秘密。实际调用语法以适配器工具文档为准。默认启动器的命名不证明其引擎或权限模式。
+Launch commands and arguments are used as argv — never spliced as shell fragments, no eval, no command substitution, no inferring secrets from materials. The adapter tool's documentation is authoritative for actual invocation syntax. The default launcher's name proves nothing about its engine or permission mode.
 
-## 协作参数
+## Collaboration Parameters
 
-以下字段同在 `lbkit-agents.yaml`，共享技能在需要这些值的步骤读取，不把模板值当作事实。安装器在文件不存在时复制 [模板](../lbkit-agents.template.yaml)，保留已有文件。
+The following fields live in the same `lbkit-agents.yaml`; shared skills read them at the steps that need the values and never treat template values as facts. The installer copies the [template](../lbkit-agents.template.yaml) when the file does not exist and keeps any existing file.
 
-| 字段 | 使用时机 |
+| Field | When used |
 |---|---|
-| `roles.human_owner_label`、`roles.coordinator_label` | 人类负责人和协调者的展示称谓；身份及授权仍以宿主 `AGENTS.md` 为准 |
-| `runtime.herdr.workspace_id_env` | 选用 Herdr 且需在协调者工作区创建标签页时，读取环境变量名 |
-| `runtime.herdr.label_prefix` | 新建 Herdr 会话、标签页和窗格的标签前缀；模板默认 `^`，宿主可按自身约定修改 |
-| `runtime.herdr.shell` | 包装启动器是 shell 函数、需要在交互 shell 中核实时 |
-| `runtime.herdr.permission_mode` | 宿主已授权自动放行时使用的工具模式；不能凭此字段扩大授权 |
-| `browser.profile` | 获准的浏览器工作确需指定 Agent 专用 profile 时 |
-| `auth.recurring_login_hint` | 已有可靠依据的登录节律提示；为空时不推测失效频率 |
-| `documents.mind_forge_guide` | 选择 mind-forge 文档适配器时，宿主提供的映射指南路径 |
+| `roles.human_owner_label`, `roles.coordinator_label` | Display titles for the human owner and the coordinator; identity and authorization still follow the consuming repository's `AGENTS.md` |
+| `runtime.herdr.workspace_id_env` | Environment variable name to read when Herdr is chosen and tabs must be created in the coordinator's workspace |
+| `runtime.herdr.label_prefix` | Label prefix for new Herdr sessions, tabs, and panes; the template default is `^`, which the host may change to its own convention |
+| `runtime.herdr.shell` | When the wrapped launcher is a shell function and must be verified inside an interactive shell |
+| `runtime.herdr.permission_mode` | Tool mode used when the host has authorized auto-approval; this field never widens authorization |
+| `browser.profile` | When authorized browser work genuinely needs an agent-specific profile |
+| `auth.recurring_login_hint` | Login-cadence hint with a reliable existing basis; when empty, do not speculate about expiry frequency |
+| `documents.mind_forge_guide` | Path to the host-provided mapping guide when the mind-forge document adapter is selected |
 
-路径相对宿主仓库根目录。不得从 `.lbkit/` 模板、别的宿主仓库、命令名或历史评测推断当前值。值缺失、为 `null`、与宿主规则冲突，或其真实性无法核实时，先在已有授权范围内只读核实；仍需该值才能继续，就向人类说明所需字段、用途和候选值，等待答复。可选值缺失时跳过依赖该值的提前准备，不阻塞无关工作。咨询结果影响后续工作时，由人类或获准维护规则的 Agent 写回宿主文件；不要写入共享模板。
+Paths are relative to the consuming repository root. Current values must not be inferred from `.lbkit/` templates, other repositories, command names, or past evals. When a value is missing, `null`, conflicts with host rules, or cannot be verified as genuine, first verify read-only within existing authorization; if the value is still needed to continue, tell the human the required field, its purpose, and candidate values, and wait for an answer. When an optional value is missing, skip preparations that depend on it instead of blocking unrelated work. When a consultation's outcome affects later work, the human or an agent authorized to maintain rules writes it back to the host file — never into the shared template.
 
-## 模型选择与数据边界
+## Model Selection and Data Boundaries
 
-每个候选方案还必须声明 `model`（非空实际模型标识）、`deployment`（internal / external / unknown）和 `suitable_for`（非空任务适配说明数组）。`suitable_for` 是选择提示，不代表已测得的能力排名；内部部署判断须有可信配置、平台说明或人类确认，不能仅由命令名、模型名或内部代理地址推断。未核实归属的方案标记 unknown。
+Every candidate option must also declare `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes). `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
 
-新建或复用会话前，先根据仓库规则、用户说明和实际输入确定数据敏感性，再过滤候选，最后比较任务所需推理深度、上下文规模、工具能力、时延和成本。敏感输入仅允许 internal；敏感性未知时也不能送给 external 或 unknown。跨仓任务按最严格输入要求选择。不能因本地 CLI 或代理而把外部部署方案改判为 internal。
+Before creating or reusing a session, determine data sensitivity from repository rules, user instructions, and actual inputs; filter candidates next; compare reasoning depth, context size, tool capability, latency, and cost last. Sensitive inputs go only to internal; when sensitivity is unknown, external and unknown are also off limits. Cross-repository tasks are chosen by the strictest input requirement. A local CLI or proxy never re-judges an external deployment as internal.
 
-在已有任务授权内选择合适的候选不必逐次询问模型；记录方案、理由、数据分级及部署依据即可。若无合适候选、归属不明或启动不可用，报告确切缺口，不直启 codex/claude、换代理或修改候选范围兜底。候选范围变更属于配置变更，不从普通任务授权推导。
+Choosing a suitable candidate within existing task authorization needs no per-instance model consultation; record the option, the reason, the data classification, and the deployment basis. If no suitable candidate exists, provenance is unclear, or launch is unavailable, report the exact gap — never fall back to directly launching codex/claude, switching proxies, or altering the candidate range. Changing the candidate range is a configuration change, not something derived from ordinary task authorization.
 
-模型边界同样覆盖评测样本、子 Agent、重试与恢复。复用会话须先核对实际模型及已有上下文的适用性，再提交材料；不为满足校验而先向不合规模型发送仓库内容。启动后、派发前核实实际模型、部署方案和权限参数，发现不符停止派发。
+Model boundaries equally cover eval samples, subagents, retries, and recovery. Before reusing a session, verify the actual model and the applicability of its existing context before submitting material; repository content is never sent to a non-compliant model to satisfy a check. After launch and before dispatch, verify the actual model, deployment option, and permission parameters; stop dispatch on any mismatch.
 
-### 包装启动器
+### Wrapped Launchers
 
-宿主仓库的 `AGENTS.md` 可以限定启动命令白名单。只读配置检查通过不证明服务可达、实际路由或敏感数据适用性。
+The consuming repository's `AGENTS.md` may whitelist launch commands. Passing a read-only configuration check proves nothing about service reachability, actual routing, or suitability for sensitive data.
 
-运行时传入任务、输出格式、恢复标识或禁用工具等参数，不得覆盖包装器绑定的模型、profile、provider 或代理；不得通过命令别名、附加参数、环境变量、隐藏子进程绕过候选与部署限制。包装器内部调用引擎不等于允许协调者直接调用引擎。
+Runtime parameters such as the task, output format, resume identifier, or disabled tools must not override the model, profile, provider, or proxy the wrapper binds; candidate and deployment limits must not be bypassed through command aliases, extra arguments, environment variables, or hidden subprocesses. The wrapper calling the engine internally does not authorize the coordinator to call the engine directly.
 
-## 缺失、冲突与校验
+## Missing Values, Conflicts, and Validation
 
-使用字段前必须校验结构、类型和取值。已存在的配置无法解析、版本不支持、字段拼写未知或值越界时，明确报告配置问题，不静默忽略或擅改默认值。只请求现有日志状态时，仍可明确降为已知文档的只读汇报，但不得宣称实时验证成功。
+Validate structure, types, and values before using fields. When existing configuration fails to parse, the version is unsupported, a field spelling is unknown, or a value is out of range, report the configuration problem explicitly — never silently ignore it or quietly change defaults. When only the recorded logbook status is requested, an explicit downgrade to a read-only report of known documents is still allowed, but real-time verification must not be claimed.
 
-无须运行工具的任务不要求启动器、等待或复核参数齐全；已有会话恢复也不强制新建会话。新建或替换执行进程前缺少有效启动器就停止该步骤。其他运行适配器没有随包实现：只有当前环境提供明确能力、参数映射和授权时才能接入，且仍须满足宿主仓库边界；宿主仓库明确要求 Herdr 可见监听时，不得自动降级为轮询或隐藏子进程。
+Tasks that need no tooling do not require launcher, wait, or review parameters to be complete; existing session recovery does not force a new session. If a valid launcher is missing before creating or replacing an execution process, stop that step. Other runtime adapters are not implemented in the kit: they can be adopted only when the current environment provides explicit capability, parameter mapping, and authorization, and the consuming repository boundaries still apply. When the consuming repository explicitly requires Herdr-visible monitoring, never auto-degrade to polling or hidden subprocesses.
 
-不要把授权确认、证据核验、工作树隔离、是否夺取焦点或是否启动监听做成布尔开关。目标、仓库、检查项、候选、证据、负责人及授权依据属于每次工作输入，不在默认配置中硬编码。
+Do not turn authorization confirmation, evidence verification, worktree isolation, focus stealing, or monitoring start into boolean switches. Goals, repositories, checklist items, candidates, evidence, owners, and authorization bases are per-run work inputs, not hardcoded defaults.
 
-## 本次操作模式
+## Per-Run Operation Modes
 
-mode 是入口的调用输入，不写进全局默认配置；可由明确请求推断，不要求用户记住参数名。
+mode is a call input to the entry, not part of the global default configuration; it can be inferred from an explicit request, so users need not memorize parameter names.
 
-| 入口 | 模式 | 关键边界 |
+| Entry | Modes | Key boundary |
 |---|---|---|
-| lb-plan | create / revise / review | review 只读；接管已有计划通常是 revise |
-| lb-push | advance / resume / cleanup | cleanup 只处理获准资源，不派发业务项 |
-| lb-update | format / evidence / close | 新完成结论必须走 evidence，不能用 format 绕过 |
-| lb-status | recorded / live | 显式 recorded 仅依据记录；有已派发执行者的普通进度查询默认 live，能力缺失时明确未知 |
-| lb-preflight | run | 只读预检与逐步可行性分析；卡点经人类确认回写 🔮；有 🔮 未决则整本日志停止 |
+| lb-plan | create / revise / review | review is read-only; taking over an existing plan is usually revise |
+| lb-push | advance / resume / cleanup | cleanup handles only authorized resources; it does not dispatch project items |
+| lb-update | format / evidence / close | New completion verdicts must go through evidence; format must not be used to bypass it |
+| lb-status | recorded / live | Explicit recorded relies on records only; an ordinary progress query with a dispatched executor defaults to live, and missing capability is reported as explicitly unknown |
+| lb-preflight | run | Read-only preflight with step-by-step feasibility analysis; blockers are written back as 🔮 after human confirmation; any unresolved 🔮 halts the whole logbook |
 
-status 的观测模式与写入权限分开：recorded/live 均可维护 emoji 和少量事实片段，明确要求“只读/不修改”时禁止写入。停滞通常以连续 10 分钟无有效进展为极限，按任务特点判断；不增加固定的任务总时长限制，也不将 wait_seconds 当作该极限。
+Status observation modes are separate from write permissions: recorded/live may both maintain emoji and a few fact snippets; when "read-only / no modifications" is explicitly requested, writing is forbidden. Stagnation is usually bounded by 10 consecutive minutes without effective progress, judged per the task's character; no fixed total task duration limit is added, and wait_seconds is not that limit.
 
-例如“普通 Markdown，日志是 notes/demo.md，只检查计划”对应 documents.adapter=markdown、显式日志位置和 lb-plan 的 review。无需新建 YAML 覆盖文件，也不能因此改变下一次调用的仓库默认值。
+For example, "plain Markdown, logbook at notes/demo.md, plan check only" maps to documents.adapter=markdown, an explicit logbook location, and lb-plan's review. No new YAML override file is needed, and repository defaults for the next call must not change because of it.

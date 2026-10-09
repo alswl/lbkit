@@ -1,41 +1,41 @@
 ---
 name: lb-plan
 version: 0.1.0
-description: 创建、接管、重新规划或只读审查项目日志，核对人类写定的目标并设计阶段、分工、依赖、验收清单和工作包；不代写目标、大段正文或改已有标题。不启动执行 Agent；纯文档更新用 lb-update，查询进展用 lb-status。适用于代码、报告和环境等交付。
+description: Create, take over, replan, or review read-only a project logbook; verify human-authored goals and design phases, division of labor, dependencies, acceptance checklists, and work packages; never ghostwrite goals or large prose bodies, and never alter existing headings. Does not launch executor agents; use lb-update for pure document updates and lb-status for progress queries. Applies to deliverables such as code, reports, and environments.
 ---
 
-# 规划项目日志
+# Plan the Project Logbook
 
-本流程交付可审阅计划，不派发执行。mode 为 create（新建）、revise（接管或修订）、review（只读审查），由请求及现有产物确定；review 不写任何文件。
+This workflow delivers a reviewable plan; it does not dispatch execution. The mode is create (new), revise (take over or amend), or review (read-only review), determined by the request and existing artifacts; review writes no files.
 
-## 输入与前置条件
+## Inputs and Preconditions
 
-输入包括目标或现有日志、操作模式、可用事实、用户决定及获准范围。不要求固定项目名称、阶段数、Agent 数量或技术栈。
+Inputs include goals or an existing logbook, the operation mode, available facts, user decisions, and the approved scope. No fixed project name, phase count, agent count, or tech stack is required.
 
-开始前必须读取 [配置契约](../../docs/configuration.md)，解析本轮 documents 和适用的 limits.review_rounds；读取 [规划流程](references/planning.md)、[工作包契约](../../docs/coordination.md) 和 [证据模型](../../docs/evidence.md)。缺失必要规范时停止依赖它的规划判断，报告缺口，不凭记忆补规则。
+Before starting, read the [Configuration Contract](../../docs/configuration.md), parse this round's documents and the applicable limits.review_rounds; read the [Planning Process](references/planning.md), the [Work Package Contract](../../docs/coordination.md), and the [Evidence Model](../../docs/evidence.md). When a required specification is missing, stop the planning judgments that depend on it, report the gap, and do not reconstruct rules from memory.
 
-写入前还必须读取 [日志格式](../../docs/logbook-format.md) 和 [文档适配流程](../lb-update/references/document-adapters.md)。只审查现有普通 Markdown 时不要求运行工具配置或 mind-forge。
+Before writing, also read the [Logbook Format](../../docs/logbook-format.md) and the [Document Adapter Process](../lb-update/references/document-adapters.md). When only reviewing existing plain Markdown, running tool configuration or mind-forge is not required.
 
-## 必经流程
+## Required Workflow
 
-1. 按 [CLI 读取流程](../lb-update/references/document-adapters.md#本仓-cli-调用) 定位唯一目标日志或获准的新建位置：已有路径用 `context --json`，必要时才用 `list --json`；审查已有日志运行目标文件的 `check --json`，并阅读原文。核对人类写定的总览及各阶段目标、非目标、成果与完成定义；目标缺失或最终交付冲突时提出建议并交人类亲自写定，不拼接为泛化目标，不从技术债反推使命。已有各级标题的文字和编号不得改写。
-2. 根据已有产物选择需要补充的层次：目标澄清建议、阶段依赖、分工边界、验收证据及适用的发布回退。技术实现留给所属业务仓库 Agent，报告项目不强制部署。
-3. 适配 [日志模板](assets/logbook-template.md)，保留真实项目结构；模板中的目标占位符不是授权 Agent 代写目标。大段项目正文由人类编写；Agent 可起草待办供确认，并按日志格式维护少量事实片段，不逐段索要确认。为当前结果准备 [工作包](assets/work-package.md)，记录实际采用的参数与来源。需独立检查时明确有限复核轮数，null 不能当无限循环。
-4. 将未确认新增、拆分或重排与现行路径分开。已有明确用户决定直接落实，不重复索取；已有事实不足时先读取获准记录；需要跨仓调查则交执行入口在已有授权内委派，范围外信息咨询人类。本技能不自行派发。
-5. 必须完成目标覆盖、依赖冲突、责任、验收可证明性、当前工作包完整性和授权检查，并收齐执行三要素：工作目录（本日志项目目录默认在范围内，其他目录经用户批准后按本机/远程机器两级列表登记）、Stage 划分、逐项待办清单。机器归属不明的目录不能擅自归为本机；按 [工作目录格式](../../docs/logbook-format.md#工作目录) 检查。根据风险与收益建议独立检查或增员，不自行启动 Agent。
+1. Following the [CLI Reading Process](../lb-update/references/document-adapters.md#本仓-cli-调用), locate the single target logbook or the approved new location: use `context --json` for existing paths and `list --json` only when necessary; when reviewing an existing logbook, run `check --json` on the target file and read the original text. Verify the human-authored overview and each phase's goals, non-goals, deliverables, and definition of done; when goals are missing or final deliverables conflict, propose suggestions and hand them to the human to author personally — do not stitch them into a generalized goal or infer a mission from technical debt. The wording and numbering of existing headings at every level must not be rewritten.
+2. Based on existing artifacts, choose which layers need supplementing: goal clarification suggestions, phase dependencies, division-of-labor boundaries, acceptance evidence, and applicable release rollback. Technical implementation is left to the owning business repository agent; report projects do not mandate deployment.
+3. Adapt the [logbook template](assets/logbook-template.md), preserving the real project structure; goal placeholders in the template are not authorization for the agent to ghostwrite goals. Large prose bodies are written by the human; the agent may draft todos for confirmation and maintain a small number of fact snippets per the logbook format, without requesting confirmation paragraph by paragraph. Prepare a [work package](assets/work-package.md) for the current result, recording the parameters actually used and their sources. When independent checking is needed, state an explicit finite number of review rounds; null must not be treated as an infinite loop.
+4. Keep unconfirmed additions, splits, or reorderings separate from the current path. Implement explicit user decisions directly without asking again; when existing facts are insufficient, first read approved records; for cross-repository investigation, hand it to the execution entry point to delegate within existing authorization, and consult the human for out-of-scope information. This skill does not dispatch on its own.
+5. Complete checks on goal coverage, dependency conflicts, responsibility, acceptance provability, current work package completeness, and authorization, and collect the three execution essentials: working directories (this logbook's project directory is in scope by default; other directories are registered in the local/remote machine two-tier list after user approval), Stage division, and an item-by-item todo list. Directories with unclear machine ownership must not be assumed local; check them per the [Working Directory Format](../../docs/logbook-format.md#工作目录). Recommend independent checks or additional staff based on risk and benefit; do not launch agents on your own.
 
-待办格式约束：已有待办首行文字由人类维护，Agent 不得改写、追加或删减；修订建议在对话中提出，由人类修改。新待办草案尽量用一个简洁、可验证的句子写清动作、结果和必要的范围/阈值，确认后方可新增。任务下只补极简状态、阻塞或产物链接；原因、过程、历史和详细证据放入对应 Thinking，不堆在主日志子项中。执行路径必须线性；同一负责人交付同一结果的操作不拆项，负责人或验收关口变化时拆成顺序任务。同一 Stage 内不要草拟两条完全相同的首句——CLI 写入按阶段标题+完整任务原文定位，同文任务的写命令会永久 ambiguous 拒绝，解围只能由人类改首行文字。一个任务只能由人或 Agent 负责，不能同时标两种责任。若 PR 合并是阶段或项目完成条件，须将合并写成明确待办，不以 PR 链接或隐性阶段状态规则替代。责任仓库使用 `@仓库` 标记，放在任务文字末尾、责任角色 emoji 之前，例如 `完成人工 Review 并合并 PR。 @sample-tests @sample-core 👱`。
+Todo format constraints: the first-line text of existing todos is maintained by the human; the agent must not rewrite, append to, or delete it — propose revision suggestions in conversation and let the human edit. Draft new todos as one concise, verifiable sentence covering the action, the result, and any required scope/threshold; only add after confirmation. Under a task, add only minimal status, blockers, or artifact links; causes, process, history, and detailed evidence go into the corresponding Thinking, not piled into main-logbook sub-items. The execution path must be linear; operations by the same owner delivering the same result are not split into separate items — split into sequential tasks when the owner or the acceptance gate changes. Within one Stage, do not draft two identical first sentences — CLI writes locate tasks by stage heading plus full task text, so write commands for identically worded tasks are permanently rejected as ambiguous, and only the human editing the first line can resolve it. A task has exactly one owner, human or agent; never mark both kinds of responsibility. If PR merge is a phase or project completion condition, write the merge as an explicit todo instead of relying on PR links or implicit stage-status rules. Mark the responsible repository with `@仓库` at the end of the task text, before the responsibility-role emoji, e.g. `完成人工 Review 并合并 PR。 @sample-tests @sample-core 👱`.
 
-交接产物约束：Agent 任务需要交给下一责任人验收时，在该 Agent 任务项下用缩进 4 个空格写一条极简产物路径；不得直接写入人负责的任务项，交接信息放在上一执行环节；不以摘要或提交号替代产物位置。
+Handoff artifact constraints: when an agent task needs to be handed to the next owner for acceptance, write one minimal artifact path indented 4 spaces under that agent task item; never write directly into a human-owned task item — handoff information goes under the previous execution step; do not substitute summaries or commit hashes for the artifact location.
 
-链接规划：关键结果优先使用长期可访问的 URL，包括工作项、PR 和已发布的单页 HTML，放在所属阶段的相关链接区。待办事项下的产物路径优先本地实际路径（`~/` 写法），文件不在本地或需对外分享时才用远程链接。尚未发布或归档的材料如实标明，保留既有证据位置，不编造链接；需要新增发布或归档任务时仍须人类确认。
+Link planning: prefer long-lived accessible URLs for key results, including work items, PRs, and published single-page HTML, placed in the owning phase's related links section. Artifact paths under todos prefer real local paths (`~/` style); use remote links only when the file is not local or must be shared externally. Label unpublished or unarchived material truthfully, keep existing evidence locations, and never fabricate links; adding new publish or archive tasks still requires human confirmation.
 
-6. create/revise 的待办草案先展示，确认后按文档适配流程写入并验证；现有 Stage 内新增已获确认的待办时使用 `bin/lb task add`，并核对其位置。目标、大段正文及已有标题文字和编号交人类编写，术语、SKILLS、已授权目录和简短事实可由 Agent 维护；缺少人类亲自写定的目标时保留草稿占位，不能作为可执行计划准出。写后运行目标日志的 `check --json` 并核对差异；检查通过不等于计划已获确认。review 仅报告问题位置、影响及建议，不调用写子命令、不保存提案或修改清单。
+6. For create/revise, show todo drafts first and write and verify them per the document adapter process after confirmation; when adding already-confirmed todos inside an existing Stage, use `bin/lb task add` and verify their position. Goals, large prose bodies, and existing heading wording and numbering are written by the human; terminology, SKILLS, authorized directories, and short facts may be maintained by the agent; when goals authored by the human are missing, keep draft placeholders — such a plan cannot pass exit as executable. After writing, run `check --json` on the target logbook and reconcile the diff; a passing check does not mean the plan is confirmed. review only reports problem locations, impact, and suggestions; it calls no write subcommands and saves no proposals or change lists.
 
-## 交付与停止
+## Delivery and Stop
 
-展示计划位置、目标、依赖顺序、验收门、当前首项和需人类决定的事项。明确观察事实、目标和未知，未就绪就报告具体缺口。
+Present the plan location, goals, dependency order, acceptance gates, current first item, and items requiring human decisions. Separate observed facts, goals, and unknowns; if not ready, report the specific gaps.
 
-准出要求：工作目录、Stage 划分与待办清单三要素已写入日志并经用户人工确认。用户亲自编写或修订计划即为确认；代理创建的计划需用户对展示结果明确确认，确认事实记入日志或配套账本。未达准出的计划停在计划层，不得进入执行。
+Exit criteria: the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user. The user writing or revising the plan personally counts as confirmation; for an agent-created plan, the user must explicitly confirm the presented result, and the confirmation fact is recorded in the logbook or its companion ledger. Plans short of the exit criteria stay at the plan layer and must not enter execution.
 
-计划存在、已展示或检查通过都不代表执行批准。结束本流程；推进只能进入获准的 lb-push 请求。
+A plan existing, being presented, or passing checks does not mean execution is approved. End this workflow; advancement may only proceed into an approved lb-push request.

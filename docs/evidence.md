@@ -1,31 +1,31 @@
-# 证据模型
+# Evidence Model
 
-这里定义多个技能共用的证据含义；核验顺序、失败处理和写回门槛由 [lb-update](../skills/lb-update/SKILL.md) 约束。协调者核对回传，原始调查与业务测试仍由所属 Agent 负责。
+This defines the shared meaning of evidence across skills; verification order, failure handling, and write-back gates are governed by [lb-update](../skills/lb-update/SKILL.md). The coordinator verifies returned results, while original investigation and project testing remain the responsibility of the owning agent.
 
-## 身份与适用性
+## Identity and Applicability
 
-一份证据关联验收门、候选的不可变身份、原始记录、检查结论，以及适用的时间和环境。身份随交付物选择：源码提交、报告固定版本或内容摘要、构建摘要、环境变更记录及观测时点；不要求所有项目都有 Git 提交、PR、部署或性能测试。
+A piece of evidence links an acceptance gate, the candidate's immutable identity, the original record, the inspection verdict, and the applicable time and environment. Identity follows the deliverable: source commits, a pinned report version or content digest, build digests, environment change records, and observation timestamps. Not every project has Git commits, PRs, deployments, or performance benchmarks.
 
-性能比较须核对候选、输入、平台、计时边界、缓存状态及进程模型；首次编译、热缓存 CLI 与常驻 HTTP 请求不能直接互推。小幅差异未经验证，不断言退化，也不直接归为噪声。
+Performance comparisons must verify candidate, inputs, platform, timing boundaries, cache state, and process model; a cold first compile, a warm-cache CLI run, and a resident HTTP request cannot be compared directly. Small differences are not asserted as regressions without verification, nor written off as noise outright.
 
-移动分支、口头总结、任务数、测试文件存在、进程空闲，均不足以证明验收。运行态可随时变化，其证据只能证明指定环境在指定时点的状态；不能把旧观测写成实时事实。
+A moved branch, a verbal summary, task counts, the existence of test files, or an idle process are not sufficient to prove acceptance. Runtime state can change at any moment, and evidence of it only proves the state of a given environment at a given point in time; old observations must not be written as current facts.
 
-证据不足与结果失败不同。候选、验收条件或环境变化可能使部分旧证据失效；历史事实仍保留，不拼接不同版本的通过结果，也不机械丢弃无关证据。
+Insufficient evidence is not the same as a failed result. Changes to the candidate, the acceptance criteria, or the environment may invalidate some older evidence; historical facts are retained, passing results from different versions are not stitched together, and unrelated evidence is not mechanically discarded.
 
-## 检查与结论
+## Inspection and Verdicts
 
-独立检查者与实施者不同，针对同一固定候选，只读验证原始记录，不代实施者修改交付物。检查结论为 pass、fail 或可执行缺口，并关联验收门；实际使用路径的验证比只读总结更有证明力。
+The independent checker differs from the implementer: for the same pinned candidate, it verifies original records read-only and does not modify deliverables on the implementer's behalf. The inspection verdict is pass, fail, or an actionable gap, and is tied to an acceptance gate; verification along the actual usage path carries more weight than a read-only summary.
 
-已被评论、报告或历史记录引用为证据的契约/报告文件，后续修订应沿用原文件名原位更新；确需改名时保留旧名重定向或在新位置注明承继关系，不用改名的"整洁"换取证据链断裂。
+Contract or report files already cited as evidence in comments, reports, or historical records should be updated in place under their original filename. If renaming is truly necessary, keep a redirect under the old name or note the succession at the new location; do not trade a broken evidence chain for the tidiness of a rename.
 
-证据形态也是验收门的一部分：明确要求 E2E、真实环境操作、质量报告或截图时，不能用代码检查、构建或静态分析降级替代。UI E2E 证据应覆盖关键操作及状态转换，截图数量由可复核的关键步骤决定，不以一张终态图代表整条路径。多个质量参与方共同验证时，每个参与方的有效报告都须可见，并能追溯到适用候选、原始记录与结论。前端页面类交付在勾选收口前，默认须由人类在本地 dev 实际看到运行效果，Agent 的静态描述与 DOM 断言不能替代这一次亲验。
+Evidence form is part of the acceptance gate too: when E2E, real-environment operation, quality reports, or screenshots are explicitly required, code inspection, builds, or static analysis cannot substitute at a lower bar. UI E2E evidence should cover key operations and state transitions; the number of screenshots is determined by the reviewable key steps, and a single final-state screenshot must not stand in for the whole path. When multiple quality participants verify jointly, each participant's valid report must be visible and traceable to the applicable candidate, original record, and verdict. Frontend page deliverables must, by default, be seen running in a local dev environment by a human before the checkbox is closed; static descriptions and DOM assertions from an agent cannot substitute for this first-hand check.
 
-评审记录、质量报告与截图等过程证据落协调仓（sources、thinking 与主日志产物行），不塞进业务仓代码 PR；业务仓 PR 只保留实现代码、必需测试与说明文档。
+Process evidence such as review records, quality reports, and screenshots lands in the coordination repository (sources, thinking, and artifact lines in the main logbook), not in the project repository's code PRs; a project PR keeps only implementation code, required tests, and explanatory docs.
 
-协调者的验收结论区分通过、未通过、证据不足、待人工决定。有限复核轮数由当前工作包及 [配置契约](configuration.md) 确定；技能切换不重置轮数。
+The coordinator's acceptance verdict distinguishes passed, failed, insufficient evidence, and pending human decision. The limited number of review rounds is set by the current work package and the [configuration contract](configuration.md); switching skills does not reset the count.
 
-## 合并与最终决定
+## Merging and Final Decisions
 
-项目有 PR 时，当前状态证据区分开放、关闭未合并和已合并。前两者均不满足合入门；候选与 squash/rebase 后提交可以不同，需要可靠对应关系。没有 PR 的结果依据自身验收门判断，不虚构合并门。
+When a project has PRs, current-state evidence distinguishes open, closed-unmerged, and merged. The first two do not satisfy the merge gate; the candidate and the post-squash/rebase commit may differ, so a reliable correspondence is required. Results without a PR are judged by their own acceptance gates; do not invent a merge gate.
 
-人工接受偏差是新的决定依据，不是原标准通过。项目完成、工作包验收、取消项目与关闭进程是不同事实。显示约定见 [日志格式](logbook-format.md)，实际收尾流程见 [验收与收尾](../skills/lb-update/references/verification.md)。
+A human accepting a deviation is a new basis for decision, not a pass under the original standard. Project completion, work-package acceptance, project cancellation, and process closure are distinct facts. Display conventions are in [Logbook Format](logbook-format.md); the actual close-out flow is in [Verification and Close-out](../skills/lb-update/references/verification.md).

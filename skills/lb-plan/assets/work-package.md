@@ -1,33 +1,33 @@
-# <工作包名称>
+# <Work Package Name>
 
-所属日志与检查项：<日志链接、阶段和事项原文或已有标识>
+所属日志与检查项：<logbook link, phase, and item original text or existing identifier>
 
-授权依据：<本轮已确认范围、允许动作与推进终点（持续推进、指定单项或批次）；未获准动作不包含在内>
+Authorization basis: <this round's confirmed scope, allowed actions, and advancement endpoint (continuous advancement, a designated single item, or a batch); unapproved actions are not included>
 
-负责人：<唯一执行 Agent>
+Owner: <the single executor agent>
 
-结果：<一个可证明的结果>
+Result: <one provable result>
 
-范围：<允许操作的资源；需要访问仓库时注明所属仓库与原仓库下的独立工作树>
+Scope: <resources allowed to operate on; when repository access is needed, state the owning repository and an independent worktree under the original repository>
 
-排除项：<明确不做的事项>
+Exclusions: <explicitly out-of-scope items>
 
-输入与权威来源：<已确认计划、固定候选、原始材料>
+Inputs and authoritative sources: <confirmed plan, fixed candidates, source material>
 
-本轮参数与来源：<仅记录实际覆盖的 documents/runtime/limits 字段；启动器 command + args 整体记录，复核上限包含首轮；不需要的配置字段不填写>
+This round's parameters and sources: <record only documents/runtime/limits fields actually overridden; record the launcher command + args as a whole; the review cap includes the first round; leave unneeded config fields blank>
 
-模型选择（需要 Agent 时）：<输入敏感性及依据；候选方案的 command + args、模型、部署归属与依据；按任务需求选择的理由；复用也须核对>
+Model selection (when an agent is needed): <input sensitivity and rationale; candidate options' command + args, model, deployment ownership, and rationale; why the choice fits the task; verify even when reusing>
 
-依赖与并行边界：<前置结果、共享资源、获准并行范围>
+Dependencies and parallelism boundaries: <prerequisite results, shared resources, approved parallel scope>
 
-交付物与证据：<位置、不可变身份、运行环境和原始记录格式>
+Deliverables and evidence: <location, immutable identity, runtime environment, and raw record format>
 
-完成条件：<客观验收标准>
+Completion criteria: <objective acceptance standards>
 
-检查者与复核：<独立检查者、同一候选、通过标准、最大轮数；无需检查时说明依据>
+Checker and review: <independent checker, same candidate, pass criteria, maximum rounds; state the rationale when no check is needed>
 
-阻塞与升级：<人工关口、关键输入缺口、重大决策或方向错误；按任务判断超时，通常连续 10 分钟无有效进展即停止继续尝试并报告>
+Blockers and escalation: <human gates, key input gaps, major decisions, or wrong direction; judge timeouts per the task — usually 10 consecutive minutes without effective progress means stop retrying and report>
 
-交接与会话：<回传后未结责任、保留理由、恢复触发条件及授权的关闭条件>
+Handoff and session: <open responsibilities after report-back, retention rationale, recovery triggers, and the authorization closure conditions>
 
-回传要求：状态、交付结果、候选身份、证据、剩余缺口、阻塞类别、受影响验收门和仍承担的责任。
+Report-back requirements: status, delivered results, candidate identity, evidence, remaining gaps, blocker category, affected acceptance gates, and responsibilities still held.

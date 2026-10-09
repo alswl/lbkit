@@ -1,58 +1,58 @@
-# 目标恢复与计划设计
+# Goal Recovery and Plan Design
 
-规划、接管或只读审查时读取。当前仓库约束来自 [AGENTS.md](../../../AGENTS.md)，本文件不授予额外调查或执行权限。
+Read when planning, taking over, or doing a read-only review. Current repository constraints come from [AGENTS.md](../../../AGENTS.md); this file grants no additional investigation or execution authority.
 
-## 恢复目标
+## Recover Goals
 
-先读取当前请求、原始任务、首次分工、已有日志和决定依据，优先使用明确的人类目标。不能从最新 CI 缺口、技术债或活跃进程反推使命。
+First read the current request, the original task, the first assignment, the existing logbook, and the basis for decisions; prefer explicit human goals. Do not infer a mission from the latest CI gaps, technical debt, or active processes.
 
-总览及各阶段的「目标：」由人类亲自写定；Agent 只核对、指出缺失或冲突、提出可审阅建议，不把建议写成日志目标。已有各级标题的文字和编号也由人类维护；状态同步仅可更换阶段标题前的 emoji。
+The overview's and each phase's 「目标：」 are authored by the human personally; the agent only verifies, points out gaps or conflicts, and proposes reviewable suggestions — it never writes suggestions into logbook goals. The wording and numbering of existing headings at every level are also human-maintained; status sync may only swap the emoji before a phase heading.
 
-有缺失或冲突时，利用已有授权向相关 Agent 核对原始提示与会话事实；不要求固定人数，不为了凑人数启动 Agent。最终交付存在实质冲突就说明冲突并交人类裁决，不能拼成宽泛项目。
+When something is missing or conflicting, use existing authorization to check original prompts and session facts with the relevant agents; no fixed headcount is required, and never launch agents just to fill a quota. If final deliverables substantively conflict, describe the conflict and hand it to the human to adjudicate — do not stitch them into a broad project.
 
-新发现的问题只有被明确纳入目标才成为验收门，否则作为证据、风险或待决定信息。需要调查时先核对已有授权，由执行入口在授权范围内委派；范围外的信息或调查咨询人类，不重复请求已获授权。
+Newly discovered issues become acceptance gates only when explicitly added to goals; otherwise treat them as evidence, risks, or pending decisions. Before investigating, verify existing authorization and let the execution entry point delegate within it; consult the human for out-of-scope information or investigation, and do not re-request already-granted authorization.
 
-## 适配项目类型
+## Adapt to Project Type
 
-从最终成果倒推阶段、依赖和证明方式，不固定行业或技术栈：
+Work backward from the final deliverable to phases, dependencies, and proof methods; no fixed industry or tech stack:
 
-- 源码变更：关联业务仓库规格、固定候选、适用测试；要求合入时才将 PR 合并列为明确待办，不用隐性合并门卡住已完成的阶段。
-- 报告或研究：固定内容版本、来源与结论核对、必要的人类审阅；不要强制部署或代码测试。
-- 环境交付：明确环境身份、观测时间、验证方法及适用回退；运行态证据不代表永久正确。
+- Code changes: link the business repository's specs, fixed candidates, and applicable tests; list PR merge as an explicit todo only when merging is required, and do not let an implicit merge gate block completed phases.
+- Reports or research: fix content versions, source and conclusion verification, and necessary human review; do not force deployment or code tests.
+- Environment delivery: define environment identity, observation times, verification methods, and applicable rollback; runtime evidence does not prove permanent correctness.
 
-沿用真实工作流名称和顺序，阶段数由结果决定。已有编号规格不改成固定生命周期标题。没有上线、发布或回退含义的项目不套这些步骤；有发布要求时提前设计其工作项、评审人、凭据等前置证据。
+Keep real workflow names and order; the phase count follows the deliverable. Do not convert existing numbered specs into fixed lifecycle headings. Projects with no release, publish, or rollback semantics do not get those steps; when release is required, design its work items, reviewers, credentials, and other prerequisite evidence in advance.
 
-## 计划与工作包
+## Plan and Work Packages
 
-计划必须使目标、非目标、任务责任、依赖、验收和证据、适用的发布回退及最终决定可恢复。责任由阶段待办和工作包明确，不另设「参与的 Agents」章节；总览的 `SKILLS` 列表只登记仓库外部技能，不承担角色分工。远期细节可以未知，当前要派发的包必须完整。采用 [工作包模板](../assets/work-package.md)，仅记录使用到的本轮参数和来源。
+The plan must make goals, non-goals, task ownership, dependencies, acceptance and evidence, applicable release rollback, and final decisions recoverable. Responsibility is made explicit by phase todos and work packages, with no separate "Participating Agents" section; the overview's `SKILLS` list only registers skills external to the repository and does not carry role assignment. Long-term details may be unknown; the package about to be dispatched must be complete. Use the [work package template](../assets/work-package.md) and record only the parameters and sources actually used this round.
 
-仓库根目录有 `lbkit-skills.json` 时，起草待办的 `技能：` 子行先读 `bin/lb skills --json` 全部条目，按每条的 `scope`（适用与不适用的工作）判断该待办属于哪类工作，`actions` 只作提示，不按动作前缀机械匹配；命中后按 `description` 的前置条件核对目标仓库；`companions` 是同一待办里按 `when` 顺带使用的技能，可写进同一 `技能：` 子行或工作包，不单拆待办。仅凭待办文字判断不了归属时（如某项是否属于 speckit tasks.md 的任务区间），先读对应工作包、tasks.md 或 thinking 再定，仍不能确定就不填并在草案中注明。随待办草案一起交人类确认。清单只是可选参考：没有清单或没有匹配时按原规则判断，查无依据不硬填。
+When `lbkit-skills.json` exists at the repository root, draft a todo's `技能：` sub-line by first reading all entries via `bin/lb skills --json`; judge which kind of work the todo belongs to by each entry's `scope` (the work it covers and excludes); `actions` is only a hint — do not match mechanically by action prefix; on a hit, check the target repository against the `description` prerequisites; `companions` are skills used incidentally within the same todo per `when` — write them into the same `技能：` sub-line or the work package rather than splitting out separate todos. When the todo text alone cannot determine ownership (e.g. whether an item falls in a speckit tasks.md task range), read the corresponding work package, tasks.md, or thinking first; if still undetermined, leave it blank and note it in the draft. Submit it with the todo draft for human confirmation. The list is only an optional reference: without a list, or without a match, judge by the original rules; do not force-fill when nothing supports it.
 
-主待办应尽量压成一个简洁、可验证的句子，保留动作、预期结果以及不可省略的范围和验收阈值；不要把背景、操作经过、历史故障或多条证据路径塞入句中，改放到该项的缩进子项或既有 thinking。精简不能抹掉授权边界、依赖或验收条件，同一负责人交付同一结果的操作不拆项；负责人或验收关口变化时拆成顺序任务，不据此并行。
+Compress the main todo into one concise, verifiable sentence preserving the action, expected result, and non-omittable scope and acceptance thresholds; do not stuff background, operation history, past incidents, or multiple evidence paths into the sentence — move them to that item's indented sub-items or existing thinking. Compression must not erase authorization boundaries, dependencies, or acceptance conditions; operations by the same owner delivering the same result are not split; split into sequential tasks when the owner or acceptance gate changes, and do not parallelize on that basis.
 
-待办起草分两路：`workflows/<工作流>/` 提供运行实例模板时，待办清单、阶段结构、目标模板句与裁定默认值从模板逐项填空——不自由起草、不改粒度、不增删人工关口，省下的确认轮次是模板的意义；无模板或目标/范围需变更才走本文件的通用起草。两行制、`执行：` 前缀与 `🔀` 批次定式按 [日志格式](../../../docs/logbook-format.md)，`🔀` 判定须核对跨仓读写依赖：不同仓之间一项读、另一项写同一文件，同样禁止并发。
+Todo drafting has two paths: when `workflows/<workflow>/` provides a run-instance template, fill in the todo list, phase structure, goal template sentences, and adjudication defaults from the template item by item — no free drafting, no granularity changes, no adding or removing human gates; the confirmation rounds saved are the whole point of the template. Only without a template, or when goals/scope must change, use the generic drafting in this file. The two-line format, the `执行：` prefix, and the `🔀` batch convention follow the [Logbook Format](../../../docs/logbook-format.md); `🔀` decisions must check cross-repository read/write dependencies: across different repositories, one item reading and another writing the same file is likewise barred from concurrency.
 
-重要交付在可行时设置独立检查者；检查范围、通过标准与有限轮数必须明确。需要复核但 rounds 尚未配置时，提出适合任务的上限并纳入工作包确认，不能把 null 当成无限循环。无需独立检查时说明依据，不为填配置而造任务。
+For important deliverables, set an independent checker when feasible; the check scope, pass criteria, and finite round count must be explicit. When review is needed but rounds are not yet configured, propose a task-appropriate cap and confirm it in the work package; null must not be treated as an infinite loop. When no independent check is needed, state the rationale; do not invent tasks just to fill configuration.
 
-只在独立工作、不同仓库或专业上下文、独立复核或实际瓶颈能覆盖协调成本时建议增加 Agent，附名称、范围、依赖与完成标准。不自行启动。
+Recommend adding an agent only when independent work, a different repository or specialized context, independent review, or an actual bottleneck justifies the coordination cost; attach name, scope, dependencies, and completion criteria. Do not launch it yourself.
 
-项目大段正文由人类编写，Agent 不以“方案已批准”为由代写。待办草案先在对话中展示，经确认后写入；术语、SKILLS、已授权目录与简短事实可按 [日志格式](../../../docs/logbook-format.md) 维护。
+Large prose bodies are written by the human; the agent must not ghostwrite them on the grounds that "the plan is approved". Present todo drafts in conversation first and write them only after confirmation; terminology, SKILLS, authorized directories, and short facts may be maintained per the [Logbook Format](../../../docs/logbook-format.md).
 
-新项目明确标草稿；目标尚未由人类写定时只留占位，不将草稿准出执行。已有项目的未确认新增、重排或范围变化放在提案里，不覆盖已确认路径；即使人类批准目标或已有标题变更，也由人类亲自改写对应文字。只读审查仅输出问题位置、影响和处理建议；不写提案文件或改清单。
+Mark new projects clearly as drafts; while goals have not been authored by the human, keep only placeholders and never let a draft exit into execution. For existing projects, keep unconfirmed additions, reorderings, or scope changes in proposals instead of overwriting the confirmed path; even when the human approves goal or heading changes, the human personally rewrites the corresponding text. Read-only review only outputs problem locations, impact, and handling suggestions; it writes no proposal files and changes no lists.
 
-## 拆分与收口
+## Split and Close Out
 
-用户明确要求拆分已有日志时，先确认阶段去向和哪份日志收口；已明确的选择直接落实，不重复索取任务授权。拆分是迁移现行计划，不是重新设计目标或重新验收。
+When the user explicitly asks to split an existing logbook, first confirm where phases go and which logbook closes out; implement explicit choices directly without re-requesting task authorization. A split migrates the current plan; it does not redesign goals or re-accept.
 
-1. 读取源日志、绑定的 prompt/thinking、引用入口及正在维护相关阶段的 Captain。按真实章节划分；总纲编号不等于存在同号 Stage，不补造缺失章节。
-2. 原样迁移获准阶段的标题、目标、清单顺序、责任、任务状态、产物和证据。核对拆分前后的逐项对应关系，不能漏项、复制出两份可执行清单，或把跳过改成通过；沿用原工作目录及机器归属。
-3. 原日志注明收口范围与后续入口，新日志注明来源、承接范围及原负责人。收口只结束这份日志的调度，不表示整个项目达标；保留偏差、未完成责任与人类决定，不为收口新增门槛或复核轮次。
-4. 按文档适配流程维护绑定与索引。历史账本保留并链接，新增回传转入承接日志；旧 prompt 的范围约束也要同步，不能让它继续要求维护已迁出的阶段。原目标与完成标准不代写，说明其跨日志适用范围。
-5. 写前重读并发改动，写后核对阶段内容、关键链接和状态仍存活，再对两份日志执行 context/check；不得用旧页整存覆盖其他 Captain 的新回传。
-6. 向获准通知的相关 Captain 交接旧/新日志、配套记录、责任和写入入口，核实实际主会话收到。未获通知授权时说明待交接对象；不得自行发信。通知不派发业务任务，不接管其他阶段。文档迁移完成与运行中的 Captain 已接收分别报告。
+1. Read the source logbook, its bound prompts/thinking, referenced entry points, and the Captains currently maintaining the relevant phases. Divide along real sections; master-plan numbering does not imply a same-numbered Stage exists — do not fabricate missing sections.
+2. Migrate approved phases verbatim: headings, goals, list order, ownership, task status, artifacts, and evidence. Verify item-by-item correspondence across the split — no dropped items, no duplicated executable lists, no turning skipped into passed; keep the original working directories and machine ownership.
+3. In the original logbook, note the close-out scope and the follow-up entry point; in the new logbook, note the source, the inherited scope, and the original owner. Close-out only ends this logbook's scheduling; it does not mean the whole project meets its goals. Keep deviations, unfinished responsibilities, and human decisions; add no new gates or review rounds for the close-out.
+4. Maintain bindings and indexes per the document adapter process. Keep and link historical ledgers; route new reports-back to the inheriting logbook; sync the old prompt's scope constraints too — it must not keep demanding maintenance of migrated phases. Do not ghostwrite original goals and completion criteria; state their cross-logbook applicability.
+5. Re-read concurrent changes before writing; after writing, verify phase content, key links, and status are still intact, then run context/check on both logbooks. Never overwrite other Captains' new reports-back by saving a stale page wholesale.
+6. Hand off old/new logbooks, companion records, responsibilities, and write entry points to the relevant Captains you are authorized to notify, and verify the actual main session received them. Without notification authorization, state who is pending handoff; never send messages on your own. Notification dispatches no business tasks and takes over no other phases. Report document migration completion and running Captains' receipt separately.
 
-## 完成检查
+## Completion Checks
 
-逐项确认目标覆盖、依赖无冲突、责任明确、证据可证明、当前工作包完整、参数合法、授权状态明确。将观察事实、当前目标、未知分开。最后展示计划位置、路径、验收和待人类决定事项；文件存在不等于已展示，展示不等于执行批准。
+Item by item, confirm goal coverage, conflict-free dependencies, clear ownership, provable evidence, current work package completeness, valid parameters, and explicit authorization status. Separate observed facts, current goals, and unknowns. Finally present the plan location, paths, acceptance, and items awaiting human decisions; a file existing does not mean it was presented, and presentation does not mean execution is approved.
 
-准出前必须确认工作目录、Stage 划分与待办清单三要素已写入日志并获用户人工确认（用户亲自编写或修订计划即为确认）；未达确认的计划不得进入 lb-push 执行。
+Before exit, confirm the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation); plans short of confirmation must not enter lb-push execution.

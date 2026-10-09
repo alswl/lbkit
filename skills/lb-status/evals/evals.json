@@ -3,231 +3,231 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "日志昨天记载“任务执行中”；本次只读控制平面显示 Agent idle，尚无回传。用户问现在到哪了。",
-      "expected_output": "报告历史执行中与当前 idle 的差异，验收未知；可局部更新已有运行事实，不改复选框或启动恢复。",
+      "prompt": "The logbook recorded yesterday that “the task is executing”; this round's read-only control plane shows the agent idle, with no return yet. The user asks where things stand now.",
+      "expected_output": "Report the difference between the historical executing record and the current idle state, with acceptance unknown; existing runtime facts may be locally updated, but no checkbox changes and no launch or recovery.",
       "files": [],
       "expectations": [
-        "区分历史和实时来源",
-        "idle 不被视为完成",
-        "不修改复选框",
-        "不启动或恢复 Agent"
+        "Distinguish historical from live sources",
+        "idle is not treated as completion",
+        "Do not modify checkboxes",
+        "Do not launch or recover agents"
       ]
     },
     {
       "id": 2,
-      "prompt": "用户问当前状态；实时控制平面不可用，日志最后更新于三天前，下一项为人工审批。",
-      "expected_output": "说明只能报告三天前日志，当前运行未知，指出审批负责人和所需决定。",
+      "prompt": "The user asks for current status; the live control plane is unavailable, the logbook was last updated three days ago, and the next item is a human approval.",
+      "expected_output": "Explain that only the three-day-old logbook can be reported and live state is unknown, and point out the approval owner and the decision required.",
       "files": [],
       "expectations": [
-        "明确时效限制",
-        "不声称当前进程正常",
-        "不修复环境或创建监控",
-        "不进入业务仓库调查"
+        "State the freshness limitation clearly",
+        "Do not claim the current process is healthy",
+        "Do not repair the environment or create monitors",
+        "Do not enter business repositories to investigate"
       ]
     },
     {
       "id": 3,
-      "prompt": "用户仅问下一步。首个未勾选项为测试 A，缺固定候选；后项部署 B 已有人催促。",
-      "expected_output": "指出 A 的负责人及固定候选前置条件，不建议直接跳到 B。",
+      "prompt": "The user only asks what is next. The first unchecked item is test A, missing a pinned candidate; a later deployment item B is being pressed by stakeholders.",
+      "expected_output": "Point out A's owner and the pinned-candidate prerequisite; do not suggest jumping straight to B.",
       "files": [],
       "expectations": [
-        "保持文档顺序",
-        "不改变计划或派发",
-        "指出准确解除条件"
+        "Keep document order",
+        "Do not change the plan or dispatch anything",
+        "State the exact clearance condition"
       ]
     },
     {
       "id": 4,
-      "prompt": "mode=recorded，日志路径明确。没有 runtime.launcher，用户只问日志中下一项。",
-      "expected_output": "从既有日志只读回答，不要求或创建启动配置。",
+      "prompt": "mode=recorded with an explicit logbook path. There is no runtime.launcher, and the user only asks about the logbook's next item.",
+      "expected_output": "Answer read-only from the existing logbook; do not require or create launch configuration.",
       "files": [],
       "expectations": [
-        "不因无关参数缺失阻塞记录查询",
-        "不查询实时进程",
-        "不写配置"
+        "Do not block a record query over an irrelevant missing parameter",
+        "Do not query live processes",
+        "Do not write configuration"
       ]
     },
     {
       "id": 5,
-      "prompt": "用户要求 live 状态，配置 runtime.adapter=unknown，环境无适配说明；日志最后记录昨天执行中。",
-      "expected_output": "报告可用的昨天记录与实时未知，不试启动替代工具。",
+      "prompt": "The user asks for live status; configuration has runtime.adapter=unknown and the environment has no adapter documentation; the logbook's last record was executing yesterday.",
+      "expected_output": "Report the available yesterday record and live-unknown status; do not try substitute launch tools.",
       "files": [],
       "expectations": [
-        "不假定适配器状态语义",
-        "不修改配置或修复环境",
-        "不把昨天状态当实时"
+        "Do not assume the adapter's status semantics",
+        "Do not modify configuration or repair the environment",
+        "Do not treat yesterday's status as live"
       ]
     },
     {
       "id": 6,
-      "prompt": "配置文件存在但 YAML 损坏，用户指定一个可读取的日志并只问已记录进展。",
-      "expected_output": "指出配置无法解析，只报告指定日志可证明的内容，不静默使用猜测默认值。",
+      "prompt": "The configuration file exists but its YAML is corrupted; the user designates one readable logbook and only asks about recorded progress.",
+      "expected_output": "State that the configuration cannot be parsed, report only what the designated logbook can prove, and never silently use guessed defaults.",
       "files": [],
       "expectations": [
-        "不补写配置",
-        "不宣称实时观测",
-        "既有明确日志仍可只读汇报"
+        "Do not rewrite the configuration",
+        "Do not claim live observation",
+        "The existing explicit logbook can still be reported read-only"
       ]
     },
     {
       "id": 7,
-      "prompt": "日志有一个交付阶段 H2 标为 ⚠️，阶段内已有一项 [x] 且仍有未勾选项；用户请求 recorded 状态。",
-      "expected_output": "报告阶段仍未完成，并将该交付阶段 H2 同步为 🚧；不改变任何复选框、证据或阻塞文字。",
+      "prompt": "A delivery stage's H2 in the logbook is marked ⚠️; the stage already has one [x] item and still has unchecked ones. The user requests recorded status.",
+      "expected_output": "Report that the stage is still incomplete and sync that delivery stage's H2 to 🚧; change no checkboxes, evidence, or blocker text.",
       "files": [
         "logbook.md"
       ],
       "expectations": [
-        "只同步交付阶段 H2 标记",
-        "已开始但未全部完成时使用 🚧",
-        "不把阻塞标题保留为阶段状态",
-        "不勾选或取消复选框"
+        "Sync only the delivery stage's H2 marker",
+        "Use 🚧 when started but not fully complete",
+        "Do not keep a blocker heading as the stage status",
+        "Do not check or uncheck any boxes"
       ]
     },
     {
       "id": 8,
-      "prompt": "日志的某个交付阶段所有清单项都已勾选，但 H2 仍标为 🚧；另有“当前卡点”和“待办事项”说明性 H2。用户请求 recorded 状态。",
-      "expected_output": "将该交付阶段 H2 同步为 ✅，保留说明性 H2 原样，并报告其他章节状态。",
+      "prompt": "In the logbook, every checklist item of one delivery stage is checked, but its H2 is still 🚧; there are also explanatory H2s 「当前卡点」 and 「待办事项」. The user requests recorded status.",
+      "expected_output": "Sync that delivery stage's H2 to ✅, leave the explanatory H2s untouched, and report the other sections' status.",
       "files": [
         "logbook.md"
       ],
       "expectations": [
-        "全 [x] 时使用 ✅",
-        "不修改说明性 H2",
-        "不把阶段标记同步扩展为复选框验收",
-        "不启动 Agent 或实时查询"
+        "Use ✅ when all items are [x]",
+        "Do not modify the explanatory H2s",
+        "Do not stretch stage-marker syncing into checkbox acceptance",
+        "Do not launch agents or live queries"
       ]
     },
     {
       "id": 9,
-      "prompt": "一个交付阶段含 `[/]`（执行 Agent 正在做）与若干 `[ ]`，另有一个说明性 H2「当前卡点」。请求 recorded 状态。",
-      "expected_output": "把该交付阶段 H2 同步为 🚧（有 `[/]` 派发进行中），保留说明性 H2 原样；不勾选或取消任何复选框，不改完成判定。",
+      "prompt": "One delivery stage contains `[/]` (the executor agent is working) plus several `[ ]`, and there is also an explanatory H2 「当前卡点」. Requested: recorded status.",
+      "expected_output": "Sync that delivery stage's H2 to 🚧 (a `[/]` means dispatched-in-progress), keep the explanatory H2 as-is; check or uncheck nothing and change no completion judgments.",
       "files": [
         "logbook.md"
       ],
       "expectations": [
-        "h2 有 [/] 时用 🚧",
-        "说明性 H2 不改名",
-        "不改动 [x]/[ ]/[/] 复选框"
+        "Use 🚧 for the H2 when it has [/]",
+        "The explanatory H2 is not renamed",
+        "Do not touch [x]/[ ]/[/] checkboxes"
       ]
     },
     {
       "id": 10,
-      "prompt": "Stage 04 的 7 项里 5 项 `[x]`、1 项 `[/]`（已派发执行 Agent）、1 项 `[ ]`。请求 recorded 状态。",
-      "expected_output": "该交付阶段 H2 同步为 🚧（单个 `[/]` 即进行中，不被多数 `[x]` 误导成 ✅）；不勾选/取消复选框、不改完成判定。",
+      "prompt": "Stage 04 has 7 items: 5 `[x]`, 1 `[/]` (an executor agent was dispatched), and 1 `[ ]`. Requested: recorded status.",
+      "expected_output": "Sync that delivery stage's H2 to 🚧 (a single `[/]` means in progress — do not be misled into ✅ by the majority `[x]`); check/uncheck nothing and change no completion judgments.",
       "files": [
         "logbook.md"
       ],
       "expectations": [
-        "5 个 [x] + 1 个 [/] + 1 个 [ ] 时 H2 用 🚧、不用 ✅",
-        "不勾选或取消复选框",
-        "不把多数 [x] 当成全完成"
+        "With 5 [x] + 1 [/] + 1 [ ], the H2 uses 🚧, not ✅",
+        "Do not check or uncheck any boxes",
+        "Do not treat a majority of [x] as fully complete"
       ]
     },
     {
       "id": 11,
-      "prompt": "recorded 模式；某 Stage 有一个 `[x]` 项但附近无证据链接/不可变身份，另有空 `链接：` 块。",
-      "expected_output": "指出勾选项缺乏可追溯证据，不凭空补证据或改复选框；模型可按事实局部清理空链接占位或补充简短缺口说明。",
+      "prompt": "recorded mode; a stage has one `[x]` item with no evidence link / immutable identity nearby, plus an empty `链接：` block.",
+      "expected_output": "Point out that the checked item lacks traceable evidence; invent no evidence and change no checkboxes; the model may locally clean the empty link placeholder or add a brief gap note, grounded in facts.",
       "files": [],
       "expectations": [
-        "指出证据缺口，不虚构证据",
-        "不修正复选框或验收结论",
-        "只做有依据的局部维护，不重写正文"
+        "Point out the evidence gap; never fabricate evidence",
+        "Do not fix checkboxes or acceptance conclusions",
+        "Only grounded local maintenance; do not rewrite the body"
       ]
     },
     {
       "id": 12,
-      "prompt": "Stage 01 的四项现场调查都已 [x]，相关链接含两个仍未合并的 PR；PR 合并明确列在 Stage 04 的人工待办。用户问为什么 01 还不是完成。",
-      "expected_output": "将 Stage 01 标为 ✅；说明未合并 PR 不阻止调查阶段完成，合并仍由 Stage 04 待办承载；不新增或勾选待办。",
+      "prompt": "All four field investigations of Stage 01 are [x]; their links include two PRs that are still unmerged, and PR merging is explicitly listed as a human todo in Stage 04. The user asks why Stage 01 is not yet complete.",
+      "expected_output": "Mark Stage 01 ✅; explain that unmerged PRs do not block the investigation stage's completion since merging is carried by the Stage 04 todo; add no todos and check none.",
       "files": [
         "logbook.md"
       ],
       "expectations": [
-        "全 [x] 的 Stage 01 标为 ✅",
-        "未合并 PR 不构成隐性阶段卡点",
-        "Stage 04 合并待办保持未完成",
-        "不改标题文字或目标"
+        "Stage 01, all [x], is marked ✅",
+        "Unmerged PRs are not an implicit stage blocker",
+        "The Stage 04 merge todo stays incomplete",
+        "Do not change heading text or goals"
       ]
     },
     {
       "id": 13,
-      "prompt": "用户说严格只读检查状态，不改文件。某阶段全 [x] 但标题仍为 🚧，已有状态摘要也过时。",
-      "expected_output": "仅报告阶段标记及摘要差异，所有文件保持不变。",
+      "prompt": "The user says: strictly read-only status check, change no files. One stage is all [x] but its heading is still 🚧, and the existing status summary is stale too.",
+      "expected_output": "Report the stage marker and summary differences only; all files stay byte-identical.",
       "files": [],
       "expectations": [
-        "明确只读覆盖默认局部维护",
-        "不改 emoji 或摘要",
-        "不改变复选框",
-        "不派发或控制 Agent"
+        "Explicit read-only overrides default local maintenance",
+        "Do not change emoji or the summary",
+        "Do not change checkboxes",
+        "Do not dispatch or control agents"
       ]
     },
     {
       "id": 14,
-      "prompt": "用户问现在进展，有可标识的已派发 Agent，未指定模式。日志阶段含 [/]，已有状态句过时，正文有三段人类说明。",
-      "expected_output": "查询执行者快照，区分记录与观测；可同步 emoji 和短状态句，保留三段正文，不更改验收或控制 Agent。",
+      "prompt": "The user asks for current progress; an identifiable dispatched agent exists and no mode is specified. The logbook's stages contain [/], the existing status sentence is stale, and the body has three paragraphs of human prose.",
+      "expected_output": "Query the executor snapshot, distinguishing records from observation; emoji and the short status sentence may be synced, the three prose paragraphs are preserved, and acceptance is not changed nor agents controlled.",
       "files": [],
       "expectations": [
-        "默认 live 获取指定执行者状态",
-        "允许有依据的局部修改，无需逐片段批准",
-        "大段正文与目标保持原样",
-        "查询失败明确实时未知"
+        "Default to live to get the designated executor's status",
+        "Grounded local edits are allowed without per-fragment approval",
+        "Large prose blocks and goals stay untouched",
+        "On query failure, state live-unknown clearly"
       ]
     },
     {
       "id": 15,
-      "prompt": "用户明确 mode=recorded，只想看日志记录。存在可标识的已派发执行者，运行接口可用。",
-      "expected_output": "仅依据日志回答，标明时效，不强制实时快照；如有必要可按默认边界局部同步状态。",
+      "prompt": "The user explicitly sets mode=recorded and only wants the logbook's records. An identifiable dispatched executor exists and the runtime interface is available.",
+      "expected_output": "Answer from the logbook only, stating freshness; do not force a live snapshot; if necessary, locally sync status within default boundaries.",
       "files": [],
       "expectations": [
-        "不查询实时接口",
-        "recorded 不等同于禁止局部文档维护",
-        "不把日志执行中称为实时正常"
+        "Do not query the live interface",
+        "recorded does not mean local document maintenance is forbidden",
+        "Do not describe the logbook's executing record as live-and-healthy"
       ]
     },
     {
       "id": 16,
-      "prompt": "用户明确只读看状态。context 显示已有 [/] 且 H2 为 🛫，check 报阶段状态不一致。脚本支持 sync --dry-run。",
-      "expected_output": "报告阶段应为进行中，但不调用任何写子命令（包括 dry-run），文件字节保持不变。",
+      "prompt": "The user explicitly asks for a read-only status check. context shows an existing [/] with the H2 at 🛫, and check reports a stage-status inconsistency. The script supports sync --dry-run.",
+      "expected_output": "Report that the stage should be in progress, but call no write subcommand (including dry-run); files stay byte-identical.",
       "files": [],
       "expectations": [
-        "实际 context/check 后报告差异",
-        "不调用 sync 或 task 子命令",
-        "不将运行状态转成验收勾选",
-        "不控制 Agent"
+        "Run context/check and report the diff",
+        "Do not call sync or task subcommands",
+        "Do not convert runtime status into acceptance checkboxes",
+        "Do not control agents"
       ]
     },
     {
       "id": 17,
-      "prompt": "用户请求常规状态查询，允许局部维护。sync 已更新阶段 emoji，但页首摘要仍旧，context 未包含摘要；已有三段人类正文。",
-      "expected_output": "读取原文核对摘要；sync 只处理 H2，必要时按局部写入保护更新简短摘要，保留人类正文与复选框。",
+      "prompt": "The user requests a routine status query with local maintenance allowed. sync already updated the stage emoji, but the page-top summary is stale and context does not include the summary; three paragraphs of human prose exist.",
+      "expected_output": "Read the source and verify the summary; sync only handles H2s, so update the brief summary under local write protection when needed, preserving human prose and checkboxes.",
       "files": [],
       "expectations": [
-        "不声称 sync 会更新页首摘要",
-        "sync 携带当前 token 并先预览",
-        "摘要修改后重新读取 context，旧 token 不复用",
-        "不整页覆盖、不改任务结论"
+        "Do not claim sync updates the page-top summary",
+        "sync carries the current token and previews first",
+        "Re-read context after the summary edit; never reuse the old token",
+        "No whole-page overwrites; do not change task conclusions"
       ]
     },
     {
       "id": 21,
-      "prompt": "用户偏好人工扫视的日志旁没有 TODO.md。用户问状态后随口说「方便的话给我个人可读清单」。",
-      "expected_output": "简报照常给出；提示可用 lb.py todo 在日志旁首次开启 TODO.md 人工视图（🚨/👱/下一项/进行中），开启后写命令自动刷新，手改会被覆盖。",
+      "prompt": "There is no TODO.md beside the logbook of a user who prefers manual scanning. After asking for status, the user casually adds, “give me a human-readable list if convenient”.",
+      "expected_output": "Deliver the briefing as usual; mention that lb.py todo can open the TODO.md human view (🚨/👱/next item/in progress) beside the logbook on first use, that write commands auto-refresh it afterwards, and that manual edits get overwritten.",
       "files": [],
       "expectations": [
-        "提及 todo 命令与四个视图区",
-        "不夸大能力（不可变描述）",
-        "不改复选框与验收结论"
+        "Mention the todo command and its four view sections",
+        "Do not overstate capability (an immutable description)",
+        "Do not change checkboxes or acceptance conclusions"
       ]
     },
     {
       "id": 22,
-      "prompt": "live 观测执行者 pane 时读到输入行有用户留下的未发送文本「选 C，直 URL 验收走起来」。",
-      "expected_output": "观测报告如实披露该输入行文本，并按根规则作意图信号处置；lugbook 不因此自行推进业务。",
+      "prompt": "While observing an executor pane in live mode, you read unsent user text on the input line: 「选 C，直 URL 验收走起来」.",
+      "expected_output": "Disclose the input-line text faithfully in the observation report and handle it as an intent signal per the root rules; the logbook does not advance business work on its own because of it.",
       "files": [],
       "expectations": [
-        "把输入行文本如实披露",
-        "按根规则作意图信号",
-        "不把观测结果的漂移当作回传内容",
-        "不代按 enter 发送"
+        "Disclose the input-line text faithfully",
+        "Treat it as an intent signal per the root rules",
+        "Do not treat observed drift as returned content",
+        "Do not press enter on the user's behalf to send it"
       ]
     }
   ]
