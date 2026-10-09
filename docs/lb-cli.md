@@ -1,31 +1,31 @@
-# `lb`：受保护的轻量 Logbook CLI
+# `lb`: the guarded lightweight Logbook CLI
 
-`bin/lb` 只使用 Python 3 标准库，面向本仓约定的 Markdown 结构化读取和极小范围编辑。它不是调度器：不会验收、派发工作、推定授权、变更清单顺序，也不会访问网络。
+`bin/lb` uses only the Python 3 standard library, built for structured reading of this repo's Markdown conventions and minimal-scope edits. It is not a scheduler: it never accepts delivery, dispatches work, presumes authorization, or reorders checklist items, and it never touches the network.
 
 ```sh
-# 发现保守识别的主日志（默认扫描 projects/*/docs/*.md）
+# Discover conservatively recognized main logbooks (default scan: projects/*/docs/*.md)
 bin/lb list --json
-bin/lb list --projects-dir records --json  # 对应宿主 documents.project_root
+bin/lb list --projects-dir records --json  # maps to the host's documents.project_root
 
-# 读取阶段、下一项、工作目录、链接及并发版本 token
+# Read stages, next item, working directories, links, and the concurrency version token
 bin/lb context projects/example/docs/logbook.md --json
 
-# 检查一个日志，或检查所有已发现日志
+# Check one logbook, or check all discovered logbooks
 bin/lb check projects/example/docs/logbook.md
 bin/lb check --all --json
 
-# 结构化状态快照（派生摘要、阶段计数、🔮 门禁、页首状态行归属）
+# Structured state snapshot (derived summary, stage counts, 🔮 gate, top status-line ownership)
 bin/lb state projects/example/docs/logbook.md --json
 
-# 在日志旁生成/刷新 docs/TODO.md（慢留人工视角：🚨 介入项、👱 待办、下一项、进行中）
+# Generate/refresh docs/TODO.md beside the logbook (a slow-paced human view: 🚨 interventions, 👱 todos, next item, in progress)
 bin/lb todo projects/example/docs/logbook.md
-bin/lb todo projects/example/docs/logbook.md --dry-run   # 只看不写
-bin/lb todo projects/example/docs/logbook.md --json     # 机读结构
+bin/lb todo projects/example/docs/logbook.md --dry-run   # look, don't write
+bin/lb todo projects/example/docs/logbook.md --json     # machine-readable structure
 
-# 同步交付阶段 H2 的 emoji 与已接管的页首状态行；先查看 dry run
+# Sync delivery-stage H2 emoji and the adopted top status line; inspect a dry run first
 bin/lb sync projects/example/docs/logbook.md --token 0123... --dry-run
 
-# 将 context 返回的 version_token 原样带入精确写操作
+# Pass the version_token returned by context unchanged into precise write operations
 bin/lb task update projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --task '开发：实现 CLI。 @logbooks 🤖️' \
   --status / --token 0123... --dry-run
@@ -33,91 +33,91 @@ bin/lb task artifact projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --task '开发：实现 CLI。 @logbooks 🤖️' \
   --artifact '产物：[CLI](../scripts/lb.py)' --token 0123...
 
-# 在已获确认的阶段追加待办，或放在该阶段某条待办之前
+# Append a todo to a confirmed stage, or place it before an existing todo in that stage
 bin/lb task add projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --text '测试：验证 CLI。 @logbooks' --token 0123... --dry-run
 bin/lb task add projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --text '测试：验证 CLI。 @logbooks' --before-line 42 --token 0123...
 
-# 在 Agent 待办下追加一行简短事实，kind 可为产物、阻塞、状态或交接
+# Append one short fact under an agent todo; kind is one of 产物, 阻塞, 状态, 交接
 bin/lb task note projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --task '开发：实现 CLI。 @logbooks 🤖️' \
   --kind 阻塞 --text '🚨 请人类负责人完成登录；登录后恢复。' --token 0123... --dry-run
 
-# 只看人工待办，或只取下一项
+# Human todos only, or just the next item
 bin/lb task list projects/example/docs/logbook.md --human --json
 bin/lb task list --status in-progress --json
 bin/lb task next projects/example/docs/logbook.md --json
 
-# 可选的仓库根目录 lbkit-skills.json（JSON Schema：.lbkit/schemas/lbkit-skills.schema.json，文件首键 "$schema" 引用它，"version" 为格式版本，目前仅支持 0.1.0）：按工作类型登记技能链，字段 name、scope（使用范围）、chain、actions（动作前缀提示）、companions（随行技能：skill + when）、description
+# Optional repository-root lbkit-skills.json (JSON Schema: .lbkit/schemas/lbkit-skills.schema.json, referenced by the file's leading "$schema" key, with "version" as the format version, currently only 0.1.0): registers skill chains by kind of work; fields name, scope (usage range), chain, actions (action-prefix hints), companions (companion skills: skill + when), description
 bin/lb skills --json
 bin/lb skills --action 开发 --json
 bin/lb skills add --name 'speckit 功能实现' --scope '适用：…；不适用：…' --chain speckit-implement --action 开发 --companion 'comment-prune=实现完成、提交前' --dry-run
-bin/lb skills usage --since 2026-10-01   # Claude Code 与 Codex 会话里实际调用的技能；唯一读 --root 外（~/.claude、~/.codex）的命令，只统计工作目录落在日志登记目录或本仓内的会话
-bin/lb skills extract --json   # 技能未被任何条目（技能链或随行技能）覆盖的「技能：」子行原样列出，附待办原文、完成状态与回指它的工作包
+bin/lb skills usage --since 2026-10-01   # skills actually invoked in Claude Code and Codex sessions; the only command reading outside --root (~/.claude, ~/.codex), counting only sessions whose working directory falls in a logbook-registered directory or this repo
+bin/lb skills extract --json   # 「技能：」 sub-lines not covered by any entry (skill chain or companion skill), listed verbatim with the todo's original text, completion status, and the work package pointing back to it
 ```
 
-`--root` 默认为当前目录，可把每条路径限制在合成仓库或工作树内：
+`--root` defaults to the current directory and can confine every path to a synthetic repository or worktree:
 
 ```sh
 bin/lb --root /tmp/fixture context projects/demo/docs/log.md --json
 ```
 
-`check` 的 `DUPLICATE_TASK_TEXT` 在同 Stage 内出现未收口的同文任务时提示（全部已勾的历史重名不复告警）——它预示后续按任务原文的写命令会被 ambiguous 拒绝。`local_target` 对以 `~` 开头的链接做 expanduser 归属判断，位于 root 外时仍归 LOCAL_LINK_UNVERIFIED。
+`check`'s `DUPLICATE_TASK_TEXT` flags unclosed same-text tasks within one Stage (historical duplicates that are all checked no longer warn) — a preview that later write commands targeting the task's original text will be rejected as ambiguous. `local_target` runs expanduser ownership judgment on links starting with `~`; those outside the root still count as LOCAL_LINK_UNVERIFIED.
 
-`context`、`state`、`todo` 的“下一项”只从 `Stage NN` 交付阶段的未完成待办计算；旧日志“总览”里的全局复选清单不参与调度。
-`task list` 与 `task next` 采用同一交付阶段范围；`task list` 可按阶段、状态和人工归属过滤，省略日志路径时列出所有已发现日志的待办。
+The "next item" in `context`, `state`, and `todo` is computed only from unfinished todos in `Stage NN` delivery stages; global checkbox lists in an old logbook's Overview take no part in scheduling.
+`task list` and `task next` use the same delivery-stage scope; `task list` filters by stage, status, and human ownership, and lists todos across all discovered logbooks when the logbook path is omitted.
 
-发现默认检查 root 内 `projects/*/docs/*.md`；`list`、`check --all`、`task list` 可用 `--projects-dir` 传入宿主配置的 `documents.project_root`，并以“恰有一个可见 H1，且有 H2 阶段或待办”的启发式识别候选；这会排除 `thinking/` 和 `prompts/`，但不是任意文章的语义分类器。`projects`、项目与 `docs` 目录都会在遍历前做 containment 校验，指向 root 外或异常的目录不会被遍历。代码围栏和 HTML 注释中的标题、待办与链接不参与解析；行尾 HTML 注释只隐藏注释部分，因此注释前的任务仍保留完整原文和可更新身份。多行注释的关闭行若随后还有结构文本，会报告 `COMMENT_STRUCTURE_AMBIGUOUS` 而不猜测解析。围栏只有以同字符、足够长度且行尾仅空白的 fence 才关闭。`context.stages[].tasks` 给出每项原文、状态、行号、仓库标记和人类标记。`bound_records` 只列正文明确链接到 `thinking/` 或 `prompts/` 的位置，绝不根据同名文件猜测绑定。
+Discovery defaults to `projects/*/docs/*.md` inside the root; `list`, `check --all`, and `task list` accept `--projects-dir` to pass in the host-configured `documents.project_root`, and recognize candidates with the heuristic "exactly one visible H1, plus an H2 stage or a todo"; this excludes `thinking/` and `prompts/` but is not a semantic classifier for arbitrary articles. The `projects`, project, and `docs` directories all get containment checks before traversal; directories pointing outside the root or otherwise anomalous are not traversed. Headings, todos, and links inside code fences and HTML comments do not participate in parsing; a trailing HTML comment hides only the comment itself, so a task before the comment keeps its full original text and updatable identity. If a multiline comment's closing line is followed by structural text, `COMMENT_STRUCTURE_AMBIGUOUS` is reported rather than guessing the parse. A fence closes only with a fence of the same character, sufficient length, and nothing but whitespace at end of line. `context.stages[].tasks` gives each item's original text, status, line number, repository marker, and human marker. `bound_records` lists only places in the body that explicitly link to `thinking/` or `prompts/` — bindings are never guessed from same-named files.
 
-## 写入与并发保护
+## Write and Concurrency Protection
 
-所有写操作（包括 `sync`）都必须提供 `context --json` 返回的 SHA-256 `version_token`。文件任一字节变化、阶段和任务原文无法唯一匹配，都会以退出码 4 拒绝写入；非法状态值属于参数错误，退出码为 2。任务由阶段标题（去除状态 emoji 后）和完整原始任务文字共同定位，不以行号定位。`task update` 拒绝修改 `👱` 或 `人工验证：` 人工项的复选框；`task artifact`、`task note` 拒绝往人类负责项写子行。`task add` 只创建未启动项，拒绝同阶段同文待办；`--before-line` 必须指向该阶段已有待办的首行。Agent 使用 `task add` 前仍须取得人类对新增事项和顺序的明确确认。`--dry-run` 不会写入文件，并输出可审阅的 unified diff（JSON 的 `diff` 字段）。
+Every write operation (including `sync`) must supply the SHA-256 `version_token` returned by `context --json`. Any single-byte file change, or a stage and task original text that cannot be uniquely matched, refuses the write with exit code 4; an invalid status value is a parameter error with exit code 2. Tasks are located by the stage heading (minus the status emoji) plus the full original task text — never by line number. `task update` refuses to change the checkboxes of `👱` or `人工验证：` human items; `task artifact` and `task note` refuse to write sub-lines onto human-owned items. `task add` creates only not-started items and rejects same-text todos in the same stage; `--before-line` must point at the first line of an existing todo in that stage. Before using `task add`, an agent still needs the human's explicit confirmation of the new items and their order. `--dry-run` writes nothing and prints a reviewable unified diff (the JSON `diff` field).
 
-所有写命令都会在写前重新解析候选文本，并拒绝新引入的确定性 `check` 问题（例如缺失的仓内链接）。既有问题不阻止无关局部更新；阶段 emoji 暂态、显式 `[-]`、外链未抓取及仓库外本地链接未核验属于允许的提示。JSON 写结果的 `issues_introduced` 在准入通过时为空列表。`task artifact` 与 `task note` 把新子行放在既有缩进子项末尾；相同子行已存在时拒绝重复追加。`task note` 的文本以 `🚨 ` 开头且指定 `--kind` 时，标记保持在子项正文最前。
+All write commands re-parse the candidate text before writing and reject newly introduced deterministic `check` issues (such as missing in-repo links). Pre-existing issues do not block unrelated local updates; transient stage emoji, explicit `[-]`, unfetched external links, and unverified local links outside the repository count as permitted notices. The `issues_introduced` field of the JSON write result is an empty list when admission passes. `task artifact` and `task note` place new sub-lines after the existing indented sub-items; appending a duplicate is refused when an identical sub-line already exists. When `task note` text starts with `🚨 ` and a `--kind` is given, the marker stays at the very front of the sub-item body.
 
-写入会在临时文件 fsync 后、`os.replace` 前再次检查 root containment 和源文件字节，随后才作同目录原子替换。这缩小常规并发编辑的覆盖窗口，但不是跨任意编辑器或恶意进程的 CAS/锁保证；冲突仍应以拒绝写入后重新读取 context 为准。
+Before writing, the tool re-checks root containment and the source file's bytes after fsyncing the temp file and before `os.replace`, then performs the same-directory atomic replacement. This narrows the clobber window of ordinary concurrent editing but is not a CAS/lock guarantee against arbitrary editors or malicious processes; on conflict, still re-read context after the refused write.
 
-路径在读取和写入时都会解析符号链接，目标必须仍位于 `--root` 内。例外是只读的 `skills usage`：它读取 `~/.claude/projects` 与 `~/.codex/sessions` 的会话记录，只报告工作目录落在日志登记目录或本仓内的会话。编辑保持 UTF-8、原有 CRLF/LF 风格及所有未触及字节；`sync` 只改可确定状态的交付阶段 H2 emoji，空阶段、含 `[-]` 的阶段和未知状态不会被判完成。`[-]` 会在检查中报告为显式不适用/跳过记录，而不是未开始或批准信号。
+Paths resolve symlinks on both read and write, and targets must still lie inside `--root`. The exception is read-only `skills usage`: it reads session records from `~/.claude/projects` and `~/.codex/sessions`, reporting only sessions whose working directory falls in a logbook-registered directory or this repo. Edits preserve UTF-8, the original CRLF/LF style, and all untouched bytes; `sync` only changes the H2 emoji of delivery stages whose status is determinable — empty stages, stages containing `[-]`, and unknown statuses are never judged complete. `[-]` is reported by `check` as an explicit not-applicable/skip record, not as not-started or an approval signal.
 
-## 检查、状态与限制
+## Checks, Status, and Limits
 
-`check` 的问题格式为 `路径:行号:代码:说明`，`--json` 返回等价结构。退出码为：0 无确定性问题（可能仍有 `LINK_UNVERIFIED` 提示），1 有确定性问题，2 命令参数错误，3 路径/读取拒绝，4 并发或写入保护拒绝。HTTP(S) 链接只报告 `LINK_UNVERIFIED`，从不请求网络；本地链接只检查其在 root 内的存在性。工具不解析任意 YAML，也不对外部文件、远程链接或 mind-forge 元数据作验证。
+`check` reports issues in the format `路径:行号:代码:说明`, with `--json` returning the equivalent structure. Exit codes: 0 no deterministic issues (there may still be `LINK_UNVERIFIED` notices), 1 deterministic issues found, 2 command parameter error, 3 path/read refusal, 4 concurrency or write-protection refusal. HTTP(S) links are only reported as `LINK_UNVERIFIED` — the network is never touched; local links are checked only for existence within the root. The tool parses no arbitrary YAML and validates nothing about external files, remote links, or mind-forge metadata.
 
-外部 URL（如 Forgejo PR 链接）按设计一律报 `LINK_UNVERIFIED`，属确定性提示而非结构错误；PR 链接是运行实例的身份记法，保留即可，不为消除该项把链接降级成纯文本。
+External URLs (such as Forgejo PR links) report `LINK_UNVERIFIED` by design — a deterministic notice, not a structural error; a PR link is the run instance's identity notation, so keep it and never downgrade the link to plain text just to clear the notice.
 
-## 🔮 preflight 门禁
+## The 🔮 preflight gate
 
-任一待办或其缩进子项的复选框文字含 `🔮`（lb-preflight 产出、经人类确认写入的待讨论卡点）时，视为整本日志停摆：
+When any todo's or indented sub-item's checkbox text contains `🔮` (a pending-discussion blocker produced by lb-preflight and written in after human confirmation), the whole logbook is considered halted:
 
-- `context --json` 返回 `preflight_blockers`（逐项含 `line`、`text`、`indent`、`stage`）与 `preflight_clear: false`；每个任务的 `preflight` 布尔字段标出该行是否卡点。
-- `check` 对每个 🔮 复选框行报告 `PREFLIGHT_BLOCKER`（确定性状态记录，与 `[-]` 的 `SKIPPED_EXPLICIT` 同类，参与退出码 1）。
-- `sync`、`task update`、`task artifact`、`task add`、`task note` 一律以退出码 4 拒绝写入，报错指明行号；CLI 不提供绕过参数，解除方式只能是人类在日志文本中改写或移除 🔮 后重新取 `context`。
+- `context --json` returns `preflight_blockers` (each with `line`, `text`, `indent`, `stage`) and `preflight_clear: false`; each task's `preflight` boolean marks whether that line is a blocker.
+- `check` reports `PREFLIGHT_BLOCKER` for every 🔮 checkbox line (a deterministic status record, same class as `[-]`'s `SKIPPED_EXPLICIT`, contributing to exit code 1).
+- `sync`, `task update`, `task artifact`, `task add`, and `task note` all refuse to write with exit code 4, with the error naming the line; the CLI offers no bypass flag — the only way out is a human rewriting or removing the 🔮 in the logbook text, then re-fetching `context`.
 
-工具只做标记检测，不验证 🔮 来源；写入与裁决语义见 [日志格式](logbook-format.md) 与 lb-preflight SKILL。
+The tool only detects markers and does not verify a 🔮's provenance; write and adjudication semantics are in [Logbook Format](logbook-format.md) and the lb-preflight SKILL.
 
-## 页首状态行与结构化状态
+## Top Status Line and Structured State
 
-面向状态 emoji 的管理优先走本脚本，不手改 H2 emoji 或机读状态段。`state --json` 给出结构化快照：整体计数（交付阶段 done/in_flight/not_started）、`summary`（派生机读串）、`next_task`、🔮 门禁及每个 `> 状态：` 行的 `owned` 归属。
+Manage status emoji through this script first; do not hand-edit H2 emoji or the machine-readable status segment. `state --json` gives a structured snapshot: overall counts (delivery stages done/in_flight/not_started), `summary` (the derived machine-readable string), `next_task`, the 🔮 gate, and the `owned` attribution of every `> 状态：` line.
 
-页首 `> 状态：` 行以第一个 `——` 分界：前半为机读段，`sync` 在其以 🛫/🚧/✅ 开头时重写为派生串——`状态：<emoji> <首个未验收交付阶段> · [🔮 待讨论 N 项 · ]下一项：<待办原文>`（全部完成时为 `状态：✅ 全部交付阶段已完成`），并以 `summary_updated` / `summary_kept_human` 报告；后半人类注释原样保留，非 emoji 开头或无分界的叙事行视为人类正文一律不动，没有状态行的日志也不会自动新建。
+The top `> 状态：` line splits at the first `——`: the first half is the machine-readable segment, which `sync` rewrites to the derived string when it starts with 🛫/🚧/✅ — `状态：<emoji> <首个未验收交付阶段> · [🔮 待讨论 N 项 · ]下一项：<待办原文>` (or `状态：✅ 全部交付阶段已完成` when everything is done) — reported as `summary_updated` / `summary_kept_human`; the second half, the human commentary, is preserved verbatim. Narrative lines that do not start with an emoji, or that lack the divider, are treated as human prose and never touched, and no status line is auto-created for logbooks without one.
 
-运行测试：
+Running tests:
 
 ```sh
 python3 -m unittest discover -s tests -v
 ```
 
-## TODO.md 人工视角
+## TODO.md Human View
 
-`todo` 子命令把日志内容整理成日志同目录的 `TODO.md`，面向人类扫视：🚨 需要人类负责人处理的计划外事项（取待办首行或子行中含 🚨 的文本，含具体操作与解除条件的原文）、👱 未完成人工待办、文档顺序下一项、进行中事项。没有 `[ ]` 或 `[/]` 时，仍有 `[-]` 就显示“跳过项待处置”，不宣称全部完成。文件头带机器维护注释与重生成命令，手改会被覆盖；`sync` 与 `task update/artifact/add/note` 的非 dry-run 写入在 `TODO.md` 已存在时自动重解析刷新（不存在则不自动创建，首次用 `todo` 命令开启）。该文件是派生视图，不参与解析、检查或验收判定。
+The `todo` subcommand organizes the logbook into a `TODO.md` beside it, built for human scanning: 🚨 unplanned items needing the human owner (taken from todo first lines or sub-lines containing 🚨, verbatim with the exact action and clearing condition), 👱 unfinished human todos, the next item in document order, and items in progress. When there are no `[ ]` or `[/]` items but a `[-]` remains, it shows "skipped items pending disposal" instead of claiming full completion. The file header carries a machine-maintenance comment and the regeneration command; hand edits get overwritten. Non-dry-run writes from `sync` and `task update/artifact/add/note` automatically re-parse and refresh an existing `TODO.md` (it is not auto-created when absent — start with the `todo` command). The file is a derived view: it participates in no parsing, checks, or acceptance judgments.
 
-## 技能接入与评测
+## Skill Integration and Evaluation
 
-lb-* 入口由 Agent 在对应步骤调用 CLI，共用流程见 [文档适配](../skills/lb-update/references/document-adapters.md#本仓-cli-调用)：plan 读取与检查，push 在接收后标进行中，status 查询及获准的 emoji 同步，update 在证据验收后更新状态与产物；preflight 是只读分析入口，卡点回写由技能按日志写入边界完成、不经 CLI 写子命令。脚本不自行执行这些技能，也不检查任务授权或证据充分性。
+lb-* entries call the CLI at their respective steps; the shared flow is in [document adapters](../skills/lb-update/references/document-adapters.md#本仓-cli-调用): plan reads and checks, push marks in progress after taking a task, status queries and syncs authorized emoji, update updates status and artifacts after evidence acceptance; preflight is a read-only analysis entry, with blocker write-back done by the skill within the logbook write boundaries — never through CLI write subcommands. The script neither runs these skills itself nor checks task authorization or evidence sufficiency.
 
-`tests/test_lb_skill_flows.py` 用合成日志运行多步 CLI 流程，验证 token 刷新、并发编辑保护、产物交接和只读查询；各技能 `evals/evals.json` 另含模型决策场景。CLI 集成测试通过不等于模型行为评测通过；后者还需在受控环境中实际运行技能并检查工具调用、文件差异及回答，不能只评分口头计划。
+`tests/test_lb_skill_flows.py` runs multi-step CLI flows on synthetic logbooks, verifying token refresh, concurrent-edit protection, artifact handoff, and read-only queries; each skill's `evals/evals.json` separately holds model decision scenarios. Passing CLI integration tests is not the same as passing model behavior evals; the latter also requires actually running the skills in a controlled environment and inspecting tool calls, file diffs, and answers — verbal plans alone are not scored.
 
-代码实现放在 `src/logbook_cli/`：`cli.py` 负责 argparse、写入和输出，`document.py` 负责解析与检查，`views.py` 负责状态和 TODO 派生视图，`edit.py` 负责任务文本编辑与写前候选检查。`bin/lb` 是快速入口，`python3 scripts/lb.py` 保留兼容；也可运行 `PYTHONPATH=src python3 -m logbook_cli`。`scripts/` 仅保留可直接执行的入口及评测工具。实现保持 Python 标准库，评测夹具会携带完整包。
+The implementation lives in `src/logbook_cli/`: `cli.py` handles argparse, writes, and output; `document.py` handles parsing and checks; `views.py` handles the status and TODO derived views; `edit.py` handles task text editing and pre-write candidate checks. `bin/lb` is the quick entry, `python3 scripts/lb.py` remains for compatibility, and `PYTHONPATH=src python3 -m logbook_cli` also works. `scripts/` keeps only directly runnable entries and eval tooling. The implementation stays on the Python standard library, and eval fixtures carry the full package.
 
-可复跑的夹具准备、非覆盖预检及事件采集见 宿主仓库的行为评测流程。
+Reproducible fixture preparation, non-clobbering prechecks, and event collection are described in the consuming repository's behavior-eval process.

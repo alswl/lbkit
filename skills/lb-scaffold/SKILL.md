@@ -1,28 +1,28 @@
 ---
 name: lb-scaffold
 version: 0.1.0
-description: 从 workflows/<工作流>/ 的运行实例模板填空初始化新 logbook：只填目标日、工作目录与运行裁定三个可变槽并一次收齐，不自由起草、不改结构粒度；三要素齐备并经人类确认后交 lb-push。无模板或需变更目标与结构时走 lb-plan，不套本技能。
+description: Initialize a new logbook by fill-in from a run-instance template under workflows/<workflow>/: fill only the three mutable slots — target date, working directories, and run rulings — collected in one pass; no free drafting, no changing structural granularity; once the three essentials are complete and human-confirmed, hand off to lb-push. With no template, or when goals and structure must change, go to lb-plan instead — this skill does not apply.
 ---
 
-# 从工作流模板初始化运行实例
+# Initialize a run instance from a workflow template
 
-填空，不设计。前提是 `workflows/<工作流>/` 提供了运行实例模板（待办清单、front matter、目标模板句与既定裁定）；没有模板、或人类要改目标、范围与结构时转 [lb-plan](../lb-plan/SKILL.md)。本技能不派发执行。
+Fill in the blanks; do not design. The precondition is that `workflows/<workflow>/` provides a run-instance template (todo manifest, front matter, goal template sentence, and established rulings); with no template, or when the human wants to change goals, scope, or structure, switch to [lb-plan](../lb-plan/SKILL.md). This skill does not dispatch execution.
 
-## 前置
+## Prerequisites
 
-1. 读取 [配置契约](../../docs/configuration.md) 解析 documents；读取 [lb-plan 规划流程](../lb-plan/references/planning.md)（模板优先条款）、[日志格式](../../docs/logbook-format.md) 与 [文档适配流程](../lb-update/references/document-adapters.md)。
-2. 定位模板：`workflows/<name>/docs/` 下带「运行实例模板」节的文章及其 prompt 契约。工作流不存在、模板节或既定裁定缺失时停止并说明缺口，不代写模板、不转自由起草。
+1. Read the [configuration contract](../../docs/configuration.md) to resolve documents; read the [lb-plan planning workflow](../lb-plan/references/planning.md) (template-first clause), the [logbook format](../../docs/logbook-format.md), and the [document adapter workflow](../lb-update/references/document-adapters.md).
+2. Locate the template: the article with the 「运行实例模板」 section under `workflows/<name>/docs/`, along with its prompt contract. If the workflow does not exist, or the template section or established rulings are missing, stop and state the gap; never ghost-write the template and never switch to free drafting.
 
-## 必经流程
+## Required workflow
 
-1. 解析可变槽：目标日（默认昨天）、工作目录（对现场现状核对）、运行裁定（默认全部沿用模板「既定裁定」）。只对无默认值或与现场冲突的槽发问，用紧凑编号清单一次收齐，不逐条追问。
-2. 填空生成主日志：front matter、标题、文件命名、日期占位与待办清单逐项照模板替换——不复述技能自带流程、不增删待办、不调粒度、不动人工关口、不写波次注释（`🔀` 定式按模板与日志格式）。目标句由模板提供：模板经人类确认落稿即为其写定，人类在实例上改写时以其文字为准。
-3. 配套记录：thinking 记来源（工作流与 `prev-run` 实例）、槽值与裁定出处；按文档适配登记绑定与项目索引。
-4. 写后运行 `check --json`；外部 URL 的 `LINK_UNVERIFIED` 是既定提示，不当结构错误修。
-5. 收尾：展示填的槽值一览（非全文复述），请人类扫一眼确认。三要素（工作目录、Stage 划分、待办清单）齐备并确认后即准出，推进交 lb-push。
+1. Resolve the mutable slots: target date (default: yesterday), working directories (checked against the on-site state), and run rulings (default: carry over all of the template's 「既定裁定」). Ask only about slots with no default or that conflict with the on-site state; collect answers with one compact numbered list instead of asking item by item.
+2. Fill in and generate the main logbook: front matter, title, file naming, date placeholders, and the todo manifest are each replaced per the template — never restate the skill's own workflow, add or drop todos, adjust granularity, touch manual gates, or write wave notes (`🔀` convention follows the template and the logbook format). The goal sentence comes from the template: once the template is human-confirmed and finalized, that counts as its writing; when the human rewrites it on the instance, their wording governs.
+3. Companion records: thinking records the source (workflow and `prev-run` instance), slot values, and where each ruling came from; register bindings and the project index per the document adapter.
+4. After writing, run `check --json`; `LINK_UNVERIFIED` for external URLs is an expected notice, not a structural error to fix.
+5. Wrap-up: show a summary of the filled slot values (not a full restatement) and ask the human for a quick confirm. Once the three essentials (working directories, stage breakdown, todo manifest) are complete and confirmed, exit is granted; advancement is handed to lb-push.
 
-## 边界
+## Boundaries
 
-- 只创建新实例；修改既有日志走 lb-update，重规划走 lb-plan。
-- 不改 `workflows/` 模板本身；发现的模板缺陷记录到对话，由人类修模板。
-- 调度、授权与监听边界一律以 AGENTS.md 与对应技能为准；本技能不因模板存在而豁免确认，只是把确认收敛为一轮槽值扫视。
+- Only create new instances; modifying an existing logbook goes to lb-update, replanning to lb-plan.
+- Never change the `workflows/` templates themselves; record discovered template defects in the conversation and let the human fix the template.
+- For scheduling, authorization, and listener boundaries, AGENTS.md and the corresponding skills govern; the existence of a template does not exempt this skill from confirmation — it only collapses confirmation into one round of slot-value review.

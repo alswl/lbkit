@@ -2,18 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/alswl/lbkit/schemas/lbkit-skills.schema.json",
   "title": "lbkit-skills.json",
-  "description": "可选的仓库根目录技能清单：按工作类型登记技能链，供 lb-plan 起草待办的「技能：」子行时参考。由 bin/lb skills 读取与追加。",
+  "description": "Optional repository-root skill manifest: skill chains registered by work type, referenced by lb-plan when drafting the 「技能：」 todo sub-line. Read and appended to by bin/lb skills.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "skills"],
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "指向本 schema 的路径，便于编辑器校验。"
+      "description": "Path to this schema, for editor validation."
     },
     "version": {
       "enum": ["0.1.0"],
-      "description": "清单格式版本，语义化版本号。"
+      "description": "Manifest format version, a semantic version string."
     },
     "skills": {
       "type": "array",
@@ -29,22 +29,22 @@
       "properties": {
         "name": {
           "$ref": "#/$defs/nonEmpty",
-          "description": "工作类型，语义化命名，在清单内唯一。"
+          "description": "Work type, semantically named, unique within the manifest."
         },
         "scope": {
           "$ref": "#/$defs/nonEmpty",
-          "description": "使用范围，写成「适用：…；不适用：…」，按工作性质区分，不以动作前缀或仓库名代替。"
+          "description": "Scope of use, written as 「适用：…；不适用：…」 (applies-to / not-for), distinguished by the nature of the work — not replaced by action prefixes or repository names."
         },
         "chain": {
           "type": "array",
           "minItems": 1,
           "items": { "$ref": "#/$defs/nonEmpty" },
-          "description": "按调用顺序排列的技能名；可包含只存在于某个业务仓库内的技能。"
+          "description": "Skill names in invocation order; may include skills that exist only inside a business repository."
         },
         "actions": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "常见待办动作前缀（如 设计、开发），只作提示，不用于机械匹配。"
+          "description": "Common todo action prefixes (e.g. 设计, 开发); informational only, never used for mechanical matching."
         },
         "companions": {
           "type": "array",
@@ -56,15 +56,15 @@
               "skill": { "$ref": "#/$defs/nonEmpty" },
               "when": {
                 "$ref": "#/$defs/nonEmpty",
-                "description": "什么时候顺带使用。"
+                "description": "When it is used incidentally."
               }
             }
           },
-          "description": "随主技能链顺带使用、不单独对应待办的技能。"
+          "description": "Skills used incidentally along the main skill chain, with no todo of their own."
         },
         "description": {
           "type": "string",
-          "description": "给下一位协调者的背景：前置条件、怎么跑、限定与不用什么、来源日志或工作包。"
+          "description": "Background for the next coordinator: prerequisites, how to run it, limits and what not to use, and the source logbook or work package."
         }
       }
     }

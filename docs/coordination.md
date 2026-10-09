@@ -1,49 +1,49 @@
-# 协调对象与契约
+# Coordination Roles and Contracts
 
-人类负责人负责目标、风险接受与不可逆决定；每份日志的协调者维护共享状态、依赖和验收；执行 Agent 交付有边界的工作包。权限底线由 [AGENTS.md](../AGENTS.md) 定义，具体操作顺序由 lb-* 技能约束。
+The human owner holds goals, risk acceptance, and irreversible decisions; the coordinator of each logbook maintains shared state, dependencies, and acceptance; executor agents deliver bounded work packages. The permission floor is defined by [AGENTS.md](../AGENTS.md); concrete operation order is constrained by the lb-* skills.
 
-## 范围、授权与依赖
+## Scope, Authorization, and Dependencies
 
-计划确认不等于执行授权。“推进项目”或未限定单项的 lb-push 请求，授权沿已确认路径串行推进，直到完成、人工关口或严重卡点；“只完成这一项”“开始下一项”或明确批次遵守指定终点。只请求分析、排版或状态不授予启动权限。已有授权在其范围内持续有效，不逐项重新确认。
+Plan confirmation is not execution authorization. A "push the project forward" request, or an lb-push request not scoped to a single item, authorizes serial progress along the confirmed path until completion, a human gate, or a severe blocker; "finish just this one", "start the next item", or an explicit batch honors the specified endpoints. Requests for analysis only, formatting only, or status only grant no permission to start. Existing authorization remains valid within its scope; items are not re-confirmed one by one.
 
-其他协调者已明确负责的阶段，保持其调度归属；共享日志或获知进展不代表接管权限。拆分后的阶段仍沿用原负责人，交接通知与派发业务任务分开。
+Stages explicitly owned by other coordinators keep their scheduling ownership; sharing a logbook or hearing about progress does not confer the right to take over. Split-off stages keep the original owner, and handoff notices are kept separate from dispatching project tasks.
 
-跨项并行需要明确批次授权，同时输入稳定、依赖满足、可变资源不重叠。首项阻塞、后项更紧急或新增 Agent 有帮助都不是跳过、重排或扩展范围的依据。
+Cross-item parallelism requires explicit batch authorization, plus stable inputs, satisfied dependencies, and non-overlapping mutable resources. The first item blocking, the second being more urgent, or an extra agent helping are none of them grounds to skip, reorder, or widen scope.
 
-原工作包的调查、检查与有限返工包含在原授权范围内。缺信息时由所属 Agent 在授权范围内补齐，范围外信息咨询人类。执行偏离已确认方案可纠正；方案本身方向错误或涉及重大决策时停止并交人类。超时与恢复按 [执行流程](../skills/lb-push/references/execution.md) 处理。
+Investigation, inspection, and limited rework within the original work package fall inside the original authorization. Missing information is filled in by the owning agent within the authorization; out-of-scope questions go to the human. Deviations from the confirmed plan can be corrected; when the plan itself is heading the wrong way or a major decision is involved, stop and hand over to the human. Timeouts and recovery follow the [execution flow](../skills/lb-push/references/execution.md).
 
-Agent 可起草待办，确认后写入；新增、重排和扩大任务范围仍须确认。已有清单与推进授权足以支持准备下一个执行工作包，不为工作包文字重复索要批准。同一负责人交付同一结果的操作不拆项；负责人或验收关口变化时拆成顺序任务，不据此并行。
+Agents may draft todos and write them in after confirmation; additions, reordering, and widened task scope still require confirmation. An existing list plus authorization to proceed is enough to prepare the next execution work package — do not repeatedly ask for approval over work-package wording. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, and do not parallelize on that basis.
 
-请求人类现场裁决时用紧凑编号清单：逐项编号、给出候选与默认建议，让人一行内按号可答；不铺陈长段落。多项裁决一轮收齐，不逐条打断。
+When asking a human for an on-the-spot ruling, use a compact numbered list: number each item, give candidates and a default recommendation, so the human can answer by number in one line; no long paragraphs. Collect multiple rulings in one round instead of interrupting item by item.
 
-协调者的 Git 提交纪律：与人类同仓工作时，提交一律 `git commit -- <明确路径>`（pathspec），提交后 `show --stat` 自查无他人文件；不带 pathspec 的提交会把人类已 stage 的在途内容一并裹挟。反向的坑同样真实：同一文件混有负责人未提交的行时，pathspec 提交取的是整个**工作树**版本，会把负责人那些行一并带进提交，并在成功后反向覆盖手工暂存的 index。需要「只提交自己的行」时，走 index 手术：`git hash-object -w <净化后内容>` 加 `git update-index --cacheinfo 100644 <blob> <path>` 精确暂存，再执行**不带 pathspec** 的 `git commit`，让提交树只来自 index；提交后用 `git status` 确认负责人的行仍留在工作区。重写或修复本地历史前后，先 `fetch` 并核对目标分支的远端状态，不凭会话记忆断言「远端没有这分支/没推过」——远端可能已有同名或期间推送，漏看会造成分叉。
+Git commit discipline for coordinators: when working in the same repository as a human, always commit with `git commit -- <explicit path>` (pathspec) and self-check with `show --stat` afterwards to confirm no one else's files slipped in; committing without a pathspec sweeps up the human's staged in-flight content. The reverse trap is just as real: when the same file mixes in uncommitted lines from the owner, a pathspec commit takes the entire **working tree** version, dragging the owner's lines into the commit and afterwards writing back over the manually staged index. When you need to commit only your own lines, do index surgery: `git hash-object -w <sanitized content>` plus `git update-index --cacheinfo 100644 <blob> <path>` to stage precisely, then run `git commit` **without a pathspec** so the commit tree comes only from the index; afterwards use `git status` to confirm the owner's lines are still in the working tree. Before and after rewriting or repairing local history, `fetch` first and check the remote state of the target branch; never assert from session memory that "the remote doesn't have this branch / it was never pushed" — the remote may already have a same-name branch or a push made in the meantime, and missing it causes divergence.
 
-## 工作包与回传字段
+## Work Packages and Return Fields
 
-[工作包模板](../skills/lb-plan/assets/work-package.md) 是执行契约，不是第二份调度清单。它关联主日志中的结果，至少包含：
+The [work package template](../skills/lb-plan/assets/work-package.md) is an execution contract, not a second scheduling checklist. It links to the result in the main logbook and contains at least:
 
-- 所属检查项、一名负责人、一个可证明结果；
-- 范围、明确排除项、输入及权威来源；
-- 依赖、并行边界、授权依据与允许操作；
-- 交付物位置、不可变身份、原始证据格式；
-- 完成条件、必要检查者与通过标准、有限复核轮数；
-- 阻塞与升级条件、交接责任和会话保留或关闭条件。
+- 所属检查项 (owning checklist item), one owner, and one provable result;
+- Scope, explicit exclusions, inputs, and authoritative sources;
+- Dependencies, parallelism boundaries, authorization basis, and permitted operations;
+- Deliverable location, immutable identity, and raw evidence format;
+- Completion conditions, required checkers and pass criteria, and a limited number of review rounds;
+- Blocking and escalation conditions, handoff responsibilities, and session retention or closure conditions.
 
-回传包含状态、交付结果、候选身份、证据、剩余缺口、阻塞类别、受影响验收门和未结责任。“继续调查”“帮助项目”不是完整工作包。
+A return includes status, delivered result, candidate identity, evidence, remaining gaps, blocker category, affected acceptance gates, and open responsibilities. "Keep investigating" and "help the project" are not complete work packages.
 
-工作包预计产出的 PR 混合多种性质（前置非业务、文档、代码实现）或文件量明显超常规时，按前置非业务 → 文档 → 代码实现拆为顺序小 PR，避免单个巨型 PR 卡住人工评审。
+When the PR a work package is expected to produce mixes several kinds of changes (prerequisite non-project, docs, code implementation) or is clearly larger than usual, split it into sequential small PRs — prerequisite non-project → docs → code implementation — so a single giant PR does not jam human review.
 
-向人类负责人发出的问询在其明确答复前，不得以"意图推断"自行升级该问询的裁量范围——宁可再次要一次明确裁决，不替人类负责人做带下游成本的决定。
+Until a human owner explicitly answers an inquiry, do not widen that inquiry's discretion by inferring intent — ask again for an explicit ruling rather than making a downstream-costly decision on the human owner's behalf.
 
-简短指示的语义存在多解空间（如"注意错误信息"可以是查根因或改文案）时，先回一句语义确认再派包，不抢猜一个方向做完整工作包。
+When a short instruction has multiple readings (e.g. "watch the error message" could mean finding the root cause or rewording the copy), reply with a one-line semantic confirmation before dispatching the package; do not guess a direction and build a full work package on it.
 
-本轮运行选择按 [配置契约](configuration.md) 解析，工作包只记录实际需要的参数及来源，不抄整份默认配置。缺失或不适用的字段要区分；无需独立复核的任务不能为了填轮数而创建检查者。
+This run's choices are resolved per the [configuration contract](configuration.md); the work package records only the parameters actually needed and their sources, not a copy of the whole default configuration. Distinguish missing fields from inapplicable ones; tasks that need no independent review must not get checkers created just to fill the round count.
 
-## 设计来源
+## Design Sources
 
-以下是设计参考，不是必执行流程：
+The following are design references, not mandatory flows:
 
-- [Anthropic：Building effective agents](https://www.anthropic.com/research/building-effective-agents)：动态拆分与独立子任务。
-- [Anthropic：多 Agent 研究系统](https://www.anthropic.com/engineering/multi-agent-research-system)：任务边界及输出。
-- [OpenAI Agents SDK：编排](https://openai.github.io/openai-agents-python/multi_agent/)：管理者汇总与专业分工。
-- [Azure：编排模式](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns)：最低必要复杂度与有限复核。
+- [Anthropic: Building effective agents](https://www.anthropic.com/research/building-effective-agents): dynamic decomposition and independent subtasks.
+- [Anthropic: multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system): task boundaries and outputs.
+- [OpenAI Agents SDK: orchestration](https://openai.github.io/openai-agents-python/multi_agent/): manager aggregation and specialist division of labor.
+- [Azure: orchestration patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns): minimal necessary complexity and limited review rounds.

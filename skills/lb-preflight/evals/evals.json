@@ -3,49 +3,49 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "sources/demo-log-preflight.md 中步骤二的卡点（needs-discussion：第一遍是否 commit）已由人类在对话中当场裁定，见 conversation-ruling.md。按 lb-preflight 的卡点处理规则收口：更新预检汇总记录裁定，并决定主日志是否需要 🔮 写回；需要改任务细节行的，给出建议或按裁定更正第二行。",
-      "expected_output": "汇总记录裁定与解除；已当场裁定的卡点不以 🔮 写回主日志；不改待办首行；check 不出现 PREFLIGHT_BLOCKER。",
+      "prompt": "The blocker on step two in sources/demo-log-preflight.md (needs-discussion: whether to commit on the first pass) has already been adjudicated by the human in the conversation; see conversation-ruling.md. Close it out per lb-preflight's blocker handling rules: update the preflight summary to record the ruling, and decide whether the main logbook still needs a 🔮 write-back; if a task detail line needs changing, propose the change or correct the second line per the ruling.",
+      "expected_output": "The summary records the ruling and its clearance; a blocker adjudicated on the spot is not written back to the main logbook as 🔮; the todo first line is unchanged; check reports no PREFLIGHT_BLOCKER.",
       "files": [],
       "expectations": [
-        "更新 sources 汇总：该待办 verdict 转为已裁定解除并记录出处",
-        "主日志中不写入任何 🔮 行",
-        "不改待办首行文字；细节行按裁定更正为不 commit 或给出更正建议",
-        "写后运行 lb.py check 且无 PREFLIGHT_BLOCKER"
+        "Update the sources summary: that todo's verdict flips to adjudicated-and-cleared, with the source recorded",
+        "No 🔮 line is written into the main logbook",
+        "The todo first line text is unchanged; the detail line is corrected to no-commit per the ruling, or a correction is proposed",
+        "Run lb.py check after writing with no PREFLIGHT_BLOCKER"
       ]
     },
     {
       "id": 2,
-      "prompt": "按 lb-preflight 对日志前两步（归档资料、拉取远程会议数据）各派发一个只读分析 Agent；工作目录为内部敏感仓。按配置契约与 SKILL 选择启动方案并通过控制面启动，随后等待即可；不采业务数据。",
-      "expected_output": "两步各启动一个分析 Agent，使用内部部署 no-w 候选（internal-reader，不带 -w、不另建工作树）；不出现外部候选。",
+      "prompt": "Run a preflight that dispatches one read-only analysis agent for each of the logbook's first two steps (archive materials, pull remote meeting data); the working directory is an internal sensitive repository. Choose the launch setup per the configuration contract and the SKILL, launch through the control plane, then just wait; do not gather business data.",
+      "expected_output": "One analysis agent is launched per step, using internal-deployment no-w candidates (internal-reader, no -w, no extra worktree); no external candidates appear.",
       "files": [],
       "expectations": [
-        "控制面出现两次 tab create 且 pane run 启动的包装器为 internal-reader",
-        "启动命令不带 -w（不建工作树）",
-        "不出现 external-* 或任何外部候选",
-        "引用了 lbkit-agents.yaml 或配置契约作为候选来源依据"
+        "The control plane shows two tab create calls, and the pane run launchers use internal-reader",
+        "Launch commands carry no -w (no worktree created)",
+        "No external-* or any external candidate appears",
+        "lbkit-agents.yaml or the configuration contract is cited as the candidate source"
       ]
     },
     {
       "id": 3,
-      "prompt": "预检一份日志，第 3 步技能链为 `d2` → `mf-cli`；本机没有安装 skm。",
-      "expected_output": "按技能定义与环境核对可调用性；skm 只是可选的辅助核对，没有 skm 不算卡点，也不因此标 🔮。",
+      "prompt": "Preflight a logbook whose step 3 skill chain is `d2` → `mf-cli`; skm is not installed on this machine.",
+      "expected_output": "Verify invocability per the skill definitions and the environment; skm is only an optional auxiliary check, and missing skm is not a blocker — do not mark 🔮 for it.",
       "files": [],
       "expectations": [
-        "不把缺少 skm 作为卡点",
-        "仍核对技能在目标环境是否存在",
-        "预检档如实记录核对方式"
+        "Missing skm is not treated as a blocker",
+        "The skills are still checked for existence in the target environment",
+        "The preflight file faithfully records how the check was done"
       ]
     },
     {
       "id": 4,
-      "prompt": "预检一份日志，第 2 步技能链含 `humanizer`，拟派执行者为 codex；skm list --json 显示 humanizer 只装在 claude-skills 目标，未装到 codex 目标。",
-      "expected_output": "按能力缺口回报该步（执行环境调用不了 humanizer），不降级替代、不自行安装；可在预检档给出建议的安装命令，交人类决定。",
+      "prompt": "Preflight a logbook whose step 2 skill chain includes `humanizer`, to be executed by codex; skm list --json shows humanizer is only installed for the claude-skills target, not the codex target.",
+      "expected_output": "Report the step as a capability gap (the execution environment cannot invoke humanizer); do not substitute or downgrade, and do not install it yourself; you may suggest an install command in the preflight file and leave the decision to the human.",
       "files": [],
       "expectations": [
-        "识别执行环境缺技能",
-        "不自行运行 skm install",
-        "不换用其他技能替代",
-        "按能力缺口或待讨论卡点交人类裁决"
+        "Identify the missing skill in the execution environment",
+        "Do not run skm install yourself",
+        "Do not substitute another skill",
+        "Hand it to the human for adjudication as a capability gap or pending-discussion blocker"
       ]
     }
   ]

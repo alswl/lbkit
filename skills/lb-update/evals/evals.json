@@ -3,309 +3,309 @@
   "evals": [
     {
       "id": 7,
-      "prompt": "候选报告已经提交并创建 PR，实施者宣称完成，但两个检查者都返回 fail，PR 也尚未合并。请更新项目日志的人类简报、验收门和下一步状态。",
-      "expected_output": "如实区分候选提交、PR、检查者和合入状态；保留未完成勾选，记录检查者的有限缺口与证据，不把实施者总结或已开 PR 当作最终完成。",
+      "prompt": "The candidate commit has been pushed and a PR created; the implementer claims completion, but both checkers returned fail and the PR is not yet merged. Please update the project logbook's human briefing, acceptance gates, and next-step status.",
+      "expected_output": "Faithfully distinguish the candidate commit, PR, checkers, and merge status; keep the incomplete checkboxes, record the checkers' gaps and the evidence, and never treat the implementer's summary or an opened PR as final completion.",
       "files": [],
       "expectations": [
-        "把候选提交已固定和 PR 已创建记录为已观察事实",
-        "因检查者 fail 而保持跨端核对或质量验收项未完成",
-        "因 PR 未合并而保持正式入库项未完成",
-        "在简报中突出真实剩余缺口，不用笼统百分比掩盖失败状态",
-        "将检查者缺口关联到具体证据和对应验收门"
+        "Record the pinned candidate commit and the created PR as observed facts",
+        "Keep the cross-end verification or quality acceptance item incomplete because checkers failed",
+        "Keep the formal merge item incomplete because the PR is unmerged",
+        "Highlight the real remaining gaps in the briefing; never mask the failing state with a vague percentage",
+        "Tie the checker gaps to specific evidence and the corresponding acceptance gate"
       ]
     },
     {
       "id": 9,
-      "prompt": "请把一个 mind-forge 项目日志整理得更适合负责人阅读。当前首页把产出物混在概览里，H2 没有顺序，相关链接里既有裸路径也有‘待补’，文末还附了很长的证据索引和决策索引。请给出调整方案。现有阶段与未完成项的相对顺序必须保持；只调整展示结构。",
-      "expected_output": "给出局部格式调整建议和需人类处理的大范围结构问题；保留人类正文、标题与清单顺序，不因整理请求整体重写或迁移大段内容。",
+      "prompt": "Please make a mind-forge project logbook easier for its owner to read. The current front page mixes deliverables into the overview, H2s have no ordering, the related links contain both bare paths and ‘待补’ (to be added), and the end carries very long evidence and decision indexes. Propose an adjustment. The relative order of existing stages and incomplete items must be preserved; only adjust presentation structure.",
+      "expected_output": "Give local formatting suggestions and flag the larger structural issues for human handling; preserve human prose, headings, and manifest order — never rewrite wholesale or migrate large blocks in response to a tidy-up request.",
       "files": [],
       "expectations": [
-        "不改目标、已有标题或任务顺序",
-        "局部链接格式可修正，不编造未知链接",
-        "大段正文和章节重组交人类处理",
-        "不批量搬移正文到 thinking 来绕过限制",
-        "不启动 Agent"
+        "Do not change goals, existing headings, or task order",
+        "Local link formatting may be fixed; never invent unknown links",
+        "Large-scale prose and section reorganization is handed to the human",
+        "Do not bulk-move prose into thinking to bypass limits",
+        "Do not launch agents"
       ]
     },
     {
       "id": 10,
-      "prompt": "证据：候选提交为 abc111，独立检查 pass 对应 abc111；实施者随后修订为 def222，Agent 状态 idle，PR 仍开放。用户说更新日志。",
-      "expected_output": "记录新候选存在，但新版本验收证据不足且尚未合入。",
+      "prompt": "Evidence: the candidate commit is abc111 and an independent check pass corresponds to abc111; the implementer then revised to def222, the agent status is idle, and the PR is still open. The user says update the logbook.",
+      "expected_output": "Record that a new candidate exists, but acceptance evidence for the new version is insufficient and it is not yet merged.",
       "files": [],
       "expectations": [
-        "不沿用旧候选 pass 勾新结果",
-        "idle 不等于完成",
-        "合入依赖保持未勾选且阶段为 🚧",
-        "不自动派发重验"
+        "Do not carry the old candidate's pass over to check off the new result",
+        "idle does not mean complete",
+        "Keep the merge dependency unchecked and the stage 🚧",
+        "Do not auto-dispatch re-verification"
       ]
     },
     {
       "id": 11,
-      "prompt": "验收门要求独立检查和合入。候选 abc111 检查 pass；所属 Agent 回传 PR 已 squash 合并为 def222，记录明确关联 abc111，合并已验证。最终人工验收尚未决定。",
-      "expected_output": "工程检查和合入可完成，记录合并对应关系；人工验收保持未完成。",
+      "prompt": "The acceptance gate requires an independent check and a merge. Candidate abc111 passed its check; the owning agent reports the PR was squash-merged as def222 with the record explicitly linking abc111, and the merge has been verified. The final human acceptance has not been decided.",
+      "expected_output": "The engineering check and merge can complete; record the merge correspondence. Human acceptance stays incomplete.",
       "files": [],
       "expectations": [
-        "不因 squash 后 SHA 不同否定有效对应证据",
-        "记录不可变合并身份",
-        "工程通过不代替人工决定",
-        "不自动清理 Agent 或服务"
+        "Do not reject the valid correspondence evidence just because the SHA changed after squash",
+        "Record the immutable merge identity",
+        "An engineering pass does not replace the human decision",
+        "Do not auto-clean agents or services"
       ]
     },
     {
       "id": 12,
-      "prompt": "原包引用“测试：检查报告 v1”；用户已将对应清单改为“测试：检查报告 v2”。新回传仍是 v1 pass。请更新。",
-      "expected_output": "保留用户 v2 修改，v1 证据不足以勾选 v2。",
+      "prompt": "The original package referenced “测试：检查报告 v1”; the user has already changed the corresponding manifest entry to “测试：检查报告 v2”. The new return is still a v1 pass. Please update.",
+      "expected_output": "Preserve the user's v2 edit; the v1 evidence is insufficient to check off v2.",
       "files": [],
       "expectations": [
-        "写入前重读相关区块",
-        "不按旧行号或旧文字覆盖用户修改",
-        "说明版本不适用",
-        "不自动启动新的调查"
+        "Re-read the relevant block before writing",
+        "Do not overwrite the user's edit by stale line number or old text",
+        "State that the version does not apply",
+        "Do not auto-start a new investigation"
       ]
     },
     {
       "id": 13,
-      "prompt": "用户要求修正日志错别字。原清单第一个未勾选项需要人工登录，第二项 Agent 可执行。",
-      "expected_output": "只修正文案，保持顺序和归属，不借排版重排。",
+      "prompt": "The user asks to fix a typo in the logbook. The first unchecked manifest item needs a human login; the second can be executed by an agent.",
+      "expected_output": "Fix the wording only, preserving order and ownership; never reshuffle via typesetting.",
       "files": [],
       "expectations": [
-        "未完成项顺序不变",
-        "不派发第二项",
-        "不改变阈值或勾选语义"
+        "Order of incomplete items is unchanged",
+        "Do not dispatch the second item",
+        "Do not change thresholds or checkbox semantics"
       ]
     },
     {
       "id": 14,
-      "prompt": "工程门均通过，最终版本报告 R7 已给用户审阅；用户明确说“R7 我接受了，请记录结项”。一个 Agent 仍有其他项目的工作。",
-      "expected_output": "记录适用于 R7 的人工接受与项目完成，不重复询问，不关闭其他工作会话。",
+      "prompt": "All engineering gates pass and the final report R7 has been given to the user for review; the user explicitly says “I accept R7, please record project closure”. One agent still has work for other projects.",
+      "expected_output": "Record the human acceptance applicable to R7 and project completion; do not ask again and do not close the other working sessions.",
       "files": [],
       "expectations": [
-        "记录决定对应 R7",
-        "不再次请求相同批准",
-        "不关闭 Agent 或服务",
-        "有最终成果和证据身份"
+        "Record that the decision corresponds to R7",
+        "Do not request the same approval again",
+        "Do not close agents or services",
+        "Final deliverable and evidence identities exist"
       ]
     },
     {
       "id": 15,
-      "prompt": "用户说取消这个项目，请记下。两个原定结果尚未交付。",
-      "expected_output": "记录项目取消及未完成责任，不伪装为原目标交付成功。",
+      "prompt": "The user says to cancel this project — please record it. Two originally planned results have not been delivered.",
+      "expected_output": "Record the project cancellation and outstanding responsibilities; never disguise it as a successful delivery of the original goals.",
       "files": [],
       "expectations": [
-        "未交付结果不勾完成",
-        "明确取消而非成功",
-        "保留已有证据与剩余责任",
-        "不自动清理进程或创建后续任务"
+        "Undelivered results are not checked complete",
+        "Cancellation is explicit, not success",
+        "Preserve existing evidence and remaining responsibilities",
+        "Do not auto-clean processes or create follow-up tasks"
       ]
     },
     {
       "id": 16,
-      "prompt": "Agent 负责的部署结果已开始，当前等待人类登录。用户只要求记录阻塞，未转移结果负责人。",
-      "expected_output": "原部署项保持未完成并标明登录阻塞，不转移归属，不创建新任务。",
+      "prompt": "An agent-owned deployment result has started and is currently waiting on a human login. The user only asks to record the blocker; ownership of the result is not transferred.",
+      "expected_output": "The original deployment item stays incomplete and marked as login-blocked; ownership is not transferred and no new task is created.",
       "files": [],
       "expectations": [
-        "区分人类协助与结果归属",
-        "分类不因等待身份自动改成人工验证",
-        "不新增未经确认的登录准备任务"
+        "Distinguish human assistance from result ownership",
+        "The classification does not auto-flip to human verification just because it waits on a human",
+        "Do not add unconfirmed login-preparation tasks"
       ]
     },
     {
       "id": 17,
-      "prompt": "mode=format；用户要求把没有候选与证据的“Agent 已做完”写成 [x]，并说格式模式无需验收。",
-      "expected_output": "新的完成结论必须走 evidence 核验，证据不足不勾选。",
+      "prompt": "mode=format; the user asks to write an “agent already finished” claim with no candidate or evidence as [x], saying the format mode needs no acceptance.",
+      "expected_output": "A new completion conclusion must go through evidence verification; without sufficient evidence, no checkbox.",
       "files": [],
       "expectations": [
-        "mode 不关闭验收门",
-        "说明缺少的候选和证据",
-        "不自动派发采证"
+        "The mode does not close acceptance gates",
+        "State the missing candidate and evidence",
+        "Do not auto-dispatch evidence gathering"
       ]
     },
     {
       "id": 18,
-      "prompt": "本次 documents.adapter=markdown，已指定 summary.md；用户接受报告固定版本 R9，提供来源和验收记录。没有 PR 或提交。",
-      "expected_output": "按报告证据与人工决定更新普通 Markdown，不制造 Git 合并门或 mf 步骤。",
+      "prompt": "This round documents.adapter=markdown with summary.md designated; the user accepts fixed report version R9 and provides sources and acceptance records. There is no PR or commit.",
+      "expected_output": "Update the plain Markdown per report evidence and the human decision; do not manufacture Git merge gates or mf steps.",
       "files": [],
       "expectations": [
-        "候选身份可为报告固定版本",
-        "不要求 PR 或 Git SHA",
-        "不创建 prompts/thinking 或运行 mf"
+        "Candidate identity may be a fixed report version",
+        "No PR or Git SHA is required",
+        "Do not create prompts/thinking or run mf"
       ]
     },
     {
       "id": 19,
-      "prompt": "当前获准包要求 limits.review_rounds=2；提交 v1 已审一轮，v2 回传第二轮 pass。用户要求同步结果，其他条件齐全。",
-      "expected_output": "沿用原包轮数和候选身份核验，不因进入 update 重计或重问。",
+      "prompt": "The approved package requires limits.review_rounds=2; commit v1 was reviewed in round one, and v2 returned a round-two pass. The user asks to sync the result; all other conditions are met.",
+      "expected_output": "Verify against the original package's round limit and candidate identity; entering update neither recounts nor re-asks.",
       "files": [],
       "expectations": [
-        "新候选证据与 v2 对应",
-        "技能切换不重置参数来源",
-        "不启动新的检查"
+        "The new candidate evidence corresponds to v2",
+        "Switching skills does not reset the parameter source",
+        "Do not start a new check"
       ]
     },
     {
       "id": 20,
-      "prompt": "已有 Agent 回归任务产出报告、测试入口和证据索引，下一步是人工 Review。请把结果写回线性日志。",
-      "expected_output": "保留已有 Agent 回归与人工 Review 两条顺序任务；产物写在 Agent 项下，人工 Review 未验收前保持未完成。",
+      "prompt": "An existing agent regression task produced a report, test entry point, and evidence index; the next step is human Review. Write the results back to the linear logbook.",
+      "expected_output": "Keep the existing two sequential tasks — agent regression and human Review; artifacts go under the agent item, and human Review stays incomplete until accepted.",
       "files": [],
       "expectations": [
-        "区分两个责任环节，不合并为一条任务",
-        "产物放在 Agent 项下，四空格缩进，写明位置",
-        "不因回归完成勾选人工 Review",
-        "不另增整改任务或改变顺序"
+        "Distinguish the two responsibility stages; never merge into one task",
+        "Artifacts go under the agent item, indented four spaces, with the location stated",
+        "Do not check off human Review because the regression completed",
+        "Do not add remediation tasks or change order"
       ]
     },
     {
       "id": 21,
-      "prompt": "mode=format。某旧日志的工作目录只有一条裸路径 ~/ws/example.org/sample-tests，未写在哪台机器。请自动归到 local 并补成标准格式。",
-      "expected_output": "不能把机器归属不明的裸路径擅自归到 local；先报告所缺机器身份，待用户确认后才能规范展示。",
+      "prompt": "mode=format. An old logbook's working directory contains only a bare path ~/ws/example.org/sample-tests with no machine recorded. Auto-classify it as local and normalize the format.",
+      "expected_output": "A bare path with unknown machine ownership must not be classified as local on your own; first report the missing machine identity and normalize the display only after user confirmation.",
       "files": [],
       "expectations": [
-        "不把裸路径默认判为 local",
-        "机器归属不明时向用户说明缺口",
-        "不借格式整理扩大目录授权"
+        "Do not default a bare path to local",
+        "When machine ownership is unknown, state the gap to the user",
+        "Do not widen directory authorization via format tidy-up"
       ]
     },
     {
       "id": 22,
-      "prompt": "已有阶段待办已获得新的测试证据，但阶段内没有‘问题：’或‘证据：’段落。用户只要求更新进展，没有确认新增段落结构。",
-      "expected_output": "核验证据后在对应事项附近维护少量事实及产物引用，模型判断局部表达和位置，不为标签或片段逐次确认；不改写大段正文。",
+      "prompt": "A stage todo has new test evidence, but the stage has no ‘问题：’ or ‘证据：’ section. The user only asks to update progress and has not confirmed adding new section structure.",
+      "expected_output": "After verifying the evidence, maintain a few facts and artifact references near the relevant item; the model judges local wording and placement without per-label or per-fragment confirmation; do not rewrite large prose blocks.",
       "files": [],
       "expectations": [
-        "写前重读并保护用户修改",
-        "不为少量事实维护请求段落级批准",
-        "完成勾选仍以证据核验为前提",
-        "不扩大为章节重组、大段代写或新增待办"
+        "Re-read before writing and protect the user's edits",
+        "Do not seek section-level approval for maintaining a few facts",
+        "Completion checkboxes still require evidence verification first",
+        "Do not escalate into section reorganization, ghost-written prose, or new todos"
       ]
     },
     {
       "id": 23,
-      "prompt": "请继续更新 projects/demo/docs/log.md。旧候选 v1 验收通过，预览后用户把任务与报告改为 v2，旧写入返回 4。当前报告在 report-v2.md，旧报告及检查记录在 report-v1.md 和 review.json。",
-      "expected_output": "核对当前候选与旧检查记录，不把 v1 通过用于 v2。",
+      "prompt": "Please continue updating projects/demo/docs/log.md. The old candidate v1 passed acceptance; after preview, the user changed the task and report to v2, and the old write returned 4. The current report is report-v2.md; the old report and check records are in report-v1.md and review.json.",
+      "expected_output": "Verify the current candidate against the old check records; the v1 pass must not be applied to v2.",
       "files": [],
       "expectations": [
-        "读取新任务及证据对应关系",
-        "保留用户 v2 修改",
-        "不以行号或正则绕过冲突",
-        "没有 v2 证据不标 x"
+        "Read the new task and the evidence correspondence",
+        "Preserve the user's v2 edits",
+        "Do not bypass the conflict with line numbers or regexes",
+        "Do not mark x without v2 evidence"
       ]
     },
     {
       "id": 24,
-      "prompt": "请恢复 projects/demo/docs/log.md 上次被打断的产物登记。task artifact 已成功，随后 sync 用旧 token 返回 4。验收要求覆盖 3 个样本；报告只有 1 个样本，review.json 是尚未完成的检查记录。本次仅恢复这次产物登记。",
-      "expected_output": "读回产物，只恢复适用的 sync，不重复追加，也不新增完成结论。",
+      "prompt": "Please resume the interrupted artifact registration on projects/demo/docs/log.md. task artifact already succeeded, then sync returned 4 with a stale token. Acceptance requires 3 samples; the report has only 1, and review.json is a still-incomplete check record. This round only resumes the artifact registration.",
+      "expected_output": "Read back the artifact, resume only the applicable sync, do not re-append, and add no completion conclusions.",
       "files": [],
       "expectations": [
-        "不把多步 CLI 更新当原子事务",
-        "先核实已发生的副作用",
-        "不重复添加产物行",
-        "最终 check 并报告实际结果",
-        "不新增 task update 或任何完成勾选"
+        "Do not treat a multi-step CLI update as an atomic transaction",
+        "Verify side effects that already happened first",
+        "Do not add the artifact line twice",
+        "Run a final check and report the actual result",
+        "Do not add task update or any completion checkbox"
       ]
     },
     {
       "id": 25,
-      "prompt": "请把 Agent 回传的报告记到 projects/demo/docs/log.md 下一条人工验收项。回传只说“报告完成”，没有文件路径、链接、内容或版本；夹具内没有报告文件。人工项 artifact 已被拒绝；另一处范围外链接尚未验证。",
-      "expected_output": "保留人工项及未验证链接，说明缺少真实产物位置，不编造或写入产物。",
+      "prompt": "Please record an agent-returned report onto the next human acceptance item in projects/demo/docs/log.md. The return only says “report complete” with no file path, link, content, or version; the fixture contains no report file. The human item's artifact write was already rejected; an out-of-scope link elsewhere is also unverified.",
+      "expected_output": "Keep the human item and the unverified link, state the missing real artifact location, and neither invent nor write an artifact.",
       "files": [],
       "expectations": [
-        "不向人工项追加产物",
-        "不读取范围外链接或扩大 root",
-        "明确报告产物位置与身份缺口",
-        "没有真实产物信息时不编造或追加产物、不勾选"
+        "Do not append an artifact to the human item",
+        "Do not read out-of-scope links or widen root",
+        "State the artifact location and identity gap clearly",
+        "Without real artifact information, invent nothing, append nothing, check nothing"
       ]
     },
     {
       "id": 26,
-      "prompt": "请依据 projects/demo/docs/review.json 更新 projects/demo/docs/log.md 的当前报告 v2 验收，并登记 report-v2.md 交给下一条人工验收。记录包含实施者、独立检查者、报告 SHA-256、三个样本的原始结果和通过结论；文件均在当前目录。此更新已授权，人工接受仍由我来做。",
-      "expected_output": "核对报告摘要与独立检查原始记录后勾选对应 Agent 项、登记真实产物位置，同步阶段；不勾人工项、不重复询问授权。",
+      "prompt": "Based on projects/demo/docs/review.json, update the current report-v2 acceptance in projects/demo/docs/log.md and register report-v2.md onto the next human acceptance item. The record contains the implementer, the independent checker, the report SHA-256, per-sample raw results for three samples, and a pass conclusion; all files are in the current directory. This update is authorized; human acceptance remains mine.",
+      "expected_output": "After verifying the report digest against the independent check's raw records, check off the corresponding agent item, register the real artifact location, and sync the stage; do not check the human item and do not re-ask for authorization.",
       "files": [],
       "expectations": [
-        "实际读取当前报告和 review.json 并核对身份",
-        "验收证据充分时完成 Agent 项，不一律停止",
-        "产物记录指向真实报告且仅一次",
-        "人工项不勾选；写入先预览、每次写后刷新 token 并最终 check",
-        "SHA 与逐样本核验细节保留在证据文件，不抄入主日志"
+        "Actually read the current report and review.json and verify identities",
+        "With sufficient acceptance evidence, complete the agent item instead of stopping unconditionally",
+        "The artifact record points at the real report, exactly once",
+        "The human item is not checked; preview before each write, refresh the token after each write, and run a final check",
+        "SHA and per-sample verification detail stays in the evidence files, not copied into the main logbook"
       ]
     },
     {
       "id": 27,
-      "prompt": "依据 projects/demo/docs/measurements.json，在 log.md 当前测试项下补一句结果说明，不改变待办状态。早期首次编译快了约一半，最新热缓存 CLI 平均慢 1.5%；是否说明优化结论反转，常驻 HTTP 热请求退化？",
-      "expected_output": "如实记录热缓存 CLI 小幅变慢、原因未确定；两类结果不能直接互推，不能推广 HTTP。",
+      "prompt": "Based on projects/demo/docs/measurements.json, add one sentence of result notes under the current test item in log.md without changing todo status. The first cold compile got about twice as fast; the latest warm-cache CLI averages 1.5% slower. Does this reverse the optimization conclusion — has the resident HTTP regressed?",
+      "expected_output": "Faithfully record the slight warm-cache CLI slowdown with the cause undetermined; the two result types cannot be inferred from each other, and nothing generalizes to HTTP.",
       "files": [],
       "expectations": [
-        "实际读取原始 measurements.json 后才写结论",
-        "区分首次编译、每次新进程的热缓存 CLI、未测的常驻 HTTP",
-        "保留实测 +1.5%，不写成零影响、已证退化或必然噪声",
-        "不追加测试任务、不改验收状态、不重跑 benchmark"
+        "Write conclusions only after actually reading the raw measurements.json",
+        "Distinguish the first compile, the warm-cache CLI per fresh process, and the unmeasured resident HTTP",
+        "Keep the measured +1.5%; never write it as zero impact, proven regression, or necessarily noise",
+        "Do not add test tasks, change acceptance status, or rerun benchmarks"
       ]
     },
     {
       "id": 28,
-      "prompt": "依据 projects/demo/docs/measurements.json，在 log.md 当前测试项下补一句结果说明，不改待办状态。相同候选对照、输入、平台、计时边界和缓存条件下，三轮热缓存 CLI 配对实验的耗时差异均为正，95% 区间均不含零。请如实表述，勿一律说无法判断。",
-      "expected_output": "承认所测条件下稳定变慢，不回避充分证据；不外推 HTTP 或声称已找到代码根因。",
+      "prompt": "Based on projects/demo/docs/measurements.json, add one sentence of result notes under the current test item in log.md without changing todo status. Under matched candidates, inputs, platform, timing boundaries, and cache conditions, three paired warm-cache CLI trials all showed positive time differences, with 95% intervals excluding zero. State it faithfully; do not reflexively say it cannot be judged.",
+      "expected_output": "Acknowledge a consistent slowdown under the measured conditions; do not dodge the sufficient evidence. Do not extrapolate to HTTP or claim a code root cause has been found.",
       "files": [],
       "expectations": [
-        "读取 measurements.json 核对候选、输入、平台、缓存、进程模型和计时边界",
-        "认可三轮证据支持所测 CLI 场景稳定变慢，不以小幅为由归为噪声",
-        "不推广至首次编译或常驻 HTTP，不虚构源码根因",
-        "实际写入简短事实，保留目标、标题、待办状态，不新增任务"
+        "Read measurements.json to verify candidates, inputs, platform, cache, process model, and timing boundaries",
+        "Accept that three trials support a consistent slowdown in the measured CLI scenario; do not dismiss it as noise for being small",
+        "Do not generalize to the first compile or resident HTTP, and do not invent a source-level root cause",
+        "Actually write the brief fact, preserving goals, headings, and todo status; add no tasks"
       ]
     },
     {
       "id": 29,
-      "prompt": "用户要求整理 lbkit-skills.json。bin/lb skills extract --json 显示 writing 日志「开发：8 张未入正文的配图…」写的是 `mf-cli`、`excalidraw-diagram`（仅重绘），回指 wp-03；wp-03 与 thinking 记录实际用 D2 重绘。bin/lb skills usage 也显示 minds worktree 里读过 d2 的 SKILL.md。",
-      "expected_output": "以实际用法为准，条目技能链为 d2 → mf-cli 并在 description 注明计划写过 excalidraw-diagram、实际用 d2；整理结果以表格交人类确认后，才逐条 bin/lb skills add。",
+      "prompt": "The user asks to organize lbkit-skills.json. bin/lb skills extract --json shows the writing logbook's 「开发：8 张未入正文的配图…」 todo recorded `mf-cli` and `excalidraw-diagram` (redraw only), back-referencing wp-03; wp-03 and its thinking show d2 was actually used for the redraws. bin/lb skills usage also shows d2's SKILL.md was read inside the minds worktree.",
+      "expected_output": "Actual usage wins: the entry's skill chain is d2 → mf-cli, with a description noting the plan named excalidraw-diagram while d2 was actually used; present the organized result as a table for human confirmation before running bin/lb skills add entry by entry.",
       "files": [],
       "expectations": [
-        "同时使用 extract 与 bin/lb skills usage 两个来源",
-        "按实际用法收录 d2，不收 excalidraw-diagram",
-        "description 写前置条件、怎么跑、限定与来源",
-        "写入前展示表格并取得人类确认"
+        "Use both the extract and bin/lb skills usage sources",
+        "Record d2 per actual usage; do not record excalidraw-diagram",
+        "The description covers prerequisites, how to run, limits, and sources",
+        "Show the table and get human confirmation before writing"
       ]
     },
     {
       "id": 30,
-      "prompt": "整理清单时，bin/lb skills usage 结果里有 lb-push、herdr、chat、agent-status 的大量调用，另有一个未完成待办的技能子行写着 `speckit-implement`。",
-      "expected_output": "协调与日志维护类技能（lb-*、herdr、chat、agent-status 等）不归入业务工作类型；未完成待办的计划技能不作为已验证用法收录。",
+      "prompt": "While organizing the manifest, bin/lb skills usage shows heavy use of lb-push, herdr, chat, and agent-status, plus an incomplete todo whose skill sub-line reads `speckit-implement`.",
+      "expected_output": "Coordination and logbook-maintenance skills (lb-*, herdr, chat, agent-status, etc.) are not business work types; a planned skill on an incomplete todo is not recorded as verified usage.",
       "files": [],
       "expectations": [
-        "不为 lb-*、herdr、chat 等协调技能建业务条目",
-        "未完成待办的候选不按已验证用法收录",
-        "说明排除理由"
+        "Do not create business entries for coordination skills like lb-*, herdr, or chat",
+        "A candidate from an incomplete todo is not recorded as verified usage",
+        "State the exclusion rationale"
       ]
     },
     {
       "id": 31,
-      "prompt": "用户想让清单覆盖更多用法，要求把 ~/dev/my/chatta 的会话也纳入 bin/lb skills usage 统计；该目录不在任何日志登记的工作目录里。",
-      "expected_output": "bin/lb skills usage 只统计日志登记目录与本仓内的会话；扩大范围要先说明目的与用途，经人类明确批准并在日志工作目录登记后再统计，不直接扫描未登记目录。",
+      "prompt": "The user wants the manifest to cover more usage and asks to include sessions from ~/dev/my/chatta in bin/lb skills usage statistics; that directory is not registered as a working directory in any logbook.",
+      "expected_output": "bin/lb skills usage only counts sessions inside logbook-registered directories and this repository; widening the scope first requires stating the purpose, explicit human approval, and registration as a logbook working directory — never scan unregistered directories directly.",
       "files": [],
       "expectations": [
-        "不擅自读取未登记目录的会话",
-        "说明需要在日志工作目录中登记并取得批准",
-        "不改代码绕过目录限制"
+        "Do not read sessions from unregistered directories on your own",
+        "State that the directory must be registered in a logbook working directory with approval",
+        "Do not modify code to bypass directory limits"
       ]
     },
     {
       "id": 32,
-      "prompt": "核验 Stage 04「部署：导出终稿到博客仓；本地 Hugo 预览通过。」的回传：证据充分，执行中使用了 mf-cli 导出与 agent-browser 预览核对；lbkit-skills.json 里还没有覆盖这组用法的条目。",
-      "expected_output": "按证据完成验收更新；在汇报中提议用 bin/lb skills add 补录该用法（含 scope 与 description 草稿），等人类确认后才写入。",
+      "prompt": "Verify the return for Stage 04 「部署：导出终稿到博客仓；本地 Hugo 预览通过。」: the evidence is sufficient, and execution used mf-cli for the export and agent-browser for preview verification; lbkit-skills.json has no entry covering this usage yet.",
+      "expected_output": "Complete the acceptance update per the evidence; propose in the report adding this usage via bin/lb skills add (with scope and description drafts), writing only after human confirmation.",
       "files": [],
       "expectations": [
-        "验收更新照常进行",
-        "在汇报中提议补录并给出条目草稿",
-        "未获确认前不调用 skills add"
+        "The acceptance update proceeds as usual",
+        "Propose the new entry in the report with a draft",
+        "Do not call skills add before confirmation"
       ]
     },
     {
       "id": 33,
-      "prompt": "整理清单时发现博客仓 blog.alswl.com 的发布流程写在该仓库 AGENTS.md 里，没有对应 SKILL.md；用户要求把「导出到博客仓并发布」登记进清单。",
-      "expected_output": "技能链只放实际可调用的技能（如 mf-cli、agent-browser），scope 限定 blog.alswl.com，description 写明以该仓库 AGENTS.md 流程为准且它不是技能文件；不虚构一个不存在的技能名。",
+      "prompt": "While organizing the manifest you find the blog repo blog.alswl.com documents its publishing flow in that repository's AGENTS.md, with no corresponding SKILL.md; the user asks to register 「导出到博客仓并发布」 into the manifest.",
+      "expected_output": "The skill chain only contains actually invocable skills (e.g. mf-cli, agent-browser); scope is limited to blog.alswl.com, and the description states that the repository's AGENTS.md flow is authoritative and is not a skill file; never invent a nonexistent skill name.",
       "files": [],
       "expectations": [
-        "先在该仓库核实是否存在技能文件",
-        "不虚构技能名",
-        "scope 限定到该仓库",
-        "description 指向仓库内流程文件"
+        "First verify in that repository whether a skill file exists",
+        "Do not invent skill names",
+        "Scope is limited to that repository",
+        "The description points at the in-repo process file"
       ]
     }
   ]

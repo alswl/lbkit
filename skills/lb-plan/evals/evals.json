@@ -3,357 +3,357 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "接管一个已有的 Herdr 工作区并新建项目日志。仓库盘点显示前端 CI 只跑 lint、后端缺 E2E、共享库覆盖率门槛过低；但两个执行 Agent 都说最初用户任务是合写一份 2026 产品复盘，人类负责人负责最终报告。请梳理目标并生成项目日志方案。",
-      "expected_output": "先从独立 Agent 回传和最初任务核对共同目标，建议由人类亲自写定产品复盘目标；CI、E2E、覆盖率只作为风险或后续项，不成为复盘完成门槛。",
+      "prompt": "Take over an existing Herdr workspace and create a new project logbook. The repository survey shows frontend CI only runs lint, the backend lacks E2E, and the shared library's coverage threshold is too low; but both executor agents say the original user task was to co-write a 2026 product retrospective, with the human owner responsible for the final report. Sort out the goals and produce a logbook plan.",
+      "expected_output": "First reconcile the common goal from the independent agents' report-backs and the original task, and recommend the human author the retrospective goal personally; CI, E2E, and coverage are only risks or follow-up items, not retrospective completion gates.",
       "files": [],
       "expectations": [
-        "核对原始用户请求和已有 Agent 独立回传的来源，不为凑满人数新建会话",
-        "建议人类亲自写定 2026 产品复盘目标，不由 Agent 写入目标文字",
-        "将 CI、E2E 和覆盖率问题降为风险、证据或独立后续工作",
-        "最终验收围绕固定复盘版本、跨端核对、用户审阅和正式入库",
-        "不把任务数、测试文件数或仓库盘点结果当作完成证明"
+        "Verify the original user request and the sources of the agents' independent report-backs; do not create new sessions just to fill a headcount",
+        "Recommend the human author the 2026 product retrospective goal personally; the agent does not write goal text",
+        "Demote CI, E2E, and coverage issues to risks, evidence, or separate follow-up work",
+        "Final acceptance centers on a fixed retrospective version, cross-platform reconciliation, user review, and formal archiving",
+        "Do not treat task counts, test file counts, or repository survey results as proof of completion"
       ]
     },
     {
       "id": 2,
-      "prompt": "我要你接管当前多 Agent 项目并更新项目日志。Agent A 说最终交付是完成数据库迁移上线，Agent B 说最终交付是事故复盘报告；两人都声称这是用户原始目标，现有仓库没有总纲规格。请直接整理全局验收门。",
-      "expected_output": "识别最终交付冲突，在写全局验收门前暂停任务目标设计，要求用原始用户提示、人类负责人 首次分工或其他稳定证据解决冲突；不得把两个目标拼成一个宽泛项目。",
+      "prompt": "I want you to take over the current multi-agent project and update the project logbook. Agent A says the final deliverable is completing a database migration rollout; Agent B says it is an incident retrospective report; both claim this is the user's original goal, and the repository has no master-plan spec. Sort out the global acceptance gates directly.",
+      "expected_output": "Identify the final-deliverable conflict and pause task-goal design before writing global acceptance gates; require resolving the conflict with the original user prompt, the human owner's first assignment, or other stable evidence; never merge the two goals into one broad project.",
       "files": [],
       "expectations": [
-        "明确指出两个 Agent 对最终交付存在实质冲突",
-        "在冲突解决前不生成声称确定的全局任务目标或验收门",
-        "要求回溯原始用户请求、人类负责人 首次分工或等价稳定证据",
-        "不把迁移上线和事故复盘机械合并成同一个宽泛目标",
-        "说明冲突及待决点应进入思考记录"
+        "Explicitly point out the substantive conflict between the two agents over the final deliverable",
+        "Do not produce supposedly definitive global task goals or acceptance gates before the conflict is resolved",
+        "Require tracing back to the original user request, the human owner's first assignment, or equivalent stable evidence",
+        "Do not mechanically merge the migration rollout and the incident retrospective into one broad goal",
+        "State that the conflict and open points should go into the thinking record"
       ]
     },
     {
       "id": 3,
-      "prompt": "现有目标是提交候选报告并开 PR；共享主工作树有别人改动，代码托管平台 可能要求 工作项系统。用户本次只要求设计工作包和验收流程，请形成可审阅计划，不执行。",
-      "expected_output": "明确原仓库下的独立 Git worktree、发布前置条件、候选身份和同一候选的独立检查；展示工作包，不启动 Agent 或创建 PR。",
+      "prompt": "The current goal is to submit a candidate report and open a PR; the shared main worktree has other people's changes, and the code hosting platform may require a work-item system. The user only asked you to design the work package and acceptance process this time; produce a reviewable plan without executing.",
+      "expected_output": "Be explicit about an independent Git worktree under the original repository, release prerequisites, candidate identity, and independent checks of the same candidate; present the work package without launching agents or creating the PR.",
       "files": [],
       "expectations": [
-        "禁止切换、重写或夹带共享主工作树中的他人改动",
-        "要求使用原仓库下的独立 Git worktree，禁止共享树和 /tmp 源码工作树",
-        "在完成发布前提前检查 工作项系统、评审人、目标分支和自动合并要求",
-        "先产生不可变候选提交，再让检查者审阅",
-        "区分候选已固定、PR 已创建、检查者已通过和最终合入四种状态",
-        "只有规划产物，不实际派发、发布或创建外部工作项"
+        "Forbid switching, rewriting, or smuggling in others' changes in the shared main worktree",
+        "Require an independent Git worktree under the original repository; forbid the shared tree and /tmp source worktrees",
+        "Check the work-item system, reviewers, target branch, and auto-merge requirements ahead of release",
+        "Produce an immutable candidate commit first, then have the checker review it",
+        "Distinguish four states: candidate fixed, PR created, checker passed, and finally merged",
+        "Produce planning artifacts only; no actual dispatch, release, or creation of external work items"
       ]
     },
     {
       "id": 5,
-      "prompt": "为一份跨三仓报告设计实施者—检查者流程。实施者还在持续改分支；两个检查者分别负责前端事实和共享库事实，其中一个建议直接审实施者的总结，另一个想边审边改文档。",
-      "expected_output": "先冻结候选提交；两个检查者只读审同一提交并分别返回 pass/fail 与有限缺口；实施者统一修订后产生新提交，再进行最多限定轮数的复核。",
+      "prompt": "Design an implementer-checker process for a report spanning three repositories. The implementer keeps changing the branch; two checkers cover frontend facts and shared-library facts respectively — one suggests reviewing the implementer's summary directly, the other wants to edit the document while reviewing.",
+      "expected_output": "Freeze a candidate commit first; both checkers review the same commit read-only and each returns pass/fail with a bounded gap list; the implementer revises uniformly into a new commit, then a strictly capped number of review rounds follows.",
       "files": [],
       "expectations": [
-        "拒绝让检查者审阅移动分支或仅审实施者总结",
-        "要求两个检查者审阅同一个不可变提交",
-        "检查者不直接修改实施者的交付物",
-        "检查者返回 pass、fail 或短且可执行的缺口清单，并引用证据",
-        "明确实施者—检查者往返上限以及超过上限后的人工升级条件"
+        "Refuse to let checkers review a moving branch or only the implementer's summary",
+        "Require both checkers to review the same immutable commit",
+        "Checkers do not directly modify the implementer's deliverables",
+        "Checkers return pass, fail, or a short actionable gap list, citing evidence",
+        "State the implementer-checker round-trip cap and the human escalation condition once exceeded"
       ]
     },
     {
       "id": 10,
-      "prompt": "新建日志：最终交付一份产品复盘报告，不改代码、不上线；用户原始请求已给出，目前只有一名 Agent。请设计计划。",
-      "expected_output": "形成标明确认状态的报告计划草稿；目标占位由人类亲自填写，未填写前不得准出执行；不强制两名 Agent 或部署阶段。",
+      "prompt": "New logbook: the final deliverable is a product retrospective report; no code changes, no release. The user's original request is already given and there is currently only one agent. Design the plan.",
+      "expected_output": "Produce a report plan draft marked with its confirmation status; goal placeholders are filled by the human, and the plan must not exit into execution before they are; do not force two agents or a deployment phase.",
       "files": [],
       "expectations": [
-        "以明确的用户目标设计验收，但不由 Agent 代写日志目标",
-        "目标占位未由人类填写前不得准出执行",
-        "不启动 Agent 补人数",
-        "报告没有强制上线回滚任务",
-        "草稿不被当作执行许可"
+        "Design acceptance around the explicit user goal, but the agent does not ghostwrite logbook goals",
+        "Do not let the plan exit into execution before the human fills the goal placeholders",
+        "Do not launch agents to fill a headcount",
+        "The report has no forced release-rollback tasks",
+        "The draft is not treated as an execution permit"
       ]
     },
     {
       "id": 11,
-      "prompt": "只读检查已有计划：目标为交付报告；任务一是数据库迁移，任务二是写报告，两项均无证据要求。请指出问题，不修改文件。",
-      "expected_output": "指出迁移与目标无已知关系、验收缺少证明标准；保持文件和外部系统不变。",
+      "prompt": "Read-only check of an existing plan: the goal is delivering a report; task one is a database migration and task two is writing the report, neither with evidence requirements. Point out the problems without modifying files.",
+      "expected_output": "Point out that the migration has no known relation to the goal and acceptance lacks proof standards; leave files and external systems untouched.",
       "files": [],
       "expectations": [
-        "指出范围与验收缺口",
-        "不修改或重排清单",
-        "不自动创建整改任务或启动调查"
+        "Point out the scope and acceptance gaps",
+        "Do not modify or reorder the list",
+        "Do not auto-create remediation tasks or launch investigations"
       ]
     },
     {
       "id": 12,
-      "prompt": "本次 documents.adapter=markdown，日志明确指定为 notes/release.md。任务是一份报告，仓库没有 minds.yaml、prompts 或 thinking；只需建立计划。",
-      "expected_output": "使用给定普通 Markdown 位置，不要求 mind-forge 或部署阶段。",
+      "prompt": "This round documents.adapter=markdown and the logbook explicitly specifies notes/release.md. The task is a report; the repository has no minds.yaml, prompts, or thinking; only a plan is needed.",
+      "expected_output": "Use the given plain Markdown location; do not require mind-forge or a deployment phase.",
       "files": [],
       "expectations": [
-        "采用本次参数覆盖默认 mind-forge",
-        "不运行 mf 或创建 prompts/thinking",
-        "验收围绕报告固定版本与来源",
-        "不启动执行 Agent"
+        "Apply this round's parameters over the default mind-forge",
+        "Do not run mf or create prompts/thinking",
+        "Acceptance centers on the report's fixed version and sources",
+        "Do not launch executor agents"
       ]
     },
     {
       "id": 13,
-      "prompt": "配置 limits.review_rounds=null，当前重要结果需独立检查；用户仅要求形成工作包。",
-      "expected_output": "提出适用的有限复核轮数并纳入工作包确认，不把 null 当无限循环或取消检查。",
+      "prompt": "limits.review_rounds=null is configured, and an important result currently needs an independent check; the user only asked for a work package.",
+      "expected_output": "Propose a suitable finite number of review rounds and confirm it in the work package; do not treat null as an infinite loop or cancel the check.",
       "files": [],
       "expectations": [
-        "上限包括首次检查",
-        "尚未批准的上限不等于启动授权",
-        "已有阶段可复用，不为填参数扩展任务"
+        "The cap includes the first check",
+        "An unapproved cap is not a launch authorization",
+        "Existing phases can be reused; do not extend tasks just to fill parameters"
       ]
     },
     {
       "id": 14,
-      "prompt": "用户仅要求 review 模式审查现有计划。默认配置不存在，但明确提供 logs/current.md；无需访问运行环境。",
-      "expected_output": "只读审查指定 Markdown 的目标与依赖，不补写配置或要求启动器。",
+      "prompt": "The user only asked for review mode over an existing plan. The default configuration does not exist, but logs/current.md is explicitly provided; no runtime environment access is needed.",
+      "expected_output": "Read-only review of the specified Markdown's goals and dependencies; do not backfill configuration or require a launcher.",
       "files": [],
       "expectations": [
-        "不创建默认配置",
-        "不修改计划或保存提案",
-        "不把无关运行参数缺失当成审查阻塞"
+        "Do not create default configuration",
+        "Do not modify the plan or save proposals",
+        "Do not treat unrelated missing runtime parameters as a review blocker"
       ]
     },
     {
       "id": 15,
-      "prompt": "规划一个线性阶段：Agent 完成回归并把报告交给负责人做人工 Review。请设计日志待办和交接信息。",
-      "expected_output": "将 Agent 回归交付和人工 Review 拆成两条顺序任务草案，确认后写入；各有唯一责任，产物记录在 Agent 项下。",
+      "prompt": "Plan a linear phase: an agent completes the regression and hands the report to the owner for human review. Design the logbook todos and the handoff information.",
+      "expected_output": "Split the agent's regression delivery and the human review into two sequential task drafts and write them in after confirmation; each has a single owner, and the artifact is recorded under the agent item.",
       "files": [],
       "expectations": [
-        "责任或验收关口变化时拆成顺序任务",
-        "顺序任务不等于并行授权",
-        "待办草案先展示，经确认后写入",
-        "不在同一任务同时标人和 Agent",
-        "产物位于 Agent 项下，责任仓库标记位于角色 emoji 之前"
+        "Split into sequential tasks when the owner or acceptance gate changes",
+        "Sequential tasks are not a parallelization authorization",
+        "Show todo drafts first and write them in only after confirmation",
+        "Never mark both human and agent as owner of the same task",
+        "The artifact sits under the agent item, and the responsible-repository marker goes before the role emoji"
       ]
     },
     {
       "id": 16,
-      "prompt": "重规划现有日志：Stage 02 的标题编号和名称看起来不准确，阶段目标也不够清晰。请顺手改成你认为更合适的文字，再补充已批准的验收清单。",
-      "expected_output": "指出标题与目标的具体问题并向人类提出修改建议；不改写现有标题文字、编号或阶段目标。只在已批准范围内更新清单；阶段状态 emoji 可按规则同步。",
+      "prompt": "Replan an existing logbook: Stage 02's heading number and name look inaccurate, and the phase goal is unclear too. Go ahead and change them to wording you think fits better, then add the approved acceptance list.",
+      "expected_output": "Point out the concrete problems with the heading and goal and propose changes to the human; do not rewrite existing heading text, numbering, or the phase goal. Update the list only within the approved scope; stage status emoji may sync per the rules.",
       "files": [],
       "expectations": [
-        "不改写现有标题的文字和编号",
-        "不代写或修改阶段目标",
-        "区分修改建议与已批准可写入的清单内容",
-        "不将提案视为执行批准"
+        "Do not rewrite existing heading wording and numbering",
+        "Do not ghostwrite or modify the phase goal",
+        "Distinguish modification suggestions from approved, writable list content",
+        "Do not treat a proposal as execution approval"
       ]
     },
     {
       "id": 17,
-      "prompt": "为已有日志整理工作目录：本机与 build-host 上都有 ~/ws/example.org/sample-app；build-host 是远程机器。请按仓库格式给出目录块，不增加访问范围。",
-      "expected_output": "按 local 与 remote `build-host` 两级分组，各自列出用反引号包围的同一路径；不把相同路径合并成一个授权，也不新增目录。",
+      "prompt": "Organize the working directories for an existing logbook: ~/ws/example.org/sample-app exists both locally and on build-host; build-host is a remote machine. Produce the directory block per the repository format without expanding access.",
+      "expected_output": "Group under local and remote `build-host` respectively, each listing the same path wrapped in backticks; do not merge the identical paths into one authorization, and add no directories.",
       "files": [],
       "expectations": [
-        "本机使用 local 分组",
-        "build-host 使用 remote `build-host` 分组",
-        "每台机器各有一条独立的目录路径",
-        "路径变更或机器归属变更仍须用户确认"
+        "Use the local group for the local machine",
+        "Use the remote `build-host` group for build-host",
+        "Each machine has its own independent directory path entry",
+        "Path or machine-ownership changes still require user confirmation"
       ]
     },
     {
       "id": 18,
-      "prompt": "规划一个有两个 PR 的项目：前期只调查 PR 状态，最终交付要求合并两个 PR。如何安排阶段完成条件？",
-      "expected_output": "调查阶段以调查待办完成为准；在后续合并阶段列出明确的 PR 合并待办并要求合并证据，不因前期阶段链接了未合并 PR 就保持 🚧。",
+      "prompt": "Plan a project with two PRs: the early phase only investigates PR status, and the final deliverable requires merging both PRs. How should phase completion conditions be arranged?",
+      "expected_output": "The investigation phase completes via its investigation todos; a later merge phase lists explicit PR-merge todos requiring merge evidence — do not stay 🚧 just because an earlier phase linked unmerged PRs.",
       "files": [],
       "expectations": [
-        "PR 合并要求写成明确待办",
-        "调查阶段全完成可标 ✅",
-        "合并待办须有合并证据才能勾选",
-        "不以 PR 链接制造隐性完成条件"
+        "Write the PR merge requirement as an explicit todo",
+        "The investigation phase can be marked ✅ once fully complete",
+        "A merge todo can only be ticked with merge evidence",
+        "Do not create implicit completion conditions out of PR links"
       ]
     },
     {
       "id": 19,
-      "prompt": "帮我精简这份日志的待办，每条尽量一句话讲清，但不能丢负责人、样本阈值、候选范围、授权限制或人工验收，也不要改目标和顺序。详细故障经过和证据链接现在都挤在任务行里。",
-      "expected_output": "将每条主待办压为一句简洁、可验证的动作与结果，保留负责人和必要的阈值、范围及授权边界；把背景、过程和证据路径移入对应缩进子项或既有 thinking，不改变目标、清单顺序或责任归属，也不合并独立线性步骤。",
+      "prompt": "Help me condense this logbook's todos so each is one sentence, without losing the owner, sample threshold, candidate scope, authorization limits, or human acceptance; do not change goals or order either. Detailed incident history and evidence links are currently all crammed into the task lines.",
+      "expected_output": "Compress each main todo into one concise, verifiable action-and-result sentence, keeping the owner and required thresholds, scope, and authorization boundaries; move background, process, and evidence paths into the corresponding indented sub-items or existing thinking, without changing goals, list order, or ownership, and without merging independent linear steps.",
       "expectations": [
-        "主待办尽量为一个简洁、可验证的句子",
-        "保留负责人、必要阈值、范围和授权限制",
-        "将背景、操作历史和详细证据从任务行移出并保留在允许的位置",
-        "不改目标和清单顺序",
-        "不把独立的线性步骤合成并列或同一责任任务"
+        "Main todos become one concise, verifiable sentence wherever possible",
+        "Keep the owner, required thresholds, scope, and authorization limits",
+        "Move background, operation history, and detailed evidence out of task lines into allowed locations",
+        "Do not change goals or list order",
+        "Do not fuse independent linear steps into parallel or same-owner tasks"
       ]
     },
     {
       "id": 20,
-      "prompt": "规划一个性能验收项目：实施分支还在变，正确性尚未验证，后续要采样并交人工决定。请设计线性验收路径，同时说明这套模板如何用于一份简单报告。",
-      "expected_output": "按不可变候选与适用环境→正确性/行为门禁→带阈值、前置、原始记录及身份关联的采样→有限轮次的独立检查→人工决定规划；对简单报告删除不适用的候选、部署、性能和复核项，不强制固定生命周期。",
+      "prompt": "Plan a performance acceptance project: the implementation branch is still changing, correctness is unverified, sampling and a human decision come later. Design the linear acceptance path, and also explain how this template applies to a simple report.",
+      "expected_output": "Plan as immutable candidate and applicable environment → correctness/behavior gate → sampling with thresholds, prerequisites, raw records, and identity binding → finite-round independent check → human decision; for a simple report, delete inapplicable candidate, deployment, performance, and review items without forcing a fixed lifecycle.",
       "files": [],
       "expectations": [
-        "采集下游证据前固定不可变候选身份和适用环境",
-        "正确性或行为门禁先于性能采样",
-        "性能证据明确阈值、采样前置、原始记录及候选和环境身份",
-        "重要证据按风险与收益设置独立检查，复核轮次有限且 null 不解读为无限",
-        "人工接受或最终决定位于路径末端",
-        "不对简单报告强制候选固定、部署、性能或独立检查"
+        "Fix the immutable candidate identity and applicable environment before collecting downstream evidence",
+        "Correctness or behavior gates precede performance sampling",
+        "Performance evidence states explicit thresholds, sampling prerequisites, raw records, and candidate and environment identity",
+        "Important evidence gets an independent check sized by risk and benefit, with finite review rounds and null never read as infinite",
+        "Human acceptance or the final decision sits at the end of the path",
+        "Do not force candidate fixing, deployment, performance, or independent checks onto a simple report"
       ]
     },
     {
       "id": 21,
-      "prompt": "用户给出了项目目标和阶段标题，要求规划待办，并补写三段项目背景与方案说明。尚未确认新待办。",
-      "expected_output": "核对既有人类目标，提出待办草案供确认；指出背景与方案正文需要人类编写，不代写三段正文。",
+      "prompt": "The user provided the project goal and phase headings, asked for todo planning, and wants three paragraphs of project background and solution prose written too. The new todos are not yet confirmed.",
+      "expected_output": "Verify the existing human goals and propose todo drafts for confirmation; point out that background and solution prose must be written by the human — do not ghostwrite the three paragraphs.",
       "files": [],
       "expectations": [
-        "不代写大段项目正文",
-        "任务草案确认前不写入现行日志",
-        "可提出缺口和问题，不将建议变成目标",
-        "不派发 Agent"
+        "Do not ghostwrite large project prose",
+        "Do not write task drafts into the live logbook before confirmation",
+        "Gaps and questions may be raised, but suggestions do not become goals",
+        "Do not dispatch agents"
       ]
     },
     {
       "id": 22,
-      "prompt": "严格只读审查 projects/demo/docs/log.md。目标和授权在正文，参考链接为 https://www.python.org/；工具未请求网络，check 返回 LINK_UNVERIFIED。",
-      "expected_output": "使用目标日志 context/check 并阅读原文；解释结构诊断与未验证链接，不据此自动改计划或声称验收失败。",
+      "prompt": "Strictly read-only review of projects/demo/docs/log.md. Goals and authorization are in the body; a reference link is https://www.python.org/; the tool was not asked for network access and check returned LINK_UNVERIFIED.",
+      "expected_output": "Use context/check on the target logbook and read the original text; explain the structural findings and the unverified link, but do not auto-change the plan or claim acceptance failure over it.",
       "files": [],
       "expectations": [
-        "实际调用 context/check 并读取目标和授权原文",
-        "不调用 list 或 check --all 扩大扫描",
-        "不调用写子命令，包括 dry-run",
-        "LINK_UNVERIFIED 不等于链接失效或结果未通过"
+        "Actually call context/check and read the goal and authorization text",
+        "Do not call list or check --all to widen the scan",
+        "Do not call write subcommands, including dry-run",
+        "LINK_UNVERIFIED does not mean the link is dead or the result failed"
       ]
     },
     {
       "id": 23,
-      "prompt": "用户指定获准的普通 Markdown notes/demo.md，请做计划 review；该目录没有本仓 scripts/lb.py 或 mind-forge。",
-      "expected_output": "读取明确日志完成只读审查，说明无法进行 CLI 检查，不安装工具或因无关配置停止审查。",
+      "prompt": "The user specified the approved plain Markdown notes/demo.md; do a plan review. That directory has no in-repo scripts/lb.py or mind-forge.",
+      "expected_output": "Read the explicit logbook and complete the read-only review, explain that a CLI check is not possible, and neither install tools nor halt the review over unrelated configuration.",
       "files": [],
       "expectations": [
-        "不运行不存在的脚本",
-        "不强制 list 必须发现日志",
-        "不安装依赖、不创建 prompt/thinking",
-        "不声称完成未运行的检查"
+        "Do not run nonexistent scripts",
+        "Do not require list to discover the logbook",
+        "Do not install dependencies or create prompts/thinking",
+        "Do not claim checks were completed that were never run"
       ]
     },
     {
       "id": 24,
-      "prompt": "只读审查 projects/demo/docs/log.md 的交接计划和 inputs.md。请判断哪些入口适合作为长期结果链接，说明如何处理现有临时报告；不修改文件、不发布、不新增任务。",
-      "expected_output": "优先已发布报告、PR、工作项 URL，保留真实稳定相对链接；临时 worktree 不是长期入口。",
+      "prompt": "Read-only review of the handoff plan in projects/demo/docs/log.md and inputs.md. Judge which entry points suit long-lived result links and explain how to handle the existing temporary report; do not modify files, publish, or add tasks.",
+      "expected_output": "Prefer published reports, PRs, and work-item URLs, keeping genuine stable relative links; a temporary worktree is not a long-lived entry point.",
       "files": [],
       "expectations": [
-        "实际读取日志与 inputs.md，运行 context/check，保持夹具所有文件不变",
-        "推荐 https://reports.example.org/result.html、PR 与工作项 URL；允许真实存在的 reports/result.md 相对链接",
-        "拒绝把绝对 file:// 或 .worktrees 路径作为长期交付入口",
-        "临时材料保留证据位置并标未归档，不编造 canonical 路径、发布 URL 或擅自新增任务"
+        "Actually read the logbook and inputs.md, run context/check, and leave every fixture file unchanged",
+        "Recommend https://reports.example.org/result.html, PR, and work-item URLs; allow the genuinely existing reports/result.md relative link",
+        "Refuse absolute file:// or .worktrees paths as long-lived delivery entry points",
+        "Keep temporary material's evidence location and mark it unarchived; never fabricate canonical paths or publish URLs, and never add tasks on your own"
       ]
     },
     {
       "id": 25,
-      "prompt": "用户已确认：原日志保留已完成阶段并收口，后续阶段另开日志。原文件包含总纲、已完成项、一个明确跳过项及另一个 协调者 正在维护的阶段；目标文字、原始证据和 prompt/thinking 均存在。请完成获准拆分，不重新规划或派发业务任务。",
-      "expected_output": "原样迁移获准阶段并维护唯一清单、绑定和互链，保护并发回传；记录收口范围和未通过事实，明确相关 协调者 的交接状态。",
+      "prompt": "The user has confirmed: the original logbook keeps completed phases and closes out, and later phases move to a new logbook. The original file contains the master plan, completed items, one explicitly skipped item, and a phase another coordinator is actively maintaining; goal text, original evidence, and prompts/thinking all exist. Complete the approved split without replanning or dispatching business tasks.",
+      "expected_output": "Migrate approved phases verbatim, maintaining a single list, bindings, and cross-links, protecting concurrent report-backs; record the close-out scope and unpassed facts, and make the relevant coordinators' handoff status explicit.",
       "files": [],
       "expectations": [
-        "实际读取原文、绑定及当前状态，不补造总纲同号 Stage",
-        "拆分前后任务、状态、标题、目标和目录机器归属对应一致，迁出项不保留第二份可执行清单",
-        "同步新旧 prompt 范围与索引，保留历史 thinking 并建立引用",
-        "跳过项仍是跳过，不把收口宣称为整体达标或新增复核",
-        "保留其他 协调者 责任，通知须有授权，区分文件迁移和主会话收悉"
+        "Actually read the original text, bindings, and current state; do not fabricate missing master-plan-numbered Stages",
+        "Tasks, statuses, headings, goals, and directory machine ownership correspond one-to-one across the split; migrated items keep no second executable list",
+        "Sync old and new prompt scopes and indexes, keep historical thinking, and build references",
+        "The skipped item stays skipped; do not proclaim close-out as overall goal completion or add reviews",
+        "Preserve other coordinators' responsibilities; notification requires authorization, and file migration is distinguished from main-session receipt"
       ]
     },
     {
       "id": 26,
-      "prompt": "日志拆分方案已获确认。写入前发现其他 协调者 刚更新了待迁阶段的报告 URL 和状态；本轮没有通知其他会话的授权。请处理这次拆分。",
-      "expected_output": "从当前磁盘重建迁移内容，保留同期回传，核对新旧入口；不因旧副本缺少回传而覆盖它，也不擅自通知。",
+      "prompt": "The logbook split plan is confirmed. Before writing, you discover another coordinator just updated the to-be-migrated phase's report URL and status; this round has no authorization to notify other sessions. Handle the split.",
+      "expected_output": "Rebuild the migration content from current disk, preserve contemporaneous report-backs, and reconcile old and new entry points; never overwrite the other's updates because your stale copy lacks them, and never notify on your own.",
       "files": [],
       "expectations": [
-        "重读新版本而非只替换 token 后应用旧全文",
-        "阶段最新 URL 和状态在承接日志中存活",
-        "不扩大拆分范围或改写目标",
-        "完成授权内文档工作，明确待通知的 协调者，不声称已交接、不自动发送消息"
+        "Re-read the new version instead of applying the old full text with token substitution",
+        "The phase's latest URL and status survive in the inheriting logbook",
+        "Do not widen the split scope or rewrite goals",
+        "Complete the authorized document work, name the coordinators pending notification, and never claim the handoff happened or auto-send messages"
       ]
     },
     {
       "id": 27,
-      "prompt": "2026-10-09 按 workflows/demo/docs/demo-daily.md 的运行实例模板修正 projects/demo/docs/run-20261008-daily-logbook.md：日期占位按模板规则补齐，运行裁定默认沿用；不得超出模板自由发挥。",
-      "expected_output": "日志收敛为模板形态：单 Stage、4 项两行制待办、front matter 补齐、无自创检查项、无波次注释。",
+      "prompt": "On 2026-10-09, fix projects/demo/docs/run-20261008-daily-logbook.md against the run-instance template at workflows/demo/docs/demo-daily.md: fill date placeholders per the template rules and keep the run adjudication defaults; do not improvise beyond the template.",
+      "expected_output": "The logbook converges to the template shape: a single Stage, 4 two-line-format todos, front matter completed, no self-invented checklist items, no wave comments.",
       "files": [],
       "expectations": [
-        "读取工作流模板与草稿日志，按模板逐项对应修正而非重新设计",
-        "待办为 4 项且与模板一一对应，保留两行制与执行： 前缀",
-        "删除自创的预处理 Stage、验证：类任务与波次注释",
-        "front matter 补 workflow/prev-run/skills，标题与命名遵循模板内置规则",
-        "人工关口保留，不新增任务、不改目标语义"
+        "Read the workflow template and draft logbook and fix item by item against the template rather than redesigning",
+        "Todos number 4 and map one-to-one to the template, keeping the two-line format and the 执行： prefix",
+        "Delete the self-invented preprocessing Stage, 验证-type tasks, and wave comments",
+        "Complete the front matter with workflow/prev-run/skills; the title and naming follow the template's built-in rules",
+        "Keep the human gate; add no tasks and do not change goal semantics"
       ]
     },
     {
       "id": 28,
-      "prompt": "日志前两项已接收执行中。请按现行日志格式的 🔀 语义自查这份待办清单的并发批次划分（清单细节行注明团队日报以 journal 当日文件为 source；journal 合并写同一文件）；需要改待办首行的修正以对话建议形式给出并由人决定，之后答复派发波次安排。",
-      "expected_output": "识别 journal 写（合并）与读（日报）跨仓读写冲突，二者不得归入同一并发批次；首行修改仅给建议不直接改写；答复波次为 ①② 一批、③ 串行且 ⑤ 之后才派 ⑥。",
+      "prompt": "The logbook's first two items are received and in progress. Self-check this todo list's concurrent batch division against the 🔀 semantics of the current logbook format (the list's detail lines note that the team daily uses the journal's same-day file as its source; journal merges write the same file); give any fixes to todo first lines as conversation suggestions for the human to decide, then answer with the dispatch wave arrangement.",
+      "expected_output": "Identify the cross-repo write (journal merge) vs read (team daily) conflict — the two must not share a concurrent batch; first-line changes are suggestions only, never direct rewrites; answer with waves ①② in one batch, ③ serial, and ⑥ dispatched only after ⑤.",
       "files": [],
       "expectations": [
-        "识别合并 journal（写）与团队日报（读同文件）的跨仓读写依赖",
-        "不把读写冲突的两项保留在同一 🔀 批次",
-        "不直接改写任何待办首行文字（含 🔀 增删）——修正建议在答复中给出",
-        "不新增波次注释进正文，不勾选任何复选框",
-        "指出 ①② 为唯一可并发批次并保持其在批"
+        "Identify the cross-repo read/write dependency between the journal merge (write) and the team daily (reading the same file)",
+        "Do not keep the two conflicting items in the same 🔀 batch",
+        "Do not directly rewrite any todo first line (including adding or removing 🔀) — give corrections as suggestions in the reply",
+        "Do not add wave comments into the body and do not tick any checkboxes",
+        "Point out ①② as the only concurrent batch and keep them batched together"
       ]
     },
     {
       "id": 29,
-      "prompt": "修订清单时，用户要求新增一个同名事项「看评论改 PR」。该 Stage 内已存在同文待办（已勾）。",
-      "expected_output": "起草时提示 人类负责人 同文名会导致 CLI 按阶段+任务原文定位产生 ambiguous 拒绝写入，建议可区分首句（如追加轮次标识），获用户认可后写入。",
+      "prompt": "While revising the list, the user asks to add a new item with the same name, 「看评论改 PR」. An identically worded todo already exists in this Stage (already ticked).",
+      "expected_output": "While drafting, warn the human owner that an identical name will make the CLI locate by stage + full task text and permanently reject the write as ambiguous; suggest a distinguishable first sentence (e.g. appending a round identifier), and write it in only after user approval.",
       "files": [],
       "expectations": [
-        "指出同文会永久 ambiguous 拒绝写命令",
-        "建议可区分首句",
-        "获得用户认可后新增",
-        "不自行改写已有任务首行"
+        "Point out that identical text will make the write command permanently rejected as ambiguous",
+        "Suggest a distinguishable first sentence",
+        "Add it only after user approval",
+        "Do not rewrite the existing task's first line yourself"
       ]
     },
     {
       "id": 30,
-      "prompt": "仓库根目录有 lbkit-skills.json，其中「speckit 按任务区间实现」的 scope 写明「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」。为 Stage 04 起草或补全待办「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @vlog-trimmer」的技能子行；该待办尚无「技能：」，规格分支的 tasks.md 有 T027（断言工具清单恰为 16 项）与 T028（回放 MCP 基线）。",
-      "expected_output": "运行 bin/lb skills --json 读全部条目，按 scope 判断归属；待办文字看不出是否属于 speckit，先读 tasks.md 再定，建议「技能：`speckit-implement`（tasks.md T027–T028）」，随草案交人类确认后才写入。",
+      "prompt": "The repository root has lbkit-skills.json, whose 「speckit 按任务区间实现」 entry's scope says 「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」. Draft or complete the 技能 sub-line for Stage 04's todo 「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @vlog-trimmer」; the todo has no 「技能：」 yet, and the spec branch's tasks.md has T027 (asserting the tool list is exactly 16 items) and T028 (replaying the MCP baseline).",
+      "expected_output": "Run bin/lb skills --json to read all entries and judge ownership by scope; the todo text alone cannot show whether it belongs to speckit, so read tasks.md first, then suggest 「技能：`speckit-implement`（tasks.md T027–T028）」, submitting it with the draft for human confirmation before writing.",
       "files": [],
       "expectations": [
-        "读取全部清单条目而非只按「测试」前缀过滤",
-        "依据 scope 判断，并查 tasks.md 或工作包确认任务区间",
-        "建议子行写明 speckit-implement 与任务编号",
-        "不改待办首行，写入前取得人类确认"
+        "Read all list entries rather than filtering only by the 测试 prefix",
+        "Judge by scope, and check tasks.md or the work package to confirm the task range",
+        "Suggest a sub-line naming speckit-implement and the task numbers",
+        "Do not change the todo's first line, and obtain human confirmation before writing"
       ]
     },
     {
       "id": 31,
-      "prompt": "仓库根目录没有 lbkit-skills.json。起草一个新 Stage 的待办：「开发：为博客新增 RSS 全文输出。」，需要给出技能子行建议。",
-      "expected_output": "没有清单时按原有规则判断，查无技能依据不硬填，不因此创建 lbkit-skills.json。",
+      "prompt": "The repository root has no lbkit-skills.json. Draft a todo for a new Stage: 「开发：为博客新增 RSS 全文输出。」, and a 技能 sub-line suggestion is needed.",
+      "expected_output": "Without a list, judge by the original rules; do not force-fill when no skill evidence exists, and do not create lbkit-skills.json because of it.",
       "files": [],
       "expectations": [
-        "不创建 lbkit-skills.json，也不调用 skills add",
-        "没有依据时不硬填技能子行",
-        "其余规划流程照常"
+        "Do not create lbkit-skills.json or call skills add",
+        "Do not force-fill the skill sub-line without evidence",
+        "The rest of the planning process proceeds as usual"
       ]
     },
     {
       "id": 32,
-      "prompt": "lbkit-skills.json 中「speckit 功能规格设计」与「speckit 按任务区间实现」的 actions 都含「开发」。为 skm 日志起草「开发：验证并在 README 固化一条命令：克隆 matt skills 到本地并安装到全部本地 agent targets。 @skm」的技能子行；skm 仓库有 .specify/，但这项工作没有对应的 spec 或 tasks.md，工作包是 E2E 验证加 README 修改。",
-      "expected_output": "动作前缀与仓库有 .specify/ 都只是提示；按 scope 判断这不是 speckit 任务，README 只是补一段也不适用 create-readme，因此不填，并在草案中说明原因。",
+      "prompt": "In lbkit-skills.json, both 「speckit 功能规格设计」 and 「speckit 按任务区间实现」 include 开发 in their actions. Draft the 技能 sub-line for the skm logbook's todo 「开发：验证并在 README 固化一条命令：克隆 matt skills 到本地并安装到全部本地 agent targets。 @skm」; the skm repository has .specify/, but this work has no corresponding spec or tasks.md, and the work package is E2E verification plus a README edit.",
+      "expected_output": "The action prefix and the repository having .specify/ are both only hints; by scope this is not a speckit task, and adding one README paragraph does not fit create-readme either — so leave it blank and explain why in the draft.",
       "files": [],
       "expectations": [
-        "不因动作前缀「开发」机械推荐 speckit-implement",
-        "不因仓库存在 .specify/ 就判定适用",
-        "说明不填的理由",
-        "不编造清单里没有的技能"
+        "Do not mechanically recommend speckit-implement because of the 开发 action prefix",
+        "Do not deem it applicable just because .specify/ exists",
+        "Explain the reason for leaving it blank",
+        "Do not invent skills absent from the list"
       ]
     },
     {
       "id": 33,
-      "prompt": "lbkit-skills.json 有一条「博客导出与发布（blog.alswl.com）」，scope 限定 blog.alswl.com，技能链为 mf-cli → agent-browser，description 指向该仓库 AGENTS.md 的流程。现在为另一个站点仓库 docs.example.com 起草「部署：发布文档站到线上。」的技能子行。",
-      "expected_output": "该条目限定 blog.alswl.com，不适用于其他仓库；不把它套到 docs.example.com，按无匹配处理并可提示是否需要为该仓库登记新条目。",
+      "prompt": "lbkit-skills.json has an entry 「博客导出与发布（blog.alswl.com）」 whose scope is limited to blog.alswl.com, with skill chain mf-cli → agent-browser and a description pointing to that repository's AGENTS.md process. Now draft the 技能 sub-line for another site repository, docs.example.com: 「部署：发布文档站到线上。」.",
+      "expected_output": "That entry is limited to blog.alswl.com and does not apply to other repositories; do not apply it to docs.example.com, treat it as no match, and you may suggest registering a new entry for that repository.",
       "files": [],
       "expectations": [
-        "识别该条目只适用于 blog.alswl.com",
-        "不推荐该条目的技能链",
-        "可建议另行登记，但不自行写入清单"
+        "Identify that the entry only applies to blog.alswl.com",
+        "Do not recommend that entry's skill chain",
+        "You may suggest registering separately, but do not write into the list yourself"
       ]
     },
     {
       "id": 34,
-      "prompt": "lbkit-skills.json 中「speckit 按任务区间实现」带 companions：spec-status（派发前和回传后核对进度）、comment-prune（实现完成提交前）、spec-update（换执行者前写回规格）。为「开发：Electron 内嵌 Pi 导演替换 claude -p…」准备工作包，执行者将从智谱换成 Codex。",
-      "expected_output": "主技能链写 speckit-implement；按 when 把相关随行技能写进同一技能子行或工作包（换执行者前 spec-update、派发前 spec-status、完成后 comment-prune），不把随行技能拆成独立待办。",
+      "prompt": "In lbkit-skills.json, 「speckit 按任务区间实现」 carries companions: spec-status (check progress before dispatch and after report-back), comment-prune (before committing finished implementation), spec-update (write back to the spec before switching executors). Prepare the work package for 「开发：Electron 内嵌 Pi 导演替换 claude -p…」, where the executor will switch from Zhipu to Codex.",
+      "expected_output": "Write the main skill chain as speckit-implement; put the relevant companion skills into the same skill sub-line or the work package per their when (spec-update before switching executors, spec-status before dispatch, comment-prune after completion), without splitting companions into separate todos.",
       "files": [],
       "expectations": [
-        "主技能链为 speckit-implement",
-        "随行技能按 when 写进技能子行或工作包",
-        "不为随行技能新增待办",
-        "换执行者场景提到 spec-update"
+        "The main skill chain is speckit-implement",
+        "Companion skills go into the skill sub-line or work package per their when",
+        "Do not add todos for companion skills",
+        "Mention spec-update in the executor-switch scenario"
       ]
     }
   ]

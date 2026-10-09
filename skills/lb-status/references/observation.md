@@ -1,15 +1,15 @@
-# 状态观测
+# Status observation
 
-本参考只定义记录与运行信息的读取；允许的局部文档维护由技能主流程及日志格式约束。运行观测不建立监听、不修复环境、不执行业务命令或控制 Agent。
+This reference only defines reading records and runtime information; permitted local document maintenance is governed by the skill's main workflow and the logbook format. Live observation establishes no listeners, repairs no environments, runs no business commands, and controls no agents.
 
-## recorded 模式
+## recorded mode
 
-读取指定日志、已有回传和决定，不查询实时进程。标明来源与时效；旧记录不能证明“当前进程正常”。缺少实时信息就报告未知，不把记录查询升级为环境调查。
+Read the designated logbook, existing returns, and decisions; do not query live processes. State the source and its freshness; old records cannot prove "the current process is healthy". When live information is missing, report unknown — never escalate a record query into an environment investigation.
 
-## live 模式
+## live mode
 
-用户要求实时状态，或普通进度查询涉及可标识的已派发执行者时，读取适配器的只读接口文档，用显式标识查询状态与最近活动。Herdr 使用环境提供的工具技能，不加载或执行启动与恢复流程。
+When the user asks for live status, or an ordinary progress query involves an identifiable dispatched executor, read the adapter's read-only interface documentation and query status and recent activity with explicit identifiers. For Herdr, use the environment-provided tool skill; never load or execute launch and recovery flows.
 
-缺少查询能力或配置无效时退回文档事实，明确“实时未知”；不启动替代工具、不改配置。缺少会话标识不证明无在跑执行者。停滞结论需要活动时点和输出依据，不由单次 working 快照推出。
+When query capability is missing or configuration is invalid, fall back to documented facts and state "live status unknown"; do not start substitute tools or change configuration. A missing session identifier does not prove no executor is running. Stagnation conclusions require activity timestamps and output evidence — never infer them from a single working snapshot.
 
-运行状态不代替验收；旧回传不能覆盖更晚的日志变更。新完成结论交 lb-update 核验，恢复执行交 lb-push，状态请求不授予这些动作。live 观测读到执行窗口输入行的未发送文本时，按根规则作意图信号处置。
+Runtime status does not replace acceptance; old returns cannot override later logbook changes. New completion conclusions go to lb-update for verification, and resuming execution goes to lb-push — a status request grants neither. When live observation reads unsent text on an execution window's input line, handle it as an intent signal per the root rules.

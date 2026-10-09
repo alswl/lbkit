@@ -1,25 +1,25 @@
-# <项目名> 验收日志
+# <Project Name> Acceptance Logbook
 
-<!-- 草稿：总览及各阶段的「目标：」占位符由人类亲自填写，大段正文亦由人类编写，Agent 不代写；尚未填写时不得准出执行。沿用真实项目的交付拆分和线性顺序，不把模板阶段当成固定流程。按需重复交付阶段；具体代码或配置变更在实现前增加变更计划关口。有下游证据的项目先固定不可变候选与适用环境，再按依赖收集证据；正确性/行为门禁先于性能或运行采样，人工接受或最终决定放在末端。分类、归属和状态依据实际结果填写。示例链接须替换或移除。 -->
-<!-- 准出自检：工作目录、Stage 划分与待办清单三要素齐备，并经用户人工确认（用户亲自编写或修订计划即为确认）后，计划才可进入 lb-push 执行。 -->
+<!-- Draft: the overview's and each phase's 「目标：」 placeholders are filled in by the human personally, and large prose bodies are also written by the human — the agent does not ghostwrite them; while they remain unfilled, the plan must not exit into execution. Keep the real project's delivery breakdown and linear order; do not treat the template phases as a fixed pipeline. Repeat delivery phases as needed; add a change-plan gate before concrete code or config changes are implemented. For projects with downstream evidence, first fix the immutable candidate and applicable environments, then collect evidence along the dependencies; correctness/behavior gates precede performance or runtime sampling, and human acceptance or the final decision sits at the end. Fill in categories, ownership, and status per actual results. Replace or remove example links. -->
+<!-- Exit self-check: only when the three essentials — working directories, Stage division, and the todo list — are all present and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation) may the plan enter lb-push execution. -->
 
-## 总览
+## Overview
 
-目标：<最终交付结果及完成定义>。
+目标：<final deliverable and definition of done>.
 
 非目标：
 
-- <明确排除项>
+- <explicit exclusions>
 
-SKILLS：（仅列仓库外部技能）
+SKILLS：(only skills external to the repository)
 
 - `<skill-name>`
 
 链接：
 
-- [项目主入口](https://example.invalid/project)
+- [Project main entry](https://example.invalid/project)
 
-<!-- 本日志项目目录默认在范围内，无须重复列出；只按「local」或「remote `机器名`」分组列出经用户确认的其他机器目录。无目录的分组删除；若无其他目录，整块改为「工作目录：无额外目录（仅本日志项目目录）」。 -->
+<!-- This logbook's project directory is in scope by default and need not be listed again; list only other machines' directories confirmed by the user, grouped by 「local」 or 「remote `机器名`」. Delete empty groups; if there are no other directories, replace the whole block with 「工作目录：无额外目录（仅本日志项目目录）」. -->
 工作目录：
 
 - local
@@ -27,35 +27,35 @@ SKILLS：（仅列仓库外部技能）
 - remote `<机器名>`
   - `~/ws/<获准的远程目录>`
 
-## 🛫 Stage 01 <真实交付阶段>
+## 🛫 Stage 01 <Real Delivery Stage>
 
-目标：<本阶段可证明的结果或阈值>。
+目标：<a provable result or threshold for this phase>.
 
 相关链接：
 
-- [输入或验收依据](https://example.invalid/source)
+- [Input or acceptance basis](https://example.invalid/source)
 
 待办：
 
-<!-- 待办由 Agent 起草后先展示，经人类确认再写入。同一负责人交付同一结果的操作不拆项，负责人或验收关口变化时拆成顺序任务。每项的分类替换为设计、开发、测试、部署、验证或人工验证之一。只有真实需要部署的阶段才出现部署项。默认 Agent 执行不加归属标记；人类负责项用「人工验证：」前缀或末尾 👱 标记。 -->
-- [ ] <分类>：<一个可以证明的交付结果>
-- [ ] 测试：<与该成果身份关联的验收证据已满足门槛>
+<!-- Todos are drafted by the agent, shown first, and written in after human confirmation. Operations by the same owner delivering the same result are not split into separate items; split into sequential tasks when the owner or the acceptance gate changes. Replace each item's category with one of 设计, 开发, 测试, 部署, 验证, or 人工验证. Only phases that genuinely need deployment get a deployment item. Agent-executed items carry no ownership marker by default; human-owned items use the 「人工验证：」 prefix or a trailing 👱 marker. -->
+- [ ] <分类>：<a provable deliverable result>
+- [ ] 测试：<acceptance evidence tied to this deliverable's identity has met the threshold>
 
-<!-- 以下是实现、性能或运行证据项目的可选线性范式，按真实依赖取舍并替换上方通用示例；报告类或简单项目应删除不适用的候选、部署、性能和独立复核项，不为套模板造任务。
-- [ ] 设计：<不可变候选身份与适用环境已固定>
-- [ ] 测试：<同一候选在该环境的正确性或行为门禁已通过>
-- [ ] 验证：<满足采样前置后，按明确阈值取得与候选、环境关联的原始记录>
-- [ ] 验证：<基于风险与收益设置的独立检查已在明确有限轮次内完成>
+<!-- Below is an optional linear paradigm for implementation, performance, or runtime evidence items; pick based on real dependencies and replace the generic examples above. Report-type or simple projects should delete inapplicable candidate, deployment, performance, and independent-review items; do not invent tasks to fit the template.
+- [ ] 设计：<an immutable candidate identity and applicable environment have been fixed>
+- [ ] 测试：<the same candidate has passed the correctness or behavior gate in that environment>
+- [ ] 验证：<after sampling prerequisites are met, raw records tied to the candidate and environment are captured against explicit thresholds>
+- [ ] 验证：<an independent check sized by risk and benefit has completed within an explicitly finite number of rounds>
 -->
 
-## 🛫 Stage 02 最终决定
+## 🛫 Stage 02 Final Decision
 
-目标：<最终成果、偏差和剩余责任已有明确人工决定>。
+目标：<the final deliverable, deviations, and remaining responsibilities have an explicit human decision>.
 
 相关链接：
 
-- [最终成果或决定记录](https://example.invalid/final-record)
+- [Final deliverable or decision record](https://example.invalid/final-record)
 
 待办：
 
-- [ ] 人工验证：<最终成果及适用偏差已明确接受，或项目已明确终止>
+- [ ] 人工验证：<the final deliverable and applicable deviations are explicitly accepted, or the project is explicitly terminated>

@@ -1,23 +1,23 @@
-# 验收与收尾流程
+# Acceptance and wrap-up workflow
 
-处理新结果、已确认决定或最终收尾前必须读取。证据术语见 [证据模型](../../../docs/evidence.md)，日志显示见 [格式](../../../docs/logbook-format.md)。
+Must be read before handling new results, confirmed decisions, or final wrap-up. Evidence terminology is in the [evidence model](../../../docs/evidence.md); logbook display is in the [format](../../../docs/logbook-format.md).
 
-## 先核验，再写入
+## Verify first, then write
 
-1. 重新定位当前检查项和原定验收门，检查用户同期修改；证据引用旧事项或旧版本时先核对对应关系。
-2. 按交付类型固定身份，核对候选、环境、时间和原始记录。代码用提交，报告可用固定版本或摘要，环境用变更记录及观测时点，不要求每类交付都有 PR。
-3. 核对必要的独立检查：检查者不同于实施者，针对同一候选，回传原始证据，不只复述总结。所需检查未返回、轮数已到上限或证据身份不一致时，明确缺口；本流程不自行派发检查者。
-4. 项目有 PR 时核实当前状态；合入门必须有已合并证据及对应身份。squash/rebase 可以改变 SHA，需可靠对应关系。无法核实就保持未知，不以旧记录宣布合并。
-5. 逐门判断通过、未通过、证据不足或待人工决定。候选、环境或验收标准变化后，旧证据默认不支持受影响项的新完成结论；只有可核实的候选对应关系及原始记录证明仍覆盖当前门槛时才沿用。任务名称相近、token 刷新或用户要求“继续更新”都不是这种证明。不拼接版本，不清空无关历史事实。
-6. 只有结果满足门槛才勾选。失败和证据缺口留在原项，记录负责人、所缺事实和解除条件，不扩大整改范围或悄悄降低标准。
-7. 按 [文档适配流程](document-adapters.md) 写回并检查。报告更新及未完成部分，停在本次授权边界。
+1. Re-locate the current checklist item and its original acceptance gate, and check the user's concurrent edits; when evidence references an old item or old version, confirm the correspondence first.
+2. Fix identity by deliverable type, then verify candidate, environment, time, and original records. Code uses commits; reports may use a fixed version or summary; environments use change records and observation timestamps — not every deliverable type requires a PR.
+3. Verify the required independent checks: the checker differs from the implementer, targets the same candidate, and returns original evidence rather than restating a summary. When a required check has not returned, the round limit is reached, or evidence identities disagree, state the gap explicitly; this workflow does not dispatch checkers itself.
+4. When the project has a PR, verify its current state; a merge gate requires merged evidence with a matching identity. squash/rebase can change SHAs — a reliable correspondence is required. If it cannot be verified, keep it unknown; never declare a merge from stale records.
+5. Judge each gate as pass, fail, insufficient evidence, or pending human decision. After a candidate, environment, or acceptance criteria change, old evidence does not by default support new completion conclusions for the affected items; carry it forward only when a verifiable candidate correspondence and original records prove it still covers the current gate. Similar task names, a refreshed token, or a user saying "keep updating" are not such proof. Do not stitch versions together, and do not erase unrelated historical facts.
+6. Check a box only when the result meets the gate. Failures and evidence gaps stay on the original item, recording the owner, the missing facts, and the clearance conditions; do not expand remediation scope or quietly lower the bar.
+7. Write back and check per the [document adapter workflow](document-adapters.md). Report updates and unfinished parts, and stop at this round's authorization boundary.
 
-已有确定且适用的验收结论可以直接引用，但必须能追溯其对象和依据。用户要求“勾一下”不免除核验。跨仓调查和重跑测试由所属执行者承担，更新请求本身不授权新派发。
+An existing, definite, and applicable acceptance conclusion may be cited directly, but its subject and basis must be traceable. A user asking to "just tick it" does not waive verification. Cross-repository investigation and test reruns are the owning executor's job; an update request itself authorizes no new dispatch.
 
-## 项目收尾
+## Project wrap-up
 
-汇总目标是否兑现、最终成果身份、适用的合并或发布结果、偏差与剩余责任。没有最终人工决定时保持待验收；已有适用于当前成果的明确决定时直接记录，不重复询问。
+Summarize whether goals were met, the identity of final deliverables, applicable merge or release results, deviations, and remaining responsibilities. Without a final human decision, remain pending acceptance; with an explicit decision applicable to the current deliverable, record it directly without asking again.
 
-人类接受偏差时记录新的决定依据及影响，不把历史改成原标准通过。未确认后续事项作为待决定信息，不自动创建清单或外部工作项。取消或终止可以结束协调，但不能记作成功交付。
+When the human accepts a deviation, record the new decision's basis and impact; never rewrite history as if the original standard passed. Unconfirmed follow-ups are recorded as pending-decision information; do not auto-create manifests or external work items. Cancellation or termination may end coordination, but must not be recorded as a successful delivery.
 
-收尾更新不关闭执行会话或其他服务。必要清理交给 lb-push 的授权清理分支，交接未完成责任与资源范围。
+Wrap-up updates do not close execution sessions or other services. Necessary cleanup is left to lb-push's authorized cleanup branch, handing over unfinished responsibilities and resource scope.
