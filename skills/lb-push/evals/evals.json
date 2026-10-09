@@ -682,6 +682,42 @@
         "获得用户确认",
         "不由 Agent 自行合并成巨型 PR"
       ]
+    },
+    {
+      "id": 64,
+      "prompt": "宿主 lbkit-agents.yaml 的启动器是 zsh shell 函数（如 codex-luna，内部含代理与模型参数）。协调者需要在 Herdr 里为责任仓新建一个执行者、交包并确认实际模型。请给出操作。",
+      "expected_output": "tab create --workspace --cwd 仓库根 --label 带前缀 --no-focus 建 shell pane；pane run 在该交互 shell 里执行包装函数；agent rename 以 pane id 为目标命名；agent read 核实 TUI 页脚的实际模型后再 agent prompt 交包。不以 agent start --kind 通用引擎替代包装器。",
+      "files": [],
+      "expectations": [
+        "用 pane run 在目标 pane 的交互 shell 里启动包装函数，不用 agent start --kind 拼装通用引擎",
+        "以 pane id 为目标执行 agent rename，命名带宿主前缀且不夺焦点",
+        "交包前用 agent read 核实实际模型与部署归属",
+        "新建 tab 使用 --no-focus，不夺取人类焦点"
+      ]
+    },
+    {
+      "id": 65,
+      "prompt": "协调者与人类负责人同仓。日志文件里混有负责人未提交的勾选行，协调者要把自己写的状态行单独提交，且绝不能带走负责人的行。第一次用 git commit -- <文件> 提交后发现负责人的行也被带进去了。请给出正确做法。",
+      "expected_output": "认识到 pathspec 提交取整个工作树版本并会反向覆盖 index；改为 index 手术：把剔除负责人行后的内容 git hash-object -w，git update-index --cacheinfo 暂存该 blob，再执行不带 pathspec 的 git commit；提交后 git status 确认负责人的行仍留在工作区未提交。",
+      "files": [],
+      "expectations": [
+        "明白 git commit -- <path> 以工作树内容为准，手工暂存会被绕过并覆盖",
+        "用 hash-object 加 update-index --cacheinfo 精确控制进入提交的内容",
+        "最终提交不带 pathspec，提交树只来自 index",
+        "提交后核对负责人的改动仍留在工作区，未被裹挟"
+      ]
+    },
+    {
+      "id": 66,
+      "prompt": "推进中要给一条 👱 人工关口任务补记事实（合入已完成、产物位置），bin/lb task note 报错拒绝向人类负责的任务写子行。该项的复选框也未勾。请处理。",
+      "expected_output": "尊重属主边界：不重试 CLI、不改写任务首行、不代勾复选框；把事实用局部编辑写在事项附近的缩进状态行（或记入对话请负责人自改），复选框保持原状并明确留给负责人处置。",
+      "files": [],
+      "expectations": [
+        "CLI 拒绝后不换通道硬写复选框或改首行",
+        "事实以极简状态行的局部编辑落在事项附近，不动标题与清单顺序",
+        "复选框状态留给人类负责人，明确说明解除条件或所需动作",
+        "不把 CLI 拒绝当成项目受阻，继续授权内可做的其他工作"
+      ]
     }
   ]
 }
