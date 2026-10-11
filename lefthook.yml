@@ -1,0 +1,16 @@
+pre-commit:
+  commands:
+    ruff:
+      glob:
+        - "*.py"
+        - "**/*.py"
+        - "bin/lb"
+        - "scripts/lb.py"
+      run: uv run --locked ruff check {staged_files}
+
+pre-push:
+  commands:
+    mypy:
+      run: uv run --locked mypy src/logbook_cli
+    tests:
+      run: uv run --locked python -m unittest discover tests

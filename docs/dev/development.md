@@ -26,6 +26,20 @@ uv run --locked mypy src/logbook_cli
 uv build
 ```
 
+## Local Git Hooks
+
+The repository provides optional Lefthook checks that mirror CI. Install
+Lefthook through your preferred package manager, then run:
+
+```sh
+lefthook install
+```
+
+The `pre-commit` hook runs Ruff for staged Python and launcher files. The
+`pre-push` hook runs mypy and the complete unittest suite. Use
+`lefthook run pre-commit` or `lefthook run pre-push` to invoke either check
+without making a commit or push.
+
 ## Checklist for Changing Shared Contracts
 
 Contract files (`docs/installable/`) and skills (`skills/`) are installed into consuming repositories, so when changing them:
