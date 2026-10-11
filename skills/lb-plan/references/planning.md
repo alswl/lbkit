@@ -1,44 +1,30 @@
 # Goal Recovery and Plan Design
 
-Read when planning, taking over, or doing a read-only review. Current repository constraints come from [AGENTS.md](../../../AGENTS.md); this file grants no additional investigation or execution authority.
+Read for planning, takeover, or review. Read [coordination](../../../docs/installable/coordination.md) for authorization, [format](../../../docs/installable/logbook-format.md) for editable fields, and [evidence](../../../docs/installable/evidence.md) for acceptance and source references.
 
-## Recover Goals
+## Recover Goals and Decisions
 
-First read the current request, the original task, the first assignment, the existing logbook, and the basis for decisions; prefer explicit human goals. Do not infer a mission from the latest CI gaps, technical debt, or active processes.
+Recover the original request, current human goals, latest explicit decisions, logbook and bound Prompt/Thinking. Do not substitute recent technical gaps for the mission. Human-provided goals may be transcribed verbatim with their source in Thinking; agent-inferred goals remain suggestions. New projects with missing goals remain drafts. Existing headings and goals are not rewritten for cosmetic reasons.
 
-The overview's and each phase's 「目标：」 are authored by the human personally; the agent only verifies, points out gaps or conflicts, and proposes reviewable suggestions — it never writes suggestions into logbook goals. The wording and numbering of existing headings at every level are also human-maintained; status sync may only swap the emoji before a phase heading.
+Apply a clear newer human ruling directly to the affected unfinished agent tasks and work packages. Do not let an old package's permissions override it, and do not expand unrelated scope. In review mode, output findings only: no files, proposal records or dispatch.
 
-When something is missing or conflicting, use existing authorization to check original prompts and session facts with the relevant agents; no fixed headcount is required, and never launch agents just to fill a quota. If final deliverables substantively conflict, describe the conflict and hand it to the human to adjudicate — do not stitch them into a broad project.
+## Size and Template Selection
 
-Newly discovered issues become acceptance gates only when explicitly added to goals; otherwise treat them as evidence, risks, or pending decisions. Before investigating, verify existing authorization and let the execution entry point delegate within it; consult the human for out-of-scope information or investigation, and do not re-request already-granted authorization.
+Derive stages from real separately delivered or accepted results. Small work (roughly one person-day or less) and lightweight operational runs default to one Stage; an applicable human gate is a todo, not a compulsory final Stage. Explain a multi-stage exception. Research, writing, events and environment work use their own criteria; no automatic code, release or merge steps.
 
-## Adapt to Project Type
+A workflow run uses the template's 「运行实例模板」 section and exactly three mutable slots: target date, working directories, run rulings. Validate complete goal sentences, stage/todo structure and established human gates before fill-in. An object name cannot replace the target-date slot. A confirmed template is not freely compressed or extended by scaffold; missing slots require template maintenance, and an explicitly requested structural change belongs to planning.
 
-Work backward from the final deliverable to phases, dependencies, and proof methods; no fixed industry or tech stack:
+## Capabilities and Work Packages
 
-- Code changes: link the business repository's specs, fixed candidates, and applicable tests; list PR merge as an explicit todo only when merging is required, and do not let an implicit merge gate block completed phases.
-- Reports or research: fix content versions, source and conclusion verification, and necessary human review; do not force deployment or code tests.
-- Environment delivery: define environment identity, observation times, verification methods, and applicable rollback; runtime evidence does not prove permanent correctness.
+Read all optional `lbkit-skills.json` entries via `bin/lb skills --json`. Match by scope and outcome, not action-prefix keywords. Check the main chain and conditional companions against the target work. If a specialized chain does not apply, inspect reusable individual skill definitions rather than rejecting all capabilities or importing that chain's special requirements. Report registry gaps separately from missing capabilities; do not infer a skill's actual behavior from its name.
 
-Keep real workflow names and order; the phase count follows the deliverable. Do not convert existing numbered specs into fixed lifecycle headings. Projects with no release, publish, or rollback semantics do not get those steps; when release is required, design its work items, reviewers, credentials, and other prerequisite evidence in advance.
+Cover result preparation, delivery, verification and human handoff where relevant. Resolve actual skill definitions in the environment that will execute them; record definition location and target-machine availability in preflight/work packages. Main todos only contain skill names on an indented `技能：` sub-line, with no purpose annotations or coordination adapters. Do not maintain a top-level or front matter skills inventory.
 
-## Plan and Work Packages
+One concise todo names an action and verifiable result, retaining material scope and thresholds. Details and history belong in Thinking; source references may live in the corresponding `sources/<doc-name>.md`. One owner delivering one result need not be fragmented into technical operations. Separate independently required responsibilities and gates; sequencing does not authorize parallelism.
 
-The plan must make goals, non-goals, task ownership, dependencies, acceptance and evidence, applicable release rollback, and final decisions recoverable. Responsibility is made explicit by phase todos and work packages, with no separate "Participating Agents" section; the overview's `SKILLS` list only registers skills external to the repository and does not carry role assignment. Long-term details may be unknown; the package about to be dispatched must be complete. Use the [work package template](../assets/work-package.md) and record only the parameters and sources actually used this round.
+Use the [work package](../assets/work-package.md) for the next authorized result; do not fully specify distant work prematurely. Record only applicable parameters. Independent checking must justify its value, use the same result identity and have finite rounds; no fixed agent count or mandatory checker for every task. A plan request does not launch agents.
 
-When `lbkit-skills.json` exists at the repository root, draft a todo's `技能：` sub-line by first reading all entries via `bin/lb skills --json`; judge which kind of work the todo belongs to by each entry's `scope` (the work it covers and excludes); `actions` is only a hint — do not match mechanically by action prefix; on a hit, check the target repository against the `description` prerequisites; `companions` are skills used incidentally within the same todo per `when` — write them into the same `技能：` sub-line or the work package rather than splitting out separate todos. When the todo text alone cannot determine ownership (e.g. whether an item falls in a speckit tasks.md task range), read the corresponding work package, tasks.md, or thinking first; if still undetermined, leave it blank and note it in the draft. Submit it with the todo draft for human confirmation. The list is only an optional reference: without a list, or without a match, judge by the original rules; do not force-fill when nothing supports it.
-
-Compress the main todo into one concise, verifiable sentence preserving the action, expected result, and non-omittable scope and acceptance thresholds; do not stuff background, operation history, past incidents, or multiple evidence paths into the sentence — move them to that item's indented sub-items or existing thinking. Compression must not erase authorization boundaries, dependencies, or acceptance conditions; operations by the same owner delivering the same result are not split; split into sequential tasks when the owner or acceptance gate changes, and do not parallelize on that basis.
-
-Todo drafting has two paths: when `workflows/<workflow>/` provides a run-instance template, fill in the todo list, phase structure, goal template sentences, and adjudication defaults from the template item by item — no free drafting, no granularity changes, no adding or removing human gates; the confirmation rounds saved are the whole point of the template. Only without a template, or when goals/scope must change, use the generic drafting in this file. The two-line format, the `执行：` prefix, and the `🔀` batch convention follow the [Logbook Format](../../../docs/logbook-format.md); `🔀` decisions must check cross-repository read/write dependencies: across different repositories, one item reading and another writing the same file is likewise barred from concurrency.
-
-For important deliverables, set an independent checker when feasible; the check scope, pass criteria, and finite round count must be explicit. When review is needed but rounds are not yet configured, propose a task-appropriate cap and confirm it in the work package; null must not be treated as an infinite loop. When no independent check is needed, state the rationale; do not invent tasks just to fill configuration.
-
-Recommend adding an agent only when independent work, a different repository or specialized context, independent review, or an actual bottleneck justifies the coordination cost; attach name, scope, dependencies, and completion criteria. Do not launch it yourself.
-
-Large prose bodies are written by the human; the agent must not ghostwrite them on the grounds that "the plan is approved". Present todo drafts in conversation first and write them only after confirmation; terminology, SKILLS, authorized directories, and short facts may be maintained per the [Logbook Format](../../../docs/logbook-format.md).
-
-Mark new projects clearly as drafts; while goals have not been authored by the human, keep only placeholders and never let a draft exit into execution. For existing projects, keep unconfirmed additions, reorderings, or scope changes in proposals instead of overwriting the confirmed path; even when the human approves goal or heading changes, the human personally rewrites the corresponding text. Read-only review only outputs problem locations, impact, and handling suggestions; it writes no proposal files and changes no lists.
+Create writes a draft immediately, including placeholders and unconfirmed todos, for file-based review. Revise keeps undecided scope changes as proposals while applying explicit decisions locally. Preserve evidence correspondence when renaming unfinished agent todos with `task rewrite`; changed acceptance requires renewed verification. Human items retain their protected wording and terminal states.
 
 ## Split and Close Out
 

@@ -37,8 +37,8 @@ def repository_root(path: Path) -> Path:
 
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
-    docs = kit / "docs"
-    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "lbkit-agents.template.yaml", kit / "AGENTS.template.md"]
+    docs = kit / "docs/installable"
+    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "scripts/lb.py", kit / "src/logbook_cli", kit / "lbkit-agents.template.yaml", kit / "AGENTS.template.md", kit / "pyproject.toml", kit / "uv.lock"]
     if any(not path.exists() for path in required) or not skills.is_dir() or not docs.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
@@ -51,12 +51,23 @@ def manifest(kit: Path) -> dict[Path, Path]:
             mapping[Path(".agents/skills") / skill.name] = Path(".lbkit/skills") / skill.name
             mapping[Path(".claude/skills") / skill.name] = Path(".lbkit/skills") / skill.name
     for doc in sorted(docs.glob("*.md")):
-        mapping[Path("docs") / doc.name] = Path(".lbkit/docs") / doc.name
+        mapping[Path("docs") / doc.name] = Path(".lbkit/docs/installable") / doc.name
     return mapping
 
 
 def relative_link(link: Path, target: Path) -> str:
     return os.path.relpath(target, link.parent)
+
+
+def legacy_contract_link(repo: Path, link_rel: Path, target_rel: Path) -> bool:
+    """Recognize only the previous installer-owned contract symlink."""
+    link = repo / link_rel
+    return (
+        link_rel.parent == Path("docs")
+        and target_rel.parent == Path(".lbkit/docs/installable")
+        and link.is_symlink()
+        and os.readlink(link) == relative_link(link, repo / ".lbkit/docs" / link_rel.name)
+    )
 
 
 def conflicts(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
@@ -65,7 +76,7 @@ def conflicts(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
         link = repo / link_rel
         expected = relative_link(link, repo / target_rel)
         if link.is_symlink():
-            if os.readlink(link) != expected:
+            if os.readlink(link) != expected and not legacy_contract_link(repo, link_rel, target_rel):
                 blocked.append(link_rel)
         elif link.exists():
             blocked.append(link_rel)
@@ -77,7 +88,9 @@ def install_links(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
     for link_rel, target_rel in mapping.items():
         link = repo / link_rel
         if link.is_symlink():
-            continue
+            if not legacy_contract_link(repo, link_rel, target_rel):
+                continue
+            link.unlink()
         link.parent.mkdir(parents=True, exist_ok=True)
         link.symlink_to(relative_link(link, repo / target_rel), target_is_directory=(repo / target_rel).is_dir())
         created.append(link_rel)
@@ -94,19 +107,36 @@ def source_url(kit: Path, supplied: str | None) -> str:
 
 
 def init_mind_forge(repo: Path, dry_run: bool) -> str | None:
-    """Best-effort mind-forge init; `mf init` itself refuses non-empty directories."""
-    if (repo / "minds.yaml").exists():
-        return None
-    if shutil.which("mf") is None:
-        return "mf not found; skipped mind-forge init (run `mf init` after installing mind-forge)"
+    """Require mind-forge and bootstrap without replacing consumer content."""
     if dry_run:
-        return "mind-forge init (minds.yaml + projects/)"
+        return "mind-forge is required; verify mf and initialize minds.yaml if absent"
+    if shutil.which("mf") is None:
+        raise InstallError("mind-forge is required: install mf from https://github.com/alswl/mind-forge using scripts/install.sh, then retry")
+    version = subprocess.run(["mf", "version"], capture_output=True, text=True)
+    if version.returncode:
+        raise InstallError(f"mind-forge is required and must be runnable: {version.stderr.strip()}")
+    if (repo / "minds.yaml").is_symlink():
+        raise InstallError("minds.yaml must not be a symlink")
+    if (repo / "minds.yaml").is_file():
+        return None
+    if (repo / "minds.yaml").exists():
+        raise InstallError("minds.yaml must be a regular file")
+    if (repo / "projects").is_symlink() or ((repo / "projects").exists() and not (repo / "projects").is_dir()):
+        raise InstallError("projects must be a real directory")
     with tempfile.TemporaryDirectory() as scratch:
         result = subprocess.run(["mf", "init", scratch], capture_output=True, text=True)
         if result.returncode:
-            return f"mf init failed (continuing): {result.stderr.strip()}"
-        shutil.copytree(Path(scratch) / "projects", repo / "projects", dirs_exist_ok=True)
-        shutil.copy2(Path(scratch) / "minds.yaml", repo / "minds.yaml")
+            raise InstallError(f"mf init failed: {result.stderr.strip()}")
+        generated = Path(scratch)
+        if not (generated / "minds.yaml").is_file() or not (generated / "projects").is_dir():
+            raise InstallError("mf init did not produce minds.yaml and projects/")
+        # Initialization must never merge example content over existing projects.
+        for path in (generated / "projects").rglob("*"):
+            target = repo / "projects" / path.relative_to(generated / "projects")
+            if target.is_symlink() or (target.exists() and not (path.is_dir() and target.is_dir())):
+                raise InstallError(f"mind-forge initialization would replace {target}")
+        shutil.copytree(generated / "projects", repo / "projects", dirs_exist_ok=True)
+        shutil.copy2(generated / "minds.yaml", repo / "minds.yaml")
     return None
 
 
@@ -114,6 +144,17 @@ def legacy_config_hint(repo: Path) -> None:
     """lbkit-agents.yaml used to live at .agents/lb.yaml; never move it silently."""
     if (repo / ".agents/lb.yaml").exists() and not (repo / "lbkit-agents.yaml").exists():
         print("Move the agent config to the repository root: git mv .agents/lb.yaml lbkit-agents.yaml")
+
+
+def install_runtime(kit: Path) -> None:
+    """Install the pinned CLI environment only during explicit installation."""
+    if shutil.which("uv") is None:
+        raise InstallError("uv is required: install uv, then rerun lbkit install")
+    env = dict(os.environ, UV_PROJECT_ENVIRONMENT=str(kit / ".venv"))
+    env.pop("VIRTUAL_ENV", None)
+    result = subprocess.run(["uv", "sync", "--locked", "--no-dev", "--project", str(kit)], env=env, text=True, capture_output=True)
+    if result.returncode:
+        raise InstallError(f"CLI environment installation failed: {result.stderr.strip()}")
 
 
 def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
@@ -128,8 +169,11 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     registered = indexed.startswith("160000 ")
     if destination.exists() and not registered:
         raise InstallError(".lbkit exists but is not an indexed submodule")
+    url = source_url(kit, source) if not registered else None
+    had_minds = (repo / "minds.yaml").exists()
+    if not dry_run:
+        init_mind_forge(repo, dry_run=False)
     if not registered:
-        url = source_url(kit, source)
         if dry_run:
             print(f"git submodule add {url} .lbkit")
         else:
@@ -141,6 +185,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
             git(repo, "submodule", "update", "--init", ".lbkit")
 
     if dry_run:
+        print("uv sync --locked --no-dev --project .lbkit")
         for link_rel, target_rel in planned.items():
             print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
         if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
@@ -150,7 +195,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
         if not (repo / "CLAUDE.md").exists() and not (repo / "CLAUDE.md").is_symlink():
             print("CLAUDE.md -> AGENTS.md")
         if not (repo / "minds.yaml").exists():
-            print("mind-forge init (minds.yaml + projects/) via mf, or skipped when mf is absent")
+            print("mind-forge required: verify mf; initialize minds.yaml + projects/ via mf init")
         legacy_config_hint(repo)
         return
 
@@ -158,6 +203,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     blocked = conflicts(repo, actual)
     if blocked:
         raise InstallError("installed lbkit conflicts with existing paths: " + ", ".join(map(str, blocked)))
+    install_runtime(destination)
     created = install_links(repo, actual)
     if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
         with (repo / "lbkit-agents.yaml").open("x", encoding="utf-8") as target:
@@ -169,11 +215,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if not claude_md.exists() and not claude_md.is_symlink():
         claude_md.symlink_to("AGENTS.md")
         created.append(Path("CLAUDE.md"))
-    had_minds = (repo / "minds.yaml").exists()
-    note = init_mind_forge(repo, dry_run=False)
-    if note:
-        print(note)
-    elif not had_minds:
+    if not had_minds:
         created.append(Path("minds.yaml"))
     result = subprocess.run([str(repo / "bin/lb"), "--help"], cwd=repo, capture_output=True, text=True)
     if result.returncode:
@@ -193,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         install(args.repo, Path(__file__).resolve().parents[1], args.source, args.dry_run)
-    except InstallError as exc:
+    except (InstallError, OSError) as exc:
         print(f"lbkit: {exc}", file=sys.stderr)
         return 1
     return 0

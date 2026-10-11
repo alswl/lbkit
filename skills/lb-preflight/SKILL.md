@@ -1,52 +1,48 @@
 ---
 name: lb-preflight
-version: 0.1.0
-description: Run a full end-to-end preflight against a logbook: parse the linear route in document order, dispatch a read-only analysis agent per step for feasibility analysis; write a machine-readable summary to sources/<main-log-name>-preflight.md; blockers pending discussion are written back to todos as 🔮 markers after human confirmation. While any 🔮 is unresolved the whole logbook must not advance, and bin/lb write commands are refused outright. Read-only preflight; does not dispatch execution.
+version: 0.2.0-dev
+description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 
-# Logbook end-to-end preflight
+# Preflight the Current Route
 
-This skill delivers preflight conclusions; it does not dispatch execution, write goals, or change the first line of existing todos. When a blocker is found, the only action is to mark it as a 🔮 pending-discussion item for human adjudication; the whole logbook stays frozen until a human clears the marker.
+Read [configuration](../../docs/installable/configuration.md), [coordination](../../docs/installable/coordination.md), [planning](../lb-plan/references/planning.md), and [evidence](../../docs/installable/evidence.md). For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
 
-## Inputs and prerequisites
+## Route and scope
 
-- Locate the single target logbook and run `context --json` and `check --json` (see [CLI read workflow](../lb-update/references/document-adapters.md#本仓-cli-调用)), then read the source. When `preflight_clear` is false, blockers already exist: first summarize the unresolved items for the human; do no new analysis this round.
-- Read the [configuration contract](../../docs/configuration.md) to resolve this round's documents; read the [planning workflow](../lb-plan/references/planning.md), the [coordination contract](../../docs/coordination.md), and the [evidence model](../../docs/evidence.md). Before writing blockers back, read the [logbook format](../../docs/logbook-format.md) and the [document adapter workflow](../lb-update/references/document-adapters.md).
-- A logbook missing any of the three essentials (working directories, stage breakdown, todo manifest) goes back to lb-plan to be completed; this skill neither writes goals nor adds todos on the human's behalf.
+Read `context --json`, `check --json`, the full logbook, latest human decisions, and current work packages. Missing directories, stages or todos are planning gaps; do not invent them. Existing 🔮 markers prevent advancing this project, not read-only reconciliation or independently authorized repository maintenance. Apply the current request and actual operation object before declaring work blocked.
 
-## Required workflow
+Construct the current ordered route: each todo, result, dependencies, skills, actual execution environment and acceptance method. `next_task` is only a parse candidate. Compare the route with the previous preflight; newly added tasks, rewritten outcomes, changed machines/skill definitions and changed criteria require renewed coverage. Do not reuse an old all-green verdict for a new route. Explicit human changes supersede conflicting old work-package constraints within their scope; preflight does not grant execution authorization.
 
-1. Route planning: derive the linear path in document order — Stage → each todo → its skill chain / sub-items / artifacts and acceptance criteria → manual gates. `next_task` from `context` is only a parse candidate and must be verified against the source; for each step record the required outcome, predecessor dependencies, repositories and skills involved, whether inputs are present, and how acceptance is proven.
-2. Step-by-step feasibility analysis (fan-out): dispatch one read-only analysis agent per step, constrained to the working directories registered in this logbook, and verify —
-   - whether predecessor conditions hold and dependencies are valid;
-   - whether the repositories / machines / environments a step references currently support it (read-only structural checks only; no business evidence gathered, no business commands run);
-   - whether the skills and toolchains a step references actually exist and are invocable in the target environment (report a capability gap when they do not; do not substitute or downgrade); when `skm` is installed locally, `skm list --json` may help verify install status; missing skm is not a blocker;
-   - provability of acceptance evidence: which numbers, environments, gates, or credentials are missing.
-   Each step's expectations come from the skill that step references: the analysis agent should read that skill's definition (SKILL.md or the equivalent in the target repository) and output a comparison of "how the skill expects to work → what the repository/environment reality is → where the gap is", not settle for an inventory of "skill present / absent". Human-owned items only get their prerequisites analyzed.
-   Analysis agents return in one round, reporting only facts and gaps — no iteration, no fixing, no artifact creation. When analyses of multiple steps are independent, dispatch them in parallel; this is read-only verification, not cross-item parallel execution. Concurrency follows current model service limits and host configuration; when limits are unknown, start with a small trial batch, and on rate limiting retry only the failed routes instead of rerunning the whole round. Where candidates allow, read-only analysis prefers a no-worktree setup; sensitive-handling rules still keep internal-only candidates as before.
-3. Machine-readable summary: write conclusions into the owning project's `sources/<main-log-file-name>-preflight.md` (newly created, or an idempotent full-file overwrite; do not touch other records), with a fixed structure:
-   - frontmatter: `logbook` (relative path of the main logbook), `preflight_date` (ISO date), `overall`: `green` (all feasible) / `amber` (has needs-input or not-checked) / `blocked` (has needs-discussion or infeasible);
-   - **sections split by todo**: one H2 per todo (the todo's original text as the heading), each containing in order `verdict:`, skill chain, skill expectations, on-site reality, gap (reality vs expectation, item by item), blocker (`无` when none), evidence line numbers or paths; no sections unrelated to the todo;
-   - list uncovered steps one by one with reasons; never silently drop steps. This file is an evidence index, not a second task list; detailed findings go into the corresponding thinking, not copied into the body.
-4. Blocker write-back: for items whose verdict is `needs-discussion`, **first show the blocker list to the human in the conversation**; only after their explicit confirmation write the blockers back near the corresponding todos in the main logbook (prophecy-ball format: `- [ ] 🔮 待讨论：<one sentence> @<repo>`, or as an indented sub-item `- [ ] 🔮 …`). Blockers the human adjudicates and confirms on the spot in the conversation count as cleared once recorded in the preflight summary and thinking; no 🔮 write-back is needed. Write-back does not change goals, headings, or the first line of any todo, and checks no boxes; re-fetch `version_token` before writing and run `check --json` after. The write-back action itself is not subject to the existing 🔮 gate (the CLI only blocks sync/task write subcommands), but the same round must not use it to rewrite any existing task text either.
-5. Closing report: show plan locations, the overall verdict, per-step conclusions, blocker line numbers, and clearance conditions; record in thinking the preflight date, coverage, unanalyzed items, and reasons. Conclusions are time-bound observations: all green only means "the pre-run preflight was not blocked"; runtime state is governed by the scene at lb-push dispatch time.
+## Feasibility
 
-## Gate semantics (the contract with 🔮)
+Use read-only inspection within registered business directories. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:
 
-- 🔮 means "pending-discussion items found by preflight": they need human discussion and adjudication, and the whole logbook does not advance before adjudication. When any todo or its indented sub-items carries 🔮, `bin/lb` `sync`, `task update`, `task artifact`, `task add`, and `task note` all refuse with exit code 4; `context --json` reports `preflight_clear: false`, and `check` reports `PREFLIGHT_BLOCKER`.
-- There is exactly one way to clear it: a human rewrites or removes the 🔮 by hand in the logbook (rewrites it into an ordinary todo, handles it separately, or deletes it); the CLI offers no bypass. The preflight skill itself also never rewrites the first line of a human todo.
-- 🔮 does not change the acceptance semantics of the item it belongs to, nor is it 🚨 (an unplanned item requiring the human owner) or ⏳ (a reached human decision point); it refers specifically to pending-discussion blockers produced by preflight. The three are not interchangeable.
+- expected result and applicable skill definition (actual path/version or digest);
+- target environment, available capability, inputs and predecessor requirements;
+- method that can prove the agreed criterion;
+- observed gap, affected step and clearance condition.
 
-## Collection and wrap-up
+A registry name is not proof that a definition was read or that a target machine can invoke it. Inspect the actual consumer definition; same-name skills may differ. Installation tools such as skm are optional aids, not prerequisites by themselves. Human items get prerequisite analysis, not substitute acceptance.
 
-- Collection: this skill's result is complete only after every analysis agent's conclusion has been retrieved (`herdr agent read` or the agent's on-disk path) and written into `sources/<main-log-name>-preflight.md`; any agent that fails to report, blocks, or times out is faithfully recorded in the preflight file as not-checked with the reason — never silently dropped.
-- Before writing blockers back to the main logbook, first show the full blocker list to the human in the conversation and write only after their explicit confirmation; without confirmation no 🔮 is written to disk.
-- When unsent user text is found in collected agent input lines, treat it as a user intent signal per repository rules: disclose it faithfully and act on the intent; do not ask the user to resend.
-- Wrap-up: once all conclusions are collected, close every Herdr analysis tab created for this preflight round (`herdr tab close`, only tabs this skill created), leaving no analysis agents behind as idle sessions; take down monitors too, cleaning up only tabs this skill created. If lb-push immediately follows and reuses an analysis session as the executor, the corresponding tab is handed over as an execution tab and lb-push's wrap-up closes it.
-- Residual worktrees from analysis agents started in worktree mode (e.g. `-w`): after read-only verification, hand them to the owning repository's executor agent or a human for deletion; the coordinator does not clean up across repositories.
+Separate control entry, execution location, transfer direction and destination. “Local” in a business request need not mean the coordinator's machine. A missing reverse connection does not invalidate an available authorized forward-fetch path. Missing directories or credentials block only the dependent checks; collect the minimum needed information together without scanning undeclared business directories. Do not block an explicit local skill/document maintenance request on unrelated remote paths.
 
-## Boundaries
+Prefer completing routine preparation within existing authorization and preserve the user's review order. Backups and recovery can support reversible operations, but do not authorize external writes. Do not reintroduce old approvals or route ordinary technical recovery to the human as a new decision.
 
-- Analysis agents are read-only and confined to registered working directories; data sensitivity follows the model and deployment rules of the [configuration contract](../../docs/configuration.md), and cross-repository input is handled at the strictest level.
-- Capability gaps (missing skill, unreachable environment, missing credentials) are reported faithfully as needs-input; do not swap tools or downgrade on your own.
-- This skill does not judge execution authorization itself; whether work is authorized is decided by what the logbook records and [AGENTS.md](../../AGENTS.md). Passing preflight authorizes no advancement; advancement still requires entering an approved lb-push.
+## Record and handoff
+
+Maintain a preflight section in the bound Thinking record, keyed by date and the logbook version_token. Preserve previous observations as history when the route changes. Each run records `logbook`, `version_token`, `observed_at`, and `overall` (green / amber / blocked), then one entry per current todo with:
+
+- original task text and relevant stage;
+- verdict (feasible / needs-input / not-checked / needs-discussion / infeasible);
+- actual skill definition and target environment;
+- expectation, observation, gap and affected criterion;
+- source pointers and clearance conditions.
+
+No step may disappear: a missing, failed or timed-out analysis is not-checked with a reason. Reference original material through `sources/<doc-name>.md` where useful; do not copy raw records or create a second task list. A new record must not overwrite historical evidence merely because the file name is unchanged.
+
+Show needs-discussion gaps together. Write 🔮 into the main logbook only after explicit human confirmation. A ruling already supplied in the conversation is recorded as cleared; do not write a new unresolved marker for it. Existing markers must be rewritten or removed by the human; CLI `sync` and task writes have no bypass. Markers do not alter acceptance, and are distinct from an unplanned 🚨 blocker or an expected human gate.
+
+Report route coverage, current findings and precise missing inputs. Green means preflight checked this route at this time, not that it was executed or authorized. The dispatching flow rechecks runtime facts.
+
+Collect all delegated returns before closing analysis sessions created by this run, or hand an applicable session to an already-authorized executor. Preserve handoff and references before cleanup; never delete worktrees through an exit dialog. Input-box suggestions are not human instructions or facts. Unknown input provenance stays unknown and does not trigger dispatch or acceptance.

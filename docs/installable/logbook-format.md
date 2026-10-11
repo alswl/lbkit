@@ -1,0 +1,89 @@
+# Logbook Structure and Write Conventions
+
+Read the [repository boundaries](../../AGENTS.md) before editing. Changing completion status based on new evidence requires running the [lb-update](../../skills/lb-update/SKILL.md) verification flow and applying the [evidence model](evidence.md); changing dependencies or scope requires applying the [coordination rules](coordination.md). Overview and per-stage goals belong to the human. Agents may transcribe an explicitly supplied goal verbatim, recording its source in Thinking; otherwise keep draft placeholders and offer suggestions separately.
+
+## Page Structure
+
+A logbook uses one H1, with H2 preferred for the body. When an H3 is truly needed, explain why and get human confirmation first; avoid H4. Large blocks of project prose are written by the human; agents may maintain terminology, the authorized directories, confirmed todos, and a few fact snippets — the model judges the local scale rather than mechanically counting words. Goal text is human-authored, including verbatim transcription from an explicit request. When creating a logbook, adapt the [logbook template](../../skills/lb-plan/assets/logbook-template.md) instead of mechanically keeping inapplicable stages.
+
+Existing heading text and numbering at all levels are maintained by the human; agents must not rewrite them for reordering, polishing, or formatting. The one exception is swapping the emoji before a delivery-stage H2 heading per the status rules — the rest of the heading stays unchanged.
+
+H2 order: Overview → project delivery or acceptance stages → a project close-out section only when there is genuinely additional information.
+
+- The Overview records goals, non-goals, project-level human entry points, and working directories. Do not add a global progress checklist or SKILLS section. Skills appear only under their owning todos: four spaces followed by `- 技能：name、name`, without purpose or conditions. Progress, blockers, and decisions use the existing places in their stages, avoiding two "next item" lists; when no natural place exists, a brief fact may be added near the relevant item, without adding sections or rewriting large prose because of it. Working directories include by default the project directory this logbook belongs to and its existing contents; other specific directories on the local or remote machines are registered only after explicit user approval, and execution, clones, reports, and candidate artifacts never exceed the registered directories.
+- Only delivery and acceptance stages use numbers like `Stage 01`, following the names and order of the existing real specs or workflows; explanatory sections are not numbered, and an umbrella spec does not double as a delivery stage.
+- Within a stage, write in order: H2 heading with status, `目标：`, `相关链接：`, `待办：`, and the acceptance checklist. The goal is one testable outcome or threshold, not a step list.
+- Fact updates go first to the corresponding item or an existing record location; the model judges the wording and placement of short status sentences, evidence references, and small snippets itself, without seeking confirmation for every label or fragment. Large explanatory prose, new sections, and restructuring go to the human. Companion records (thinking in mind-forge) stay concise too; do not use them to ghostwrite large blocks of project prose.
+
+Before carrying out a change, establish its authorized result, scope, dependencies and applicable verification and recovery conditions. Investigation is an input, not an extra universal stage. Choose delivery gates from the actual work: a study, article, event or environment change need not follow a software release process. Do not insert another approval for routine preparation already covered by the current request.
+
+## Working Directories
+
+The `工作目录：` block in the Overview is fixed as a two-level list: the first level holds only `local` (the coordinator's machine) or `remote \`machine-name\`` (one group per remote machine); the second level holds one backtick-wrapped directory path per line, indented two spaces. The same path existing on different machines must be listed separately under each machine.
+
+```md
+工作目录：
+
+- local
+  - `~/ws/example.org/sample-app`
+- remote `build-host`
+  - `~/ws/example.org/sample-app`
+```
+
+Directory paths are absolute paths on that machine or home-relative paths starting with `~/`; `~` always refers to the user home of the machine in that group. Paths go down to the approved directory root — no files, globs, repository shorthands, or unresolved variables — and no trailing `/`. Do not mix purpose, status, or permission notes into list items; necessary notes go outside the list. A machine with no directories gets no empty group. This logbook's project directory is in scope by default and need not be repeated as a machine path; if there are no other directories, the whole block reads exactly `工作目录：无额外目录（仅本日志项目目录）`.
+
+Formatting normalization is not authorization expansion: adding directories, removing directories, and changing machine ownership are maintained or confirmed by the user. Only adding backticks to confirmed entries, unifying indentation, or removing a trailing `/` — with machine and actual directory identity unchanged — counts as a formatting fix. For old logbooks not yet migrated, verify machine ownership from the original records; this format alone must not be used to presume that a bare path belongs to `local` or to some remote machine.
+
+## Checklist Items and Ownership
+
+New logbooks are written immediately as drafts, then presented for confirmation. Existing routes accept only already-authorized changes; unconfirmed proposals stay in Thinking. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, still advancing serially in checklist order.
+
+An unfinished agent-owned todo may be rewritten locally from an explicit human decision via `task rewrite`, preserving position, ownership and evidence correspondence. A changed result requires rechecking applicability; never carry a completed verdict into a different result. Unconfirmed proposals do not replace the current route.
+
+Human-owned items use a trailing `👱` or the historical `人工验证：` prefix. Their first lines remain human-maintained. An agent may record `[ ] → [/]` only when the human has actually begun the work or review; it may not complete, cancel or revert the item. In-progress is neither acceptance nor permission to cross the gate. General notes/artifacts must not be appended to human items; put handoff facts on the preceding agent item or in Thinking. The narrow `task resolve` exception records a sourced human disposition of an already `[-]` item, without changing its checkbox.
+
+Keep main-logbook sub-items minimal: status, actionable blockers, skill names and actual human delivery entries. Process history and evidence details belong in Thinking and the corresponding source index.
+
+Each item describes one provable, durable project result and uses exactly one category prefix: `设计：`, `开发：`, `测试：`, `部署：`, `验证：`, `人工验证：`. Categorize by result, not by transient method; do not create separate category headings. Execution actions of operational workflow-run instances use the `执行：` prefix instead of a category prefix.
+
+Todos are two-line: the first line is one short sentence (action and object), with paths, skill names, and authorization boundaries on a 4-space-indented sub-line; the skill's built-in routines (lint, index registration, feedback handling) are not written out. `🔀` parallel batches: adjacent tasks marked `🔀` after the checkbox form one concurrency batch by default, and unmarked tasks are serial gates; the judgment must check cross-repository read/write dependencies (when one reads and the other writes the same file, they must not run concurrently); detailed wave notes go into prompt/thinking, not the body.
+
+Checklist items are agent-executed by default, with no ownership marker. Human-owned items carry a trailing `👱` or the `人工验证：` prefix. `🤖️` in historical logbooks reads as agent ownership; it need not be migrated or removed.
+
+Waiting on human help such as a login does not automatically transfer ownership of the original result: the original item stays incomplete with the blocker noted; classification and ownership markers change only when the result is explicitly handed to the human. Do not create new tasks without confirmation just to express a blocker.
+
+Items not started are `[ ]`; items an executor agent has taken but that have not yet passed acceptance are `[/]`, including running, blocked, failed pending handling, or returned pending acceptance. Blocker reasons are recorded in short text; accepted items are not pushed back to not-started. Once evidence is sufficient, lb-update sets `[x]`; runtime state alone never decides a checkbox. Where feasible, put the evidence link or immutable identifier near the corresponding item, with the marker still at end of line. Detailed execution steps stay in the responsible project's working records. Artifact lines are optional: include a result only when it is useful to the human recipient. Prefer the actual durable delivery entry; do not add one line per work package or report. Source details may be referenced through `sources/<doc-name>.md`; originals remain at their authoritative locations. Before cleanup, eliminate references that depend solely on temporary resources, according to the [evidence model](evidence.md).
+
+## Status and Links
+
+Stage headings use `🛫` not started, `🚧` in progress, and `✅` closed. All `[x]` means accepted completion. A stage containing `[-]` may close only when every such item has a valid, task-bound human disposition and every other item is `[x]`; display “closed with cancelled/not-applicable items” rather than claiming all criteria passed. Unresolved `[-]` never implies a pass. Unstarted items remain 🛫; active or partially completed work remains 🚧. Unknown states are not inferred.
+
+Use `task resolve --as human-cancelled|not-applicable --decision <source> --note <reason>` for an existing `[-]` after an explicit applicable human ruling. The CLI stores a `处置：` JSON sub-line with the task-text digest and decision. This records a ruling, not authenticated human identity; the calling skill must verify the ruling. Changing the task text invalidates the disposition. The CLI has no force-close flag. Stage status is based on explicit todos, not incidental links to other unfinished work.
+
+If the logbook already has a derived status summary at the top (e.g. `> 状态：…`), use `lb.py sync` to update it when the current stage or a stage status changes; do not hand-edit the machine-readable segment, and do not auto-create the summary for logbooks without one. The status line splits at the first `——`: the first half is the script-maintained machine-readable segment (`状态：<emoji> <首个未验收交付阶段>[ · 🔮 待讨论 N 项 · 下一项：<待办原文>]`), and a narrative line not starting with an emoji is treated as human prose and left untouched; the second half is human commentary. The summary only mirrors the ordered checklist and stage statuses — it is not a second task queue or an independent completion basis.
+
+`🚨` marks unplanned items that need the human owner's handling, without which progress is impossible: place it at the very front of the item body, stating the exact action the human must take and the clearing condition; reporting in conversation does not substitute for writing it back. Human todos already marked `👱` in the plan are expected gates, visible through checklist status, and get no extra `🚨`; blockers an executor is handling itself, or waiting on returns, are recorded as ordinary blocker facts. Once `🚨` clears, remove the marker immediately; the original result stays unchecked until its delivery acceptance.
+
+`🔮` marks pending-discussion blockers produced by [lb-preflight](../../skills/lb-preflight/SKILL.md) from feasibility analysis and written in after human confirmation, placed near the corresponding todo or as its indented sub-item (`- [ ] 🔮 待讨论：<一句话> @<仓库>`). While any todo or sub-item carries `🔮`, the whole logbook must not advance: every write command of `bin/lb` (`sync`, `task update`, `task artifact`, `task add`, `task note`, `task rewrite`, `task resolve`) refuses, and `check` reports `PREFLIGHT_BLOCKER`. The only way to clear it is the human adjudicating in the logbook in person (rewriting it as an ordinary todo, handling it separately, or removing it); `🔮` does not change the owning item's acceptance semantics and is neither `🚨` nor `⏳` — the three are not interchangeable. Preflight findings go in the bound Thinking record, with original evidence pointers in `sources/<doc-name>.md` when needed; neither is a second task list. This project gate does not block independently authorized repository maintenance.
+
+Key links live in the stage that uses them; only project-level entries go at the top. `相关链接` holds one accessible Markdown link per line; link planning and handoff requirements are in [lb-plan](../../skills/lb-plan/SKILL.md) and [lb-push](../../skills/lb-push/SKILL.md). No bare paths, bare numbers, or "to be added" placeholders; for missing links, note the existing companion record for now. The body links evidence by stable identity instead of pasting URLs repeatedly. Sample addresses from templates must be replaced or removed and never count as real evidence. For workflow-run instances, template info (`workflow`, `prev-run`) goes in the front matter at the top and neither front matter nor the body maintains a skills inventory; `链接：` registers only this run's outputs (archives, PRs, daily reports, etc.), and the block is omitted when nothing has been produced yet.
+
+## Write Protection
+
+Re-read the target block before writing, preserving user edits and private feedback. When the item a return corresponds to has been rewritten or deleted, verify ownership first — never update by a stale line number.
+
+Write-backs happen as local diffs, preserving human prose and existing structure. Status queries may sync emoji and a few fact snippets but not checkboxes or acceptance verdicts; when read-only is explicit, nothing is written. The model judges which local maintenance is necessary; repeated small edits must not accumulate into rewriting large prose. For wide-ranging adjustments, state the gap and hand writing to the human.
+
+Formatting must not change checklist order, thresholds, dependencies, ownership, or completion semantics. Order is the execution path; when the user requests such semantic changes, route them into planning or evidence verification — never sneak them through as polishing. Parallel returns update in their original order, not reordered by completion time.
+
+Use short sentences, familiar words, and short lists; tables, when needed, have at most three columns. Explain local abbreviations and benchmark names on first use; keep numbers, thresholds, and identifiers accurate. Delete narration already covered by specs, work packages, or linked evidence; do not write "today"/"next steps" session chatter. Choose the document backend per the [configuration contract](configuration.md); the mind-forge location is given by the host's `lbkit-agents.yaml` key `documents.mind_forge_guide`, and managed logbooks require mind-forge with Prompt/Thinking bindings. Low-level CLI parsing remains usable on Markdown for inspection and migration.
+
+## Markdown vocabulary
+
+The parser maps display labels to semantic fields. Supported pairs are `技能` / `Skills`, `处置` / `Resolution`, `状态` / `Status`, `产物` / `Artifact`, `阻塞` / `Blocker`, `交接` / `Handoff`, `工作目录` / `Working directories`, and `待办` / `Todo`. Field labels accept ASCII or full-width colons; English labels are case-insensitive. Existing human prose is preserved.
+
+Stage states are semantic values. Existing markers remain valid; optional text markers `pending`, `active`, and `settled` map to the same states. Sync preserves a stage's marker family. An unmarked stage defaults to the historical emoji family. Page summaries preserve their field spelling and marker family, and human prose after `——` (Chinese) or `--` (English). A settled stage can include explicitly resolved cancellations and is not necessarily a successful delivery.
+
+For newly inserted notes and TODO views, the first recognized field label selects Chinese or English. If no field exists, CJK prose selects Chinese; otherwise English is used. This is a documented bilingual default, not general language detection. `Human review:` and `Human verification:` are English aliases for the historical human-review prefix; the existing human-owner marker still applies.
+
+Skill annotations accept mixed bare/backticked names, optional slash prefixes, and separators `、`, `,`, `，`, `→`, or `->`. One trailing parenthesized condition is preserved in the raw value. Invalid chains return diagnostics and an empty chain instead of partial names. Tasks without action prefixes remain in the document model, but are not skill-catalog candidates. Work-package text matches remain heuristic candidates, never verified identity bindings.

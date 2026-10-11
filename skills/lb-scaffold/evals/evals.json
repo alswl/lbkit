@@ -3,16 +3,14 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Initialize projects/demo/docs/demo-20261008-logbook.md from the run-instance template workflows/demo/docs/demo-daily.md: target date 2026-10-08, all other slots defaulted; documents.adapter=markdown, no further questions to the human needed.",
-      "expected_output": "The logbook takes shape by template fill-in: title, front matter, a single Stage with 4 two-line todos, manual gates preserved; no items added or dropped, no wave notes; the markdown backend creates no prompts/thinking; the reply includes a slot-value summary.",
+      "prompt": "Initialize projects/demo/docs/demo-20261008-logbook.md from the valid run-instance template workflows/demo/docs/demo-daily.md. Target date 2026-10-08, all other slots defaulted. mind-forge is installed/configured.",
+      "expected_output": "Fill slots without changing the single Stage, four todos or manual gates; maintain mind-forge bindings and return the slot summary.",
       "files": [],
       "expectations": [
-        "The target file is replaced with the template shape: # 2026-10-08 日报, single Stage 01, 4 todos each matching the template",
-        "Front matter contains workflow/prev-run/skills, with skills being the template's two commands",
-        "Manual gates preserved; no tasks added, no wave-note section",
-        "No 「链接：」 block before there are deliverables",
-        "No prompts/ or thinking/ binding files created (markdown backend)",
-        "The reply explains the values of all three slots"
+        "Preserve the template goal, stage, four todos and manual gates",
+        "Keep workflow and prev-run provenance, no skills front matter or SKILLS section",
+        "Maintain Prompt/Thinking bindings",
+        "Do not dispatch execution"
       ]
     },
     {
@@ -25,6 +23,30 @@
         "The target file is left untouched",
         "Do not draft the logbook yourself and do not ghost-write the template",
         "Give a viable next step (human adds the template, or switch to lb-plan)"
+      ]
+    },
+    {
+      "id": 3,
+      "axis": "填空保留结构",
+      "prompt": "使用已确认的单阶段活动模板生成运行实例；mf 可用，三个槽位已齐。",
+      "expected_output": "保留既定目标句、待办顺序与人工关口；不生成 skills front matter 或 SKILLS 区块；建立 mind-forge 绑定，技能仅就地列名",
+      "files": [],
+      "assertions": [
+        {
+          "name": "preserve_confirmed_template",
+          "type": "contains",
+          "check": "保留既定目标句、待办顺序与人工关口"
+        },
+        {
+          "name": "no_skill_inventory",
+          "type": "contains",
+          "check": "不生成 skills front matter 或 SKILLS 区块"
+        },
+        {
+          "name": "mind_forge_bindings",
+          "type": "contains",
+          "check": "建立 mind-forge 绑定，技能仅就地列名"
+        }
       ]
     }
   ]

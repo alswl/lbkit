@@ -1,0 +1,36 @@
+[project]
+name = "lbkit"
+version = "0.2.0.dev0"
+description = "Read and safely update cross-repository collaboration logbooks"
+requires-python = ">=3.11"
+dependencies = ["click>=8.1,<9"]
+
+[project.scripts]
+lb = "logbook_cli.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.8,<0.9"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "logbook_cli"
+
+[dependency-groups]
+dev = ["ruff>=0.12", "mypy>=1.16"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/logbook_cli"]
+
+# Checkout launchers and standalone tests establish their source path before imports.
+[tool.ruff.lint.per-file-ignores]
+"bin/lb" = ["E402"]
+"scripts/lb.py" = ["E402"]
+"tests/test_lb_models.py" = ["E402"]

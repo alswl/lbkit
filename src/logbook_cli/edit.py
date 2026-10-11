@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 
 from logbook_cli.document import (
@@ -12,10 +13,18 @@ from logbook_cli.document import (
     Stage,
     Task,
     check,
+    find_task,
     parse_text,
 )
+from logbook_cli.format import (
+    ALARM_MARKER,
+    NOTE_KINDS,
+    SUMMARY_TEXT,
+    field_value,
+    prefix,
+)
+from logbook_cli.models import Field
 
-NOTE_KINDS = ("产物", "阻塞", "状态", "交接")
 ADVISORY_ISSUES = {
     "STAGE_EMOJI",
     "SKIPPED_EXPLICIT",
@@ -82,11 +91,14 @@ def append_note(
             raise LbError(
                 f"note kind must be one of: {', '.join(NOTE_KINDS)}", EXIT_USAGE
             )
-        if note.startswith("🚨 "):
-            body = note.removeprefix("🚨 ")
-            note = note if body.startswith(f"{kind}：") else f"🚨 {kind}：{body}"
-        elif not note.startswith(f"{kind}："):
-            note = f"{kind}：{note}"
+        parsed_kind = field_value(kind + ":")
+        assert parsed_kind is not None
+        key = parsed_kind[0]
+        alarm = ALARM_MARKER + " " if note.startswith(ALARM_MARKER + " ") else ""
+        body = note[len(alarm) :]
+        value = field_value(body)
+        if not value or value[0] is not key:
+            note = alarm + prefix(key, doc.locale) + body
 
     last = task_content_end(doc, task)
 
@@ -104,7 +116,11 @@ def append_note(
 
 
 def add_task(
-    doc: Document, stage_name: str, text: str, before_line: int | None = None
+    doc: Document,
+    stage_name: str,
+    text: str,
+    before_line: int | None = None,
+    before_task: str | None = None,
 ) -> tuple[str, int]:
     """Add one unchecked task within one delivery stage at a task boundary."""
     if not text.strip() or text != text.strip() or "\n" in text or "\r" in text:
@@ -123,6 +139,8 @@ def add_task(
         raise LbError("task text already exists in this stage", EXIT_REFUSED)
     newline = "\r\n" if b"\r\n" in doc.data else "\n"
 
+    if before_task is not None:
+        before_line = find_task(doc, stage_name, before_task).line
     if before_line is not None:
         target = next((task for task in stage.tasks if task.line == before_line), None)
         if target is None:
@@ -141,11 +159,11 @@ def add_task(
         headings = [
             index
             for index in range(stage.line, stop)
-            if doc.lines[index].strip() == "待办："
+            if (value := field_value(doc.lines[index])) and value[0] is Field.TODO
         ]
         if len(headings) != 1:
             raise LbError(
-                "empty stage needs one 待办： line before a task can be added",
+                "empty stage needs one Todo field before a task can be added",
                 EXIT_REFUSED,
             )
         index = headings[0]
@@ -155,3 +173,72 @@ def add_task(
     separator = "" if doc.text[:at].endswith(("\n", "\r")) else newline
     changed = doc.text[:at] + f"{separator}- [ ] {text}{newline}" + doc.text[at:]
     return changed, line
+
+
+def single_line(value: str, label: str) -> None:
+    if not value.strip() or value != value.strip() or "\n" in value or "\r" in value:
+        raise LbError(
+            f"{label} must be one nonempty line without outer whitespace", EXIT_USAGE
+        )
+
+
+def rewrite_task(doc: Document, task: Task, text: str, decision: str) -> str:
+    single_line(text, "task text")
+    single_line(decision, "decision")
+    if task.human or task.state not in (" ", "/"):
+        raise LbError(
+            "only unfinished agent tasks may be rewritten; reopen and reverify completed results separately",
+            EXIT_REFUSED,
+        )
+    if text.startswith(("- [", "* [", "+ [")):
+        raise LbError("--text is task text only, without a checkbox", EXIT_USAGE)
+    start = task.state_at + 3
+    changed = doc.text[:start] + text + doc.text[start + len(task.text) :]
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    updated = find_task(candidate, task.stage, text)
+    if (
+        updated.human
+        or updated.repositories != task.repositories
+        or updated.preflight_blocker
+    ):
+        raise LbError(
+            "rewrite must preserve agent ownership and repositories, and cannot introduce a preflight gate",
+            EXIT_REFUSED,
+        )
+    changed, _ = append_note(
+        candidate,
+        updated,
+        prefix(Field.STATUS, doc.locale)
+        + SUMMARY_TEXT[doc.locale]["rewrite"]
+        + decision,
+    )
+    return changed
+
+
+def resolve_task(
+    doc: Document, task: Task, disposition: str, decision: str, note: str
+) -> str:
+    single_line(decision, "decision")
+    single_line(note, "note")
+    if task.state != "-" or task.resolution or task.resolution_error:
+        raise LbError(
+            "resolve requires an unresolved [-] task without an existing disposition record",
+            EXIT_REFUSED,
+        )
+    record = json.dumps(
+        {"task": task.identity, "as": disposition, "decision": decision, "note": note},
+        ensure_ascii=False,
+    ).replace("<", "\\u003c")
+    last = task_content_end(doc, task)
+    at = doc.offsets[last] + len(doc.lines[last])
+    newline = "\r\n" if b"\r\n" in doc.data else "\n"
+    separator = "" if doc.text[:at].endswith(("\n", "\r")) else newline
+    return (
+        doc.text[:at]
+        + separator
+        + "    - "
+        + prefix(Field.RESOLUTION, doc.locale)
+        + record
+        + newline
+        + doc.text[at:]
+    )

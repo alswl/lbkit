@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 from logbook_cli.document import (
@@ -12,19 +11,15 @@ from logbook_cli.document import (
     LbError,
     discover,
     parse,
-    visible_lines,
 )
+from logbook_cli.format import PACKAGE_RE, QUOTE_RE, skill_chain
+from logbook_cli.models import Field
 
 CATALOG = "lbkit-skills.json"
 SCHEMA_REF = ".lbkit/schemas/lbkit-skills.schema.json"
 VERSIONS = ("0.1.0",)
 FIELDS = {"name", "scope", "chain", "actions", "companions", "description"}
 REQUIRED = ("name", "scope")
-TASK_RE = re.compile(r"^- \[(?P<state>.)\] (?P<text>(?P<action>[^：:\s]+)[：:].*?)\s*$")
-SKILL_LINE_RE = re.compile(r"^ {4}- 技能[：:]\s*(?P<value>.+?)\s*$")
-SKILL_NAME_RE = re.compile(r"`/?([\w.-]+)`")
-PACKAGE_RE = re.compile(r"所属(?:日志与)?检查项")
-QUOTE_RE = re.compile(r"「([^」]+)」")
 
 
 def catalog_path(root: Path) -> Path:
@@ -34,7 +29,8 @@ def catalog_path(root: Path) -> Path:
 def validate(data: object) -> list[dict]:
     if not isinstance(data, dict) or set(data) - {"$schema", "version", "skills"}:
         raise LbError(
-            f'{CATALOG}: top level must be {{"version": ..., "skills": [...]}}', EXIT_PATH
+            f'{CATALOG}: top level must be {{"version": ..., "skills": [...]}}',
+            EXIT_PATH,
         )
     if data.get("version") not in VERSIONS:
         raise LbError(
@@ -141,7 +137,7 @@ def work_packages(root: Path, logbook: Path) -> list[tuple[str, list[str]]]:
     for path in sorted(sources.glob("*.md")) if sources.is_dir() else []:
         lines = path.read_text(encoding="utf-8").splitlines()[:8]
         quotes = [
-            q.rstrip("…").strip()
+            next(part for part in q if part).rstrip("…").strip()
             for line in lines
             if PACKAGE_RE.search(line)
             for q in QUOTE_RE.findall(line)
@@ -165,39 +161,33 @@ def extract(root: Path, projects_dir: str) -> list[dict]:
     for path in discover(root, projects_dir):
         doc = parse(path, root)
         packages = work_packages(root, path)
-        task = None
-        for index, line in visible_lines(doc.lines):
-            if line is None:
-                continue
-            line = line.rstrip("\r\n")
-            match = TASK_RE.match(line)
-            if match:
-                task = match
-                continue
-            if not line.startswith("    "):
-                task = None
-                continue
-            skill = SKILL_LINE_RE.match(line)
-            if not (task and skill):
-                continue
-            value = skill.group("value")
-            chain = SKILL_NAME_RE.findall(value)
-            if not chain or any(set(chain) <= skills for skills in covered):
-                continue
-            text = task.group("text")
-            found.append(
-                {
-                    "action": task.group("action"),
-                    "chain": chain,
-                    "raw": value,
-                    "task": text,
-                    "done": task.group("state") == "x",
-                    "source": f"{path.relative_to(root)}:{index + 1}",
-                    "work_packages": [
-                        p
-                        for p, quotes in packages
-                        if any(text.startswith(q) for q in quotes)
-                    ],
-                }
-            )
+        for stage in doc.stages:
+            for task in stage.tasks:
+                # Actionless tasks remain valid; catalog curation still requires a work type.
+                if task.action is None:
+                    continue
+                for annotation in task.annotations:
+                    if annotation.kind is not Field.SKILLS:
+                        continue
+                    chain = skill_chain(annotation.value)
+                    if chain.names and any(
+                        set(chain.names) <= names for names in covered
+                    ):
+                        continue
+                    found.append(
+                        {
+                            "action": task.action,
+                            "chain": list(chain.names),
+                            "raw": chain.raw,
+                            "task": task.text,
+                            "done": task.settled and task.state == "x",
+                            "source": f"{path.relative_to(root)}:{annotation.line}",
+                            "work_packages": [
+                                p
+                                for p, quotes in packages
+                                if any(task.text.startswith(q) for q in quotes)
+                            ],
+                            "diagnostics": list(chain.diagnostics),
+                        }
+                    )
     return found

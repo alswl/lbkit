@@ -452,12 +452,9 @@ class LbCliTest(unittest.TestCase):
             side_effect=AssertionError("must not iterate outside projects"),
         ):
             self.assertEqual(LB.discover(repo), [])
-        with (
-            mock.patch("logbook_cli.cli.parse", side_effect=OSError("read failure")),
-            self.assertRaises(SystemExit) as raised,
-        ):
-            LB.main(["--root", str(self.root), "context", "projects/demo/docs/log.md"])
-        self.assertEqual(raised.exception.code, 3)
+        with mock.patch("logbook_cli.services.common.parse", side_effect=OSError("read failure")):
+            code = LB.main(["--root", str(self.root), "context", "projects/demo/docs/log.md"])
+        self.assertEqual(code, 3)
 
 
 PREFLIGHT_DOC = """# Pre

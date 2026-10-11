@@ -16,50 +16,7 @@
 
 ## 安装
 
-在本仓库的一个检出中，用一条命令安装到另一个 Git 仓库：
-
-```sh
-./bin/lbkit install --repo /path/to/logbooks --source https://github.com/alswl/lbkit.git
-```
-
-当前检出已有 `origin` 远端时可省略 `--source`。先加 `--dry-run` 可以预览全部 Git 与链接操作。
-
-该命令会添加 `.lbkit` 子模块、链接 CLI / 技能 / 共享文档、在缺失时复制 `lbkit-agents.template.yaml` 为 `lbkit-agents.yaml`、在缺失时生成 `AGENTS.md` 桩（内容为占位协作约定，需按本仓实际规则补充）、创建 `CLAUDE.md -> AGENTS.md` 链接，并在缺失 `minds.yaml` 时初始化 mind-forge 仓库（`minds.yaml` + `projects/`，经 `mf init` 生成；未安装 `mf` 时跳过并提示），最后检查 `bin/lb --help`。它拒绝覆盖已有文件，也不会代替你提交或推送任何一个仓库。
-
-### 不依赖单独检出
-
-机器上没有 lbkit 检出时，先在目标仓库手动添加子模块，再从 `.lbkit` 内运行 install：
-
-```sh
-cd /path/to/logbooks
-git submodule add https://github.com/alswl/lbkit.git .lbkit
-./.lbkit/bin/lbkit install
-```
-
-install 检测到 `.lbkit` 已是注册的子模块后会跳过 Git 操作，直接补链接和模板；`--repo` 默认是当前目录，在仓库根目录运行时可省略。
-
-使用方仓库拥有项目日志、`AGENTS.md`、`lbkit-agents.yaml` 以及可选的 `lbkit-skills.json`；lbkit 拥有共享实现与指令。安装后的链接结构：
-
-```text
-.agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
-.claude/skills/lb-*  -> ../../.lbkit/skills/lb-*
-bin/lb               -> ../.lbkit/bin/lb
-bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
-bin/lbkit            -> ../.lbkit/bin/lbkit
-docs/<shared>.md     -> ../.lbkit/docs/<shared>.md
-```
-
-只链接入口。CLI 实现（`scripts/lb.py`、`src/logbook_cli`）留在 `.lbkit` 子模块内——`bin/lb` 通过自身路径解析到它们。
-
-### 任意目录运行
-
-`bin/lb` 需在仓库根目录运行。若想在任意使用方仓库的任意子目录都能直接敲 `lb`，做一次链接即可：
-
-```sh
-ln -s /path/to/repo/bin/lb-anywhere ~/.local/bin/lb
-```
-
-wrapper 会向上找到最近的 `bin/lb`，切换到该仓库根目录再执行——执行的永远是该仓库钉住的 lbkit 版本。
+参见[安装与升级指南](docs/guide/install.zh-CN.md)。mind-forge 为必需依赖。
 
 ## 技能
 
@@ -70,7 +27,7 @@ wrapper 会向上找到最近的 `bin/lb`，切换到该仓库根目录再执行
 | [lb-plan](skills/lb-plan/SKILL.md) | 核对目标、起草待办供确认、设计阶段与工作包 |
 | [lb-preflight](skills/lb-preflight/SKILL.md) | 只读预检：路线规划与逐步可行性分析 |
 | [lb-push](skills/lb-push/SKILL.md) | 在已授权范围内派发、恢复并监听执行 |
-| [lb-update](skills/lb-update/SKILL.md) | 核验证据、维护记录、记录人工决定与收尾 |
+| [lb-update](skills/lb-update/SKILL.md) | 获取现状并核实写回，或只读重读人类修改 |
 | [lb-status](skills/lb-status/SKILL.md) | 观察日志与控制平面，输出状态简报 |
 
 ### 技能清单（可选）
@@ -104,21 +61,21 @@ bin/lb skills extract        # 日志「技能：」子行中未被清单覆盖�
 bin/lb skills usage          # 会话里实际调用的技能（唯一读 --root 外的只读命令）
 ```
 
-所有写命令都必须携带 `context --json` 返回的 SHA-256 `version_token`；文件有任何并发变化即拒绝写入。完整契约见 [lb-cli 契约](docs/lb-cli.md)。
+所有写命令都必须携带 `context --json` 返回的 SHA-256 `version_token`；文件有任何并发变化即拒绝写入。完整契约见 [lb-cli 契约](docs/installable/lb-cli.md)。
 
 ## 共享契约（随安装分发至使用方仓库）
 
-本仓库有两个文档目录：`docs/` 存放分发给使用方仓库的共享契约（安装时链接进其 `docs/`）；`dev-docs/` 存放 lbkit 自身的开发文档，**不**随安装分发。
+从[文档首页](docs/README.md)进入使用指南、贡献者文档和契约查询。仅 `docs/installable/` 分发给外部仓库，外部入口仍为 `docs/<契约名>.md`。
 
-- [生命周期与技能入口](docs/lifecycle.md)
-- [协调契约](docs/coordination.md)
-- [日志格式](docs/logbook-format.md)
-- [证据规则](docs/evidence.md)
-- [配置与运行适配器](docs/configuration.md)
-- [`lb` CLI 参考](docs/lb-cli.md)
+- [生命周期与技能入口](docs/installable/lifecycle.md)
+- [协调契约](docs/installable/coordination.md)
+- [日志格式](docs/installable/logbook-format.md)
+- [证据规则](docs/installable/evidence.md)
+- [配置与运行适配器](docs/installable/configuration.md)
+- [`lb` CLI 参考](docs/installable/lb-cli.md)
 
 ## lbkit 开发
 
 lbkit 自身的开发文档——不随安装分发：
 
-- [开发指南](dev-docs/development.md)
+- [开发指南](docs/dev/development.md)

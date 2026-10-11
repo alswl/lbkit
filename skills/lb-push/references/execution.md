@@ -1,6 +1,6 @@
 # Execution, Review, and Recovery
 
-Read before dispatching, resuming, or authorized cleanup. This file defines the operating process; tool commands come from the selected adapter. The [Repository Boundaries](../../../AGENTS.md) and the [Configuration Contract](../../../docs/configuration.md) always apply.
+Read before dispatching, resuming, or authorized cleanup. This file defines the operating process; tool commands come from the selected adapter. The [Repository Boundaries](../../../AGENTS.md) and the [Configuration Contract](../../../docs/installable/configuration.md) always apply.
 
 ## Runtime Adapter Contract
 
@@ -12,7 +12,7 @@ Existing sessions that meet requirements may be reused; do not restart just to r
 
 ## Dispatch Loop
 
-1. Locate the work package, executor, authorization, and isolated space; confirm inputs and dependencies are ready, and that release prerequisite evidence within the original scope has been checked or explicitly scheduled.
+1. Locate the work package, executor, authorization, and isolated space; confirm inputs and dependencies are ready, and that prerequisites for the first external write, including authenticated identity when applicable, are satisfied before that write.
 2. Hand the full task to the owning executor, obtain proof of receipt, and observe real status. Report the launch gate, task receipt, and business execution separately.
 3. After receipt, establish independent visible monitoring tied to this dispatch and verify monitoring readiness. A successful run with failed monitoring is a partial completion; fix the monitoring, and do not resubmit the business task.
 4. Each status wait is at most limits.wait_seconds; this is not a task execution deadline, and one expired wait never justifies killing the executor. Immediately after each wait, read the latest status and output: if `idle`, `done`, or `blocked`, stop waiting and handle the report-back or blocker; if still `working`, report the new command, artifact, or evidence, or the concrete basis for calling it stalled. Never repeat waits without refreshing status and output, and never treat one `working` snapshot as continuous operation. Keep progress human-visible.
@@ -28,7 +28,7 @@ Return only relevant gaps to the implementer, and re-verify affected results wit
 
 Before retrying, verify existing candidates, external state, and unfinished operations via the control plane or the owning agent to avoid duplicate side effects. Set applicable tool timeouts for CLI, MCP, or network calls; limits.wait_seconds does not directly cap total business command time.
 
-Judge timeouts per the task's nature, usually with 10 consecutive minutes without effective progress as the limit; effective progress means new facts, command results, artifacts, or evidence — repeated status text does not reset the clock. For builds or tests of known duration, set deadlines per the task's nature; do not treat 10 minutes as the total task budget. At the limit, verify the scene, stop retrying, and report to the human; never kill the process just because one wait expired.
+Judge timeouts per the task's nature, usually with 10 consecutive minutes without effective progress as the limit; effective progress means new facts, command results, artifacts, or evidence — repeated status text does not reset the clock. For builds or tests of known duration, set deadlines per the task's nature; do not treat 10 minutes as the total task budget. At the limit, verify the scene and stop repeating the failed method; pursue supported recovery within existing authorization and report any remaining decision or missing prerequisite; never kill the process just because one wait expired.
 
 When key information is missing, the owning agent investigates within authorization; consult the human for out-of-scope information or key inputs that cannot be obtained. For external platform work-item status and the like, trust an actual platform read — no speculative attribution about process or required fields; report exactly what the evidence shows. Deviation from the confirmed plan can be corrected and continued; when the plan itself is wrong in direction, on major decisions, or the scope changes, stop and hand to the human for judgment. Handle routine recovery within existing authorization; do not auto-create tasks for recovery.
 
@@ -39,3 +39,11 @@ Hand logins, identity, approvals, or upstream rejections straight to the human; 
 When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. A completed worktree may be deleted by the owning executor agent, protecting deliverables and user changes per the root rules — this grants no other permissions such as branch deletion. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
 
 On abnormal shutdown or a human-requested termination, first save the handoff, open responsibilities, and recovery conditions. Record session closure, task failure, project cancellation, and delivery completion separately; managing a group does not automatically include cleaning up old services.
+
+## Result Applicability and Recovery
+
+Reconcile new human decisions with stale packages before dispatch: update affected order, environment, permissions and acceptance, recording what was superseded. Preserve explicit per-destination order and verify each destination separately; historical success elsewhere is not current completion. A result can be a study, event, document or operational change; use only its agreed delivery and evidence gates.
+
+For a failed method, inspect the actual rejection and side effects, then attempt supported routine recovery within scope. A tool's generic error category is not more authoritative than its specific rejection. Distinguish a narrow retry from a broader replay with additional effects; widening side effects requires its own authorization. Do not turn every stall into a human choice or retry unchanged indefinitely.
+
+Before closing resources, ensure source references and key conclusions are recoverable under the evidence contract. This does not require copying raw materials into the coordination repository.

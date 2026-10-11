@@ -3,11 +3,36 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
+
+from logbook_cli.format import (
+    LABELS,
+    MARKER_RE,
+    PREFLIGHT_MARKER,
+    STAGE_MARKERS,
+    STATUS_RE,
+    SUMMARY_TEXT,
+    TAIL_SEPARATOR,
+    field_value,
+    language,
+    marker_style,
+    prefix,
+    split_marker,
+    task_metadata,
+)
+from logbook_cli.models import (
+    Field,
+    Stage,
+    StageStatus,
+    Task,
+    TaskAnnotation,
+    derive_stage_status,
+)
 
 EXIT_ISSUES, EXIT_USAGE, EXIT_PATH, EXIT_REFUSED = 1, 2, 3, 4
 TASK_RE = re.compile(
@@ -16,7 +41,7 @@ TASK_RE = re.compile(
 H2_RE = re.compile(r"^##\s+(?P<title>.*?)(?:\r?\n)?$")
 H1_RE = re.compile(r"^#(?!#)\s+")
 FENCE_RE = re.compile(r"^[ \t]*([`~])\1{2,}")
-EMOJI_RE = re.compile(r"^(?:🛫|🚧|✅|⚠️?)\s+")
+EMOJI_RE = MARKER_RE
 STAGE_RE = re.compile(r"^Stage\s+\d+\b", re.IGNORECASE)
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
@@ -25,43 +50,6 @@ class LbError(Exception):
     def __init__(self, message: str, code: int = EXIT_PATH) -> None:
         super().__init__(message)
         self.message, self.code = message, code
-
-
-@dataclass
-class Task:
-    stage: str
-    state: str
-    text: str
-    line: int
-    start: int
-    state_at: int
-    end: int
-    indent: str
-
-    @property
-    def human(self) -> bool:
-        return "👱" in self.text or self.text.startswith("人工验证：")
-
-    @property
-    def repositories(self) -> list[str]:
-        return re.findall(r"(?<!\w)@([\w.-]+)", self.text)
-
-    @property
-    def preflight_blocker(self) -> bool:
-        return "🔮" in self.text
-
-
-@dataclass
-class Stage:
-    title: str
-    display: str
-    line: int
-    heading_start: int
-    heading_end: int
-    emoji: str | None
-    is_delivery: bool
-    tasks: list[Task]
-    unknown_task_lines: list[int]
 
 
 @dataclass
@@ -77,6 +65,12 @@ class Document:
     comment_tail_lines: list[int]
     preflight: list[dict]
     status_lines: list[dict]
+
+    @property
+    def locale(self) -> str:
+        return language(
+            "".join(line for _, line in visible_lines(self.lines) if line is not None)
+        )
 
     @property
     def token(self) -> str:
@@ -167,7 +161,7 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
             comment_tail_lines.append(index + 1)
             continue
         line = lines[index]
-        if current is None and re.match(r"^>\s*状态：", visible):
+        if current is None and STATUS_RE.match(visible):
             status_lines.append(
                 {
                     "line": index + 1,
@@ -179,9 +173,7 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
         h2 = H2_RE.match(visible)
         if h2:
             display = h2.group("title")
-            title = EMOJI_RE.sub("", display)
-            emoji_match = re.match(r"^(🛫|🚧|✅)\s+", display)
-            emoji = emoji_match.group(1) if emoji_match else None
+            title, emoji, style = split_marker(display)
             current = Stage(
                 title,
                 display,
@@ -194,10 +186,11 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
                 [],
             )
             stages.append(current)
+            current.marker_style = style
             headings.append((index + 1, title))
             continue
         task = TASK_RE.match(line) if TASK_RE.match(visible) else None
-        if task and "🔮" in task.group("text"):
+        if task and PREFLIGHT_MARKER in task.group("text"):
             preflight.append(
                 {
                     "line": index + 1,
@@ -222,6 +215,48 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
             )
         elif current and re.match(r"^[-*+] \[[^]]+\] ", visible):
             current.unknown_task_lines.append(index + 1)
+    visibility = dict(visible_lines(lines))
+    for stage in stages:
+        for item in stage.tasks:
+            task_metadata(item)
+            records = []
+            for index in range(item.line, len(lines)):
+                line = lines[index]
+                if line.strip() and not line.startswith((" ", "\t")):
+                    break
+                visible = visibility.get(index)
+                if visible:
+                    child = re.match(r"^ {4}[-*+] (.*)", visible)
+                    value = field_value(child[1]) if child else None
+                    if value:
+                        kind, body, label = value
+                        item.annotations.append(
+                            TaskAnnotation(kind, body, index + 1, label)
+                        )
+                        if kind is Field.RESOLUTION:
+                            records.append(body)
+            if not records:
+                continue
+            try:
+                record = json.loads(records[0])
+                valid = (
+                    len(records) == 1
+                    and isinstance(record, dict)
+                    and set(record) == {"task", "as", "decision", "note"}
+                    and record["task"] == item.identity
+                    and item.state == "-"
+                    and record["as"] in ("human-cancelled", "not-applicable")
+                    and all(
+                        isinstance(record[k], str) and record[k].strip()
+                        for k in ("decision", "note")
+                    )
+                )
+            except (ValueError, TypeError):
+                valid = False
+            if valid:
+                item.resolution = record
+            else:
+                item.resolution_error = True
     return Document(
         path,
         root,
@@ -238,21 +273,9 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
 
 
 def stage_state(stage: Stage) -> str | None:
-    if stage.unknown_task_lines:
-        return None
-    states = [t.state for t in stage.tasks]
-    actionable = [state for state in states if state != "-"]
-    if not actionable:
-        return None
-    # A skip is recorded, not silently converted into a completion.  It can
-    # still coexist with visible active work, which keeps the stage in flight.
-    if all(state == "x" for state in actionable) and "-" not in states:
-        return "✅"
-    if any(state in ("x", "/") for state in actionable):
-        return "🚧"
-    if all(state == " " for state in actionable):
-        return "🛫"
-    return None
+    """Compatibility renderer for the public Markdown/JSON marker."""
+    status = derive_stage_status(stage)
+    return STAGE_MARKERS[stage.marker_style][status] if status else None
 
 
 def next_task(doc: Document) -> Task | None:
@@ -268,48 +291,73 @@ def next_task(doc: Document) -> Task | None:
     )
 
 
-def summary_derived(doc: Document) -> str:
-    """Canonical machine zone of the page-top status line.
-
-    `> 状态：` lines are split at the first `——`: everything before is a
-    derived machine zone this tool may rewrite; everything after is human
-    prose that is preserved verbatim.  Only lines whose machine zone starts
-    with a state emoji are owned; free-form narrative lines stay untouched.
-    """
-    in_flight = None
-    for stage in doc.stages:
-        if stage.is_delivery and stage_state(stage) != "✅":
-            in_flight = stage
-            break
-    parts = []
+def summary_derived(
+    doc: Document, locale: str | None = None, style: str | None = None
+) -> str:
+    locale = locale or doc.locale
+    words = SUMMARY_TEXT[locale]
+    in_flight = next(
+        (
+            s
+            for s in doc.stages
+            if s.is_delivery and derive_stage_status(s) is not StageStatus.SETTLED
+        ),
+        None,
+    )
     if in_flight is None:
-        parts.append("状态：✅ 全部交付阶段已完成")
-    else:
-        parts.append(
-            f"状态：{stage_state(in_flight) or in_flight.emoji or '🚧'} {in_flight.title}"
+        status = StageStatus.SETTLED
+        text = (
+            words["settled"]
+            if any(t.resolution for s in doc.stages if s.is_delivery for t in s.tasks)
+            else words["complete"]
         )
+    else:
+        status = derive_stage_status(in_flight) or StageStatus.IN_PROGRESS
+        text = in_flight.title
+    style = style or (
+        in_flight.marker_style
+        if in_flight
+        else next((s.marker_style for s in doc.stages if s.is_delivery), "emoji")
+    )
+    parts = [prefix(Field.STATUS, locale) + STAGE_MARKERS[style][status] + " " + text]
     if doc.preflight:
-        parts.append(f"🔮 待讨论 {len(doc.preflight)} 项")
+        parts.append(
+            PREFLIGHT_MARKER + " " + words["pending"].format(count=len(doc.preflight))
+        )
     incomplete = next_task(doc)
     if incomplete is not None:
-        parts.append(f"下一项：{incomplete.text}")
+        parts.append(words["next"] + incomplete.text)
     return " · ".join(parts)
 
 
 def summary_lines(doc: Document) -> list[dict]:
-    """Annotate each `> 状态：` line with ownership and, when owned, the
-    canonical replacement that keeps the human prose tail intact."""
-    derived = summary_derived(doc)
     records = []
     for record in doc.status_lines:
         raw = record["raw"]
-        body = re.sub(r"^>\s*状态：", "状态：", raw)
-        head, separator, tail = body.partition("——")
-        owned = bool(re.match(r"^状态：(?:🛫|🚧|✅)", head)) and "<!--" not in raw
+        match = STATUS_RE.match(raw)
+        assert match is not None
+        locale = "zh" if match[1] == LABELS["zh"][Field.STATUS] else "en"
+        body = raw[match.end() :]
+        head, separator, tail = body.partition(TAIL_SEPARATOR[locale])
+        marker = MARKER_RE.match(head)
+        owned = (
+            bool(
+                marker
+                and any(
+                    marker[1] in values.values() for values in STAGE_MARKERS.values()
+                )
+            )
+            and "<!--" not in raw
+        )
         item = {**record, "owned": owned, "current": raw}
-        if owned:
+        if owned and marker is not None:
+            derived = summary_derived(doc, locale, marker_style(marker[1]))
+            # Keep the original field spelling and colon spacing.
+            derived_body = derived[len(prefix(Field.STATUS, locale)) :]
             item["target"] = (
-                "> " + derived + (" " + separator + tail if separator else "")
+                raw[: match.end()]
+                + derived_body
+                + (" " + separator + tail if separator else "")
             ).rstrip()
         records.append(item)
     return records
@@ -334,7 +382,10 @@ def directory_items(doc: Document):
         (index, line) for index, line in visible_lines(doc.lines) if line is not None
     ]
     for position, (index, _) in enumerate(visible):
-        if doc.lines[index].rstrip("\r\n").strip() != "工作目录：":
+        if (
+            not (value := field_value(doc.lines[index]))
+            or value[0] is not Field.DIRECTORIES
+        ):
             continue
         started = False
         for next_index, raw_line in visible[position + 1 :]:
@@ -392,6 +443,7 @@ def context(doc: Document) -> dict:
                         "line": task.line,
                         "repositories": task.repositories,
                         "human": task.human,
+                        "resolution": task.resolution,
                         "preflight": task.preflight_blocker,
                     }
                     for task in s.tasks
@@ -416,7 +468,7 @@ def context(doc: Document) -> dict:
         "preflight_blockers": doc.preflight,
         "preflight_clear": not doc.preflight,
         "notes": "bound_records contains only explicitly linked prompts/thinking paths; file names are not inferred.",
-        "preflight_rule": "a 🔮 preflight discussion item halts the whole logbook; all CLI writes are refused until a human resolves it in the logbook",
+        "preflight_rule": f"a {PREFLIGHT_MARKER} preflight discussion item halts the whole logbook; all CLI writes are refused until a human resolves it in the logbook",
     }
 
 
@@ -440,8 +492,7 @@ def discover(root: Path, project_root: str = "projects") -> list[Path]:
     relative = Path(project_root)
     if relative.is_absolute() or not project_root or ".." in relative.parts:
         raise LbError(f"invalid project root: {project_root}")
-    projects = root / relative
-    projects = contained_directory(root, projects)
+    projects = contained_directory(root, root / relative)
     if projects is None:
         return []
     answer: list[Path] = []
@@ -557,7 +608,7 @@ def check(doc: Document) -> list[dict]:
                     f"expected {expected}, found {stage.emoji or 'none'}",
                 )
             )
-        if any(t.state == "-" for t in stage.tasks):
+        if any(t.state == "-" and t.resolution is None for t in stage.tasks):
             issues.append(
                 issue(
                     doc,
@@ -566,6 +617,16 @@ def check(doc: Document) -> list[dict]:
                     "[-] is an explicit skipped/not-applicable record and is not auto-approved",
                 )
             )
+        for task in stage.tasks:
+            if task.resolution_error:
+                issues.append(
+                    issue(
+                        doc,
+                        task.line,
+                        "INVALID_RESOLUTION",
+                        "resolution must uniquely match this skipped task and cite a decision and reason",
+                    )
+                )
         for line in stage.unknown_task_lines:
             issues.append(
                 issue(
@@ -585,7 +646,7 @@ def check(doc: Document) -> list[dict]:
             )
         )
     for stage in doc.stages:
-        seen: dict[str, int] = {}
+        seen: dict[str, list[int]] = {}
         for task in stage.tasks:
             seen.setdefault(task.text, []).append(task.line)
         for text, lines in seen.items():
@@ -606,7 +667,7 @@ def check(doc: Document) -> list[dict]:
                 doc,
                 blocker["line"],
                 "PREFLIGHT_BLOCKER",
-                "🔮 preflight discussion item halts the whole logbook; resolve by human decision before advancing",
+                f"{PREFLIGHT_MARKER} preflight discussion item halts the whole logbook; resolve by human decision before advancing",
             )
         )
     for link in links_for(doc):
@@ -725,7 +786,7 @@ def require_preflight_clear(doc: Document) -> None:
     if doc.preflight:
         where = ", ".join(f"line {b['line']}" for b in doc.preflight)
         raise LbError(
-            f"logbook blocked by 🔮 preflight discussion item(s) at {where}; "
+            f"logbook blocked by {PREFLIGHT_MARKER} preflight discussion item(s) at {where}; "
             "resolve by human decision in the logbook before writing",
             EXIT_REFUSED,
         )

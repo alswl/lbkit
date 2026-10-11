@@ -11,8 +11,14 @@ source_root = Path(__file__).resolve().parent.parent / "src"
 if str(source_root) not in sys.path:
     sys.path.insert(0, str(source_root))
 
-from logbook_cli.cli import cmd_task_update, main, write_bytes
+if __name__ == "__main__":
+    from logbook_cli.bootstrap import activate
+
+    activate(str(Path(__file__).resolve()))
+
+from logbook_cli.cli import cmd_task_update, main
 from logbook_cli.document import EXIT_REFUSED, LbError, check, discover, parse
+from logbook_cli.storage import write_bytes
 from logbook_cli.views import refresh_todo, render_todo, todo_snapshot
 
 __all__ = [

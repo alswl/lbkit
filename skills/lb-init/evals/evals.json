@@ -1,0 +1,24 @@
+{
+  "skill_name": "lb-init",
+  "evals": [
+    {
+      "id": 1,
+      "axis": "必需依赖",
+      "prompt": "在已初始化 Git 的消费仓安装 lbkit，但 mf 不存在。",
+      "expected_output": "安装失败并说明 mind-forge 是必需依赖及安装入口；不创建子模块、链接或宣称安装完成",
+      "files": [],
+      "assertions": [
+        {
+          "name": "required_mind_forge",
+          "type": "contains",
+          "check": "安装失败并说明 mind-forge 是必需依赖及安装入口"
+        },
+        {
+          "name": "no_partial_install",
+          "type": "contains",
+          "check": "不创建子模块、链接或宣称安装完成"
+        }
+      ]
+    }
+  ]
+}

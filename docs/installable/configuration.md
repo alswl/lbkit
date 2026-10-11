@@ -10,19 +10,20 @@ There are no implicit extra project config files, environment-variable overrides
 
 Mapping overrides field by field; lists are replaced wholesale. `runtime.launcher` is an atomic value — an override must supply both `command` and `args` together, and old launcher arguments are never spliced onto a new command. `runtime.launcher` and `launcher_alternatives` together form the selectable range; an explicitly chosen command + args must exactly match one of the options, and model and deployment metadata are read from that option, never improvised by the caller. Without an explicit choice, pick within the range per task needs and record the reason; prefer the default option when adaptability ties. No automatic failover.
 
-All relative paths resolve against the managed repository root, not the skills directory or the current shell directory. Prefer the user-specified existing logbook, then the currently explicitly bound logbook; `project_root` only aids discovery — the root is not itself a project. When multiple projects cannot be uniquely determined, clarify instead of scanning the project repository. Without configuration, a uniquely identified existing plain Markdown file can still be processed; that never licenses guessing the runtime adapter or launch command.
+All relative paths resolve against the managed repository root, not the skills directory or the current shell directory. Prefer the user-specified existing logbook, then the currently explicitly bound logbook; `project_root` only aids discovery — the root is not itself a project. When multiple projects cannot be uniquely determined, clarify instead of scanning the project repository. Managed logbook workflows require mind-forge, minds.yaml and valid document bindings. A missing dependency blocks the dependent workflow, not read-only inspection, migration diagnosis or authorized maintenance of lbkit itself. There is no silent markdown fallback.
 
 ## Fields
 
 | Field | Type and meaning | Used by |
 |---|---|---|
-| version | Semantic version string; currently only 0.1.0 is supported. The legacy `schema: 1` is treated as 0.1.0, with a rewrite prompt on read | Entries that read the configuration |
-| documents.adapter | mind-forge or markdown; selects how documents are maintained | Document reading and authorized writing by lb-* entries |
+| version | Semantic version string; current format 0.2.0. Legacy 0.1.0 / `schema: 1` require explicit migration before managed workflow writes; read-only diagnosis remains available | Entries that read the configuration |
+| documents.adapter | mind-forge (required); markdown in legacy configuration requires migration | Document reading and authorized writing by lb-* entries |
 | documents.project_root | Non-empty path; `projects` in this repository, overridable to an approved directory | Entries that need project discovery |
 | runtime.adapter | Non-empty adapter name; `herdr` ships with the kit today | push; status when requesting live state |
 | runtime.launcher | Default launch option: `command` a non-empty string, `args` a string array, plus the model metadata below | push when creating or replacing a session |
 | runtime.launcher_alternatives | Array of candidate options with the same structure; chosen per need, never auto-tried in sequence | push |
 | limits.wait_seconds | Integer in 1–60; the wait cap for a single observation, default 30 seconds — not a project-task timeout or stagnation limit | push's waiting steps |
+| limits.context_unknown_packages | Positive integer; default 3 completed packages before safe-boundary rotation when context usage cannot be measured; not a context percentage | push |
 | limits.review_rounds | Positive integer or null; maximum rounds a candidate is submitted to independent inspection, including the first | plan's inspection design, push's review control, update's return judgment |
 
 `review_rounds: null` means unconfigured — not an infinite loop, and not "no review needed". A current work package requiring independent inspection must have a finite round count before dispatch: it can be proposed explicitly per the task and confirmed along with the work package, or an existing explicit limit is carried over as-is. Tasks that need no review do not get checkers created just to fill this field. Round increases or resets never arise automatically from restarting sessions, switching skills, or changing candidates.
@@ -31,18 +32,18 @@ Launch commands and arguments are used as argv — never spliced as shell fragme
 
 ## Collaboration Parameters
 
-The following fields live in the same `lbkit-agents.yaml`; shared skills read them at the steps that need the values and never treat template values as facts. The installer copies the [template](../lbkit-agents.template.yaml) when the file does not exist and keeps any existing file.
+The following fields live in the same `lbkit-agents.yaml`; shared skills read them at the steps that need the values and never treat template values as facts. The installer copies the [template](../../lbkit-agents.template.yaml) when the file does not exist and keeps any existing file.
 
 | Field | When used |
 |---|---|
 | `roles.human_owner_label`, `roles.coordinator_label` | Display titles for the human owner and the coordinator; identity and authorization still follow the consuming repository's `AGENTS.md` |
 | `runtime.herdr.workspace_id_env` | Environment variable name to read when Herdr is chosen and tabs must be created in the coordinator's workspace |
-| `runtime.herdr.label_prefix` | Label prefix for new Herdr sessions, tabs, and panes; the template default is `^`, which the host may change to its own convention |
+| `runtime.herdr.label_prefix` | Visible label prefix for new Herdr tabs and panes; named session identifiers follow the runtime syntax; the template default is `^`, which the host may change to its own convention |
 | `runtime.herdr.shell` | When the wrapped launcher is a shell function and must be verified inside an interactive shell |
 | `runtime.herdr.permission_mode` | Tool mode used when the host has authorized auto-approval; this field never widens authorization |
 | `browser.profile` | When authorized browser work genuinely needs an agent-specific profile |
 | `auth.recurring_login_hint` | Login-cadence hint with a reliable existing basis; when empty, do not speculate about expiry frequency |
-| `documents.mind_forge_guide` | Path to the host-provided mapping guide when the mind-forge document adapter is selected |
+| `documents.mind_forge_guide` | Path to the host-provided mapping guide for the required mind-forge document workflow |
 
 Paths are relative to the consuming repository root. Current values must not be inferred from `.lbkit/` templates, other repositories, command names, or past evals. When a value is missing, `null`, conflicts with host rules, or cannot be verified as genuine, first verify read-only within existing authorization; if the value is still needed to continue, tell the human the required field, its purpose, and candidate values, and wait for an answer. When an optional value is missing, skip preparations that depend on it instead of blocking unrelated work. When a consultation's outcome affects later work, the human or an agent authorized to maintain rules writes it back to the host file — never into the shared template.
 
@@ -78,10 +79,10 @@ mode is a call input to the entry, not part of the global default configuration;
 |---|---|---|
 | lb-plan | create / revise / review | review is read-only; taking over an existing plan is usually revise |
 | lb-push | advance / resume / cleanup | cleanup handles only authorized resources; it does not dispatch project items |
-| lb-update | format / evidence / close | New completion verdicts must go through evidence; format must not be used to bypass it |
+| lb-update | reread / refresh; writes use format / evidence / close | Reread human edits without writing by default; refresh verifies current evidence before completion updates |
 | lb-status | recorded / live | Explicit recorded relies on records only; an ordinary progress query with a dispatched executor defaults to live, and missing capability is reported as explicitly unknown |
 | lb-preflight | run | Read-only preflight with step-by-step feasibility analysis; blockers are written back as 🔮 after human confirmation; any unresolved 🔮 halts the whole logbook |
 
 Status observation modes are separate from write permissions: recorded/live may both maintain emoji and a few fact snippets; when "read-only / no modifications" is explicitly requested, writing is forbidden. Stagnation is usually bounded by 10 consecutive minutes without effective progress, judged per the task's character; no fixed total task duration limit is added, and wait_seconds is not that limit.
 
-For example, "plain Markdown, logbook at notes/demo.md, plan check only" maps to documents.adapter=markdown, an explicit logbook location, and lb-plan's review. No new YAML override file is needed, and repository defaults for the next call must not change because of it.
+A request to review a known document may still be inspected read-only when mind-forge is unavailable, but must report that managed-workflow validation is incomplete. Do not initialize, migrate, or publish as a side effect of a read-only request.

@@ -12,54 +12,11 @@ Reusable Logbook coordination skills, Markdown contracts, and the `lb` CLI for h
 - **Coordinator agent** — maintains shared state, dependencies, and acceptance per logbook
 - **Executor agents** — deliver bounded work packages with verifiable evidence
 
-Authorization boundaries, evidence rules, and human checkpoints are contracts, not options. Plans don't authorize execution; agents never write to human-owned logbook items.
+Authorization boundaries, evidence rules, and human checkpoints are contracts, not options. Plans don't authorize execution; agents cannot complete human-owned items. They can record when human review starts.
 
 ## Install
 
-From a checkout of this repository, install it into another Git repository with one command:
-
-```sh
-./bin/lbkit install --repo /path/to/logbooks --source https://github.com/alswl/lbkit.git
-```
-
-`--source` may be omitted when this checkout has an `origin` remote. Add `--dry-run` to inspect the Git and link operations first.
-
-The command adds the `.lbkit` submodule, links the CLI, skills, and shared docs, copies `lbkit-agents.template.yaml` when no `lbkit-agents.yaml` exists, generates an `AGENTS.md` stub when missing (placeholder collaboration rules to be filled in locally), creates a `CLAUDE.md -> AGENTS.md` link, and initializes a mind-forge repo when `minds.yaml` is absent (`minds.yaml` + `projects/`, produced via `mf init`; skipped with a hint when `mf` is not installed), then checks `bin/lb --help`. It refuses to replace existing files, and never commits or pushes either repository.
-
-### Without a separate checkout
-
-When no lbkit checkout exists on the machine, add the submodule to the target repository manually, then run install from inside `.lbkit`:
-
-```sh
-cd /path/to/logbooks
-git submodule add https://github.com/alswl/lbkit.git .lbkit
-./.lbkit/bin/lbkit install
-```
-
-Once it detects `.lbkit` is already a registered submodule, install skips the Git operations and only adds the links and template. `--repo` defaults to the current directory, so it can be omitted when run from the repository root.
-
-The consuming repository owns its project logs, `AGENTS.md`, `lbkit-agents.yaml`, and the optional `lbkit-skills.json`; lbkit owns the shared implementation and instructions. Installed links:
-
-```text
-.agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
-.claude/skills/lb-*  -> ../../.lbkit/skills/lb-*
-bin/lb               -> ../.lbkit/bin/lb
-bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
-bin/lbkit            -> ../.lbkit/bin/lbkit
-docs/<shared>.md     -> ../.lbkit/docs/<shared>.md
-```
-
-Only entry points are linked. The CLI implementation (`scripts/lb.py`, `src/logbook_cli`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
-
-### Run from anywhere
-
-`bin/lb` runs from the repository root. To invoke `lb` from any subdirectory of any consuming repository, link the wrapper once:
-
-```sh
-ln -s /path/to/repo/bin/lb-anywhere ~/.local/bin/lb
-```
-
-The wrapper walks up to the nearest `bin/lb`, switches to that repository root, and executes it — so the repository's pinned lbkit revision always stays in charge.
+Follow the [installation and upgrade guide](docs/guide/install.md). mind-forge is required.
 
 ## Skills
 
@@ -70,7 +27,7 @@ The wrapper walks up to the nearest `bin/lb`, switches to that repository root, 
 | [lb-plan](skills/lb-plan/SKILL.md) | Verify goals, draft todos for confirmation, design stages and work packages |
 | [lb-preflight](skills/lb-preflight/SKILL.md) | Read-only preflight: route planning and step-by-step feasibility |
 | [lb-push](skills/lb-push/SKILL.md) | Dispatch, resume, and monitor execution within granted authorization |
-| [lb-update](skills/lb-update/SKILL.md) | Verify evidence, maintain records, close out human decisions |
+| [lb-update](skills/lb-update/SKILL.md) | Refresh verified progress, or reread human edits without writing |
 | [lb-status](skills/lb-status/SKILL.md) | Observe logbooks and the control plane, report status briefs |
 
 ### Skills list (optional)
@@ -104,21 +61,21 @@ bin/lb skills extract        # 技能： sub-lines in logbooks not yet covered b
 bin/lb skills usage          # skills actually invoked in sessions (the one read-only command outside --root)
 ```
 
-All write commands require the SHA-256 `version_token` returned by `context --json`; writes are rejected on any concurrent change. See the [lb CLI contract](docs/lb-cli.md) for the full contract.
+All write commands require the SHA-256 `version_token` returned by `context --json`; writes are rejected on any concurrent change. See the [lb CLI contract](docs/installable/lb-cli.md) for the full contract.
 
 ## Shared contracts (installed into consuming repositories)
 
-Two documentation directories live in this repo: `docs/` holds the shared contracts distributed to consuming repositories (linked into their `docs/` on install), while `dev-docs/` holds lbkit's own development documentation and is **not** installed.
+Start at the [documentation index](docs/README.md) for user guides, contributor documentation and reference navigation. Only `docs/installable/` is distributed to consuming repositories, under their existing `docs/` paths.
 
-- [Lifecycle & skill entries](docs/lifecycle.md)
-- [Coordination contracts](docs/coordination.md)
-- [Logbook format](docs/logbook-format.md)
-- [Evidence rules](docs/evidence.md)
-- [Configuration & runtime adapters](docs/configuration.md)
-- [`lb` CLI reference](docs/lb-cli.md)
+- [Lifecycle & skill entries](docs/installable/lifecycle.md)
+- [Coordination contracts](docs/installable/coordination.md)
+- [Logbook format](docs/installable/logbook-format.md)
+- [Evidence rules](docs/installable/evidence.md)
+- [Configuration & runtime adapters](docs/installable/configuration.md)
+- [`lb` CLI reference](docs/installable/lb-cli.md)
 
 ## lbkit development
 
 Documentation for developing lbkit itself — not installed into consuming repositories:
 
-- [Development guide](dev-docs/development.md)
+- [Development guide](docs/dev/development.md)

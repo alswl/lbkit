@@ -76,12 +76,21 @@ def claude_events(dirs: list[Path], since: str):
                         and part.get("name") == "Skill"
                     ):
                         args = part["input"].get("args") or ""
-                        yield "claude", "tool", part["input"].get("skill"), args, time, cwd, path
+                        yield (
+                            "claude",
+                            "tool",
+                            part["input"].get("skill"),
+                            args,
+                            time,
+                            cwd,
+                            path,
+                        )
 
 
 def codex_events(dirs: list[Path], since: str):
     for path in (Path.home() / ".codex" / "sessions").glob("*/*/*/*.jsonl"):
-        cwd, seen = None, set()
+        cwd = None
+        seen: set[str] = set()
         for item in records(path):
             payload = item.get("payload")
             if not isinstance(payload, dict):

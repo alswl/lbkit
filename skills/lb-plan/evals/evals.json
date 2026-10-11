@@ -81,12 +81,12 @@
     {
       "id": 12,
       "prompt": "This round documents.adapter=markdown and the logbook explicitly specifies notes/release.md. The task is a report; the repository has no minds.yaml, prompts, or thinking; only a plan is needed.",
-      "expected_output": "Use the given plain Markdown location; do not require mind-forge or a deployment phase.",
+      "expected_output": "Report the required mind-forge dependency and migration gap before managed draft writes; inspect the supplied report context without imposing deployment gates.",
       "files": [],
       "expectations": [
-        "Apply this round's parameters over the default mind-forge",
-        "Do not run mf or create prompts/thinking",
-        "Acceptance centers on the report's fixed version and sources",
+        "Do not silently use the legacy markdown adapter",
+        "State the missing mf/minds.yaml/bindings required for managed writes",
+        "Acceptance centers on report identity and sources, not a software pipeline",
         "Do not launch executor agents"
       ]
     },
@@ -115,14 +115,14 @@
     {
       "id": 15,
       "prompt": "Plan a linear phase: an agent completes the regression and hands the report to the owner for human review. Design the logbook todos and the handoff information.",
-      "expected_output": "Split the agent's regression delivery and the human review into two sequential task drafts and write them in after confirmation; each has a single owner, and the artifact is recorded under the agent item.",
+      "expected_output": "Write a new draft immediately with sequential agent-result and required human-review todos; present the file for confirmation.",
       "files": [],
       "expectations": [
-        "Split into sequential tasks when the owner or acceptance gate changes",
-        "Sequential tasks are not a parallelization authorization",
-        "Show todo drafts first and write them in only after confirmation",
-        "Never mark both human and agent as owner of the same task",
-        "The artifact sits under the agent item, and the responsible-repository marker goes before the role emoji"
+        "Split by actual owner or acceptance gate",
+        "Write the draft before requesting plan confirmation",
+        "Do not dispatch execution or infer confirmation from a saved file",
+        "Keep each task single-owner",
+        "Include the current report entry only if useful to the human; no automatic intermediate artifacts"
       ]
     },
     {
@@ -301,13 +301,13 @@
     {
       "id": 30,
       "prompt": "The repository root has lbkit-skills.json, whose 「speckit 按任务区间实现」 entry's scope says 「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」. Draft or complete the 技能 sub-line for Stage 04's todo 「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @sample-media」; the todo has no 「技能：」 yet, and the spec branch's tasks.md has T027 (asserting the tool list is exactly 16 items) and T028 (replaying the MCP baseline).",
-      "expected_output": "Run bin/lb skills --json to read all entries and judge ownership by scope; the todo text alone cannot show whether it belongs to speckit, so read tasks.md first, then suggest 「技能：`speckit-implement`（tasks.md T027–T028）」, submitting it with the draft for human confirmation before writing.",
+      "expected_output": "Read registry scope and tasks.md/work package, then put only speckit-implement on the skill sub-line; task-range explanation stays in the work package.",
       "files": [],
       "expectations": [
-        "Read all list entries rather than filtering only by the 测试 prefix",
-        "Judge by scope, and check tasks.md or the work package to confirm the task range",
-        "Suggest a sub-line naming speckit-implement and the task numbers",
-        "Do not change the todo's first line, and obtain human confirmation before writing"
+        "Read all registry entries rather than only action-prefix matches",
+        "Verify actual scope against tasks.md or the work package",
+        "Skill sub-line lists only the skill name, without task numbers or purpose",
+        "Do not rewrite the todo first line or expand scope"
       ]
     },
     {
@@ -354,6 +354,68 @@
         "Companion skills go into the skill sub-line or work package per their when",
         "Do not add todos for companion skills",
         "Mention spec-update in the executor-switch scenario"
+      ]
+    },
+    {
+      "id": 35,
+      "axis": "研究草稿直接落盘",
+      "prompt": "创建半天内完成的社区访谈计划。用户目标原文：了解居民使用图书馆的障碍。mf 已配置可用；先形成草稿，不执行。",
+      "expected_output": "写入单阶段草稿并原样转录目标，记录目标来源；技能仅在待办子行列名；无总览或 front matter 技能表；保留未确认草稿状态；不启动访谈执行",
+      "files": [],
+      "assertions": [
+        {
+          "name": "draft_and_verbatim_goal",
+          "type": "contains",
+          "check": "写入单阶段草稿并原样转录目标，记录目标来源"
+        },
+        {
+          "name": "task_local_skills",
+          "type": "contains",
+          "check": "技能仅在待办子行列名；无总览或 front matter 技能表"
+        },
+        {
+          "name": "no_execution",
+          "type": "contains",
+          "check": "保留未确认草稿状态；不启动访谈执行"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "axis": "整链范围与通用能力",
+      "prompt": "规划活动报名资料交付；登记表仅有软件项目整链，但其中包含适用的资料发布技能。",
+      "expected_output": "读取单项技能定义判断通用能力；不引入 PR、编译、部署或整链专属步骤",
+      "files": [],
+      "assertions": [
+        {
+          "name": "inspect_applicable_definition",
+          "type": "contains",
+          "check": "读取单项技能定义判断通用能力"
+        },
+        {
+          "name": "no_software_gates",
+          "type": "contains",
+          "check": "不引入 PR、编译、部署或整链专属步骤"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "axis": "模板槽位",
+      "prompt": "旧活动 workflow 只有整页正文，没有运行实例模板、目标日槽位。",
+      "expected_output": "指出模板缺口，不把活动名称代替目标日；不自由编造模板或人工关口",
+      "files": [],
+      "assertions": [
+        {
+          "name": "report_missing_slots",
+          "type": "contains",
+          "check": "指出模板缺口，不把活动名称代替目标日"
+        },
+        {
+          "name": "no_invented_template",
+          "type": "contains",
+          "check": "不自由编造模板或人工关口"
+        }
       ]
     }
   ]

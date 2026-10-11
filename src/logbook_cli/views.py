@@ -15,6 +15,8 @@ from logbook_cli.document import (
     summary_lines,
     visible_lines,
 )
+from logbook_cli.format import ALARM_MARKER, HUMAN_MARKER
+from logbook_cli.models import StageStatus, derive_stage_status
 
 TASK_BLOCK_STOP = re.compile(r"^(?:#{1,2} |[-*+] \[[^]]+\] )")
 
@@ -52,8 +54,8 @@ def todo_snapshot(doc: Document) -> dict:
         if not stage.is_delivery:
             continue
         for task in stage.tasks:
-            blockers = ([task.text] if "🚨" in task.text else []) + [
-                b for b in task_block(doc, task, visibility) if "🚨" in b
+            blockers = ([task.text] if ALARM_MARKER in task.text else []) + [
+                b for b in task_block(doc, task, visibility) if ALARM_MARKER in b
             ]
             items.append(
                 {
@@ -61,67 +63,82 @@ def todo_snapshot(doc: Document) -> dict:
                     "line": task.line,
                     "state": task.state,
                     "human": task.human,
+                    "settled": task.settled,
+                    "resolution": task.resolution,
                     "text": task.text,
                     "blockers": blockers,
                 }
             )
     return {
         "logbook": str(doc.path.relative_to(doc.root)),
+        "language": doc.locale,
         "next_task": next_task,
         "alarms": [i for i in items if i["blockers"]],
-        "human_pending": [i for i in items if i["human"] and i["state"] != "x"],
+        "human_pending": [i for i in items if i["human"] and not i["settled"]],
         "doing": [i for i in items if i["state"] == "/"],
         "todo": [i for i in items if i["state"] == " "],
-        "skipped": [i for i in items if i["state"] == "-"],
+        "skipped": [i for i in items if i["state"] == "-" and not i["settled"]],
+        "resolved": [i for i in items if i["resolution"]],
     }
 
 
 def render_todo(snapshot: dict) -> str:
+    from logbook_cli.messages import TODO
+
+    words = TODO[snapshot.get("language", "zh")]
     rel = snapshot["logbook"]
     out = [
-        f"<!-- 本文件由 bin/lb todo 生成并维护；手改会被覆盖。重生成: bin/lb todo {rel} -->",
+        words["generated"].format(rel=rel),
         "",
-        "# TODO（人工视角）",
+        words["title"],
         "",
-        f"源日志：`{rel}`",
+        words["source"].format(rel=rel),
         "",
     ]
+
+    def location(item):
+        return words["location"].format(stage=item["stage"], line=item["line"])
+
     if snapshot["alarms"]:
-        out.append("## 🚨 需要人类负责人介入")
-        out.append("")
-        for i in snapshot["alarms"]:
-            out.append(f"- **{i['text']}**（{i['stage']} 行 {i['line']}）")
-            for b in i["blockers"]:
-                if b != i["text"]:
-                    out.append(f"  - {b.strip()}")
+        out.extend(["## " + ALARM_MARKER + " " + words["alarm"], ""])
+        for item in snapshot["alarms"]:
+            out.append(f"- **{item['text']}**" + location(item))
+            out.extend(
+                "  - " + b.strip() for b in item["blockers"] if b != item["text"]
+            )
         out.append("")
     if snapshot["human_pending"]:
-        out.append("## 👱 人工待办（未完成）")
+        out.extend(["## " + HUMAN_MARKER + " " + words["human"], ""])
+        for item in snapshot["human_pending"]:
+            state = {" ": "[ ]", "/": "[/]"}.get(item["state"], "")
+            out.append("- " + item["text"] + location(item) + state)
         out.append("")
-        for i in snapshot["human_pending"]:
-            state = {" ": "[ ]", "/": "[/]"}.get(i["state"], "")
-            out.append(f"- {i['text']}（{i['stage']} 行 {i['line']}）{state}")
-        out.append("")
+    out.extend(["## " + words["next"], ""])
     nxt = snapshot["next_task"]
-    out.append("## 下一项（文档顺序首个未完成）")
-    out.append("")
     if nxt and nxt.get("text"):
-        owner = "人工" if nxt.get("human") else "Agent"
+        owner = words["human_owner"] if nxt.get("human") else "Agent"
         out.append(
-            f"- {nxt['text']}（{nxt.get('stage', '')} 行 {nxt.get('line', 0)}，{owner}）"
+            "- "
+            + nxt["text"]
+            + words["owner_location"].format(
+                stage=nxt.get("stage", ""), line=nxt.get("line", 0), owner=owner
+            )
         )
     else:
-        out.append(
-            "- 无未完成待办；跳过项待处置" if snapshot["skipped"] else "- 全部完成"
+        key = (
+            "skipped"
+            if snapshot["skipped"]
+            else "settled"
+            if snapshot["resolved"]
+            else "done"
         )
+        out.append("- " + words[key])
     out.append("")
     if snapshot["doing"]:
-        out.append("## 进行中")
+        out.extend(["## " + words["doing"], ""])
+        out.extend("- " + item["text"] + location(item) for item in snapshot["doing"])
         out.append("")
-        for i in snapshot["doing"]:
-            out.append(f"- {i['text']}（{i['stage']} 行 {i['line']}）")
-        out.append("")
-    out.append("<!-- 未列出的 [ ] 项见源日志；本文件只呈现人工视角摘要。 -->")
+    out.append(words["footer"])
     return "\n".join(out) + "\n"
 
 
@@ -139,7 +156,7 @@ def refresh_todo(doc: Document) -> Path | None:
 
 
 def state_snapshot(doc: Document) -> dict:
-    delivery = {s.title: stage_state(s) for s in doc.stages if s.is_delivery}
+    delivery = {s.title: derive_stage_status(s) for s in doc.stages if s.is_delivery}
     records = summary_lines(doc)
     return {
         "path": str(doc.path.relative_to(doc.root)),
@@ -147,9 +164,13 @@ def state_snapshot(doc: Document) -> dict:
         "summary": summary_derived(doc),
         "overall": {
             "delivery_stages": len(delivery),
-            "done": sum(1 for v in delivery.values() if v == "✅"),
-            "in_flight": sum(1 for v in delivery.values() if v == "🚧"),
-            "not_started": sum(1 for v in delivery.values() if v == "🛫"),
+            "done": sum(1 for v in delivery.values() if v is StageStatus.SETTLED),
+            "in_flight": sum(
+                1 for v in delivery.values() if v is StageStatus.IN_PROGRESS
+            ),
+            "not_started": sum(
+                1 for v in delivery.values() if v is StageStatus.NOT_STARTED
+            ),
             "preflight_clear": not doc.preflight,
         },
         "preflight_blockers": doc.preflight,
@@ -167,7 +188,7 @@ def state_snapshot(doc: Document) -> dict:
                     "done": sum(1 for t in s.tasks if t.state == "x"),
                     "skipped": sum(1 for t in s.tasks if t.state == "-"),
                     "human_pending": sum(
-                        1 for t in s.tasks if t.human and t.state != "x"
+                        1 for t in s.tasks if t.human and not t.settled
                     ),
                 },
             }
@@ -196,6 +217,8 @@ def task_rows(
             "state": task.state,
             "text": task.text,
             "human": task.human,
+            "settled": task.settled,
+            "resolution": task.resolution,
             "repositories": task.repositories,
             "preflight": task.preflight_blocker,
         }

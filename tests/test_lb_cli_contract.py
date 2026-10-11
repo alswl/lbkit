@@ -1,4 +1,4 @@
-"""Black-box contracts for the existing argparse CLI; no real project writes."""
+"""Black-box contracts for the public CLI; no real project writes."""
 
 import json
 import subprocess
@@ -32,6 +32,38 @@ class CliContractTest(unittest.TestCase):
             text=True,
             timeout=10,
         )
+
+    def test_empty_invocation_and_version_are_lightweight(self):
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Usage:", result.stdout)
+        result = self.run_cli("--root", "missing", "--version")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), (BIN.parent.parent / "VERSION").read_text().strip())
+
+    def test_aliases_and_mutually_exclusive_insertion(self):
+        for alias in ("context", "show", "next"):
+            result = self.run_cli(alias, "log.md", "--json")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("version_token", json.loads(result.stdout))
+        result = self.run_cli(
+            "task",
+            "add",
+            "log.md",
+            "--stage",
+            "Stage 01 Build",
+            "--text",
+            "New",
+            "--before-task",
+            "old",
+            "--before-line",
+            "5",
+            "--token",
+            "unused",
+            "--json",
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
 
     def test_help_needs_no_existing_root(self):
         for command in ((), ("context",), ("task", "update")):

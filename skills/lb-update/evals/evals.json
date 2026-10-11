@@ -122,13 +122,13 @@
     },
     {
       "id": 18,
-      "prompt": "This round documents.adapter=markdown with summary.md designated; the user accepts fixed report version R9 and provides sources and acceptance records. There is no PR or commit.",
-      "expected_output": "Update the plain Markdown per report evidence and the human decision; do not manufacture Git merge gates or mf steps.",
+      "prompt": "mind-forge is installed and configured. The user accepts fixed report R9 at docs/summary.md and provides original source references and acceptance records. There is no PR or commit.",
+      "expected_output": "Verify the report and update its managed logbook with source pointers and key conclusions; do not invent software gates.",
       "files": [],
       "expectations": [
-        "Candidate identity may be a fixed report version",
+        "Use fixed report identity and applicable original observations",
         "No PR or Git SHA is required",
-        "Do not create prompts/thinking or run mf"
+        "Maintain mind-forge bindings and a corresponding source-reference index when needed; do not copy originals"
       ]
     },
     {
@@ -306,6 +306,140 @@
         "Do not invent skill names",
         "Scope is limited to that repository",
         "The description points at the in-repo process file"
+      ]
+    },
+    {
+      "id": 34,
+      "axis": "来源指向与人类入口",
+      "prompt": "访谈报告 R2 已完成；原始录音留在授权资料库。用户要求不复制原文回 sources，用 sources/interviews.md 记录 docs/interviews.md 的来源指向。",
+      "expected_output": "sources/interviews.md 保存真实位置、资料身份、核验时间与用途，不复制录音或逐字稿；Thinking 保存关键结论和决定；主日志只保留整体进展与人类交付入口；按报告自身标准验收，不创建软件交付门槛",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reference_only_index",
+          "type": "contains",
+          "check": "sources/interviews.md 保存真实位置、资料身份、核验时间与用途，不复制录音或逐字稿"
+        },
+        {
+          "name": "human_facing_log",
+          "type": "contains",
+          "check": "Thinking 保存关键结论和决定；主日志只保留整体进展与人类交付入口"
+        },
+        {
+          "name": "report_specific_acceptance",
+          "type": "contains",
+          "check": "按报告自身标准验收，不创建软件交付门槛"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "axis": "实际验证不可替代",
+      "prompt": "活动场地 A 的演练已取消，但另一个场地 B 的演练通过。任务要求验证 A。",
+      "expected_output": "A 保持未验收，记录取消事实与缺口；不以 B 的通过替代 A，不把已排程写成已执行",
+      "files": [],
+      "assertions": [
+        {
+          "name": "retain_unaccepted_target",
+          "type": "contains",
+          "check": "A 保持未验收，记录取消事实与缺口"
+        },
+        {
+          "name": "no_cross_subject_substitution",
+          "type": "contains",
+          "check": "不以 B 的通过替代 A，不把已排程写成已执行"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "axis": "人类进行中",
+      "prompt": "用户已经打开研究提纲并开始审阅，人工待办仍为空框。",
+      "expected_output": "通过带 token 的 CLI 将人工项从空框改为进行中；不代标完成，不越过人工关口",
+      "files": [],
+      "assertions": [
+        {
+          "name": "guarded_human_progress",
+          "type": "contains",
+          "check": "通过带 token 的 CLI 将人工项从空框改为进行中"
+        },
+        {
+          "name": "human_gate_remains",
+          "type": "contains",
+          "check": "不代标完成，不越过人工关口"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "axis": "重读人类修改",
+      "prompt": "我改了 logbook，请重新读一下。上次可核对版本要求访谈 3 人、代理准备报告后由我审阅；当前文件改成访谈 5 人，并由我把人工审阅勾成了 [x]。旧报告只有 3 人，旧验收是通过。",
+      "expected_output": "重读并说明数量及人工状态变化；保留人类编辑，指出旧报告不能满足新门槛；只读，不把人的勾选说成已独立验证。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reread_only",
+          "type": "contains",
+          "check": "不写日志、Thinking、索引，不运行 sync，不派发执行"
+        },
+        {
+          "name": "invalidate_old_evidence",
+          "type": "contains",
+          "check": "指出 3 人报告不足以支持 5 人的新口径"
+        },
+        {
+          "name": "preserve_human_decision",
+          "type": "contains",
+          "check": "保留人工勾选并区分人类决定和独立核验"
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "axis": "无可靠旧版",
+      "prompt": "我改了 logbook，重新理解一下。当前目标是整理家庭口述史，5 次访谈，人工审稿待办未完成。没有旧版本或可靠会话快照。",
+      "expected_output": "总结当前目标、约束、待办及关口；不虚构差异，不写回或执行。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "no_invented_diff",
+          "type": "contains",
+          "check": "明确没有可靠旧版，不能断言改了哪些内容"
+        },
+        {
+          "name": "current_understanding",
+          "type": "contains",
+          "check": "概括家庭口述史、5 次访谈、人工审稿待完成"
+        },
+        {
+          "name": "no_writes",
+          "type": "contains",
+          "check": "不写回、不执行、不因为重读要求安装或创建 mind-forge 绑定"
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "axis": "混合意图",
+      "prompt": "我改了 logbook，也请把最新进展更新进去。旧版要求场地 A 演练，当前仍要求 A，另加了撤离演练；A 的最新记录是取消，B 的演练通过，旧快照说 A 已完成。现有授权允许读取这些记录并维护进度，不授权执行演练。",
+      "expected_output": "先重读新口径，再核实现状，记录 A 取消及撤离演练缺证据；不沿用旧完成，不以 B 替代 A。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reread_before_update",
+          "type": "contains",
+          "check": "先对齐当前 A 与新增撤离演练，再核对原始记录"
+        },
+        {
+          "name": "no_substitute",
+          "type": "contains",
+          "check": "A 取消不能用 B 通过或旧快照完成来验收"
+        },
+        {
+          "name": "bounded_update",
+          "type": "contains",
+          "check": "写回只记录经核实进度，用当前 token 和正常写入流程，不派发演练"
+        }
       ]
     }
   ]

@@ -1,33 +1,31 @@
 # <Work Package Name>
 
-所属日志与检查项：<logbook link, phase, and item original text or existing identifier>
+所属日志与检查项：<canonical logbook, stage, and exact task text>
 
-Authorization basis: <this round's confirmed scope, allowed actions, and advancement endpoint (continuous advancement, a designated single item, or a batch); unapproved actions are not included>
+Authorization: <current human decision/source, scope, permitted operations, endpoint; superseded constraints and their replacements if any>
 
-Owner: <the single executor agent>
+Owner and result: <one owner; one verifiable result>
 
-Result: <one provable result>
+Scope and exclusions: <authorized resources, machines/locations and boundaries; isolated workspace when applicable>
 
-Scope: <resources allowed to operate on; when repository access is needed, state the owning repository and an independent worktree under the original repository>
+Inputs: <current plan, result identity, authoritative source pointers and skill definitions actually read>
 
-Exclusions: <explicitly out-of-scope items>
+Parameters: <only applicable document/runtime/limit values and sources; verify launcher/model/data boundary if an agent is needed>
 
-Inputs and authoritative sources: <confirmed plan, fixed candidates, source material>
+Dependencies and order: <required predecessor outcomes, user-set sequence, authorized parallel boundaries>
 
-This round's parameters and sources: <record only documents/runtime/limits fields actually overridden; record the launcher command + args as a whole; the review cap includes the first round; leave unneeded config fields blank>
+Environment: <control entry, execution location, transfer direction and recipient/installation destination when relevant; do not infer locality from “local”>
 
-Model selection (when an agent is needed): <input sensitivity and rationale; candidate options' command + args, model, deployment ownership, and rationale; why the choice fits the task; verify even when reusing>
+Delivery: <the recipient's usable entry, result identity and actual delivery status; domain mechanics belong to the applicable business skill>
 
-Dependencies and parallelism boundaries: <prerequisite results, shared resources, approved parallel scope>
+Verification: <each agreed criterion, required method, actual observation/record and applicability; distinguish preparation, delivery, verification and human decision>
 
-Deliverables and evidence: <location, immutable identity, runtime environment, and raw record format>
+Source references: <sources/<doc-name>.md when needed; original locations, identity, timestamp and availability; no default copying of originals>
 
-Completion criteria: <objective acceptance standards>
+Review and recovery: <required checker and finite rounds, or why unnecessary; backup/rollback when relevant; routine recovery within authorization>
 
-Checker and review: <independent checker, same candidate, pass criteria, maximum rounds; state the rationale when no check is needed>
+Escalation: <real human gates, unavailable key inputs or scope-changing choices; a stalled method does not automatically require a new approval>
 
-Blockers and escalation: <human gates, key input gaps, major decisions, or wrong direction; judge timeouts per the task — usually 10 consecutive minutes without effective progress means stop retrying and report>
+Handoff and retention: <key decisions in Thinking, open responsibilities, durable references before cleanup, session reuse/rotation and closure conditions>
 
-Handoff and session: <open responsibilities after report-back, retention rationale, recovery triggers, and the authorization closure conditions>
-
-Report-back requirements: status, delivered results, candidate identity, evidence, remaining gaps, blocker category, affected acceptance gates, and responsibilities still held.
+Report back: status, result identity, human delivery entry, actual verification outcomes, source pointers, remaining gaps and responsibilities. Do not report another result's evidence as this result's success.

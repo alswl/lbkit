@@ -1,6 +1,6 @@
 # Coordination Roles and Contracts
 
-The human owner holds goals, risk acceptance, and irreversible decisions; the coordinator of each logbook maintains shared state, dependencies, and acceptance; executor agents deliver bounded work packages. The permission floor is defined by [AGENTS.md](../AGENTS.md); concrete operation order is constrained by the lb-* skills.
+The human owner holds goals, risk acceptance, and irreversible decisions; the coordinator of each logbook maintains shared state, dependencies, and acceptance; executor agents deliver bounded work packages. The permission floor is defined by [AGENTS.md](../../AGENTS.md); concrete operation order is constrained by the lb-* skills.
 
 ## Scope, Authorization, and Dependencies
 
@@ -10,9 +10,9 @@ Stages explicitly owned by other coordinators keep their scheduling ownership; s
 
 Cross-item parallelism requires explicit batch authorization, plus stable inputs, satisfied dependencies, and non-overlapping mutable resources. The first item blocking, the second being more urgent, or an extra agent helping are none of them grounds to skip, reorder, or widen scope.
 
-Investigation, inspection, and limited rework within the original work package fall inside the original authorization. Missing information is filled in by the owning agent within the authorization; out-of-scope questions go to the human. Deviations from the confirmed plan can be corrected; when the plan itself is heading the wrong way or a major decision is involved, stop and hand over to the human. Timeouts and recovery follow the [execution flow](../skills/lb-push/references/execution.md).
+Investigation, inspection, and limited rework within the original work package fall inside the original authorization. Missing information is filled in by the owning agent within the authorization; out-of-scope questions go to the human. Deviations from the confirmed plan can be corrected; when the plan itself is heading the wrong way or a major decision is involved, stop and hand over to the human. Timeouts and recovery follow the [execution flow](../../skills/lb-push/references/execution.md).
 
-Agents may draft todos and write them in after confirmation; additions, reordering, and widened task scope still require confirmation. An existing list plus authorization to proceed is enough to prepare the next execution work package — do not repeatedly ask for approval over work-package wording. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, and do not parallelize on that basis.
+Agents write new logbooks as drafts before confirmation. For existing routes, explicitly decided local changes are applied directly; unconfirmed additions, reordering and wider scope remain proposals. An existing list plus authorization to proceed is enough to prepare the next execution work package — do not repeatedly ask for approval over work-package wording. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, and do not parallelize on that basis.
 
 When asking a human for an on-the-spot ruling, use a compact numbered list: number each item, give candidates and a default recommendation, so the human can answer by number in one line; no long paragraphs. Collect multiple rulings in one round instead of interrupting item by item.
 
@@ -20,7 +20,7 @@ Git commit discipline for coordinators: when working in the same repository as a
 
 ## Work Packages and Return Fields
 
-The [work package template](../skills/lb-plan/assets/work-package.md) is an execution contract, not a second scheduling checklist. It links to the result in the main logbook and contains at least:
+The [work package template](../../skills/lb-plan/assets/work-package.md) is an execution contract, not a second scheduling checklist. It links to the result in the main logbook and contains at least:
 
 - 所属检查项 (owning checklist item), one owner, and one provable result;
 - Scope, explicit exclusions, inputs, and authoritative sources;
@@ -33,7 +33,7 @@ A return includes status, delivered result, candidate identity, evidence, remain
 
 When the PR a work package is expected to produce mixes several kinds of changes (prerequisite non-project, docs, code implementation) or is clearly larger than usual, split it into sequential small PRs — prerequisite non-project → docs → code implementation — so a single giant PR does not jam human review.
 
-Until a human owner explicitly answers an inquiry, do not widen that inquiry's discretion by inferring intent — ask again for an explicit ruling rather than making a downstream-costly decision on the human owner's behalf.
+Unanswered choices remain unresolved; do not infer approval. First complete useful work already authorized and independent of that choice, then collect only the necessary decisions together.
 
 When a short instruction has multiple readings (e.g. "watch the error message" could mean finding the root cause or rewording the copy), reply with a one-line semantic confirmation before dispatching the package; do not guess a direction and build a full work package on it.
 
@@ -47,3 +47,13 @@ The following are design references, not mandatory flows:
 - [Anthropic: multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system): task boundaries and outputs.
 - [OpenAI Agents SDK: orchestration](https://openai.github.io/openai-agents-python/multi_agent/): manager aggregation and specialist division of labor.
 - [Azure: orchestration patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns): minimal necessary complexity and limited review rounds.
+
+## Current Decisions and Operation Scope
+
+Evaluate the current request, the object being operated on, and applicable exceptions together. A project's registered business directories and missing remote capabilities constrain the business steps that depend on them; they do not block an explicit request to maintain the coordinating repository's rules, skills, or documents. This exception grants no permission to edit a protected shared installation or unrelated repository.
+
+An explicit newer human decision supersedes the conflicting older work-package constraint within its stated scope. Update affected instructions and record the source in Thinking before resuming; do not revive the old gate or ask for the same approval again. Preserve unrelated constraints and history. Technical stalls trigger evidence-based diagnosis and routine recovery within authorization, not automatic method-selection approvals. Escalate real scope changes, irreversible choices or unavailable human credentials after completing independent authorized work.
+
+Use only preparation, delivery, verification and human-decision gates relevant to the result. Preserve the human's chosen sequence. Separate control location, execution environment, transfer direction and destination when relevant; failure of one connection direction does not establish failure of all authorized paths. Backups support reversible work but do not authorize it by themselves.
+
+The coordinator verifies returns, maintains source pointers and key conclusions, and checks evidence retention before cleanup. Domain-specific operations and original investigation remain with the responsible executor. Main-logbook links serve the human recipient, not an inventory of agent intermediate materials.

@@ -1,10 +1,10 @@
-version: 0.1.0
+version: 0.2.0
 # Copy to the consuming repository as lbkit-agents.yaml and fill only the
 # values that apply. null means the skill must ask when the value is needed.
-# Field meanings: .lbkit/docs/configuration.md (documents, runtime adapter and
+# Field meanings: .lbkit/docs/installable/configuration.md (documents, runtime adapter and
 # launchers, limits, and the collaboration parameters below).
 documents:
-  adapter: markdown
+  adapter: mind-forge
   project_root: projects
   mind_forge_guide: null
 roles:
@@ -26,3 +26,4 @@ auth:
 limits:
   wait_seconds: 30
   review_rounds: null
+  context_unknown_packages: 3

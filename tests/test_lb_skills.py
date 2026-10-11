@@ -61,6 +61,15 @@ class SkillsTest(unittest.TestCase):
     def entries(self) -> list[dict]:
         return json.loads(self.catalog.read_text(encoding="utf-8"))["skills"]
 
+    def test_extracts_bare_skill_names_from_new_todo_format(self):
+        log = self.root / "projects/demo/docs/log.md"
+        log.write_text("# Research\n\n## 🛫 Stage 01 Research\n\n- [ ] 验证：访谈依据。\n    - 技能：interview、source-check\n")
+        result = self.run_cli("extract", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        candidates = json.loads(result.stdout)["candidates"]
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0]["chain"], ["interview", "source-check"])
+
     def test_missing_catalog_lists_nothing(self):
         result = self.run_cli("--json")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -109,7 +118,10 @@ class SkillsTest(unittest.TestCase):
                 },
             ],
         )
-        names = lambda *a: [e["name"] for e in json.loads(self.run_cli(*a, "--json").stdout)["skills"]]
+        def names(*args):
+            result = self.run_cli(*args, "--json")
+            return [entry["name"] for entry in json.loads(result.stdout)["skills"]]
+
         self.assertEqual(names(), ["speckit 实现", "前端页面"])
         self.assertEqual(names("--action", "开发"), ["speckit 实现"])
         raw = self.catalog.read_text(encoding="utf-8")

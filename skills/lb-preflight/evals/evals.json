@@ -3,14 +3,14 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "The blocker on step two in sources/demo-log-preflight.md (needs-discussion: whether to commit on the first pass) has already been adjudicated by the human in the conversation; see conversation-ruling.md. Close it out per lb-preflight's blocker handling rules: update the preflight summary to record the ruling, and decide whether the main logbook still needs a 🔮 write-back; if a task detail line needs changing, propose the change or correct the second line per the ruling.",
-      "expected_output": "The summary records the ruling and its clearance; a blocker adjudicated on the spot is not written back to the main logbook as 🔮; the todo first line is unchanged; check reports no PREFLIGHT_BLOCKER.",
+      "prompt": "An old preflight record in bound Thinking says step two needs a decision whether to commit. The human has already ruled no commit; see conversation-ruling.md. Reconcile the record and any pending marker.",
+      "expected_output": "Record the applicable ruling and current coverage in Thinking, retaining history; do not create an unresolved marker for a decided question.",
       "files": [],
       "expectations": [
-        "Update the sources summary: that todo's verdict flips to adjudicated-and-cleared, with the source recorded",
-        "No 🔮 line is written into the main logbook",
-        "The todo first line text is unchanged; the detail line is corrected to no-commit per the ruling, or a correction is proposed",
-        "Run lb.py check after writing with no PREFLIGHT_BLOCKER"
+        "Current verdict reflects the ruling and retains its source and prior observation",
+        "No new unresolved 🔮 for a question already decided",
+        "Do not overwrite historical evidence",
+        "Run the relevant check after authorized writes"
       ]
     },
     {
@@ -46,6 +46,30 @@
         "Do not run skm install yourself",
         "Do not substitute another skill",
         "Hand it to the human for adjudication as a capability gap or pending-discussion blocker"
+      ]
+    },
+    {
+      "id": 5,
+      "axis": "路线与机器更新",
+      "prompt": "计划新增一次实地采样并改到远程采集站；旧报告仅覆盖办公室的三项。本仓规则维护也已获授权。",
+      "expected_output": "覆盖最新所有待办，新增和迁移步骤明确核验或 not-checked 原因；记录技能实际定义及目标环境，不从本机安装推断远端可用；采集站路径缺口不阻塞已授权的本仓维护",
+      "files": [],
+      "assertions": [
+        {
+          "name": "refresh_route_coverage",
+          "type": "contains",
+          "check": "覆盖最新所有待办，新增和迁移步骤明确核验或 not-checked 原因"
+        },
+        {
+          "name": "verify_target_definition",
+          "type": "contains",
+          "check": "记录技能实际定义及目标环境，不从本机安装推断远端可用"
+        },
+        {
+          "name": "maintenance_not_blocked",
+          "type": "contains",
+          "check": "采集站路径缺口不阻塞已授权的本仓维护"
+        }
       ]
     }
   ]

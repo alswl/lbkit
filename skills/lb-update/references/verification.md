@@ -1,23 +1,14 @@
-# Acceptance and wrap-up workflow
+# Acceptance and Wrap-up
 
-Must be read before handling new results, confirmed decisions, or final wrap-up. Evidence terminology is in the [evidence model](../../../docs/evidence.md); logbook display is in the [format](../../../docs/logbook-format.md).
+Read for new returns, confirmed decisions, and closure. [Evidence](../../../docs/installable/evidence.md) defines result identity and source references; [format](../../../docs/installable/logbook-format.md) defines protected fields and presentation.
 
-## Verify first, then write
+1. Re-read the current item, agreed result, applicable human decisions and original criteria. Reconcile concurrent edits and superseded work packages before using any return.
+2. Identify the actual result and relevant environment, audience or time. Use a report revision, dataset snapshot, event record, content digest or other suitable identity; do not impose software objects on other domains.
+3. Verify each required criterion against original observations. Distinguish preparation, delivery, actual verification and human decision. Scheduled, skipped, cancelled, missing or aggregate-success checks do not prove a required observation happened. Evidence for another subject or environment is not interchangeable.
+4. Verify required independent checks and finite review rounds. On changed inputs, results or criteria, renew affected evidence or state a verifiable applicability basis; keep unrelated history. Routine repair stays with the original executor under existing authorization; a failure is not automatically a human technical-method decision.
+5. Judge pass, fail, insufficient evidence or pending human decision. Check an agent box only when its own criterion passed. Record actual human review starting as `[ ] → [/]`, but never complete or cancel a human item. An explicit cancellation ruling may disposition an existing `[-]` through `task resolve`; closure is not a successful delivery.
+6. Ensure the human has the actual current entry to a required delivery, not an intermediate report or historical object. When that entry does not exist, record the true state without inventing another delivery requirement.
+7. Preserve key conclusions and decisions in bound Thinking. When source pointers are needed, maintain `sources/<doc-name>.md` with original locations, identities, observation times and applicability. Read originals for verification; do not copy them into the coordinator's repository by default. Before cleanup, ensure necessary references survive or record the explicit discard decision and resulting limits.
+8. Write the minimal main-logbook diff through the [document workflow](document-adapters.md), inspect it, sync and check. Reports and work packages do not automatically get artifact lines. Return to the invoking authorized flow; an update request alone dispatches no investigation, rework or cleanup.
 
-1. Re-locate the current checklist item and its original acceptance gate, and check the user's concurrent edits; when evidence references an old item or old version, confirm the correspondence first.
-2. Fix identity by deliverable type, then verify candidate, environment, time, and original records. Code uses commits; reports may use a fixed version or summary; environments use change records and observation timestamps — not every deliverable type requires a PR.
-3. Verify the required independent checks: the checker differs from the implementer, targets the same candidate, and returns original evidence rather than restating a summary. When a required check has not returned, the round limit is reached, or evidence identities disagree, state the gap explicitly; this workflow does not dispatch checkers itself.
-4. When the project has a PR, verify its current state; a merge gate requires merged evidence with a matching identity. squash/rebase can change SHAs — a reliable correspondence is required. If it cannot be verified, keep it unknown; never declare a merge from stale records.
-5. Judge each gate as pass, fail, insufficient evidence, or pending human decision. After a candidate, environment, or acceptance criteria change, old evidence does not by default support new completion conclusions for the affected items; carry it forward only when a verifiable candidate correspondence and original records prove it still covers the current gate. Similar task names, a refreshed token, or a user saying "keep updating" are not such proof. Do not stitch versions together, and do not erase unrelated historical facts.
-6. Check a box only when the result meets the gate. Failures and evidence gaps stay on the original item, recording the owner, the missing facts, and the clearance conditions; do not expand remediation scope or quietly lower the bar.
-7. Write back and check per the [document adapter workflow](document-adapters.md). Report updates and unfinished parts, and stop at this round's authorization boundary.
-
-An existing, definite, and applicable acceptance conclusion may be cited directly, but its subject and basis must be traceable. A user asking to "just tick it" does not waive verification. Cross-repository investigation and test reruns are the owning executor's job; an update request itself authorizes no new dispatch.
-
-## Project wrap-up
-
-Summarize whether goals were met, the identity of final deliverables, applicable merge or release results, deviations, and remaining responsibilities. Without a final human decision, remain pending acceptance; with an explicit decision applicable to the current deliverable, record it directly without asking again.
-
-When the human accepts a deviation, record the new decision's basis and impact; never rewrite history as if the original standard passed. Unconfirmed follow-ups are recorded as pending-decision information; do not auto-create manifests or external work items. Cancellation or termination may end coordination, but must not be recorded as a successful delivery.
-
-Wrap-up updates do not close execution sessions or other services. Necessary cleanup is left to lb-push's authorized cleanup branch, handing over unfinished responsibilities and resource scope.
+At project close, distinguish achieved goals, accepted deviations, cancellations and open responsibilities. Record an already applicable human decision without asking again; do not invent a final human gate absent from the agreed plan. Keep recovery and source references accessible. Session cleanup is a separate authorized operation and cannot substitute for acceptance.
