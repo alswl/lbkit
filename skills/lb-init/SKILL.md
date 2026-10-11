@@ -1,6 +1,6 @@
 ---
 name: lb-init
-version: 0.2.0-dev
+version: 0.3.0-dev
 description: "Set up or refresh a Logbook repository's .lbkit submodule and thin local entry points for shared lb skills, docs, and CLI. Use for repository scaffolding, not for creating a workflow run logbook (lb-scaffold)."
 ---
 

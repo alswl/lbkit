@@ -1,6 +1,6 @@
 ---
 name: lb-plan
-version: 0.2.0-dev
+version: 0.3.0-dev
 description: "Create a reviewable logbook draft, revise an authorized plan, or review an existing plan. Recover human goals, size stages to the work, match skills to individual results, and define evidence and handoffs; does not dispatch execution."
 ---
 

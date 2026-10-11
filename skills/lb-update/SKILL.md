@@ -1,6 +1,6 @@
 ---
 name: lb-update
-version: 0.2.0-dev
+version: 0.3.0-dev
 description: "Use when the user asks to fetch current progress and update the logbook, or says they edited the logbook and asks the agent to reread it. Rereading aligns understanding without writing by default; progress updates verify evidence before writing. Does not dispatch tasks, and never checks a box on a verbal completion claim alone; human goals may be transcribed verbatim, and scope or acceptance-design changes go to lb-plan. Managed logbooks use mind-forge."
 ---
 

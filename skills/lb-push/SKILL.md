@@ -1,6 +1,6 @@
 ---
 name: lb-push
-version: 0.2.0-dev
+version: 0.3.0-dev
 description: "Advance continuously and serially along a confirmed logbook until the authorized endpoint, a human gate, or a severe blocker; dispatch or resume executor agents through the host-declared runtime adapter, verifying receipt, monitoring, and report-back acceptance. push means project advancement, not Git push; use lb-status for queries."
 ---
 
