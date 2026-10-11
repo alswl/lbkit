@@ -71,6 +71,40 @@
           "check": "采集站路径缺口不阻塞已授权的本仓维护"
         }
       ]
+    },
+    {
+      "id": 6,
+      "axis": "新授权覆盖旧工作包",
+      "prompt": "旧工作包要求部署前人工方案审批、下载路径执行预检门、默认不重启服务。人类新决定：部署后集中审阅、直接替换并重启、已授权备份。连接事实：反向 SSH 不可用、正向获取可用且有证据。按既有规则 reconcile 并生成新工作包。",
+      "expected_output": "生成的工作包沿用部署后审阅顺序，保留备份，不新增技术方法审批门，不要求修复无须使用的反向连接；旧的前置审批门和下载路径预检门被记录为已替代。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "new_review_order",
+          "type": "contains",
+          "check": "沿用部署后审阅顺序"
+        },
+        {
+          "name": "keep_backup",
+          "type": "contains",
+          "check": "保留备份"
+        },
+        {
+          "name": "no_new_method_approval",
+          "type": "contains",
+          "check": "不新增技术方法审批门"
+        },
+        {
+          "name": "no_reverse_fix_required",
+          "type": "contains",
+          "check": "不要求修复无须使用的反向连接"
+        },
+        {
+          "name": "superseded_gates_recorded",
+          "type": "contains",
+          "check": "旧的前置审批门和下载路径预检门被记录为已替代"
+        }
+      ]
     }
   ]
 }

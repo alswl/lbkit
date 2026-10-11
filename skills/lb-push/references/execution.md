@@ -42,7 +42,7 @@ On abnormal shutdown or a human-requested termination, first save the handoff, o
 
 ## Result Applicability and Recovery
 
-Reconcile new human decisions with stale packages before dispatch: update affected order, environment, permissions and acceptance, recording what was superseded. Preserve explicit per-destination order and verify each destination separately; historical success elsewhere is not current completion. A result can be a study, event, document or operational change; use only its agreed delivery and evidence gates.
+Reconcile new human decisions with stale packages before dispatch: update affected order, environment, permissions and acceptance, recording what was superseded. Preserve explicit per-destination order and verify each destination separately; historical success elsewhere is not current completion. Complete the declared substeps for each destination before advancing to the next. Stop on any destination failure; do not advance to the next destination until the failed one is resolved or the human redirects. A result can be a study, event, document or operational change; use only its agreed delivery and evidence gates.
 
 For a failed method, inspect the actual rejection and side effects, then attempt supported routine recovery within scope. A tool's generic error category is not more authoritative than its specific rejection. Distinguish a narrow retry from a broader replay with additional effects; widening side effects requires its own authorization. Do not turn every stall into a human choice or retry unchanged indefinitely.
 

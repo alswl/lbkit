@@ -417,6 +417,35 @@
           "check": "不自由编造模板或人工关口"
         }
       ]
+    },
+    {
+      "id": 38,
+      "axis": "登记表匹配",
+      "prompt": "lbkit-skills.json 只有一条限定 go-cli 专仓 仓库的专仓整链（chain 含 Go 单测、TUI 测试框架 构建、市场上架、制品安装；companion 终端审阅）和三条通用单技能（制品安装、代码平台操作、终端审阅），没有通用 CLI 升级安装整链条目。规划任务：Herdr 升级——对齐社区 tag、用 内部流水线 重构建、安装、人工审阅。",
+      "expected_output": "按 scope 选中 code-platform-cli、artifact-install-cli、terminal-review；不引入 go-cli 专仓 专链的 Go/TUI 测试框架/上架步骤；把缺通用 CLI 交付链条目如实报告为 registry gap，并区分缺 内部流水线 构建技能的 capability gap；缺链条目不阻塞主流程，构建、交付、安装与人工审阅从通用单技能自身 scope 覆盖。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "scope_match",
+          "type": "contains",
+          "check": "按 scope 选中 code-platform-cli、artifact-install-cli、terminal-review"
+        },
+        {
+          "name": "no_chain_import",
+          "type": "contains",
+          "check": "不引入 go-cli 专仓 专链的 Go/TUI 测试框架/上架步骤"
+        },
+        {
+          "name": "gap_distinction",
+          "type": "contains",
+          "check": "把缺通用 CLI 交付链条目如实报告为 registry gap"
+        },
+        {
+          "name": "main_flow_continues",
+          "type": "contains",
+          "check": "缺链条目不阻塞主流程"
+        }
+      ]
     }
   ]
 }

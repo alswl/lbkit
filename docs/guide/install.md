@@ -67,7 +67,7 @@ The shared source directory is now `docs/installable/`. Consumer entry points re
 3. Review the proposed links.
 4. Run the installer without `--dry-run`.
 
-The installer replaces only recognized old contract links that target `.lbkit/docs/`. It refuses unrelated links or regular-file conflicts. Existing configuration remains unchanged. See the [0.2 migration record](../dev/feedback-0.2.md#migration-required).
+The installer replaces only recognized old contract links that target `.lbkit/docs/`. It refuses unrelated links or regular-file conflicts. Existing configuration remains unchanged.
 
 ## CLI dependencies
 

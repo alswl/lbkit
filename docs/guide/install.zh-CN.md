@@ -50,8 +50,6 @@ wrapper 会向上找到最近的 `bin/lb`，切换到该仓库根目录再执行
 
 共享正文迁至 `docs/installable/`，外部入口仍为 `docs/<name>.md`。更新子模块后，先运行安装器的 `--dry-run`，再执行安装。安装器仅替换原来指向 `.lbkit/docs/` 的已知契约链接，不覆盖普通文件或其他符号链接。配置保持原样。
 
-参见 [0.2 迁移说明](../dev/feedback-0.2.md#migration-required)。
-
 ## CLI 依赖
 
 CLI 改用 Click。更新子模块后须重跑安装器，同步 `.lbkit/.venv`。`bin/lb` 和 `python3 .lbkit/scripts/lb.py` 使用该环境；普通读取不会自动联网安装。环境缺失时会提示修复命令。安装器本身仍仅依赖 Python 标准库。

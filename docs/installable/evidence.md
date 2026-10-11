@@ -18,6 +18,10 @@ The coordinator distinguishes passed, failed, insufficient evidence, and pending
 
 When external delivery is required, verify the real current destination and status. Provide the recipient's actual entry point; do not substitute an intermediate report, a historical delivery, or a guessed URL. Object identifiers plus a verified lookup location are acceptable when the platform provides no stable web URL. Domain-specific release, review, or installation mechanics belong to the relevant business skill, not this contract.
 
+Verify repository delivery against the current candidate only: a CI, build-artifact or install success from another event is not a repository delivery, and a historical or older-candidate PR cannot impersonate the current entry; when no PR exists for the current candidate, record the candidate identity and the absence truthfully rather than substituting another event as a stand-in.
+
+Different categories of delivered objects — source baseline (Git tag/branch), build artifacts, platform releases, marketplace listings — are distinct identities; completing one does not substitute for the others, and re-verifying an unrelated category still requires its own evidence for the current candidate.
+
 ## Storage and Presentation
 
 mind-forge is required for managed logbooks. The main document shows overall progress, conclusions, necessary limitations, and current human delivery or action entry points. Thinking holds key decisions, result identities, applicability judgments, and recovery information. Process reports and work packages are not automatically main-logbook artifacts.

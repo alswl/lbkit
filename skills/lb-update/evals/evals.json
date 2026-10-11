@@ -441,6 +441,102 @@
           "check": "写回只记录经核实进度，用当前 token 和正常写入流程，不派发演练"
         }
       ]
+    },
+    {
+      "id": 40,
+      "axis": "交付入口三态",
+      "prompt": "当前候选 ci/herdr-upgrade-20261010 无 PR；仓库只有旧候选 20261009 的 open PR #8；同时存在一个 TagPush 流水线 SUCCESS 和一份旧候选的安装成功报告。更新主日志相关链接。",
+      "expected_output": "相关链接写当前候选的真实状态：无 PR，如实记录候选身份与未建 PR 事实；旧候选 PR #8 不冒充当前入口，内部流水线/构建/安装成功不当作仓库交付；入口与检查验收分记。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "no_pr_recorded_truthfully",
+          "type": "contains",
+          "check": "如实记录候选身份与未建 PR 事实"
+        },
+        {
+          "name": "stale_pr_not_impersonating",
+          "type": "contains",
+          "check": "旧候选 PR 不冒充当前入口"
+        },
+        {
+          "name": "other_event_not_delivery",
+          "type": "contains",
+          "check": "内部流水线/构建/安装成功不当作仓库交付"
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "axis": "交付身份分类",
+      "prompt": "人类明确的 fork 维护模型：上游 tag 新建分支、补丁重放、PR 指向 master 仅供 Review 最终不合并、备份后直推 fork。候选从 v0.9.0-internal-b2 变为 v0.9.3-internal-b1；git tag、内部流水线 制品、平台 release、市场条目四类对象都要交付。",
+      "expected_output": "按人类定案顺序保留维护模型与 Review 基线；四类交付对象作为四个不同身份分别核对，完成其一不替代其余；候选变更后受影响证据重核，旧候选证据不复用；版本计数、保护恢复、fork 推送、市场上架的具体平台操作归业务技能。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "preserve_human_model",
+          "type": "contains",
+          "check": "按人类定案顺序保留维护模型与 Review 基线"
+        },
+        {
+          "name": "kind_distinct_identities",
+          "type": "contains",
+          "check": "四类交付对象作为四个不同身份分别核对"
+        },
+        {
+          "name": "candidate_change_reverify",
+          "type": "contains",
+          "check": "候选变更后受影响证据重核"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "axis": "主日志与测试工具",
+      "prompt": "验收更新：主日志里堆着恢复调查、旧方案、原始证据索引、工作包和过程报告；本次测试使用已有的 面向 herdr 的既有 TUI 测试框架 TUI 测试能力，无新增测试 PR。",
+      "expected_output": "主日志只保留人类实际需要的当前 PR、真实代码/测试入口、使用与回退说明及极简限制；中间物移到 Thinking/sources 并索引；使用已有测试能力不因缺新测试 PR 立额外关卡，测试通过与测试代码交付分开记录；测试工具 TUI 测试框架 与被测应用 herdr 分别记录，不把 面向 herdr 的既有 TUI 测试框架 写成 Herdr 自带功能。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "mainlog_minimal",
+          "type": "contains",
+          "check": "主日志只保留人类实际需要的当前 PR、真实代码/测试入口"
+        },
+        {
+          "name": "no_test_pr_gate",
+          "type": "contains",
+          "check": "使用已有测试能力不因缺新测试 PR 立额外关卡"
+        },
+        {
+          "name": "tool_vs_app",
+          "type": "contains",
+          "check": "测试工具与被测应用分别记录"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "axis": "检查反例拒收",
+      "prompt": "交付验收时发现三种情况：流水线总览 PASSED 但四个 required job 全部 SKIPPED；当前 PR 检查 FAILED 但另一个 TagPush 事件构建 SUCCESS；对 CANCELED 作业发起单 job 重试被平台拒绝「The job to re-run must be FINISHED」。判断能否勾选交付项。",
+      "expected_output": "前两种都不得勾选：SKIPPED/取消/缺失/聚合成功不证明必需检查已执行，另一构建事件不能验证本候选；第三种保留真实拒绝原文，不按 NET_001 等通用分类掩盖状态限制，不擅自把重跑扩大为整条流水线——扩大范围有额外副作用须另行授权后再动。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "skipped_not_passed",
+          "type": "contains",
+          "check": "SKIPPED/取消/缺失/聚合成功不证明必需检查已执行"
+        },
+        {
+          "name": "other_event_not_cover",
+          "type": "contains",
+          "check": "另一构建事件不能验证本候选"
+        },
+        {
+          "name": "keep_rejection_no_widen",
+          "type": "contains",
+          "check": "保留真实拒绝原文，不擅自把重跑扩大为整条流水线"
+        }
+      ]
     }
   ]
 }

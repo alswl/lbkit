@@ -16,7 +16,7 @@ A workflow run uses the template's 「运行实例模板」 section and exactly 
 
 ## Capabilities and Work Packages
 
-Read all optional `lbkit-skills.json` entries via `bin/lb skills --json`. Match by scope and outcome, not action-prefix keywords. Check the main chain and conditional companions against the target work. If a specialized chain does not apply, inspect reusable individual skill definitions rather than rejecting all capabilities or importing that chain's special requirements. Report registry gaps separately from missing capabilities; do not infer a skill's actual behavior from its name.
+Read all optional `lbkit-skills.json` entries via `bin/lb skills --json`. Match by scope and outcome, not action-prefix keywords. Check the main chain and conditional companions against the target work. If a specialized chain does not apply, inspect reusable individual skill definitions rather than rejecting all capabilities or importing that chain's special requirements. Report registry gaps separately from missing capabilities; a missing chain entry does not block the main flow—cover build, delivery, installation, and human review from individual skills' own scope. Do not infer a skill's actual behavior from its name.
 
 Cover result preparation, delivery, verification and human handoff where relevant. Resolve actual skill definitions in the environment that will execute them; record definition location and target-machine availability in preflight/work packages. Main todos only contain skill names on an indented `技能：` sub-line, with no purpose annotations or coordination adapters. Do not maintain a top-level or front matter skills inventory.
 

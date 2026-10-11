@@ -24,6 +24,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 ## Hard Rules
 
 - Never commit or push automatically: leave Git changes in the working tree or staging area; commit and push only when a human explicitly instructs it.
+- `docs/dev/` (and repo docs generally) holds long-lived documentation only. Do not record per-round feedback processing, acceptance status, or trial-run evidence in repo docs: pointed conclusions land in contracts/skills/evals/tests, the consumer's ledger and its git history own the per-item record, and trial artifacts stay in ephemeral directories.
 - Relative links inside `docs/installable/` and `skills/` must still resolve in a consuming repository after symlink resolution: SKILL.md uses `../../docs/installable/...`, the references subdirectory uses `../../../docs/installable/...`, and contracts referencing skills use `../../skills/...`.
 - When adding a new top-level installed directory or file, update `manifest()` in `bin/lbkit` accordingly.
 - On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Config schema versions describe compatibility and are independent of release suffixes. Only the human may decide and authorize version upgrades. Do not automatically bump `VERSION`, package versions, skill frontmatter versions, or config format versions when changing implementation. Report any release or compatibility implications and wait for an explicit version instruction; synchronize dependent metadata only with that instruction.

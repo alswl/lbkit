@@ -60,9 +60,8 @@ lbkit uses semantic versioning; the current version is recorded in the root `VER
 ## 0.2 Consumer Migration
 
 The feedback revision requires mind-forge for managed logbooks and changes task
-editing/closure and evidence retention. See [feedback-0.2.md](feedback-0.2.md) for
-the consumer-owned configuration migration, feedback coverage and actual
-acceptance results. Research and other non-software results must remain first-class
+editing/closure and evidence retention; consumers own their configuration migration.
+Research and other non-software results must remain first-class
 behavioral test cases. Do not infer that a passing CLI suite proves skill behavior
 or live runtime/provider compatibility.
 
