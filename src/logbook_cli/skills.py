@@ -126,7 +126,16 @@ def add(root: Path, entry: dict, dry_run: bool) -> dict:
     document = {**document, "skills": [*entries, entry]}
     validate(document)
     if not dry_run:
-        catalog_path(root).write_text(dump(document) + "\n", encoding="utf-8")
+        path = catalog_path(root)
+        text = dump(document)
+        if path.exists():
+            # Keep the file's own layout when it is plain indent-2 JSON.
+            current = path.read_text(encoding="utf-8")
+            if current.rstrip() == json.dumps(
+                json.loads(current), ensure_ascii=False, indent=2
+            ):
+                text = json.dumps(document, ensure_ascii=False, indent=2)
+        path.write_text(text + "\n", encoding="utf-8")
     return entry
 
 

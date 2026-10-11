@@ -148,7 +148,7 @@ def artifact(
 ) -> None:
     finish(
         tasks.note(
-            resolve_root(root), log, stage, task, artifact, None, token, dry_run
+            resolve_root(root), log, stage, task, artifact, "产物", token, dry_run
         ),
         json,
     )

@@ -310,12 +310,12 @@ class LbCliTest(unittest.TestCase):
             "--task",
             "开发：EOF",
             "--artifact",
-            "产物",
+            "产物：EOF",
             "--token",
             self.token(),
         )
         self.assertEqual(result.returncode, 0)
-        self.assertTrue(self.log.read_text().endswith("开发：EOF\n    - 产物\n"))
+        self.assertTrue(self.log.read_text().endswith("开发：EOF\n    - 产物：EOF\n"))
         self.log.write_text(
             DOC
             + "\n````\n# hidden\n[bad](https://ignored.invalid)\n```\nstill fenced\n````\n",

@@ -39,6 +39,7 @@ LABELS = {
         Field.HANDOFF: "交接",
         Field.DIRECTORIES: "工作目录",
         Field.TODO: "待办",
+        Field.LINKS: "相关链接",
     },
     "en": {
         Field.SKILLS: "Skills",
@@ -49,6 +50,7 @@ LABELS = {
         Field.HANDOFF: "Handoff",
         Field.DIRECTORIES: "Working directories",
         Field.TODO: "Todo",
+        Field.LINKS: "Related links",
     },
 }
 ALIASES = {

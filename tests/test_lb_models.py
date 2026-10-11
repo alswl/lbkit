@@ -24,6 +24,14 @@ class ModelRegressionTest(unittest.TestCase):
     def write(self, body):
         self.path.write_text("# Research\n\n## Stage 01 Research\n\n" + body)
 
+    def test_stage_number_letter_suffix_is_delivery(self):
+        self.path.write_text(
+            "# Demo\n\n## Stage 03b Insert\n\n- [ ] 开发：插入。\n\n"
+            "## Stage 03bx Not\n\n- [ ] 开发：不算。\n"
+        )
+        stages = parse(self.path, self.root).stages
+        self.assertEqual([s.is_delivery for s in stages], [True, False])
+
     def test_skill_chain_mixed_names_and_list_markers(self):
         for marker in ("-", "*", "+"):
             with self.subTest(marker=marker):

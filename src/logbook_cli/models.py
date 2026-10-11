@@ -34,6 +34,7 @@ class Field(Enum):
     HANDOFF = "handoff"
     DIRECTORIES = "directories"
     TODO = "todo"
+    LINKS = "links"
 
 
 @dataclass(frozen=True)

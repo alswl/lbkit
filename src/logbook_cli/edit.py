@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 from collections import Counter
+from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from logbook_cli.document import (
     EXIT_REFUSED,
     EXIT_USAGE,
+    LINK_RE,
     Document,
     LbError,
     Stage,
@@ -15,6 +20,7 @@ from logbook_cli.document import (
     check,
     find_task,
     parse_text,
+    visible_lines,
 )
 from logbook_cli.format import (
     ALARM_MARKER,
@@ -82,8 +88,12 @@ def append_note(
     doc: Document, task: Task, note: str, kind: str | None = None
 ) -> tuple[str, int]:
     """Append one child line after the task's existing indented content."""
-    if task.human:
-        raise LbError("refusing to add a note to a human-owned task", EXIT_REFUSED)
+    if task.human and not (
+        kind is not None and (field_value(kind + ":") or (None,))[0] is Field.STATUS
+    ):
+        raise LbError(
+            "human-owned tasks accept only a status note (--kind 状态)", EXIT_REFUSED
+        )
     if not note.strip() or "\n" in note or "\r" in note:
         raise LbError("task note must be one nonempty line", EXIT_USAGE)
     if kind is not None:
@@ -242,3 +252,92 @@ def resolve_task(
         + newline
         + doc.text[at:]
     )
+
+
+def add_link(doc: Document, stage_name: str, link: str) -> tuple[str, int]:
+    """Append one Markdown link to a delivery stage's related-links block."""
+    if "\n" in link or "\r" in link or not LINK_RE.fullmatch(link.strip()):
+        raise LbError("--link must be one Markdown link: [label](target)", EXIT_USAGE)
+    link = link.strip()
+    stages = [s for s in doc.stages if s.title == stage_name and s.is_delivery]
+    if len(stages) != 1:
+        raise LbError("delivery stage does not match uniquely", EXIT_REFUSED)
+    stage = stages[0]
+    later = [s.line - 1 for s in doc.stages if s.line > stage.line]
+    stop = min(later) if later else len(doc.lines)
+    fields: dict[Field, list[int]] = {Field.LINKS: [], Field.TODO: []}
+    for index, line in visible_lines(doc.lines):
+        if line is not None and stage.line <= index < stop:
+            value = field_value(line)
+            if value and value[0] in fields and not line.startswith((" ", "\t", "-")):
+                fields[value[0]].append(index)
+    newline = "\r\n" if b"\r\n" in doc.data else "\n"
+    item = f"- {link}"
+    if len(fields[Field.LINKS]) > 1:
+        raise LbError("stage has more than one related-links field", EXIT_REFUSED)
+    if fields[Field.LINKS]:
+        index = fields[Field.LINKS][0]
+        last = index
+        for cursor in range(index + 1, stop):
+            text = doc.lines[cursor].strip()
+            if not text and last == index:
+                continue
+            if not text.startswith("- "):
+                break
+            if text == item:
+                raise LbError("link already listed in this stage", EXIT_REFUSED)
+            last = cursor
+        at = doc.offsets[last] + len(doc.lines[last])
+        separator = "" if doc.text[:at].endswith(("\n", "\r")) else newline
+        if last == index:
+            insert = f"{separator}{newline}{item}{newline}"
+        else:
+            insert = f"{separator}{item}{newline}"
+        return doc.text[:at] + insert + doc.text[at:], last + 2
+    if len(fields[Field.TODO]) != 1:
+        raise LbError(
+            "stage needs one Todo field to place a new related-links field",
+            EXIT_REFUSED,
+        )
+    index = fields[Field.TODO][0]
+    at = doc.offsets[index]
+    label = prefix(Field.LINKS, doc.locale).rstrip()
+    insert = f"{label}{newline}{newline}{item}{newline}{newline}"
+    return doc.text[:at] + insert + doc.text[at:], index + 3
+
+
+def link_path(doc: Document, target: str) -> Path:
+    parsed = urlparse(target)
+    if parsed.scheme == "file":
+        return Path(unquote(parsed.path))
+    raw = unquote(target.split("#", 1)[0])
+    if raw.startswith("~"):
+        return Path(os.path.expanduser(raw))
+    return doc.path.parent / raw
+
+
+def rewrite_links(doc: Document, old: str, new: str) -> tuple[str, list[dict]]:
+    """Replace a target prefix in visible links; every rewritten target must exist."""
+    if not old or old == new:
+        raise LbError("--from must be nonempty and differ from --to", EXIT_USAGE)
+    lines = list(doc.lines)
+    rewritten = []
+    for index, visible in visible_lines(doc.lines):
+        if visible is None:
+            continue
+
+        def swap(match: re.Match[str]) -> str:
+            label, target = match.group(1), match.group(2)
+            if not target.startswith(old):
+                return match.group(0)
+            changed = new + target[len(old) :]
+            rewritten.append({"line": index + 1, "from": target, "to": changed})
+            return f"[{label}]({changed})"
+
+        head = LINK_RE.sub(swap, visible)
+        lines[index] = head + doc.lines[index][len(visible) :]
+    missing = [r for r in rewritten if not link_path(doc, r["to"]).exists()]
+    if missing:
+        listed = "; ".join(f"line {r['line']}: {r['to']}" for r in missing)
+        raise LbError(f"rewritten link target missing: {listed}", EXIT_REFUSED)
+    return "".join(lines), rewritten

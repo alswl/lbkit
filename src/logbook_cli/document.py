@@ -42,7 +42,7 @@ H2_RE = re.compile(r"^##\s+(?P<title>.*?)(?:\r?\n)?$")
 H1_RE = re.compile(r"^#(?!#)\s+")
 FENCE_RE = re.compile(r"^[ \t]*([`~])\1{2,}")
 EMOJI_RE = MARKER_RE
-STAGE_RE = re.compile(r"^Stage\s+\d+\b", re.IGNORECASE)
+STAGE_RE = re.compile(r"^Stage\s+\d+[a-z]?\b", re.IGNORECASE)
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 

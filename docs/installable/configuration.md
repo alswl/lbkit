@@ -22,6 +22,7 @@ All relative paths resolve against the managed repository root, not the skills d
 | runtime.adapter | Non-empty adapter name; `herdr` ships with the kit today | push; status when requesting live state |
 | runtime.launcher | Default launch option: `command` a non-empty string, `args` a string array, plus the model metadata below | push when creating or replacing a session |
 | runtime.launcher_alternatives | Array of candidate options with the same structure; chosen per need, never auto-tried in sequence | push |
+| runtime.quota | Mapping from provider name to `{prefer_other_above, pause_above, window}`: two usage fractions in 0–1 with prefer ≤ pause, and the usage window they apply to (e.g. `5h`, `7d`); optional, empty by default | push before dispatch, reuse and GC; status when reporting executors |
 | limits.wait_seconds | Integer in 1–60; the wait cap for a single observation, default 30 seconds — not a project-task timeout or stagnation limit | push's waiting steps |
 | limits.context_unknown_packages | Positive integer; default 3 completed packages before safe-boundary rotation when context usage cannot be measured; not a context percentage | push |
 | limits.review_rounds | Positive integer or null; maximum rounds a candidate is submitted to independent inspection, including the first | plan's inspection design, push's review control, update's return judgment |
@@ -49,13 +50,17 @@ Paths are relative to the consuming repository root. Current values must not be 
 
 ## Model Selection and Data Boundaries
 
-Every candidate option must also declare `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes). `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
+Every candidate option must also declare `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes); `provider` is optional and names the `runtime.quota` entry that applies to the option. `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
 
 Before creating or reusing a session, determine data sensitivity from repository rules, user instructions, and actual inputs; filter candidates next; compare reasoning depth, context size, tool capability, latency, and cost last. Sensitive inputs go only to internal; when sensitivity is unknown, external and unknown are also off limits. Cross-repository tasks are chosen by the strictest input requirement. A local CLI or proxy never re-judges an external deployment as internal.
 
 Choosing a suitable candidate within existing task authorization needs no per-instance model consultation; record the option, the reason, the data classification, and the deployment basis. If no suitable candidate exists, provenance is unclear, or launch is unavailable, report the exact gap — never fall back to directly launching codex/claude, switching proxies, or altering the candidate range. Changing the candidate range is a configuration change, not something derived from ordinary task authorization.
 
 Model boundaries equally cover eval samples, subagents, retries, and recovery. Before reusing a session, verify the actual model and the applicability of its existing context before submitting material; repository content is never sent to a non-compliant model to satisfy a check. After launch and before dispatch, verify the actual model, deployment option, and permission parameters; stop dispatch on any mismatch.
+
+### Quota Watermarks
+
+Before dispatching or reusing an executor, read the current usage of each configured provider from what the provider actually shows (status-line 5-hour / 7-day usage, `weekly N% left`, and the like). Above `prefer_other_above`, new dispatches go to another eligible provider with headroom; running packages are not interrupted. Above `pause_above`, pause that provider's executors: no new dispatch or reuse, idle sessions exit after saving the handoff and the resume command, until the human lifts the pause or resets the quota. Unreadable usage is reported as unknown and never guessed; a status line without a quota warning counts as headroom. The coordinator's own provider is not paused but should avoid large reads and writes. Record any switch or pause and its reason in the handoff. Quota is a selection constraint after data-boundary filtering, never a reason to widen the candidate range.
 
 ### Wrapped Launchers
 

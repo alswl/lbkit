@@ -14,6 +14,9 @@ runtime:
   adapter: null
   launcher: null
   launcher_alternatives: []
+  # Per-provider usage watermarks, matched by a launcher option's provider, e.g.
+  # claude: {prefer_other_above: 0.7, pause_above: 0.8, window: 5h}
+  quota: {}
   herdr:
     workspace_id_env: HERDR_WORKSPACE_ID
     label_prefix: ^

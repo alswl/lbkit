@@ -143,6 +143,19 @@ class SkillsTest(unittest.TestCase):
         self.add("b", "y")
         self.assertEqual(json.loads(self.catalog.read_text(encoding="utf-8"))["$schema"], "custom.json")
 
+    def test_add_keeps_indent_two_layout(self):
+        document = {"$schema": "custom.json", "version": "0.1.0", "skills": [
+            {"name": "a", "scope": "s", "chain": ["x", "y"]}
+        ]}
+        self.catalog.write_text(
+            json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        before = self.catalog.read_text(encoding="utf-8")
+        self.assertEqual(self.add("b", "z").returncode, 0)
+        after = self.catalog.read_text(encoding="utf-8")
+        self.assertTrue(after.startswith(before.rsplit("\n  ]", 1)[0]))
+        self.assertIn('"chain": [\n        "z"\n      ]', after)
+
     def test_schema_file_matches_validator(self):
         path = KIT / skills.SCHEMA_REF.removeprefix(".lbkit/")
         schema = json.loads(path.read_text(encoding="utf-8"))

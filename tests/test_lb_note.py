@@ -128,6 +128,38 @@ class TaskNoteTest(unittest.TestCase):
         content = self.log.read_text(encoding="utf-8")
         self.assertLess(content.index("产物：既有报告"), content.index("产物：新报告"))
 
+    def test_human_task_accepts_only_status_note(self) -> None:
+        human = "人工验证：确认结果。 👱"
+        base = ("task", "note", LOG, "--stage", STAGE, "--task", human)
+        refused = self.cli(*base, "--kind", "交接", "--text", "x", "--token", self.token())
+        self.assertEqual(refused.returncode, 4)
+        result = self.cli(
+            *base, "--kind", "状态", "--text", "证书已就绪", "--token", self.token()
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(
+            self.log.read_text(encoding="utf-8").endswith(
+                "- [ ] 人工验证：确认结果。 👱\n    - 状态：证书已就绪\n"
+            )
+        )
+
+    def test_artifact_adds_missing_label(self) -> None:
+        result = self.cli(
+            "task",
+            "artifact",
+            LOG,
+            "--stage",
+            STAGE,
+            "--task",
+            TASK,
+            "--artifact",
+            "新报告",
+            "--token",
+            self.token(),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("    - 产物：新报告\n", self.log.read_text(encoding="utf-8"))
+
     def test_candidate_check_refuses_new_missing_local_link(self) -> None:
         before = self.log.read_bytes()
         result = self.cli(
