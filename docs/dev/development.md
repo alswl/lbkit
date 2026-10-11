@@ -36,7 +36,7 @@ lefthook install
 ```
 
 The `pre-commit` hook runs Ruff for staged Python and launcher files. The
-`pre-push` hook runs mypy and the complete unittest suite. Use
+`pre-push` hook runs Ruff and mypy; run tests separately with the command above. Use
 `lefthook run pre-commit` or `lefthook run pre-push` to invoke either check
 without making a commit or push.
 

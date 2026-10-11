@@ -10,7 +10,7 @@ pre-commit:
 
 pre-push:
   commands:
+    ruff:
+      run: uv run --locked ruff check src scripts/lb.py tests
     mypy:
       run: uv run --locked mypy src/logbook_cli
-    tests:
-      run: uv run --locked python -m unittest discover tests
