@@ -1,6 +1,6 @@
 # Goal Recovery and Plan Design
 
-Read for planning, takeover, or review. Read [coordination](../../../docs/installable/coordination.md) for authorization, [format](../../../docs/installable/logbook-format.md) for editable fields, and [evidence](../../../docs/installable/evidence.md) for acceptance and source references.
+Read for planning, takeover, or review. Read [coordination](../../../docs/installable/coordination.md) for authorization, [format](../../../docs/installable/logbook-format.md) for editable fields.
 
 ## Recover Goals and Decisions
 
@@ -20,7 +20,7 @@ Read all optional `lbkit-skills.json` entries via `bin/lb skills --json`. Match 
 
 Cover result preparation, delivery, verification and human handoff where relevant. Resolve actual skill definitions in the environment that will execute them; record definition location and target-machine availability in preflight/work packages. Main todos only contain skill names on an indented `技能：` sub-line, with no purpose annotations or coordination adapters. Do not maintain a top-level or front matter skills inventory.
 
-One concise todo names an action and verifiable result, retaining material scope and thresholds. Details and history belong in Thinking; source references may live in the corresponding `sources/<doc-name>.md`. One owner delivering one result need not be fragmented into technical operations. Separate independently required responsibilities and gates; sequencing does not authorize parallelism.
+One concise todo names an action and verifiable result, retaining material scope and thresholds. Details and history belong in Thinking; source references may live in the corresponding `existing host records`. One owner delivering one result need not be fragmented into technical operations. Separate independently required responsibilities and gates; sequencing does not authorize parallelism.
 
 Use the [work package](../assets/work-package.md) for the next authorized result; do not fully specify distant work prematurely. Record only applicable parameters. Independent checking must justify its value, use the same result identity and have finite rounds; no fixed agent count or mandatory checker for every task. A plan request does not launch agents.
 
@@ -33,7 +33,7 @@ When the user explicitly asks to split an existing logbook, first confirm where 
 1. Read the source logbook, its bound prompts/thinking, referenced entry points, and the Captains currently maintaining the relevant phases. Divide along real sections; master-plan numbering does not imply a same-numbered Stage exists — do not fabricate missing sections.
 2. Migrate approved phases verbatim: headings, goals, list order, ownership, task status, artifacts, and evidence. Verify item-by-item correspondence across the split — no dropped items, no duplicated executable lists, no turning skipped into passed; keep the original working directories and machine ownership.
 3. In the original logbook, note the close-out scope and the follow-up entry point; in the new logbook, note the source, the inherited scope, and the original owner. Close-out only ends this logbook's scheduling; it does not mean the whole project meets its goals. Keep deviations, unfinished responsibilities, and human decisions; add no new gates or review rounds for the close-out.
-4. Maintain bindings and indexes per the document adapter process. Keep and link historical ledgers; route new reports-back to the inheriting logbook; sync the old prompt's scope constraints too — it must not keep demanding maintenance of migrated phases. Do not ghostwrite original goals and completion criteria; state their cross-logbook applicability.
+4. Maintain existing bindings per the document adapter process. Keep and link historical ledgers; route new reports-back to the inheriting logbook; sync the old prompt's scope constraints too — it must not keep demanding maintenance of migrated phases. Do not ghostwrite original goals and completion criteria; state their cross-logbook applicability.
 5. Re-read concurrent changes before writing; after writing, verify phase content, key links, and status are still intact, then run context/check on both logbooks. Never overwrite other Captains' new reports-back by saving a stale page wholesale.
 6. Hand off old/new logbooks, companion records, responsibilities, and write entry points to the relevant Captains you are authorized to notify, and verify the actual main session received them. Without notification authorization, state who is pending handoff; never send messages on your own. Notification dispatches no business tasks and takes over no other phases. Report document migration completion and running Captains' receipt separately.
 

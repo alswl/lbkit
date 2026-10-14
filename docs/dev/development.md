@@ -59,15 +59,14 @@ lbkit uses semantic versioning; the current version is recorded in the root `VER
 
 ## 0.2 Consumer Migration
 
-The feedback revision requires mind-forge for managed logbooks and changes task
-editing/closure and evidence retention; consumers own their configuration migration.
+Managed logbooks use the declared document adapter; consumers own their configuration migration. Business record retention follows the host contract.
 Research and other non-software results must remain first-class
 behavioral test cases. Do not infer that a passing CLI suite proves skill behavior
 or live runtime/provider compatibility.
 
 ## Documentation Layout
 
-Use `docs/guide/` for product usage and `docs/dev/` for contributions and dated change records. `docs/manual/` provides reference navigation.
+Use `docs/guide/` for product usage and `docs/dev/` for contributions and long-lived development guidance. `docs/manual/` provides reference navigation.
 
 Keep installable contract bodies in `docs/installable/`. The installer links only those Markdown files into consumer `docs/` directories. Do not put a documentation homepage in `docs/installable/`, because it would become an installed contract.
 
@@ -77,7 +76,7 @@ After moving a contract, update skill references and the installer mapping. Test
 
 The CLI uses Click and uv. The installer remains a small standard-library bootstrap so it can create the CLI environment before importing Click. `pyproject.toml` and `uv.lock` stay in the submodule; `lbkit install` runs `uv sync --locked --no-dev --project .lbkit`. The launchers use the existing `.lbkit/.venv`, preserve the caller's working directory, and never download dependencies on a read command. Rerun the installer after a submodule upgrade.
 
-`commands/` adapts Click parameters, `services/` implements use cases, `storage.py` owns guarded writes, and `render.py` owns CLI output. `models.py` defines semantic task/stage states and annotations. `format.py` owns Markdown labels and marker mappings; `messages.py` owns localized TODO text. `document.py` parses once, and skill extraction consumes its task annotations.
+`commands/` adapts Click parameters, `services/` implements use cases, `storage.py` owns guarded writes, and `render.py` owns CLI output. `models.py` defines semantic task/stage states and annotations. `format.py` owns Markdown labels and marker mappings. `document.py` parses once, and skill extraction consumes its task annotations.
 
 The runtime dependency change requires consumer environment setup; its release version is for the human to decide. Existing command names, JSON fields, error codes, tokens and dry-run behavior remain compatible. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
 
@@ -91,6 +90,16 @@ bindings, write Thinking, sync markers or begin execution. A reliable prior
 version is required to claim a difference; otherwise report current understanding.
 A request to refresh progress permits reading already-authorized available records
 and writing supported facts. Mixed requests reread first and re-evaluate evidence
-against the edited criteria. The existing format/evidence/close modes apply only
+against the edited criteria. The existing format/progress/close modes apply only
 after an authorized write is selected. This adds no consumer configuration or
 new approval requirement; project and skill versions remain unchanged.
+
+## Logbook coordination migration
+
+The coordination revision uses three roles: Admiral supplies goals and authorization, Captain maintains the route and coordinates assignments, and Sailor performs business work including testing, review and acceptance. Independent checks, when needed, are Sailor tasks. A current result and applicable acceptance return support progress; a runtime exit or a bare completion claim does not. Status-only requests authorize no new business execution.
+
+The revision intentionally removes the `lb todo` companion-view command and automatic TODO.md refresh, and retires the shared evidence.md/source-index rule model. It does not delete consumer-owned TODO files, business sources, human instructions or historical records. Installer migration must remove only exactly recognized installer-owned retired symlinks; copied files and unrelated links remain owned by consumers. Consumers decide their submodule revision and local instruction changes. No automatic version or config upgrade accompanies this work.
+
+Skills reconcile Sailor returns rather than requiring a framework acceptance archive. The host determines business record storage and delivery layout. Requested run statistics use the existing bound Thinking; trial evaluation traces, screenshots, grading and per-round reports stay in temporary directories. Reusable evals and rubrics belong beside their skills. Behavior acceptance compares existing and candidate bundles using actual tool actions and file changes; deterministic CLI tests and syntax checks do not certify model behavior or live host capabilities. History-to-assertion mapping must be reviewed before replacing legacy eval data.
+
+Delivery follows the host plan and explicit Admiral ruling. A PR-required gate retains PR/head/accessibility checks; branch-only review uses the branch/ref and candidate identity with a usable entry. Uncommitted changes are not branch contents. This adds no mandatory PR or permission to commit, push or merge.

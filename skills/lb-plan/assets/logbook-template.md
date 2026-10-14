@@ -22,23 +22,21 @@ No SKILLS section or front matter skills list. -->
 <!-- For other approved directories, replace the line above with:
 工作目录：
 
-- local
+- `<machine-a>`
   - `~/ws/<approved-directory>`
-- remote `<machine>`
+- `<machine-b>`
   - `~/ws/<approved-directory>`
 -->
 
 ## 🛫 Stage 01 <Actual Result>
 
-目标：<human-authored stage goal or placeholder>
-
 待办：
 
 - [ ] <分类>：<one verifiable result>
-    - 技能：<applicable-skill-name>
+    - 技能：`/example-skill`
 
 <!-- Use only applicable categories/results. An operational run may use 执行：.
 An actually required human gate goes here as a separate todo ending in 👱;
 there is no automatic final-decision Stage or software delivery pipeline.
 Main-logbook artifact lines are optional human delivery entries, not a list of
-all intermediate files. Source pointers may live in sources/<doc-name>.md. -->
+all intermediate files. Source records follow the host convention; no companion index is required. -->

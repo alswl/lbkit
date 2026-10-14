@@ -48,6 +48,34 @@
           "check": "建立 mind-forge 绑定，技能仅就地列名"
         }
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Initialize a fictional workflow run whose valid template has Overview goal, Stage title and tasks, but no separate Stage goal. Preserve existing human feedback.",
+      "expected_output": "Fill authorized run slots without demanding a Stage goal or companion archive.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "preserve_template",
+          "type": "contains",
+          "check": "Preserve overall goal, tasks, order and human feedback"
+        },
+        {
+          "name": "canonical_skills",
+          "type": "contains",
+          "check": "New or changed Skills sub-lines use slash/backtick spans and four spaces"
+        },
+        {
+          "name": "no_stage_goal",
+          "type": "not_contains",
+          "check": "Block on missing Stage goal"
+        },
+        {
+          "name": "no_archive_or_dispatch",
+          "type": "not_contains",
+          "check": "Create framework source index/archive or dispatch execution"
+        }
+      ]
     }
   ]
 }

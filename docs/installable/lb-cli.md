@@ -17,11 +17,6 @@ bin/lb check --all --json
 # Structured state snapshot (derived summary, stage counts, 🔮 gate, top status-line ownership)
 bin/lb state projects/example/docs/logbook.md --json
 
-# Generate/refresh docs/TODO.md beside the logbook (a slow-paced human view: 🚨 interventions, 👱 todos, next item, in progress)
-bin/lb todo projects/example/docs/logbook.md
-bin/lb todo projects/example/docs/logbook.md --dry-run   # look, don't write
-bin/lb todo projects/example/docs/logbook.md --json     # machine-readable structure
-
 # Sync delivery-stage H2 emoji and the adopted top status line; inspect a dry run first
 bin/lb sync projects/example/docs/logbook.md --token 0123... --dry-run
 
@@ -116,9 +111,9 @@ Running tests:
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-## TODO.md Human View
+## Removed companion view
 
-The `todo` subcommand organizes the logbook into a `TODO.md` beside it, built for human scanning: 🚨 unplanned items needing the human owner (taken from todo first lines or sub-lines containing 🚨, verbatim with the exact action and clearing condition), 👱 unfinished human todos, the next item in document order, and items in progress. When there are no `[ ]` or `[/]` items but an unresolved `[-]` remains, it shows "skipped items pending disposal" instead of claiming full completion. The file header carries a machine-maintenance comment and the regeneration command; hand edits get overwritten. Non-dry-run writes from `sync` and `task update/artifact/add/note/rewrite/resolve` automatically re-parse and refresh an existing `TODO.md` (it is not auto-created when absent — start with the `todo` command). The file is a derived view: it participates in no parsing, checks, or acceptance judgments.
+`lb todo` is no longer supported. Use `task list`, `task next`, `context` or `state`; human-readable summaries belong in the response. Protected writes never create or refresh TODO.md or a replacement view. Existing consumer files are preserved.
 
 ## Skill Integration and Evaluation
 
@@ -126,7 +121,7 @@ lb-* entries call the CLI at their respective steps; the shared flow is in [docu
 
 `tests/test_lb_skill_flows.py` runs multi-step CLI flows on synthetic logbooks, verifying token refresh, concurrent-edit protection, artifact handoff, and read-only queries; each skill's `evals/evals.json` separately holds model decision scenarios. Passing CLI integration tests is not the same as passing model behavior evals; the latter also requires actually running the skills in a controlled environment and inspecting tool calls, file diffs, and answers — verbal plans alone are not scored.
 
-The implementation lives in `src/logbook_cli/`: `commands/` handles Click parameters, `services/` handles use cases, `storage.py` guards writes, and `render.py` handles output. `models.py` defines semantic states and task annotations; `format.py` maps Markdown labels and markers. `document.py` parses and checks; `views.py` derives status and TODO views; `edit.py` performs minimal text edits. `bin/lb` and `python3 scripts/lb.py` use the existing checkout environment. For module execution use `uv run --locked python -m logbook_cli`. Install or refresh dependencies explicitly with `uv sync --locked --no-dev --project .lbkit`; reads never install or access the network.
+The implementation lives in `src/logbook_cli/`: `commands/` handles Click parameters, `services/` handles use cases, `storage.py` guards writes, and `render.py` handles output. `models.py` defines semantic states and task annotations; `format.py` maps Markdown labels and markers. `document.py` parses and checks; `views.py` derives status and task-query views; `edit.py` performs minimal text edits. `bin/lb` and `python3 scripts/lb.py` use the existing checkout environment. For module execution use `uv run --locked python -m logbook_cli`. Install or refresh dependencies explicitly with `uv sync --locked --no-dev --project .lbkit`; reads never install or access the network.
 
 Reproducible fixture preparation, non-clobbering prechecks, and event collection are described in the consuming repository's behavior-eval process.
 
@@ -138,8 +133,22 @@ Successful logbook writes return `version_token` for the exact resulting bytes, 
 
 `task resolve LOG --stage STAGE --task TEXT --as human-cancelled|not-applicable --decision SOURCE --note REASON --token TOKEN` adds a task-bound disposition to an already `[-]` item, including a human-owned item. It never changes the checkbox. The visible `处置：` JSON child includes `task` (SHA-256 of exact task text), `as`, `decision`, and `note`. Missing, conflicting, malformed or stale records do not close the task (`INVALID_RESOLUTION`). A changed task text invalidates the record; a mere `--as` option does not prove a human decision occurred.
 
-Stages whose items are all accepted or explicitly dispositioned derive ✅. Context exposes each task's resolution; TODO excludes dispositioned human items from pending and distinguishes unresolved skips from resolved ones. Summaries say “已收口（含取消/不适用项）” rather than claiming successful acceptance. All-skipped stages can close only with valid dispositions for every item. Existing unresolved skips retain their old non-pass behavior.
+Stages whose items are all accepted or explicitly dispositioned derive ✅. Context exposes each task's resolution; task queries retain the distinction between unresolved skips and dispositioned items. Summaries say “已收口（含取消/不适用项）” rather than claiming successful acceptance. All-skipped stages can close only with valid dispositions for every item. Existing unresolved skips retain their old non-pass behavior.
 
 `link add LOG --stage STAGE --link '[label](target)' --token TOKEN` appends one Markdown link as a list item to the stage's `相关链接：` (`Related links:`) block, creating the block right before `待办：` when the stage has none; an identical existing line is refused. `link rewrite LOG --from PREFIX --to PREFIX --token TOKEN` replaces the prefix in every visible link target (code fences and comments untouched) and returns the `rewritten` list; it refuses the whole write when any rewritten target does not exist (`file://`, `~` and relative targets are resolved for this). That existence check covers only the links it rewrites: `check` still reports links outside the root as `LOCAL_LINK_UNVERIFIED` without probing them.
 
 The low-level CLI remains a standard-library Markdown tool for inspection, migration and testing. Managed lb-* document workflows require mind-forge; CLI success does not establish mind-forge readiness, authorization or acceptance.
+
+## Protected task details and offline observations
+
+`task note --kind` also accepts Source/来源, Acceptance/验收 and Skills/技能. Values are single nonempty lines; new Skills are four-space-indented slash/backtick spans. Historical chain forms remain readable. Without `--replace-line N`, notes append and all Acceptance entries remain conjunctive. With that option, explicit Source/Acceptance/Skills replaces exactly the matching current task annotation line; a mismatch, stale token or ambiguous task is refused. Human items accept only the existing additive Status exception. Source/Acceptance append or replacement on `[x]` or `[-]` agent tasks requires an authorized reopening first; Skills correction establishes no new acceptance. Context exposes annotation kind/value/line and parsed skill names/diagnostics. Changed conditions invalidate affected returns/bindings.
+
+Machine groups accept `- ` followed by a backticked explicit machine name, alongside legacy local/remote groups. Context preserves machine spelling and adds machine_name/group_kind. `skills usage --machine NAME` includes only that named group plus legacy local groups and this repository; without it named groups are not scanned. This selector grants no remote access and probes no remote filesystem.
+
+```sh
+bin/lb link verify log.md --line 18 --target 'https://sources.example.com/reference/12' --label 'Primary reference' --observed-at '2026-10-14T08:00:00+08:00' --observer sailor-a --basis 'Read with the host tool' --outcome verified --token TOKEN --dry-run --json
+```
+
+`link verify` registers an offline observation of one visible HTTP(S) link selected by current line, target and label. Overview, Source, Stage and protected human links are eligible; no task, Artifact or sidecar is required. Optional --bind-stage/--bind-task are paired for an outside-task result link; --result-identity records a supplied revision. Task-contained links bind automatically and cannot redirect to another task. Use --outcome verified/unavailable/revoked. The CLI records supplied facts; Sailor performs actual observations and Captain aligns the return. It never fetches, authenticates or certifies permanent availability.
+
+Metadata is a compact reserved document-level `lb-link-verification` HTML comment, outside fences/task bodies/other comments. The semantic occurrence excludes checkbox state and physical line number; Source/Acceptance/Artifact snapshots bind task applicability. Changed target/label/context or bound values invalidate old observations without deleting history. Latest failure/revocation or equal-time conflicting observations remain unverified. Check suppresses only the eligible occurrence's LINK_UNVERIFIED; other occurrences and structural/local-link checks are preserved. Malformed records yield LINK_VERIFICATION_INVALID; context exposes observations/applicability. Arguments/time use exit 2, path errors 3 and stale/ambiguous/unsafe writes 4. Writes carry CAS and dry-run writes zero bytes.

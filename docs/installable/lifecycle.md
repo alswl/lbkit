@@ -1,6 +1,6 @@
 # Logbook Lifecycle
 
-The lb-* entries serve the same logbook. Follow the [repository boundaries](../../AGENTS.md); shared definitions live in [Coordination](coordination.md), [Format](logbook-format.md), [Evidence](evidence.md), and [Configuration](configuration.md). Operation order is constrained by each skill's main file and its conditionally required references; not every request needs to traverse the full flow.
+The lb-* entries serve the same logbook. Follow the [repository boundaries](../../AGENTS.md); shared definitions live in [Coordination](coordination.md), [Format](logbook-format.md), and [Configuration](configuration.md). Operation order is constrained by each skill's main file and its conditionally required references; not every request needs to traverse the full flow.
 
 | Entry | Responsibility | Where it stops |
 |---|---|---|
@@ -12,7 +12,7 @@ The lb-* entries serve the same logbook. Follow the [repository boundaries](../.
 
 ## Stages and Entries
 
-This repository only exposes the lb-* coordination entries; Spec Kit's spec and implementation flows are left to the project repository's executor agents. The `.specify/` material kept here is for design reference only — it is not an executable coordination flow, and its hooks are not run. lb-plan transcribes explicit human goals or retains placeholders, and writes new draft todos before confirmation; it does not ghostwrite large blocks of project prose. Execution is delegated through lb-push; returns and human close-out go through lb-update. lb-status can be used at any stage. A plan-quality check proves readiness, not delivered completion.
+This repository only exposes the lb-* coordination entries; Spec Kit's spec and implementation flows are left to the project repository's Sailors. The `.specify/` material kept here is for design reference only — it is not an executable coordination flow, and its hooks are not run. lb-plan transcribes explicit human goals or retains placeholders, and writes new draft todos before confirmation; it does not ghostwrite large blocks of project prose. Execution is delegated through lb-push; returns and human close-out go through lb-update. lb-status can be used at any stage. A plan-quality check proves readiness, not delivered completion.
 
 The lifecycle is not a chapter template for logbooks. Numbers like `Stage 01` follow the real project's delivery breakdown; do not mechanically write "plan, push, update, status". Reuse valid artifacts, and do not plan from scratch when taking over or recovering from a disconnect.
 

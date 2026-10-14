@@ -91,9 +91,12 @@ def note(
     kind: str | None,
     token: str,
     dry_run: bool,
+    replace_line: int | None = None,
 ) -> Result:
     doc = writable(root, log, token)
-    changed, line = append_note(doc, find_task(doc, stage, task), text, kind)
+    changed, line = append_note(
+        doc, find_task(doc, stage, task), text, kind, replace_line
+    )
     return save(doc, changed, dry_run, line=line)
 
 

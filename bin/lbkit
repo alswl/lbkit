@@ -97,6 +97,30 @@ def install_links(repo: Path, mapping: dict[Path, Path]) -> list[Path]:
     return created
 
 
+def retired_links(repo: Path) -> list[Path]:
+    """Only exact historical installer targets belong to the kit."""
+    found = []
+    if (repo / "docs").is_symlink():
+        return found
+    for name in ("evidence.md",):
+        rel = Path("docs") / name
+        link = repo / rel
+        targets = (repo / ".lbkit/docs/installable" / name, repo / ".lbkit/docs" / name)
+        if link.is_symlink() and os.readlink(link) in {relative_link(link, target) for target in targets}:
+            found.append(rel)
+    return found
+
+
+def retire_links(repo: Path, dry_run: bool) -> list[Path]:
+    retired = [] if (repo / ".lbkit/docs/installable/evidence.md").is_file() else retired_links(repo)
+    for rel in retired:
+        if dry_run:
+            print(f"remove retired installer link: {rel}")
+        elif rel in retired_links(repo):
+            (repo / rel).unlink()
+    return retired
+
+
 def source_url(kit: Path, supplied: str | None) -> str:
     if supplied:
         return supplied
@@ -185,6 +209,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
             git(repo, "submodule", "update", "--init", ".lbkit")
 
     if dry_run:
+        retire_links(repo, dry_run=True)
         print("uv sync --locked --no-dev --project .lbkit")
         for link_rel, target_rel in planned.items():
             print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
@@ -205,6 +230,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
         raise InstallError("installed lbkit conflicts with existing paths: " + ", ".join(map(str, blocked)))
     install_runtime(destination)
     created = install_links(repo, actual)
+    retire_links(repo, dry_run=False)
     if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
         with (repo / "lbkit-agents.yaml").open("x", encoding="utf-8") as target:
             target.write((destination / "lbkit-agents.template.yaml").read_text(encoding="utf-8"))

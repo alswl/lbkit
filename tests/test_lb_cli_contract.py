@@ -104,6 +104,29 @@ class CliContractTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["path"], "--root")
 
+    def test_retired_todo_is_unknown_and_writes_nothing(self):
+        before = {p.name: p.read_bytes() for p in self.root.iterdir() if p.is_file()}
+        result = self.run_cli("todo", "log.md")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("No such command", result.stderr)
+        self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir() if p.is_file()})
+        self.assertNotIn("todo", self.run_cli("--help").stdout.split("Commands:")[-1])
+
+    def test_sync_never_touches_existing_companion_or_creates_one(self):
+        for present in (False, True):
+            with self.subTest(present=present):
+                companion = self.root / "TODO.md"
+                if present:
+                    companion.write_bytes(b"human\r\n")
+                context = self.run_cli("context", "log.md", "--json")
+                token = json.loads(context.stdout)["version_token"]
+                result = self.run_cli("sync", "log.md", "--token", token)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                if present:
+                    self.assertEqual(companion.read_bytes(), b"human\r\n")
+                else:
+                    self.assertFalse(companion.exists())
+
     def test_expected_errors_leave_stdout_empty(self):
         for args, code in (
             (("unknown",), 2),

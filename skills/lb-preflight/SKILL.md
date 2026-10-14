@@ -4,9 +4,12 @@ version: 0.3.0-dev
 description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 
+Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+
+
 # Preflight the Current Route
 
-Read [configuration](../../docs/installable/configuration.md), [coordination](../../docs/installable/coordination.md), [planning](../lb-plan/references/planning.md), and [evidence](../../docs/installable/evidence.md). For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
+Read [configuration](../../docs/installable/configuration.md), [coordination](../../docs/installable/coordination.md), [planning](../lb-plan/references/planning.md). For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
 
 ## Route and scope
 
@@ -16,7 +19,7 @@ Construct the current ordered route: each todo, result, dependencies, skills, ac
 
 ## Feasibility
 
-Use read-only inspection within registered business directories. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:
+Captain checks route/dependencies and declared capabilities. Sailors perform business-specific read-only feasibility observations and return current methods/gaps within the authorized preflight scope; no business implementation is dispatched. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:
 
 - expected result and applicable skill definition (actual path/version or digest);
 - target environment, available capability, inputs and predecessor requirements;
@@ -39,7 +42,7 @@ Maintain a preflight section in the bound Thinking record, keyed by date and the
 - expectation, observation, gap and affected criterion;
 - source pointers and clearance conditions.
 
-No step may disappear: a missing, failed or timed-out analysis is not-checked with a reason. Reference original material through `sources/<doc-name>.md` where useful; do not copy raw records or create a second task list. A new record must not overwrite historical evidence merely because the file name is unchanged.
+No step may disappear: a missing, failed or timed-out analysis is not-checked with a reason. Reference original material through `existing host records` where useful; do not copy raw records or create a second task list. A new record must not overwrite historical evidence merely because the file name is unchanged.
 
 Show needs-discussion gaps together. Write 🔮 into the main logbook only after explicit human confirmation. A ruling already supplied in the conversation is recorded as cleared; do not write a new unresolved marker for it. Existing markers must be rewritten or removed by the human; CLI `sync` and task writes have no bypass. Markers do not alter acceptance, and are distinct from an unplanned 🚨 blocker or an expected human gate.
 

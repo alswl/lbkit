@@ -1,59 +1,121 @@
-# Coordination Roles and Contracts
+# Coordination Contract
 
-The human owner holds goals, risk acceptance, and irreversible decisions; the coordinator of each logbook maintains shared state, dependencies, and acceptance; executor agents deliver bounded work packages. The permission floor is defined by [AGENTS.md](../../AGENTS.md); concrete operation order is constrained by the lb-* skills.
+## Logbook and responsibility boundary
 
-## Scope, Authorization, and Dependencies
+The Logbook expresses Admiral's goal as an Overview, ordered Stages and tasks. A task owns a result and applicable completion conditions; it is not a transcript of business operations. Concrete business records and verification methods belong to their host repository. Captain maintains current responsibilities, dependencies, blockers, delivery entries and shared progress from the current Logbook.
 
-Plan confirmation is not execution authorization. A "push the project forward" request, or an lb-push request not scoped to a single item, authorizes serial progress along the confirmed path until completion, a human gate, or a severe blocker; "finish just this one", "start the next item", or an explicit batch honors the specified endpoints. Requests for analysis only, formatting only, or status only grant no permission to start. Existing authorization remains valid within its scope; items are not re-confirmed one by one.
+A work package assigns Sailor the current task reference, inputs, scope/permissions, result, applicable completion conditions and report-back entry. It can be a message or existing host record. It is not a second scheduling checklist and does not require a file per dispatch. Task, package and continuing agent session remain separate objects, as defined in the task/session/resource distinction.
 
-Stages explicitly owned by other coordinators keep their scheduling ownership; sharing a logbook or hearing about progress does not confer the right to take over. Split-off stages keep the original owner, and handoff notices are kept separate from dispatching project tasks.
+## Roles, authorization and returns — US2
 
-Cross-item parallelism requires explicit batch authorization, plus stable inputs, satisfied dependencies, and non-overlapping mutable resources. The first item blocking, the second being more urgent, or an extra agent helping are none of them grounds to skip, reorder, or widen scope.
+Admiral is the human owner of goals, major tradeoffs, authorization and applicable human gates. Captain maintains the route, dependencies/owners, authorized dispatch/monitoring, return alignment, progress and coordination handoff. Sailor performs business implementation, investigation, testing, review and acceptance. Another Sailor may independently check a result when needed; this creates no separate acceptance role, default checker count or universal verification gate.
 
-Investigation, inspection, and limited rework within the original work package fall inside the original authorization. Missing information is filled in by the owning agent within the authorization; out-of-scope questions go to the human. Deviations from the confirmed plan can be corrected; when the plan itself is heading the wrong way or a major decision is involved, stop and hand over to the human. Timeouts and recovery follow the [execution flow](../../skills/lb-push/references/execution.md).
+Plan confirmation is distinct from execution authorization. Existing authorization covers routine continuation, rework and recovery within its scope, without repeated per-step permission. A status, formatting or read-only analysis request dispatches no business work. An explicit newer Admiral decision supersedes the conflicting older condition only within its scope; record that change in existing Thinking and preserve unrelated constraints.
 
-Agents write new logbooks as drafts before confirmation. For existing routes, explicitly decided local changes are applied directly; unconfirmed additions, reordering and wider scope remain proposals. An existing list plus authorization to proceed is enough to prepare the next execution work package — do not repeatedly ask for approval over work-package wording. Operations by the same owner delivering the same result are not split into items; when the owner or the acceptance gate changes, split into sequential tasks, and do not parallelize on that basis.
+A Sailor return identifies the current Logbook/Stage/task/package, current result/revision, applicable inputs/conditions, acceptance outcome (passed, failed, incomplete or unknown), delivery entry, remaining responsibilities and limitations. It can be a message or existing host record. Captain verifies correspondence and readiness/control facts; Sailor performs original business observations and tests. A file, delivery link, bare done claim or runtime exit is insufficient. Changed inputs/task/result route concrete rechecking to Sailor within existing execution authorization; a status-only request cannot start that rechecking.
 
-When asking a human for an on-the-spot ruling, use a compact numbered list: number each item, give candidates and a default recommendation, so the human can answer by number in one line; no long paragraphs. Collect multiple rulings in one round instead of interrupting item by item.
+lb-update keeps reread (read-only default) and authorized refresh, with internal format/progress/close modes. Progress aligns applicable returns. Close reconciles goals, explicit human rulings, skipped/cancelled dispositions and open responsibilities. A task remains incomplete when its outcome is missing, conflicting, failed, incomplete or unknown. Human tasks remain subject to protected ownership: agents may record actual human work starting but do not complete, cancel or change the gate. All CLI writes retain the current `version_token` CAS protection.
 
-Git commit discipline for coordinators: when working in the same repository as a human, always commit with `git commit -- <explicit path>` (pathspec) and self-check with `show --stat` afterwards to confirm no one else's files slipped in; committing without a pathspec sweeps up the human's staged in-flight content. The reverse trap is just as real: when the same file mixes in uncommitted lines from the owner, a pathspec commit takes the entire **working tree** version, dragging the owner's lines into the commit and afterwards writing back over the manually staged index. When you need to commit only your own lines, do index surgery: `git hash-object -w <sanitized content>` plus `git update-index --cacheinfo 100644 <blob> <path>` to stage precisely, then run `git commit` **without a pathspec** so the commit tree comes only from the index; afterwards use `git status` to confirm the owner's lines are still in the working tree. Before and after rewriting or repairing local history, `fetch` first and check the remote state of the target branch; never assert from session memory that "the remote doesn't have this branch / it was never pushed" — the remote may already have a same-name branch or a push made in the meantime, and missing it causes divergence.
+Independent review, when required by a package, uses another Sailor and the same identified candidate. Candidate check rounds are finite and keep their used count across session switches and rework. No checker is manufactured for a task requiring no independent check; no resetting limits by splitting packages or changing tools. Human review/merge decisions remain distinct from Sailor acceptance and creation of a delivery entry.
 
-## Work Packages and Return Fields
+## Authorized Git changes
 
-The [work package template](../../skills/lb-plan/assets/work-package.md) is an execution contract, not a second scheduling checklist. It links to the result in the main logbook and contains at least:
+These rules apply only to an already authorized commit/history operation; they grant no commit, push or history-rewrite permission. Business delivery commits belong to Sailor; Captain performs only authorized coordination-state handoff operations.
 
-- 所属检查项 (owning checklist item), one owner, and one provable result;
-- Scope, explicit exclusions, inputs, and authoritative sources;
-- Dependencies, parallelism boundaries, authorization basis, and permitted operations;
-- Deliverable location, immutable identity, and raw evidence format;
-- Completion conditions, required checkers and pass criteria, and a limited number of review rounds;
-- Blocking and escalation conditions, handoff responsibilities, and session retention or closure conditions.
+Git commit discipline for authorized agents: when working in the same repository as a human, always commit with `git commit -- <explicit path>` (pathspec) and self-check with `show --stat` afterwards to confirm no one else's files slipped in; committing without a pathspec sweeps up the human's staged in-flight content. The reverse trap is just as real: when the same file mixes in uncommitted lines from the owner, a pathspec commit takes the entire **working tree** version, dragging the owner's lines into the commit and afterwards writing back over the manually staged index. When you need to commit only your own lines, do index surgery: `git hash-object -w <sanitized content>` plus `git update-index --cacheinfo 100644 <blob> <path>` to stage precisely, then run `git commit` **without a pathspec** so the commit tree comes only from the index; afterwards use `git status` to confirm the owner's lines are still in the working tree. Before and after rewriting or repairing local history, `fetch` first and check the remote state of the target branch; never assert from session memory that "the remote doesn't have this branch / it was never pushed" — the remote may already have a same-name branch or a push made in the meantime, and missing it causes divergence.
 
-A return includes status, delivered result, candidate identity, evidence, remaining gaps, blocker category, affected acceptance gates, and open responsibilities. "Keep investigating" and "help the project" are not complete work packages.
+## Parallel discovery — US2
 
-When the PR a work package is expected to produce mixes several kinds of changes (prerequisite non-project, docs, code implementation) or is clearly larger than usual, split it into sequential small PRs — prerequisite non-project → docs → code implementation — so a single giant PR does not jam human review.
+At initial route reading, after each acceptance return and when waiting/blocked, Captain inspects actual input/output dependencies, human rulings, Sailor owners, mutable files and shared browser/service resources within the current route. Different repositories, worktrees or titles alone prove no independence.
 
-Unanswered choices remain unresolved; do not infer approval. First complete useful work already authorized and independent of that choice, then collect only the necessary decisions together.
+Output one specific batch proposal with result/owner per package, input snapshot, read/write/resource isolation, convergence point and authorization status; or name the actual conflict/dependency. Already authorized batches proceed without repeated approval. Unapproved batches remain proposals while unaffected authorized work continues. No task splitting, reordering, scope expansion or human-gate bypass follows merely from discovering an opportunity. Passable human waiting requires the confirmed plan's explicit exception, independence and actual execution authorization. Scheduling preserves each package's compliant model/data boundary, isolation, visible monitoring and applicable acceptance return.
 
-When a short instruction has multiple readings (e.g. "watch the error message" could mean finding the root cause or rewording the copy), reply with a one-line semantic confirmation before dispatching the package; do not guess a direction and build a full work package on it.
+## Remote execution and Captain-managed handoff — US3
 
-This run's choices are resolved per the [configuration contract](configuration.md); the work package records only the parameters actually needed and their sources, not a copy of the whole default configuration. Distinguish missing fields from inapplicable ones; tasks that need no independent review must not get checkers created just to fill the round count.
+Cross-machine Sailor execution keeps the original Captain/Logbook scheduling responsibility. A package targets the named execution machine, approved directory and actual workspace/session, receives an actual Sailor acknowledgement and returns the current result to the original route. Captain performs dispatch/observation; business implementation and acceptance remain Sailor responsibilities.
 
-## Design Sources
+Coordination handoff instead transfers current coordinating state and necessary results to a destination Captain main session. Captain directly manages authorized coordination operations rather than creating a business package for them. The [runtime adapter](../../skills/lb-push/references/execution.md) specifies separate locators, receipt, monitoring, session reuse and partial states for these two flows.
 
-The following are design references, not mandatory flows:
+For handoff, record named source/destination machines, approved directories, matching workspace name and each end's actual workspace ID, coordination/result scope, permitted commit/push/ref operations and the endpoint. Then:
 
-- [Anthropic: Building effective agents](https://www.anthropic.com/research/building-effective-agents): dynamic decomposition and independent subtasks.
-- [Anthropic: multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system): task boundaries and outputs.
-- [OpenAI Agents SDK: orchestration](https://openai.github.io/openai-agents-python/multi_agent/): manager aggregation and specialist division of labor.
-- [Azure: orchestration patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns): minimal necessary complexity and limited review rounds.
+1. Compare both ends' refs, candidate identities, working/index changes, reliable rulings and outstanding packages.
+2. Protect uncommitted work without reset/overwrite; synchronize/retrieve only authorized branches/state/results. Do not push main, publish or upgrade environments by implication.
+3. Preserve reliable human rulings even when the destination copy is old. Ask Sailor to assess result applicability after subsequent input changes; missing rulings remain unknown.
+4. Prepare the same named workspace using the destination's own actual locator. Execution/monitor entries explicitly use registered cwd. An inherited unrelated root entry stays unused and closes only after safe non-use/no-input/no-activity confirmation.
+5. Verify the receiving Captain's actual main session obtained the current handoff and reread location; record its current gate and open responsibilities. Resource creation, matching names or a side-session/tool delivery receipt alone do not complete the handoff.
 
-## Current Decisions and Operation Scope
+This is an authorized coordination exception, not permission for Captain to perform business setup/content production or access undeclared machines/directories. Existing authorization covers routine steps only; broader goals, machines, directories and operations still require Admiral's decision. Preserve reliable human rulings and pending gates during either flow.
 
-Evaluate the current request, the object being operated on, and applicable exceptions together. A project's registered business directories and missing remote capabilities constrain the business steps that depend on them; they do not block an explicit request to maintain the coordinating repository's rules, skills, or documents. This exception grants no permission to edit a protected shared installation or unrelated repository.
+## Human delivery/readiness — US4
 
-An explicit newer human decision supersedes the conflicting older work-package constraint within its stated scope. Update affected instructions and record the source in Thinking before resuming; do not revive the old gate or ask for the same approval again. Preserve unrelated constraints and history. Technical stalls trigger evidence-based diagnosis and routine recovery within authorization, not automatic method-selection approvals. Escalate real scope changes, irreversible choices or unavailable human credentials after completing independent authorized work.
+Sailor prepares the authorized result and checks complete changed-file lists before commit and again before PR handoff against host layout, content and Article/Prompt/Thinking/Source bindings where relevant. Temporary process artifacts are judged by purpose/ownership, not basename; they do not become formal delivery by being called evidence. The host governs legitimate business sources, preservation of human feedback and safe untracking/ignore/cleanup.
 
-Use only preparation, delivery, verification and human-decision gates relevant to the result. Preserve the human's chosen sequence. Separate control location, execution environment, transfer direction and destination when relevant; failure of one connection direction does not establish failure of all authorized paths. Backups support reversible work but do not authorize it by themselves.
+When the confirmed delivery requires a PR, Captain aligns that return and reads control facts: actual current PR/head/accessibility and recipient entry. Local-only results, an old PR or an active prohibition are not a ready merge gate. PR creation belongs to Sailor when authorized; merge/human approval remains a distinct Admiral decision. Preparing a PR does not authorize main-branch pushing, merge or unrelated changes.
 
-The coordinator verifies returns, maintains source pointers and key conclusions, and checks evidence retention before cleanup. Domain-specific operations and original investigation remain with the responsible executor. Main-logbook links serve the human recipient, not an inventory of agent intermediate materials.
+For explicit branch-only delivery, Captain aligns the actual branch/ref/candidate and usable review entry against the Sailor return. Uncommitted working-tree changes must be identified separately from branch HEAD. This choice creates no PR requirement or commit/push/merge permission; an existing PR-required gate changes only through an explicit Admiral ruling.
+
+For authorized terminal review, Captain coordinates/opens the host review entry and reads back its first usable view. Sailor queries actual editor/Markview state before layout and checks content/rendered structure. Captain must not independently compare candidate content, recount tables/headers or recompute rendered budgets while calling it return alignment; correspondence uses current identity and the applicable Sailor checks/outcomes. Protect focus, unsaved buffers and unsent text; use an independent safe preview or report the gap when the current buffer cannot be checked safely.
+
+Table sections use actual rendered window width/height, including sidebars, number/sign/fold columns, borders, padding, CJK/emoji and continuation rows. Split by semantic or contiguous-numbered ranges, repeat full headers and preserve all candidates/quotations/order/answers. Each table/correction section has nearby scoped feedback and clear heading spacing. Existing work-package defects are repaired before a corrected return; reporting framework feedback alone is not repair or acceptance.
+
+## Metrics and durable records — US7
+
+Requested run lifecycle, human-interaction and first-acceptance facts live in the Logbook's existing bound Thinking using the run-event rules below. Captain records coordination facts and reports scoped elapsed time, interactions and first-pass success at 🎉. Sailor returns applicable first acceptance and subsequent defect corrections. Resuming a session preserves the run and counts; cancelled/pending work, insufficient history and zero denominators cannot become fabricated success.
+
+Source, result, handoff and recovery entries preserve the host's existing record ownership. The Logbook is not a default archive of raw outputs, temporary process sheets or detailed business validation. No framework evidence index or mandatory parallel record system is introduced by the return or metrics protocols.
+
+## Host integration
+
+Resolve host tools/skills actually available for runtime, review, document binding and business delivery. The host owns its AGENTS/config/Logbook and no new obligations are silently injected during install. No inferred Herdr/Markview commands, profile takeover, hidden monitor substitute, new record backend or auto-install is introduced. Missing required capabilities are readiness gaps. Model/deployment, isolation, visible monitoring, bounded checks and authorization invariants remain from existing host rules.
+
+## Run event and close-out metrics
+
+### Storage and helper
+
+Use the current logbook's uniquely bound Thinking via the host document adapter. A compact fenced section labelled `lb-run-events` holds one JSON object per line, optionally across multiple event sections. This is part of existing Thinking, not a new file/source index/metrics backend. Record only needed events; do not archive original observations to substantiate every event.
+
+Read-only helper:
+
+```sh
+python3 .lbkit/skills/lb-push/scripts/run-metrics.py   --root HOST_ROOT --thinking THINKING_RELATIVE_PATH   --run-id RUN_ID --scope logbook
+```
+
+For a Stage, --scope carries the exact Stage title. The helper resolves the Thinking path within approved --root, reads only that file and emits JSON to stdout. It does not infer bindings, scan transcripts, install tools, fetch networks, write/correct events or create any files. No usable event history returns unknown values with explicit coverage instead of fabricated totals. Bad arguments/events fail with exit 2; path/read failure with exit 3; valid complete/partial/unknown metrics return exit 0.
+
+### Event fields
+
+Every event has stable run_id, event_id, type, scope, at (timezone-qualified ISO 8601 or null) and origin/reference. scope is logbook or an exact Stage title. Optional fields are package_id, human_turn_id, interval_id, category, outcome, first_pass, corrects, reason and coverage (complete/partial/unknown). Missing data is represented explicitly, not as zero or a guessed timestamp.
+
+| Event type | Additional fields / meaning |
+| --- | --- |
+| run_start / run_end / run_resume | Continuous run lifecycle; resume does not reset counts or change start |
+| scope_start / scope_end | Stage reporting endpoints; logbook uses run endpoints |
+| wait_start / wait_end | Same interval_id; planned human waiting |
+| interruption_start / interruption_end | Same interval_id; outage/forced interruption |
+| human_turn | Stable human_turn_id; one mutually exclusive gate/additional/recovery category |
+| package_first_outcome | Stable package_id; passed/failed/incomplete/unknown and first_pass when known |
+| package_correction | corrects an existing first-outcome event; reason and effective first_pass/outcome |
+
+At equal event_id an identical replay is deduplicated; differing content is a conflict reported rather than summed. Invalid/cyclic corrections or duplicate initial outcomes for a package are errors/unknowns, not silently chosen successes. A correction of a delivery defect cannot erase task rework and regain first-pass success solely because a later candidate passes.
+
+Each measured scope supplies truthful history coverage. A helper cannot prove that unrecorded events never occurred; partial/unknown coverage limits the reported total. Missing timestamps do not imply zero-duration events. Stage-scoped summaries include events attributed to that scope and intervals clipped to its endpoints; run-wide totals deduplicate event/turn/package identities across scopes.
+
+### Elapsed time
+
+Total wall elapsed = scope_end − scope_start (or run_end − run_start for logbook). Future/inverted endpoints and missing boundaries are unavailable or invalid, not negative/zero totals. Open runs are not reported as completed 🎉 totals.
+
+Report known waiting duration and known interruption duration separately. Also compute the union of all clipped waiting/interruption intervals to avoid double counting overlaps. Remainder = wall elapsed − interval union only when both endpoints and interval coverage are sufficient. It is remaining wall time, not CPU/agent compute time. An open interval or missing pairing makes the affected total unknown, with known intervals optionally shown as a labelled lower bound.
+
+### Human interactions
+
+Count distinct submitted human turns affecting this run, not individual answers, tool calls, agent-to-agent messages or skill switches. Categories are planned gate decisions, additional clarification/direction and connection-only disconnection/resumption. A turn containing a planned decision is a gate; connection-only continuation is recovery; other task-affecting turns are additional. Retain secondary detail without double counting. Unknown identities/history yield scoped known counts plus unknown total where appropriate.
+
+### First-pass success
+
+Denominator = packages with an initial applicable acceptance outcome; pending/unexamined and cancelled-before-first-acceptance packages are excluded. Numerator = those passing that initial acceptance without task rework, after applying explicit corrections. An initial incomplete/unknown acceptance outcome is not a pass; distinguish never examined packages from examined packages with unresolved findings.
+
+A later human-reported delivery defect supplies a package_correction linked to the original outcome, removing its erroneous first-pass classification. Later success after rework does not improve the initial-pass numerator. This metric neither creates a mandatory independent checker nor completes a human gate. Zero denominator produces unavailable rate; insufficient historical coverage prevents a fabricated whole-run percentage.
+
+### 🎉 output
+
+Captain reports exact Stage/logbook scope, total elapsed (and wait/interruption/union breakdown), distinct human turns by category and first-pass numerator/denominator/percentage, or explicit unknown/no-calculable-data values. Link to the bound Thinking entry, not a newly created report. An applicable human gate or unfinished responsibility remains visible; metrics never turn cancellation or cleanup into successful delivery.

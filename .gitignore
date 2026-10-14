@@ -25,3 +25,11 @@ id_ed25519
 dist/
 .mypy_cache/
 .ruff_cache/
+
+# Development environments and editor scratch files.
+venv/
+*.egg-info/
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp

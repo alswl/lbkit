@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-preflight"
+  short_description: "Check route feasibility and current Sailor observations"

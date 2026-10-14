@@ -74,6 +74,14 @@ def extract(root: str | None, json: bool, projects_dir: str) -> None:
     "usage",
     help="Read Claude/Codex session history, including paths outside --root; report only repository/logbook work directories.",
 )
-@options(ROOT, JSON, PROJECTS, click.option("--since"))
-def usage(root: str | None, json: bool, projects_dir: str, since: str | None) -> None:
-    finish(service.history(resolve_root(root), projects_dir, since), json, "usage")
+@options(ROOT, JSON, PROJECTS, click.option("--since"), click.option("--machine"))
+def usage(
+    root: str | None,
+    json: bool,
+    projects_dir: str,
+    since: str | None,
+    machine: str | None,
+) -> None:
+    finish(
+        service.history(resolve_root(root), projects_dir, since, machine), json, "usage"
+    )

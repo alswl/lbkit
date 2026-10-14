@@ -20,8 +20,10 @@ from logbook_cli.format import (
     TAIL_SEPARATOR,
     field_value,
     language,
+    machine_group,
     marker_style,
     prefix,
+    skill_chain,
     split_marker,
     task_metadata,
 )
@@ -366,10 +368,10 @@ def summary_lines(doc: Document) -> list[dict]:
 def workdirs(doc: Document) -> list[dict]:
     result, group = [], None
     for index, line in directory_items(doc):
-        top = re.match(r"^- (local|remote `[^`]+`)\s*$", line)
+        top = machine_group(line)
         child = re.match(r"^  - `([^`]+)`\s*$", line)
         if top:
-            group = {"machine": top.group(1), "paths": [], "line": index + 1}
+            group = {**top, "paths": [], "line": index + 1}
             result.append(group)
         elif child and group:
             group["paths"].append({"path": child.group(1), "line": index + 1})
@@ -420,6 +422,9 @@ def links_for(doc: Document, stage: Stage | None = None) -> list[dict]:
 
 
 def context(doc: Document) -> dict:
+    from logbook_cli.link_records import observations
+
+    verification_records, verification_errors = observations(doc, links_for(doc))
     incomplete = next_task(doc)
     records = [
         link
@@ -445,6 +450,24 @@ def context(doc: Document) -> dict:
                         "human": task.human,
                         "resolution": task.resolution,
                         "preflight": task.preflight_blocker,
+                        "annotations": [
+                            {
+                                "kind": a.kind.value,
+                                "value": a.value,
+                                "line": a.line,
+                                **(
+                                    {
+                                        "names": list(skill_chain(a.value).names),
+                                        "diagnostics": list(
+                                            skill_chain(a.value).diagnostics
+                                        ),
+                                    }
+                                    if a.kind is Field.SKILLS
+                                    else {}
+                                ),
+                            }
+                            for a in task.annotations
+                        ],
                     }
                     for task in s.tasks
                 ],
@@ -464,6 +487,8 @@ def context(doc: Document) -> dict:
         },
         "work_directories": workdirs(doc),
         "related_links": links_for(doc),
+        "link_verifications": verification_records,
+        "link_verification_errors": verification_errors,
         "bound_records": records,
         "preflight_blockers": doc.preflight,
         "preflight_clear": not doc.preflight,
@@ -670,9 +695,21 @@ def check(doc: Document) -> list[dict]:
                 f"{PREFLIGHT_MARKER} preflight discussion item halts the whole logbook; resolve by human decision before advancing",
             )
         )
+    from logbook_cli.link_records import observations, verified_lines
+
+    all_links = links_for(doc)
+    verified_links = verified_lines(doc, all_links)
+    _, metadata_errors = observations(doc, all_links)
+    issues.extend(
+        issue(doc, error["line"], "LINK_VERIFICATION_INVALID", error["reason"])
+        for error in metadata_errors
+    )
     for link in links_for(doc):
         state = local_target(doc.root, doc.path, link["target"])
-        if state == "external":
+        if (
+            state == "external"
+            and (link["line"], link["label"], link["target"]) not in verified_links
+        ):
             issues.append(
                 issue(doc, link["line"], "LINK_UNVERIFIED", "external link not fetched")
             )
@@ -712,7 +749,7 @@ def check(doc: Document) -> list[dict]:
 def directory_issues(doc: Document) -> list[dict]:
     issues, group_seen = [], False
     for index, line in directory_items(doc):
-        if re.match(r"^- (local|remote `[^`]+`)\s*$", line):
+        if machine_group(line):
             group_seen = True
             continue
         child = re.match(r"^  - `([^`]+)`\s*$", line)
@@ -724,7 +761,7 @@ def directory_issues(doc: Document) -> list[dict]:
                         doc,
                         index + 1,
                         "DIRECTORY_GROUP",
-                        "directory path appears before a local/remote group",
+                        "directory path appears before a machine group",
                     )
                 )
             if not value.startswith(("/", "~/")) or value.endswith("/"):
@@ -742,7 +779,7 @@ def directory_issues(doc: Document) -> list[dict]:
                     doc,
                     index + 1,
                     "DIRECTORY_FORMAT",
-                    "expected local/remote group or two-space indented backticked path",
+                    "expected named or legacy machine group or two-space indented backticked path",
                 )
             )
     return issues

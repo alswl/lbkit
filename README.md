@@ -8,11 +8,11 @@ Reusable Logbook coordination skills, Markdown contracts, and the `lb` CLI for h
 
 **lbkit** is a shared kit that gets mounted as a `.lbkit` Git submodule in a consuming repository. It provides the coordination skills, document contracts, and CLI that let a human owner, a coordinator agent, and executor agents deliver real projects through a plain Markdown **logbook** — the single source of scheduling truth.
 
-- **Human owner** — owns goals, risk acceptance, and irreversible decisions
-- **Coordinator agent** — maintains shared state, dependencies, and acceptance per logbook
-- **Executor agents** — deliver bounded work packages with verifiable evidence
+- **Admiral (human)** — owns goals, risk acceptance, and irreversible decisions
+- **Captain (coordination agent)** — maintains goals/routes, dependencies, dispatch and progress from applicable Sailor returns
+- **Sailors (execution agents)** — perform business work, testing, review and acceptance, returning current results and outcomes
 
-Authorization boundaries, evidence rules, and human checkpoints are contracts, not options. Plans don't authorize execution; agents cannot complete human-owned items. They can record when human review starts.
+Authorization boundaries, applicable Sailor returns, and human checkpoints are contracts, not options. Plans don't authorize execution; agents cannot complete human-owned items. They can record when human review starts.
 
 ## Install
 
@@ -70,7 +70,6 @@ Start at the [documentation index](docs/README.md) for user guides, contributor 
 - [Lifecycle & skill entries](docs/installable/lifecycle.md)
 - [Coordination contracts](docs/installable/coordination.md)
 - [Logbook format](docs/installable/logbook-format.md)
-- [Evidence rules](docs/installable/evidence.md)
 - [Configuration & runtime adapters](docs/installable/configuration.md)
 - [`lb` CLI reference](docs/installable/lb-cli.md)
 
@@ -79,3 +78,5 @@ Start at the [documentation index](docs/README.md) for user guides, contributor 
 Documentation for developing lbkit itself — not installed into consuming repositories:
 
 - [Development guide](docs/dev/development.md)
+
+The [core concepts](docs/guide/concept.md) explain Logbook → Stage → task, three roles and machine/session scheduling. Human-readable status stays in the briefing or existing CLI queries; writes create no TODO companion. Business originals/checks follow host rules, with no mandatory evidence/source index.

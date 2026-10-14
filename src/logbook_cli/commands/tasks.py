@@ -165,6 +165,7 @@ def artifact(
     JSON,
     TEXT,
     click.option("--kind", type=click.Choice(NOTE_KINDS)),
+    click.option("--replace-line", type=click.IntRange(min=1)),
 )
 def note(
     root: str | None,
@@ -176,9 +177,20 @@ def note(
     json: bool,
     text: str,
     kind: str | None,
+    replace_line: int | None,
 ) -> None:
     finish(
-        tasks.note(resolve_root(root), log, stage, task, text, kind, token, dry_run),
+        tasks.note(
+            resolve_root(root),
+            log,
+            stage,
+            task,
+            text,
+            kind,
+            token,
+            dry_run,
+            replace_line,
+        ),
         json,
     )
 

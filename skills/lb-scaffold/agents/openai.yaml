@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-scaffold"
+  short_description: "Fill confirmed run templates without extra goal gates"

@@ -16,9 +16,12 @@ Existing sessions that meet requirements may be reused; do not restart just to r
 2. Hand the full task to the owning executor, obtain proof of receipt, and observe real status. Report the launch gate, task receipt, and business execution separately.
 3. After receipt, establish independent visible monitoring tied to this dispatch and verify monitoring readiness. A successful run with failed monitoring is a partial completion; fix the monitoring, and do not resubmit the business task.
 4. Each status wait is at most limits.wait_seconds; this is not a task execution deadline, and one expired wait never justifies killing the executor. Immediately after each wait, read the latest status and output: if `idle`, `done`, or `blocked`, stop waiting and handle the report-back or blocker; if still `working`, report the new command, artifact, or evidence, or the concrete basis for calling it stalled. Never repeat waits without refreshing status and output, and never treat one `working` snapshot as continuous operation. Keep progress human-visible.
-5. Hand received report-backs to lb-update's evidence process. Tie gaps to the original package; after acceptance, re-read the logbook and move to the next item within the existing advancement authorization; stop at an explicit single-item or batch endpoint, a human gate, or a severe blocker — acceptance itself is not an authorization expansion.
+5. Hand received report-backs to lb-update's applicable-return process. Tie gaps to the original package; after acceptance, re-read the logbook and move to the next item within the existing advancement authorization; stop at an explicit single-item or batch endpoint, a human gate, or a severe blocker — acceptance itself is not an authorization expansion.
 
 ## Independent Checks and Finite Rework
+
+Business execution and acceptance both belong to Sailors. Captain aligns returns and control facts. Another Sailor performs an independent check only when the package requires it; no separate acceptance role or default checker is introduced.
+
 
 When independent checks are needed, the implementer first fixes a candidate, then the same identity goes to different checkers. Checkers do not modify deliverables; they return pass, fail, or evidence-linked gaps. Each time a candidate goes to an independent check counts as one round; the first round counts against limits.review_rounds; multiple checkers reviewing the same candidate are one round.
 
@@ -36,7 +39,7 @@ Hand logins, identity, approvals, or upstream rejections straight to the human; 
 
 ## Cleanup Branch
 
-When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. A completed worktree may be deleted by the owning executor agent, protecting deliverables and user changes per the root rules — this grants no other permissions such as branch deletion. When an authorized integration (e.g. squash into `master`) finds uncommitted changes in the target worktree, save them as a named stash first and report its name; delete only the worktrees and branches registered for this run, and report unregistered directories instead of removing them. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
+When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. A completed worktree may be deleted by the owning Sailor, protecting deliverables and user changes per the root rules — this grants no other permissions such as branch deletion. When an authorized integration (e.g. squash into `master`) finds uncommitted changes in the target worktree, save them as a named stash first and report its name; delete only the worktrees and branches registered for this run, and report unregistered directories instead of removing them. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
 
 On abnormal shutdown or a human-requested termination, first save the handoff, open responsibilities, and recovery conditions. Record session closure, task failure, project cancellation, and delivery completion separately; managing a group does not automatically include cleaning up old services.
 
@@ -46,4 +49,10 @@ Reconcile new human decisions with stale packages before dispatch: update affect
 
 For a failed method, inspect the actual rejection and side effects, then attempt supported routine recovery within scope. A tool's generic error category is not more authoritative than its specific rejection. Distinguish a narrow retry from a broader replay with additional effects; widening side effects requires its own authorization. Do not turn every stall into a human choice or retry unchanged indefinitely.
 
-Before closing resources, ensure source references and key conclusions are recoverable under the evidence contract. This does not require copying raw materials into the coordination repository.
+Before closing resources, ensure source references and key conclusions are recoverable under the host record rules. This does not require copying raw materials into the coordination repository.
+
+## Requested run metrics
+
+Record run start/end/resume, human waiting/interruption, distinct human turns and applicable first acceptance/corrections in the existing bound Thinking using the [event contract](../../../docs/installable/coordination.md#run-event-and-close-out-metrics). Resume keeps the same run and counters. Captain records coordination facts; Sailor returns actual acceptance facts and later defect corrections. Do not archive raw trials or create a metrics sidecar.
+
+At Stage/logbook 🎉, report exact scope, wall elapsed with waiting/interruption union, human interaction count/categories and first-pass numerator/denominator/rate. Use the read-only `skills/lb-push/scripts/run-metrics.py` helper for deterministic arithmetic; no event history or zero denominator gives explicit unknown/no-calculable-data, never invented success. A corrected delivery defect removes an erroneous first-pass pass even if rework later succeeds. Metrics do not complete human gates or create a checker role.

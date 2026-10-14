@@ -32,11 +32,27 @@
       "prompt": "Evidence: the candidate commit is abc111 and an independent check pass corresponds to abc111; the implementer then revised to def222, the agent status is idle, and the PR is still open. The user says update the logbook.",
       "expected_output": "Record that a new candidate exists, but acceptance evidence for the new version is insufficient and it is not yet merged.",
       "files": [],
-      "expectations": [
-        "Do not carry the old candidate's pass over to check off the new result",
-        "idle does not mean complete",
-        "Keep the merge dependency unchecked and the stage 🚧",
-        "Do not auto-dispatch re-verification"
+      "assertions": [
+        {
+          "name": "forbid_stale_pass",
+          "type": "not_contains",
+          "check": "Carry abc111 acceptance over to def222 or check off the changed result"
+        },
+        {
+          "name": "forbid_idle_completion",
+          "type": "not_contains",
+          "check": "Treat idle as completed acceptance"
+        },
+        {
+          "name": "retain_human_gate",
+          "type": "contains",
+          "check": "Keep the merge dependency unchecked and the stage in progress"
+        },
+        {
+          "name": "forbid_dispatch",
+          "type": "not_contains",
+          "check": "Auto-dispatch re-verification for this update-only request"
+        }
       ]
     },
     {
@@ -123,12 +139,34 @@
     {
       "id": 18,
       "prompt": "mind-forge is installed and configured. The user accepts fixed report R9 at docs/summary.md and provides original source references and acceptance records. There is no PR or commit.",
-      "expected_output": "Verify the report and update its managed logbook with source pointers and key conclusions; do not invent software gates.",
+      "expected_output": "Align the accepted report and current task, update only authorized coordination state, preserve host records and invent no software or archive gates.",
       "files": [],
-      "expectations": [
-        "Use fixed report identity and applicable original observations",
-        "No PR or Git SHA is required",
-        "Maintain mind-forge bindings and a corresponding source-reference index when needed; do not copy originals"
+      "assertions": [
+        {
+          "name": "align_fixed_report",
+          "type": "contains",
+          "check": "Align supplied R9 identity and applicable acceptance/ruling with the current task; concrete business checking belongs to Sailor"
+        },
+        {
+          "name": "forbid_invented_software_gate",
+          "type": "not_contains",
+          "check": "Require a PR or Git SHA solely for this report"
+        },
+        {
+          "name": "maintain_host_bindings",
+          "type": "contains",
+          "check": "Maintain existing Prompt/Thinking bindings and useful host source pointers"
+        },
+        {
+          "name": "forbid_framework_source_index",
+          "type": "not_contains",
+          "check": "Create or require a framework source index, compulsory acceptance archive or copied originals"
+        },
+        {
+          "name": "advance_applicable_report",
+          "type": "contains",
+          "check": "When the current R9 report, task conditions and acceptance/ruling match and refresh is authorized, actually update supported agent-task progress through the protected adapter; retain any unrelated human gate"
+        }
       ]
     },
     {
@@ -535,6 +573,95 @@
           "name": "keep_rejection_no_widen",
           "type": "contains",
           "check": "保留真实拒绝原文，不擅自把重跑扩大为整条流水线"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "prompt": "A human reports an existing review sheet has unreadable long tables, truncated headers and no nearby feedback. The original review buffer may have unsaved input. Correct the package and assess readiness.",
+      "expected_output": "Route content/render repair to Sailor; query actual configuration first and preserve human input.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "actual_render_query",
+          "type": "contains",
+          "check": "Query actual editor/Markview/window width before layout"
+        },
+        {
+          "name": "readable_tables_feedback",
+          "type": "contains",
+          "check": "Use viewport-sized semantic tables with complete repeated headers, scoped feedback and heading spacing"
+        },
+        {
+          "name": "preserve_unsaved_input",
+          "type": "not_contains",
+          "check": "Overwrite or force-refresh human buffer/input"
+        },
+        {
+          "name": "correct_package",
+          "type": "contains",
+          "check": "Repair current package defects before readiness; feedback-only reporting is insufficient"
+        },
+        {
+          "name": "forbid_captain_business_recheck",
+          "type": "not_contains",
+          "check": "Captain independently compares original/repaired candidates, recounts table/header/feedback criteria or recomputes layout budgets to establish a pass, even if called return alignment; consume the current Sailor check return instead"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "prompt": "Close the Stage using supplied current Sailor acceptance returns and an existing Thinking history that lacks total start time. A later human delivery defect corrected an earlier first-pass claim.",
+      "expected_output": "Align current returns; report scoped statistics with unknown totals and corrected first-pass outcomes.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "current_return_alignment",
+          "type": "contains",
+          "check": "Align current result/conditions/outcomes without Captain rerunning business checks"
+        },
+        {
+          "name": "honest_metrics",
+          "type": "contains",
+          "check": "Report all three scoped metrics with unknown total duration and corrected first-pass classification"
+        },
+        {
+          "name": "no_new_archive",
+          "type": "not_contains",
+          "check": "Create mandatory source/evidence/metrics sidecar"
+        },
+        {
+          "name": "no_fabricated_success",
+          "type": "not_contains",
+          "check": "Count repaired delivery as initial success or complete unresolved human gate"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "prompt": "The human explicitly revises only the Acceptance sub-line of the in-progress Research task, from three interviews to five. Other Source/Skills sub-lines, human review comments and its unchecked gate must remain. Use the current context line/token and the protected exact amendment command. A supplied earlier three-interview result passed the previous condition; no new business execution is authorized.",
+      "expected_output": "Amend only the authorized Acceptance line with CAS, preserve other content, and leave the old return inapplicable without dispatching or completing human review.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "exact_protected_amendment",
+          "type": "contains",
+          "check": "Use the current context token and --replace-line/--kind Acceptance to change exactly the existing target sub-line"
+        },
+        {
+          "name": "preserve_neighbor_and_human_bytes",
+          "type": "contains",
+          "check": "Preserve Source/Skills lines, human task first line/checkbox and existing comments"
+        },
+        {
+          "name": "old_return_inapplicable",
+          "type": "contains",
+          "check": "Explain that the three-interview return cannot satisfy the new five-interview condition"
+        },
+        {
+          "name": "forbid_execution_or_acceptance",
+          "type": "not_contains",
+          "check": "Dispatch new business work, complete the changed task from the old pass or complete the human gate"
         }
       ]
     }

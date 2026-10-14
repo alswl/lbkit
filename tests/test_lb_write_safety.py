@@ -1,9 +1,4 @@
-"""Tests for the `todo` human view and write-safety checks.
-
-Covers the `todo` view (snapshot/render/refresh), same-text duplicate
-task detection with ambiguous-write refusal, and home-relative link
-targets in `lb check`.
-"""
+"""Duplicate task identity and home-link write safety regressions."""
 
 from __future__ import annotations
 
@@ -40,70 +35,6 @@ def write_logbook(directory: Path) -> Path:
     return path
 
 
-class TodoTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.dir = Path(self.tmp.name) / "projects" / "demo"
-        self.root = Path(self.tmp.name)
-        self.path = write_logbook(self.dir)
-        self.doc = lb.parse(self.path, self.root)
-
-    def tearDown(self) -> None:
-        self.tmp.cleanup()
-
-    def test_snapshot_sections(self) -> None:
-        snap = lb.todo_snapshot(self.doc)
-        self.assertEqual(snap["logbook"], "projects/demo/docs/logbook.md")
-        self.assertEqual(len(snap["alarms"]), 1)
-        self.assertIn("需负责人处理", snap["alarms"][0]["blockers"][0])
-        self.assertEqual(len(snap["human_pending"]), 1)
-        self.assertTrue(snap["human_pending"][0]["human"])
-        self.assertEqual(snap["next_task"]["text"], "第一个任务")
-        self.assertEqual(len(snap["doing"]), 1)
-        self.assertEqual(snap["todo"][0]["text"], "第一个任务")
-
-    def test_alarm_on_task_first_line(self) -> None:
-        self.path.write_text(
-            self.path.read_text(encoding="utf-8").replace(
-                "- [ ] 第一个任务", "- [ ] 🚨 第一个任务", 1
-            ),
-            encoding="utf-8",
-        )
-        snap = lb.todo_snapshot(lb.parse(self.path, self.root))
-        self.assertEqual(len(snap["alarms"]), 1)
-        self.assertEqual(snap["alarms"][0]["blockers"][0], "🚨 第一个任务")
-
-    def test_render_contains_all_views(self) -> None:
-        rendered = lb.render_todo(lb.todo_snapshot(self.doc))
-        for needle in (
-            "需负责人处理",
-            "人工验证：某人工步骤",
-            "下一项",
-            "进行中",
-            "bin/lb todo",
-            "手改会被覆盖",
-        ):
-            self.assertIn(needle, rendered)
-
-    def test_refresh_requires_existing_todo(self) -> None:
-        self.assertIsNone(lb.refresh_todo(self.doc))
-        target = self.dir / "docs" / "TODO.md"
-        target.write_text("# stale\n", encoding="utf-8")
-        self.assertEqual(lb.refresh_todo(self.doc), target)
-        self.assertIn("下一项", target.read_text(encoding="utf-8"))
-
-    def test_refresh_reparses_disk_not_stale_doc(self) -> None:
-        target = self.dir / "docs" / "TODO.md"
-        target.write_text("# placeholder\n", encoding="utf-8")
-        self.path.write_text(
-            self.path.read_text(encoding="utf-8").replace(
-                "- [/] Agent 任务", "- [x] Agent 任务"
-            ),
-            encoding="utf-8",
-        )
-        lb.refresh_todo(self.doc)  # doc object predates the edit
-        text = target.read_text(encoding="utf-8")
-        self.assertNotIn("## 进行中", text)
 
 
 class DuplicateTextTests(unittest.TestCase):

@@ -2,6 +2,7 @@
 
 This guide is for people who use lbkit in their own repositories.
 
+- [Understand the core concepts](concept.md) · [核心概念](concept.zh-CN.md)
 - [Install and upgrade](install.md) · [安装与升级](install.zh-CN.md)
 - [Choose a coordination skill](../installable/lifecycle.md)
 - [Configure the repository](../installable/configuration.md)

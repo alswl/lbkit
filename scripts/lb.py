@@ -19,7 +19,6 @@ if __name__ == "__main__":
 from logbook_cli.cli import cmd_task_update, main
 from logbook_cli.document import EXIT_REFUSED, LbError, check, discover, parse
 from logbook_cli.storage import write_bytes
-from logbook_cli.views import refresh_todo, render_todo, todo_snapshot
 
 __all__ = [
     "EXIT_REFUSED",
@@ -30,9 +29,6 @@ __all__ = [
     "main",
     "os",
     "parse",
-    "refresh_todo",
-    "render_todo",
-    "todo_snapshot",
     "write_bytes",
 ]
 

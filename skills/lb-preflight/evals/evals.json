@@ -6,11 +6,27 @@
       "prompt": "An old preflight record in bound Thinking says step two needs a decision whether to commit. The human has already ruled no commit; see conversation-ruling.md. Reconcile the record and any pending marker.",
       "expected_output": "Record the applicable ruling and current coverage in Thinking, retaining history; do not create an unresolved marker for a decided question.",
       "files": [],
-      "expectations": [
-        "Current verdict reflects the ruling and retains its source and prior observation",
-        "No new unresolved 🔮 for a question already decided",
-        "Do not overwrite historical evidence",
-        "Run the relevant check after authorized writes"
+      "assertions": [
+        {
+          "name": "retain_ruling_history",
+          "type": "contains",
+          "check": "Current verdict reflects the explicit no-commit ruling and preserves its source and prior observation"
+        },
+        {
+          "name": "forbid_unresolved_decided_question",
+          "type": "not_contains",
+          "check": "Create a new unresolved marker for the decided question"
+        },
+        {
+          "name": "preserve_historical_records",
+          "type": "contains",
+          "check": "Preserve existing host-owned history rather than overwriting it"
+        },
+        {
+          "name": "check_authorized_writes",
+          "type": "contains",
+          "check": "Run the relevant check after any authorized write"
+        }
       ]
     },
     {

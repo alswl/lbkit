@@ -24,6 +24,20 @@ class ModelRegressionTest(unittest.TestCase):
     def write(self, body):
         self.path.write_text("# Research\n\n## Stage 01 Research\n\n" + body)
 
+    def test_named_machine_groups_keep_identity_and_legacy(self):
+        from logbook_cli.document import check, context
+        from logbook_cli.usage import work_dirs
+        self.path.write_text("# Demo\n\n工作目录：\n\n- `machine-a`\n  - `/work/example-a`\n- local\n  - `/work/local`\n- remote `machine-b`\n  - `/work/example-b`\n\n## 🛫 Stage 01 Demo\n- [ ] Research: first\n")
+        doc = parse(self.path, self.root)
+        groups = context(doc)["work_directories"]
+        self.assertEqual([g["group_kind"] for g in groups], ["named", "local", "remote"])
+        self.assertEqual(groups[0]["machine_name"], "machine-a")
+        self.assertEqual(groups[2]["machine"], "remote `machine-b`")
+        self.assertFalse([x for x in check(doc) if x["code"].startswith("DIRECTORY_")])
+        self.assertNotIn(Path("/work/example-a"), work_dirs(self.root, "projects"))
+        self.assertIn(Path("/work/example-a"), work_dirs(self.root, "projects", "machine-a"))
+        self.assertNotIn(Path("/work/example-b"), work_dirs(self.root, "projects", "machine-a"))
+
     def test_stage_number_letter_suffix_is_delivery(self):
         self.path.write_text(
             "# Demo\n\n## Stage 03b Insert\n\n- [ ] 开发：插入。\n\n"
@@ -63,17 +77,11 @@ class ModelRegressionTest(unittest.TestCase):
             [x["chain"] for x in extract(self.root, "projects")], [["mf-cli"]]
         )
 
-    def test_human_ownership_and_todo_language(self):
-        from logbook_cli.views import render_todo, todo_snapshot
-
+    def test_human_ownership_in_both_languages(self):
         for text in ("人工验证：结果", "Human review: result"):
             self.write("- [ ] " + text + "\n")
             doc = parse(self.path, self.root)
             self.assertTrue(doc.stages[0].tasks[0].human)
-            view = render_todo(todo_snapshot(doc))
-            self.assertIn(
-                "人工待办" if text.startswith("人工") else "Pending human tasks", view
-            )
 
     def test_warning_summaries_and_fenced_locale_examples_stay_human(self):
         from logbook_cli.document import summary_lines

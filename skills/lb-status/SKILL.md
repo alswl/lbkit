@@ -4,6 +4,9 @@ version: 0.3.0-dev
 description: "Check project progress, executor status, blockers, and the next item, maintaining emoji and a few fact fragments; when context usage is found above 80%, hand off to lb-push for automatic GC. When the user explicitly asks read-only, report only — no checkbox or acceptance changes; deep plan review belongs to lb-plan."
 ---
 
+Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+
+
 # Check project status
 
 mode is recorded (per the records) or live (joining approved live observation). When the user explicitly wants records only, use recorded; for ordinary progress queries, default to live when an identifiable dispatched executor exists, otherwise recorded. An explicit request for live observation also uses live. When query capability is unavailable, report "live status unknown"; do not repair the runtime environment.
@@ -26,4 +29,4 @@ Locate the designated or uniquely identifiable logbook and read the [configurati
 
 ## Output and stopping
 
-Give a briefing per the question; when runtime state is involved, include the executor name and workspace/tab/pane, observation time or recent activity, blockers, and the next action. A single factual question does not require the full template, and focus is not reported. If local writes occurred, briefly describe the changes and unverified items; apart from the automatic GC above, pure queries never reverse into acceptance or advancement flows. When the human owner wants a manual scan of the logbook, `bin/lb todo` can open the TODO.md human view (🚨/👱/next item/in progress) beside the logbook on first use; write commands auto-refresh it afterwards — see the [CLI reference](../../docs/installable/lb-cli.md). For read-only todo filtering use `bin/lb task list`, and for the next item `bin/lb task next`; still verify scheduling semantics against the logbook source.
+Give a briefing per the question; when runtime state is involved, include the executor name and workspace/tab/pane, observation time or recent activity, blockers, and the next action. A single factual question does not require the full template, and focus is not reported. If local writes occurred, briefly describe the changes and unverified items; apart from the automatic GC above, pure queries never reverse into acceptance or advancement flows. Return a requested human-readable list in the briefing; do not create or refresh a companion checklist file. For read-only todo filtering use `bin/lb task list`, and for the next item `bin/lb task next`; still verify scheduling semantics against the logbook source.

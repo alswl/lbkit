@@ -36,3 +36,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 
 - [docs/dev/development.md](docs/dev/development.md) — required reading before changing contracts, skills, or the installer: link rules, install manifest, version evolution.
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
+
+<!-- SPECKIT START -->
+Active implementation plan: [Logbook Coordination and Sailor Execution](specs/003-captain-executor-boundary/plan.md).
+<!-- SPECKIT END -->

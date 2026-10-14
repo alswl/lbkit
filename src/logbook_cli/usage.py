@@ -19,11 +19,15 @@ COMMAND_RE = re.compile(r"<command-name>/?([\w:.-]+)</command-name>")
 SKILL_READ_RE = re.compile(r"skills/([\w.-]+)/SKILL\.md")
 
 
-def work_dirs(root: Path, projects_dir: str) -> list[Path]:
+def work_dirs(root: Path, projects_dir: str, machine: str | None = None) -> list[Path]:
     dirs = {root}
     for path in discover(root, projects_dir):
         for group in context(parse(path, root))["work_directories"]:
-            if group["machine"] != "local":
+            if group["machine"] != "local" and not (
+                machine
+                and group.get("group_kind") == "named"
+                and group.get("machine_name") == machine
+            ):
                 continue
             for item in group["paths"]:
                 dirs.add(Path(item["path"]).expanduser().resolve())
@@ -109,9 +113,11 @@ def codex_events(dirs: list[Path], since: str):
                     yield "codex", "read", name, "", time, cwd, path
 
 
-def usage(root: Path, projects_dir: str, since: str) -> list[dict]:
+def usage(
+    root: Path, projects_dir: str, since: str, machine: str | None = None
+) -> list[dict]:
     home = Path.home()
-    dirs = work_dirs(root, projects_dir)
+    dirs = work_dirs(root, projects_dir, machine)
     events = [
         {
             "runtime": runtime,

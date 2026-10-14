@@ -17,7 +17,7 @@ from logbook_cli.document import (
 )
 from logbook_cli.format import MARKER_PATTERN
 from logbook_cli.services.common import Result, load, save, writable
-from logbook_cli.views import render_todo, state_snapshot, todo_snapshot
+from logbook_cli.views import state_snapshot
 
 
 def list_logs(root: str, projects_dir: str) -> Result:
@@ -45,19 +45,6 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
         problems,
         EXIT_ISSUES if any(p["code"] != "LINK_UNVERIFIED" for p in problems) else 0,
     )
-
-
-def todo(root: str, log: str, dry_run: bool, json: bool) -> Result:
-    doc = load(root, log)
-    snapshot = todo_snapshot(doc)
-    if json:
-        return Result(snapshot)
-    rendered = render_todo(snapshot)
-    if dry_run:
-        return Result(snapshot, text=rendered)
-    target = doc.path.parent / "TODO.md"
-    target.write_text(rendered, encoding="utf-8")
-    return Result(snapshot, text=f"TODO.md written: {target}\n")
 
 
 def sync(root: str, log: str, token: str, dry_run: bool) -> Result:

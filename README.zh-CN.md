@@ -8,11 +8,11 @@
 
 **lbkit** 是一套共享工具包，以 `.lbkit` Git 子模块形式挂载到使用方仓库。它提供协调技能、文档契约和 CLI，让人类负责人、协调者 Agent 与执行 Agent 通过一份纯 Markdown **日志（logbook）**交付真实项目——日志是唯一的调度事实来源。
 
-- **人类负责人** — 掌握目标、风险接受与不可逆决定
-- **协调者 Agent** — 维护每份日志的共享状态、依赖与验收
-- **执行 Agent** — 交付有边界的工作包，并附可验证证据
+- **Admiral（人类）** — 掌握目标、风险接受与不可逆决定
+- **Captain（协调 Agent）** — 维护目标、路径、依赖、调度及适用回报支持的进度
+- **Sailor（执行 Agent）** — 执行业务、测试、review 和具体验收，回报当前成果、结论和缺口
 
-授权边界、证据规则和人工关口是契约，不是可关闭的选项。计划确认不等于执行授权；Agent 永远不写人类负责的日志条目。
+授权边界、适用的 Sailor 回报和人工关口是契约，不是可关闭的选项。计划确认不等于执行授权；Agent 永远不写人类负责的日志条目。
 
 ## 安装
 
@@ -70,7 +70,6 @@ bin/lb skills usage          # 会话里实际调用的技能（唯一读 --root
 - [生命周期与技能入口](docs/installable/lifecycle.md)
 - [协调契约](docs/installable/coordination.md)
 - [日志格式](docs/installable/logbook-format.md)
-- [证据规则](docs/installable/evidence.md)
 - [配置与运行适配器](docs/installable/configuration.md)
 - [`lb` CLI 参考](docs/installable/lb-cli.md)
 
@@ -79,3 +78,5 @@ bin/lb skills usage          # 会话里实际调用的技能（唯一读 --root
 lbkit 自身的开发文档——不随安装分发：
 
 - [开发指南](docs/dev/development.md)
+
+[核心概念](docs/guide/concept.md)介绍 Logbook、待办、Admiral／Captain／Sailor 三角色与跨机器调度。Captain 维护目标、路径和协调状态；Sailor 执行业务工作及具体验收。人工摘要使用对话或现有 CLI 查询，不生成 TODO 附属文件，也不要求 evidence/source 索引。

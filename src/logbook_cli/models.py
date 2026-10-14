@@ -27,6 +27,8 @@ class Owner(Enum):
 
 class Field(Enum):
     SKILLS = "skills"
+    SOURCE = "source"
+    ACCEPTANCE = "acceptance"
     RESOLUTION = "resolution"
     STATUS = "status"
     ARTIFACT = "artifact"

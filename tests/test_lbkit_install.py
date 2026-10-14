@@ -232,7 +232,7 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertFalse((docs / "README.md").exists())
         self.assertFalse((docs / "dev").exists())
         self.assertTrue(
-            (self.repo / ".agents/skills/lb-plan/../../docs/installable/evidence.md")
+            (self.repo / ".agents/skills/lb-plan/../../docs/installable/coordination.md")
             .resolve()
             .is_file()
         )
@@ -241,6 +241,49 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertIn(
             Path("docs/configuration.md"), installer["conflicts"](self.repo, mapping)
         )
+
+    def test_retired_link_cleanup_preserves_consumer_content(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        docs = self.repo / "docs"
+        docs.mkdir()
+        link = docs / "evidence.md"
+        for target in ("../.lbkit/docs/evidence.md", "../.lbkit/docs/installable/evidence.md"):
+            link.symlink_to(target)
+            installer["retire_links"](self.repo, True)
+            self.assertTrue(link.is_symlink())
+            installer["retire_links"](self.repo, False)
+            self.assertFalse(link.is_symlink())
+        link.write_bytes(b"consumer-owned\r\n")
+        self.assertEqual(installer["retire_links"](self.repo, False), [])
+        self.assertEqual(link.read_bytes(), b"consumer-owned\r\n")
+        link.unlink()
+        link.symlink_to("../user-owned.md")
+        installer["retire_links"](self.repo, False)
+        self.assertEqual(os.readlink(link), "../user-owned.md")
+
+    def test_retirement_requires_actual_kit_removal_and_safe_parent(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        docs = self.repo / "docs"
+        docs.mkdir()
+        link = docs / "evidence.md"
+        link.symlink_to("../.lbkit/docs/installable/evidence.md")
+        target = self.repo / ".lbkit/docs/installable/evidence.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("still installed")
+        self.assertEqual(installer["retire_links"](self.repo, False), [])
+        self.assertTrue(link.is_symlink())
+        target.unlink()
+        installer["retire_links"](self.repo, False)
+        self.assertFalse(link.is_symlink())
+        docs.rmdir()
+        outside = self.repo.parent / "outside"
+        outside.mkdir()
+        docs.symlink_to(outside, target_is_directory=True)
+        (outside / "evidence.md").symlink_to("../.lbkit/docs/installable/evidence.md")
+        self.assertEqual(installer["retire_links"](self.repo, False), [])
+        self.assertTrue((outside / "evidence.md").is_symlink())
 
     def test_legacy_agent_config_gets_a_move_hint_only(self):
         legacy = self.repo / ".agents" / "lb.yaml"

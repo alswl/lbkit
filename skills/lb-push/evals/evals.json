@@ -81,11 +81,27 @@
       "prompt": "The user has explicitly approved running tasks A and B in the same batch in parallel; their inputs are fixed, worktrees independent, with no shared writes; task C is not approved. Both work packages are complete. Advance the batch.",
       "expected_output": "Dispatch A and B within the batch boundary, verify receipt and monitoring for each, do not ask again whether to start, and do not launch C.",
       "files": [],
-      "expectations": [
-        "Reuse the explicit batch authorization",
-        "Each execution package runs in an independent Git worktree under the original repository",
-        "Each package gets independent visible monitoring without stealing focus",
-        "Do not expand to C"
+      "assertions": [
+        {
+          "name": "reuse_batch_authorization",
+          "type": "contains",
+          "check": "Advance approved A and B without asking again to start"
+        },
+        {
+          "name": "isolated_worktrees",
+          "type": "contains",
+          "check": "Each execution package uses an independent worktree under its repository"
+        },
+        {
+          "name": "receipt_and_monitoring",
+          "type": "contains",
+          "check": "Confirm each actual recipient and independent visible monitoring without stealing focus"
+        },
+        {
+          "name": "forbid_unapproved_c",
+          "type": "not_contains",
+          "check": "Dispatch or execute task C"
+        }
       ]
     },
     {
@@ -898,6 +914,114 @@
           "name": "no_render_assumption",
           "type": "contains",
           "check": "不假设 HTML 换行或编辑器 wrap 能修复过宽表格"
+        }
+      ]
+    },
+    {
+      "id": 74,
+      "prompt": "The approved remote package was actually received by Sailor on machine-b. Captain and Logbook remain on machine-a. Monitoring failed, and the destination workspace has the same name but a different actual ID. Repair only authorized coordination readiness.",
+      "expected_output": "Keep remote execution separate from Captain handoff, repair monitoring without resending.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "original_route",
+          "type": "contains",
+          "check": "Retain original Captain/Logbook and report-back entry"
+        },
+        {
+          "name": "actual_destination_id",
+          "type": "contains",
+          "check": "Use destination actual workspace/session IDs and registered cwd"
+        },
+        {
+          "name": "repair_monitor_only",
+          "type": "contains",
+          "check": "Repair dispatch-associated visible monitoring"
+        },
+        {
+          "name": "no_duplicate_dispatch",
+          "type": "not_contains",
+          "check": "Resend the received business package or claim readiness before actual monitor"
+        },
+        {
+          "name": "no_business_takeover",
+          "type": "not_contains",
+          "check": "Captain performs business implementation or concrete acceptance"
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "prompt": "Human asks to review the current business result and merge its PR. Result only exists locally; an old PR does not contain it. Host excludes local process logs even if renamed.",
+      "expected_output": "Sailor prepares authorized PR and host-conformant inventory; Captain checks actual head/access before handing over.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "current_pr_entry",
+          "type": "contains",
+          "check": "Deliver actual accessible PR matching current result/head before ready merge handoff"
+        },
+        {
+          "name": "file_scope_checks",
+          "type": "contains",
+          "check": "Check full file inventory/host bindings before commit and PR handoff"
+        },
+        {
+          "name": "no_process_material",
+          "type": "not_contains",
+          "check": "Include temporary process material as formal delivery based only on name"
+        },
+        {
+          "name": "no_human_merge",
+          "type": "not_contains",
+          "check": "Merge or complete human gate without explicit decision"
+        }
+      ]
+    },
+    {
+      "id": 76,
+      "prompt": "At an approved human wait, independent source preparation shares the same browser profile with current work; another package requires the human content decision. Find parallel opportunities.",
+      "expected_output": "Analyze actual shared resources and decision dependencies without starting unapproved work.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "actual_dependency_analysis",
+          "type": "contains",
+          "check": "Identify shared browser and human-input conflicts at waiting checkpoint"
+        },
+        {
+          "name": "no_unapproved_batch",
+          "type": "not_contains",
+          "check": "Start a batch solely because asked to find parallel opportunities"
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "axis": "Explicit branch-only delivery preserves the human ruling and candidate identity",
+      "prompt": "Admiral explicitly chooses local-machine branch review, no PR. The current Sailor return identifies accepted candidate WORKTREE-v2 based on feature-route HEAD abc111; concept.md is uncommitted and the provided usable review entry shows that candidate. No commit/push/merge permission exists. Prepare the human handoff using the supplied controlled observations; perform no writes.",
+      "expected_output": "Deliver the branch/candidate review entry, preserve branch-only scope and distinguish working-tree content from HEAD.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "honors_branch_review",
+          "type": "contains",
+          "check": "Keeps the explicit local branch review ruling and hands over the provided candidate review entry; does not cancel branch review."
+        },
+        {
+          "name": "distinguishes_uncommitted_candidate",
+          "type": "contains",
+          "check": "Identifies branch HEAD separately from uncommitted WORKTREE-v2, not as committed branch content."
+        },
+        {
+          "name": "no_invented_pr_gate",
+          "type": "not_contains",
+          "check": "Does not require a PR or infer commit, push, merge or remote authorization."
+        },
+        {
+          "name": "sailor_acceptance_preserved",
+          "type": "contains",
+          "check": "Uses the current Sailor acceptance return without launching new business acceptance or claiming the human review is complete."
         }
       ]
     }

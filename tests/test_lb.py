@@ -210,24 +210,7 @@ class LbCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual([item["code"] for item in issues], ["LINK_UNVERIFIED"])
 
-    def test_todo_all_done_has_no_next_task(self):
-        self.log.write_text(
-            "# Demo\n\n## ✅ Stage 01 Build\n\n待办：\n- [x] 开发：已完成。\n",
-            encoding="utf-8",
-        )
-        result = self.cli("todo", "projects/demo/docs/log.md", "--dry-run")
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("- 全部完成", result.stdout)
 
-    def test_todo_skipped_task_is_not_complete(self):
-        self.log.write_text(
-            "# Demo\n\n## 🚧 Stage 01 Build\n\n待办：\n- [x] 开发：已完成。\n- [-] 验证：待处置。\n",
-            encoding="utf-8",
-        )
-        result = self.cli("todo", "projects/demo/docs/log.md", "--dry-run")
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("跳过项待处置", result.stdout)
-        self.assertNotIn("- 全部完成", result.stdout)
 
     def test_overview_checklist_is_not_the_next_delivery_task(self):
         self.log.write_text(
@@ -239,8 +222,6 @@ class LbCliTest(unittest.TestCase):
         self.assertEqual(data["next_task"]["text"], "开发：阶段首项。")
         result, data = self.payload("state", "projects/demo/docs/log.md")
         self.assertEqual(data["next_task"]["text"], "开发：阶段首项。")
-        result, data = self.payload("todo", "projects/demo/docs/log.md")
-        self.assertEqual(data["human_pending"], [])
 
     def test_duplicate_in_one_stage_and_unknown_or_nested_checkbox(self):
         self.log.write_text(

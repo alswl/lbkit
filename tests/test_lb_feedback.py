@@ -53,6 +53,15 @@ class FeedbackTest(unittest.TestCase):
             args += ["--" + key.replace("_", "-"), value]
         return self.cli(*args, code=code)
 
+    def test_completed_stage_new_task_warns_until_sync(self):
+        self.log.write_text("# Demo\n\n## ✅ Stage 01 Demo\n\n待办：\n- [x] Research: previous\n")
+        token = self.context()["version_token"]
+        self.cli("task", "add", "log.md", "--stage", "Stage 01 Demo", "--text", "Research: new", "--token", token)
+        issues = self.cli("check", "log.md", code=1)
+        self.assertEqual([i["code"] for i in issues], ["STAGE_EMOJI"])
+        self.cli("sync", "log.md", "--token", self.context()["version_token"])
+        self.assertEqual(self.cli("check", "log.md"), [])
+
     def test_write_token_chain_and_preview(self):
         first = self.context()["version_token"]
         preview = self.cli(
@@ -174,9 +183,6 @@ class FeedbackTest(unittest.TestCase):
         self.cli("sync", "log.md", "--token", self.context()["version_token"])
         self.assertEqual(self.context()["stages"][0]["derived_emoji"], "✅")
         self.assertEqual(self.cli("check", "log.md"), [])
-        todo = self.cli("todo", "log.md")
-        self.assertEqual(todo["human_pending"], [])
-        self.assertEqual(len(todo["resolved"]), 1)
         self.assertIn("取消", self.cli("state", "log.md")["summary"])
         self.assertIn("[-] " + HUMAN, self.log.read_text())
         self.log.write_text(

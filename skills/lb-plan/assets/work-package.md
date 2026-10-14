@@ -4,7 +4,7 @@
 
 Authorization: <current human decision/source, scope, permitted operations, endpoint; superseded constraints and their replacements if any>
 
-Owner and result: <one owner; one verifiable result>
+Owner and result: <one Sailor; one current verifiable result>
 
 Scope and exclusions: <authorized resources, machines/locations and boundaries; isolated workspace when applicable>
 
@@ -20,7 +20,7 @@ Delivery: <the recipient's usable entry, result identity and actual delivery sta
 
 Verification: <each agreed criterion, required method, actual observation/record and applicability; distinguish preparation, delivery, verification and human decision>
 
-Source references: <sources/<doc-name>.md when needed; original locations, identity, timestamp and availability; no default copying of originals>
+Host records: <existing authoritative source/result entry when useful; no mandatory index, archive or file per dispatch>
 
 Review and recovery: <required checker and finite rounds, or why unnecessary; backup/rollback when relevant; routine recovery within authorization>
 
@@ -28,4 +28,4 @@ Escalation: <real human gates, unavailable key inputs or scope-changing choices;
 
 Handoff and retention: <key decisions in Thinking, open responsibilities, durable references before cleanup, session reuse/rotation and closure conditions>
 
-Report back: status, result identity, human delivery entry, actual verification outcomes, source pointers, remaining gaps and responsibilities. Do not report another result's evidence as this result's success.
+Report back: Logbook/Stage/task/package identity, current result/revision, applicable inputs/conditions, passed/failed/incomplete/unknown acceptance, usable delivery entry, remaining gaps and responsibilities. Do not report another result's evidence as this result's success.

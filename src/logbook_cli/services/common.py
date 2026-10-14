@@ -14,7 +14,6 @@ from logbook_cli.document import (
 )
 from logbook_cli.edit import require_valid_candidate
 from logbook_cli.storage import write_bytes
-from logbook_cli.views import refresh_todo
 
 
 @dataclass
@@ -39,8 +38,6 @@ def writable(root: str, log: str, token: str) -> Document:
 def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Result:
     require_valid_candidate(doc, changed)
     write_bytes(doc, changed.encode("utf-8"), dry_run)
-    if not dry_run:
-        refresh_todo(doc)
     path = str(doc.path.relative_to(doc.root))
     value = {
         "path": path,

@@ -53,8 +53,9 @@ class TaskAddTest(unittest.TestCase):
             *extra,
         )
 
-    def test_append_before_footer_and_refresh_todo(self) -> None:
-        self.assertEqual(self.cli("todo", LOG).returncode, 0)
+    def test_append_before_footer_preserves_companion(self) -> None:
+        companion = self.log.parent / "TODO.md"
+        companion.write_bytes(b"human content\r\n")
         before = self.log.read_bytes()
         args = self.args("验证：第三项")
         preview = self.cli(*args, "--dry-run", "--json")
@@ -62,6 +63,7 @@ class TaskAddTest(unittest.TestCase):
         self.assertIn("+- [ ] 验证：第三项", json.loads(preview.stdout)["diff"])
         self.assertEqual(self.log.read_bytes(), before)
         self.assertEqual(self.cli(*args).returncode, 0)
+        self.assertEqual(companion.read_bytes(), b"human content\r\n")
         content = self.log.read_text(encoding="utf-8")
         self.assertLess(content.index("测试：第二项"), content.index("验证：第三项"))
         self.assertLess(

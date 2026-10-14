@@ -446,6 +446,39 @@
           "check": "缺链条目不阻塞主流程"
         }
       ]
+    },
+    {
+      "id": 39,
+      "prompt": "Plan a new two-stage fictional research logbook from the Admiral goal exactly as supplied. Use example-skill and another-skill, no execution authorization.",
+      "expected_output": "Generate a reviewable draft preserving the overall goal, concise Stage structure and canonical skill annotations.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "goal_in_overview",
+          "type": "contains",
+          "check": "Preserve the supplied goal verbatim in Overview"
+        },
+        {
+          "name": "canonical_skill_annotations",
+          "type": "contains",
+          "check": "New Skills sub-lines use four spaces and `/skill` spans"
+        },
+        {
+          "name": "no_stage_goal_gate",
+          "type": "not_contains",
+          "check": "Generate an independent Stage goal or require its completion"
+        },
+        {
+          "name": "no_companion_archive",
+          "type": "not_contains",
+          "check": "Create a source index, evidence archive or companion task list"
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Dispatch business execution"
+        }
+      ]
     }
   ]
 }

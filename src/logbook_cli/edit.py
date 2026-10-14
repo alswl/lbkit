@@ -28,6 +28,7 @@ from logbook_cli.format import (
     SUMMARY_TEXT,
     field_value,
     prefix,
+    skill_chain,
 )
 from logbook_cli.models import Field
 
@@ -85,7 +86,11 @@ def task_content_end(doc: Document, task: Task) -> int:
 
 
 def append_note(
-    doc: Document, task: Task, note: str, kind: str | None = None
+    doc: Document,
+    task: Task,
+    note: str,
+    kind: str | None = None,
+    replace_line: int | None = None,
 ) -> tuple[str, int]:
     """Append one child line after the task's existing indented content."""
     if task.human and not (
@@ -109,6 +114,52 @@ def append_note(
         value = field_value(body)
         if not value or value[0] is not key:
             note = alarm + prefix(key, doc.locale) + body
+
+    semantic = field_value(note.removeprefix(ALARM_MARKER + " "))
+    if semantic:
+        field, annotation_value, _ = semantic
+        if field in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS):
+            if not annotation_value.strip() or "<!--" in annotation_value:
+                raise LbError(
+                    "task detail must be nonempty visible single-line text", EXIT_USAGE
+                )
+        if field in (Field.SOURCE, Field.ACCEPTANCE) and task.state in ("x", "-"):
+            raise LbError(
+                "reopen the task before changing Source/Acceptance", EXIT_REFUSED
+            )
+        if field is Field.SKILLS:
+            chain = skill_chain(annotation_value)
+            if chain.diagnostics:
+                raise LbError("invalid Skills chain", EXIT_USAGE)
+            note = prefix(field, doc.locale) + "、".join(
+                f"`/{name}`" for name in chain.names
+            )
+    if replace_line is not None:
+        if (
+            task.human
+            or kind is None
+            or not semantic
+            or semantic[0] not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS)
+        ):
+            raise LbError(
+                "replacement requires explicit Source/Acceptance/Skills on an agent task",
+                EXIT_REFUSED,
+            )
+        targets = [
+            a
+            for a in task.annotations
+            if a.line == replace_line and a.kind is semantic[0]
+        ]
+        if len(targets) != 1:
+            raise LbError(
+                "replacement line must match the selected task and kind", EXIT_REFUSED
+            )
+        lines = list(doc.lines)
+        old = lines[replace_line - 1]
+        newline = "\r\n" if old.endswith("\r\n") else "\n" if old.endswith("\n") else ""
+        suffix = " " + old[old.index("<!--") :].rstrip("\r\n") if "<!--" in old else ""
+        lines[replace_line - 1] = f"    - {note}{suffix}{newline}"
+        return "".join(lines), replace_line
 
     last = task_content_end(doc, task)
 

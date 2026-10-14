@@ -17,6 +17,6 @@ The consuming repository owns project logs, its `AGENTS.md`, `lbkit-agents.yaml`
 
 ## Existing connection
 
-Inspect local changes and compare the old and new lbkit contracts before updating the submodule revision. Refresh only broken or newly required links. Verify mf remains installed even when minds.yaml exists. Migrate legacy markdown configuration to mind-forge explicitly, preserving the consumer's content and establishing Prompt/Thinking bindings and source-reference indexes as needed. Re-run the CLI and tests, and report any migration needed in local rules or configuration.
+Inspect local changes and compare the old and new lbkit contracts before updating the submodule revision. Refresh only broken or newly required links. Verify mf remains installed even when minds.yaml exists. Migrate legacy markdown configuration to mind-forge explicitly, preserving the consumer's content and establishing Prompt/Thinking bindings according to existing host-owned records. Re-run the CLI and tests, and report any migration needed in local rules or configuration.
 
 Never create or amend commits when the user has forbidden commits. A stash can hold a prepared migration, but it cannot replace the commit required for a usable submodule pointer.

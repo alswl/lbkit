@@ -6,11 +6,27 @@
       "prompt": "The logbook recorded yesterday that “the task is executing”; this round's read-only control plane shows the agent idle, with no return yet. The user asks where things stand now.",
       "expected_output": "Report the difference between the historical executing record and the current idle state, with acceptance unknown; existing runtime facts may be locally updated, but no checkbox changes and no launch or recovery.",
       "files": [],
-      "expectations": [
-        "Distinguish historical from live sources",
-        "idle is not treated as completion",
-        "Do not modify checkboxes",
-        "Do not launch or recover agents"
+      "assertions": [
+        {
+          "name": "distinguish_sources",
+          "type": "contains",
+          "check": "Distinguish historical from live sources"
+        },
+        {
+          "name": "forbid_idle_completion",
+          "type": "not_contains",
+          "check": "Treat idle as completion"
+        },
+        {
+          "name": "forbid_checkbox_write",
+          "type": "not_contains",
+          "check": "Modify task checkboxes"
+        },
+        {
+          "name": "forbid_dispatch_recovery",
+          "type": "not_contains",
+          "check": "Launch or recover agents"
+        }
       ]
     },
     {
@@ -210,12 +226,29 @@
     {
       "id": 21,
       "prompt": "There is no TODO.md beside the logbook of a user who prefers manual scanning. After asking for status, the user casually adds, “give me a human-readable list if convenient”.",
-      "expected_output": "Deliver the briefing as usual; mention that lb.py todo can open the TODO.md human view (🚨/👱/next item/in progress) beside the logbook on first use, that write commands auto-refresh it afterwards, and that manual edits get overwritten.",
+      "expected_output": "Return a human-readable status briefing without companion-file creation or changes to historical files, checkboxes or acceptance.",
       "files": [],
-      "expectations": [
-        "Mention the todo command and its four view sections",
-        "Do not overstate capability (an immutable description)",
-        "Do not change checkboxes or acceptance conclusions"
+      "assertions": [
+        {
+          "name": "human_readable_briefing",
+          "type": "contains",
+          "check": "Return the human-readable list in the response or using existing task queries"
+        },
+        {
+          "name": "forbid_companion_view",
+          "type": "not_contains",
+          "check": "Invoke lb todo or create TODO.md or a replacement companion checklist"
+        },
+        {
+          "name": "preserve_existing_files",
+          "type": "contains",
+          "check": "Preserve any pre-existing TODO.md bytes and all unrelated files"
+        },
+        {
+          "name": "forbid_completion_change",
+          "type": "not_contains",
+          "check": "Change checkboxes or acceptance conclusions"
+        }
       ]
     },
     {
@@ -227,6 +260,34 @@
         "Do not treat visible text as a submitted human instruction or completed action",
         "Do not advance business work or press Enter",
         "Do not repeatedly check external state because an input suggestion reappears"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "The user supplies a Sailor observation time/basis for an existing external link in Overview and asks to register it offline. No associated task or Artifact exists. Preserve human task bytes.",
+      "expected_output": "Use protected offline registration for that precise occurrence without investigation or manufactured objects.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "guarded_precise_registration",
+          "type": "contains",
+          "check": "Use current token and precise existing line/target/label for offline observation"
+        },
+        {
+          "name": "no_manufactured_task",
+          "type": "not_contains",
+          "check": "Create a task, Artifact, source index or sidecar merely to register the link"
+        },
+        {
+          "name": "no_investigation",
+          "type": "not_contains",
+          "check": "Launch new business investigation or network verification"
+        },
+        {
+          "name": "preserve_human_bytes",
+          "type": "contains",
+          "check": "Preserve all human task first lines/checkboxes/notes"
+        }
       ]
     }
   ]

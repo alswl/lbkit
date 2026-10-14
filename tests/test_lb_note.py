@@ -54,9 +54,71 @@ class TaskNoteTest(unittest.TestCase):
             *extra,
         )
 
-    def test_note_appends_after_existing_children_and_refreshes_alarm(self) -> None:
+    def test_protected_detail_append_replace_and_canonical_skills(self):
+        for kind, value in (("Source", "💬 owner 2026-10-14 new input"), ("Acceptance", "current result must pass"), ("Skills", "example-skill, `/another-skill`")):
+            result = self.cli(*self.note_args(self.token(), "--kind", kind, "--text", value), "--json")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        context = json.loads(self.cli("context", LOG, "--json").stdout)
+        task = context["stages"][0]["tasks"][0]
+        annotations = task["annotations"]
+        skills = next(a for a in annotations if a["kind"] == "skills")
+        self.assertEqual(skills["names"], ["example-skill", "another-skill"])
+        self.assertIn("    - 技能：`/example-skill`、`/another-skill`", self.log.read_text())
+        acceptance = next(a for a in annotations if a["kind"] == "acceptance")
+        token = self.token()
+        result = self.cli(*self.note_args(token, "--kind", "Acceptance", "--replace-line", str(acceptance["line"]), "--text", "revised condition"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("current result must pass", self.log.read_text())
+        self.assertIn("💬 owner", self.log.read_text())
+        self.assertEqual(self.cli(*self.note_args(token, "--kind", "Acceptance", "--text", "stale")).returncode, 4)
+        before = self.log.read_bytes()
+        result = self.cli(*self.note_args(self.token(), "--kind", "Source", "--replace-line", str(acceptance["line"]), "--text", "wrong kind"))
+        self.assertEqual(result.returncode, 4)
+        self.assertEqual(self.log.read_bytes(), before)
+
+    def test_empty_or_hidden_task_details_refuse_without_hiding_human_gate(self):
+        before = self.log.read_bytes()
+        for text in ("Source:", "Acceptance: <!-- hide the human gate", "Skills: <!-- hide"):
+            with self.subTest(text=text):
+                result = self.cli(*self.note_args(self.token(), "--text", text))
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertEqual(self.log.read_bytes(), before)
+                self.assertEqual(len(json.loads(self.cli("context", LOG, "--json").stdout)["stages"][0]["tasks"]), 2)
+
+    def test_replacement_preserves_human_comment_and_line_endings(self):
+        self.log.write_bytes((f"# Demo\r\n\r\n## 🚧 {STAGE}\r\n\r\n- [/] {TASK}\r\n    - 验收：old <!-- human comment -->").encode())
+        result = self.cli(*self.note_args(self.token(), "--kind", "Acceptance", "--replace-line", "6", "--text", "new"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.log.read_bytes().endswith("验收：new <!-- human comment -->".encode()))
+        self.assertNotIn(b"\n", self.log.read_bytes().replace(b"\r\n", b""))
+
+    def test_settled_condition_matrix_blocks_append_and_replace(self):
+        for state in ("x", "-"):
+            with self.subTest(state=state):
+                self.log.write_text(f"# Demo\n\n## 🚧 {STAGE}\n\n- [{state}] {TASK}\n    - 验收：old condition\n")
+                before = self.log.read_bytes()
+                for kind in ("Source", "Acceptance"):
+                    for replacement in ((), ("--replace-line", "6")):
+                        result = self.cli(*self.note_args(self.token(), "--kind", kind, "--text", "new", *replacement))
+                        self.assertEqual(result.returncode, 4, result.stderr)
+                        self.assertEqual(self.log.read_bytes(), before)
+                result = self.cli(*self.note_args(self.token(), "--kind", "Skills", "--text", "example-skill"))
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_additive_acceptance_is_conjunctive_and_raw_skills_validate(self):
+        for value in ("first condition", "second condition"):
+            result = self.cli(*self.note_args(self.token(), "--kind", "验收", "--text", value))
+            self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("first condition", self.log.read_text())
+        self.assertIn("second condition", self.log.read_text())
+        before = self.log.read_bytes()
+        result = self.cli(*self.note_args(self.token(), "--text", "技能：valid ??? malformed"))
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(self.log.read_bytes(), before)
+
+    def test_note_appends_preserving_existing_companion(self) -> None:
         todo = self.log.parent / "TODO.md"
-        self.assertEqual(self.cli("todo", LOG).returncode, 0)
+        todo.write_bytes(b"human content\r\n")
         before = self.log.read_bytes()
         args = self.note_args(
             self.token(), "--kind", "阻塞", "--text", "🚨 请提供验收账号；提供后恢复。"
@@ -69,7 +131,7 @@ class TaskNoteTest(unittest.TestCase):
         content = self.log.read_text(encoding="utf-8")
         self.assertLess(content.index("产物：既有报告"), content.index("🚨 阻塞："))
         self.assertLess(content.index("🚨 阻塞："), content.index("人工验证：确认结果"))
-        self.assertIn("请提供验收账号", todo.read_text(encoding="utf-8"))
+        self.assertEqual(todo.read_bytes(), b"human content\r\n")
         self.assertEqual(
             self.cli(
                 *self.note_args(

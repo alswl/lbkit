@@ -4,6 +4,9 @@ version: 0.3.0-dev
 description: "Initialize a new logbook by fill-in from a run-instance template under workflows/<workflow>/: fill only the three mutable slots — target date, working directories, and run rulings — collected in one pass; no free drafting, no changing structural granularity; once the three essentials are complete and human-confirmed, hand off to lb-push. With no template, or when goals and structure must change, go to lb-plan instead — this skill does not apply."
 ---
 
+Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+
+
 # Initialize a run instance from a workflow template
 
 Fill in the blanks; do not design. The precondition is that `workflows/<workflow>/` provides a run-instance template (todo manifest, front matter, goal template sentence, and established rulings); with no template, or when the human wants to change goals, scope, or structure, switch to [lb-plan](../lb-plan/SKILL.md). This skill does not dispatch execution.
@@ -17,7 +20,7 @@ Fill in the blanks; do not design. The precondition is that `workflows/<workflow
 
 1. Resolve the mutable slots: target date (default: yesterday), working directories (checked against the on-site state), and run rulings (default: carry over all of the template's 「既定裁定」). Ask only about slots with no default or that conflict with the on-site state; collect answers with one compact numbered list instead of asking item by item.
 2. Fill in and generate the main logbook: front matter (workflow and prev-run, never a skills list), title, file naming, date placeholders, and the todo manifest are each replaced per the template — never restate the skill's own workflow, add or drop todos, adjust granularity, touch manual gates, or write wave notes (`🔀` convention follows the template and the logbook format). The goal sentence comes from the template: once the template is human-confirmed and finalized, that counts as its writing; when the human rewrites it on the instance, their wording governs.
-3. Companion records: mind-forge is required; bound Thinking records the source (workflow and `prev-run` instance), slot values, and where each ruling came from; register bindings and the project index per the document adapter. Skills appear only as names on the applicable todo sub-line; source pointers may use sources/<doc-name>.md, without copying originals.
+3. Companion records: mind-forge is required; bound Thinking records the source (workflow and `prev-run` instance), slot values, and where each ruling came from; register bindings and the project index per the document adapter. Skills appear only as names on the applicable todo sub-line; source pointers may use existing host records, without copying originals.
 4. After writing, run `check --json`; `LINK_UNVERIFIED` for external URLs is an expected notice, not a structural error to fix.
 5. Wrap-up: show a summary of the filled slot values (not a full restatement) and ask the human for a quick confirm. Once the three essentials (working directories, stage breakdown, todo manifest) are complete and confirmed, exit is granted; advancement is handed to lb-push.
 

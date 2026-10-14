@@ -84,10 +84,12 @@ mode is a call input to the entry, not part of the global default configuration;
 |---|---|---|
 | lb-plan | create / revise / review | review is read-only; taking over an existing plan is usually revise |
 | lb-push | advance / resume / cleanup | cleanup handles only authorized resources; it does not dispatch project items |
-| lb-update | reread / refresh; writes use format / evidence / close | Reread human edits without writing by default; refresh verifies current evidence before completion updates |
+| lb-update | reread / refresh; writes use format / progress / close | Reread human edits without writing by default; refresh aligns applicable current Sailor acceptance returns before completion updates |
 | lb-status | recorded / live | Explicit recorded relies on records only; an ordinary progress query with a dispatched executor defaults to live, and missing capability is reported as explicitly unknown |
 | lb-preflight | run | Read-only preflight with step-by-step feasibility analysis; blockers are written back as 🔮 after human confirmation; any unresolved 🔮 halts the whole logbook |
 
 Status observation modes are separate from write permissions: recorded/live may both maintain emoji and a few fact snippets; when "read-only / no modifications" is explicitly requested, writing is forbidden. Stagnation is usually bounded by 10 consecutive minutes without effective progress, judged per the task's character; no fixed total task duration limit is added, and wait_seconds is not that limit.
 
 A request to review a known document may still be inspected read-only when mind-forge is unavailable, but must report that managed-workflow validation is incomplete. Do not initialize, migrate, or publish as a side effect of a read-only request.
+
+Role display aliases preserve existing `roles.human_owner_label` and `roles.coordinator_label` compatibility keys. The domain roles remain Admiral (human), Captain (coordination agent) and Sailor (execution agent); checking/acceptance is Sailor work, not a third agent role. Runtime resources and deployment selection grant no extra authorization.

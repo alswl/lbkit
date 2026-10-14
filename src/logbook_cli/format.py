@@ -32,6 +32,8 @@ HUMAN_PREFIXES = ("人工验证：", "Human review:", "Human verification:")
 LABELS = {
     "zh": {
         Field.SKILLS: "技能",
+        Field.SOURCE: "来源",
+        Field.ACCEPTANCE: "验收",
         Field.RESOLUTION: "处置",
         Field.STATUS: "状态",
         Field.ARTIFACT: "产物",
@@ -43,6 +45,8 @@ LABELS = {
     },
     "en": {
         Field.SKILLS: "Skills",
+        Field.SOURCE: "Source",
+        Field.ACCEPTANCE: "Acceptance",
         Field.RESOLUTION: "Resolution",
         Field.STATUS: "Status",
         Field.ARTIFACT: "Artifact",
@@ -75,7 +79,15 @@ SUMMARY_TEXT = {
         "rewrite": "Rewritten per decision: ",
     },
 }
-NOTE_FIELDS = (Field.ARTIFACT, Field.BLOCKER, Field.STATUS, Field.HANDOFF)
+NOTE_FIELDS = (
+    Field.ARTIFACT,
+    Field.BLOCKER,
+    Field.STATUS,
+    Field.HANDOFF,
+    Field.SOURCE,
+    Field.ACCEPTANCE,
+    Field.SKILLS,
+)
 NOTE_KINDS = tuple(
     label
     for labels in LABELS.values()
@@ -168,3 +180,21 @@ def skill_chain(value: str) -> SkillChain:
             )
         rest = rest[sep.end() :]
     return SkillChain((), value, ("Empty skill chain",))
+
+
+def machine_group(line: str) -> dict | None:
+    if not line.startswith("- "):
+        return None
+    raw = line.rstrip()
+    if raw == "- local":
+        return {"machine": "local", "machine_name": None, "group_kind": "local"}
+    legacy = re.fullmatch(r"- remote `([^`]+)`", raw)
+    named = re.fullmatch(r"- `([^`]+)`", raw)
+    match = legacy or named
+    if match and match[1].strip() == match[1] and match[1]:
+        return {
+            "machine": raw[2:],
+            "machine_name": match[1],
+            "group_kind": "remote" if legacy else "named",
+        }
+    return None

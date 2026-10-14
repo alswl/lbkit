@@ -42,12 +42,6 @@ def check(
     finish(logbook.validate(resolve_root(root), log, all, projects_dir), json, "check")
 
 
-@click.command("todo", help="Regenerate the human-view TODO.md beside the logbook.")
-@options(ROOT, LOG, DRY_RUN, JSON)
-def todo(root: str | None, log: str, dry_run: bool, json: bool) -> None:
-    finish(logbook.todo(resolve_root(root), log, dry_run, json), json)
-
-
 @click.command("state", help="Show structured state and derived summary.")
 @options(ROOT, LOG, JSON)
 def state(root: str | None, log: str, json: bool) -> None:
@@ -61,7 +55,7 @@ def sync(root: str | None, log: str, token: str, dry_run: bool, json: bool) -> N
 
 
 def register(app: click.Group) -> None:
-    for command in (list_logs, context, check, todo, state, sync):
+    for command in (list_logs, context, check, state, sync):
         app.add_command(command)
     app.add_command(context, "show")
     app.add_command(context, "next")

@@ -1,3 +1,3 @@
 interface:
   display_name: "lb-update"
-  short_description: "Verify candidates against original evidence and update logbook results, blockers, and confirmed human decisions"
+  short_description: "Align Sailor returns; preserve human edits and gates"
