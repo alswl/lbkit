@@ -449,7 +449,7 @@
     },
     {
       "id": 39,
-      "prompt": "Plan a new two-stage fictional research logbook from the Admiral goal exactly as supplied. Use example-skill and another-skill, no execution authorization.",
+      "prompt": "Create a two-stage fictional research logbook draft. The human-authored Overview goal is exactly: Compare the reliability and cost of two public datasets. Stage 01 prepares sources; Stage 02 produces the comparison. Use example-skill and another-skill. Draft creation is authorized; business execution is not. Use the host document adapter and supplied writable fixture, preserving the goal verbatim.",
       "expected_output": "Generate a reviewable draft preserving the overall goal, concise Stage structure and canonical skill annotations.",
       "files": [],
       "assertions": [
@@ -477,6 +477,30 @@
           "name": "no_execution",
           "type": "not_contains",
           "check": "Dispatch business execution"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "axis": "Preserve historical human Stage goals during annotation repair",
+      "prompt": "In the supplied existing logbook, Overview goal is \"Compare two datasets.\" Stage 01 has the human-authored line \"目标：保留原始引文\" and a task with four-space-indented \"技能：example-skill\". The human authorizes normalizing only that skill annotation. Perform the narrow edit through the host adapter; do not execute tasks.",
+      "expected_output": "Preserve historical human Stage goals during annotation repair",
+      "files": [],
+      "assertions": [
+        {
+          "name": "canonical_edit",
+          "type": "contains",
+          "check": "The actual edited file has four spaces followed by 技能：`/example-skill`; cite before/after bytes."
+        },
+        {
+          "name": "preserves_human_goal",
+          "type": "contains",
+          "check": "Overview and historical Stage goal remain byte-identical, as do task order and other body text."
+        },
+        {
+          "name": "no_new_goal_gate",
+          "type": "not_contains",
+          "check": "Requires Stage goal completion, deletes the existing goal, or dispatches business work."
         }
       ]
     }

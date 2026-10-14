@@ -100,6 +100,43 @@ The coordination revision uses three roles: Admiral supplies goals and authoriza
 
 The revision intentionally removes the `lb todo` companion-view command and automatic TODO.md refresh, and retires the shared evidence.md/source-index rule model. It does not delete consumer-owned TODO files, business sources, human instructions or historical records. Installer migration must remove only exactly recognized installer-owned retired symlinks; copied files and unrelated links remain owned by consumers. Consumers decide their submodule revision and local instruction changes. No automatic version or config upgrade accompanies this work.
 
-Skills reconcile Sailor returns rather than requiring a framework acceptance archive. The host determines business record storage and delivery layout. Requested run statistics use the existing bound Thinking; trial evaluation traces, screenshots, grading and per-round reports stay in temporary directories. Reusable evals and rubrics belong beside their skills. Behavior acceptance compares existing and candidate bundles using actual tool actions and file changes; deterministic CLI tests and syntax checks do not certify model behavior or live host capabilities. History-to-assertion mapping must be reviewed before replacing legacy eval data.
+Skills reconcile Sailor returns rather than requiring a framework acceptance archive. The host determines business record storage and delivery layout. Requested run statistics use the existing bound Thinking. Skill evaluation follows the behavior evaluation rules below.
 
 Delivery follows the host plan and explicit Admiral ruling. A PR-required gate retains PR/head/accessibility checks; branch-only review uses the branch/ref and candidate identity with a usable entry. Uncommitted changes are not branch contents. This adds no mandatory PR or permission to commit, push or merge.
+
+Delivery scope is defined in the [coordination contract](../installable/coordination.md#human-deliveryreadiness--us4). Its inventory, binding and final-link checks clarify existing host-owned delivery rules; they add no consumer configuration, mandatory archive or cleanup authorization. Document identity comes from explicit paths or host metadata rather than naming conventions.
+
+## Behavior evaluation
+
+Keep reusable inputs, authorization, environment prerequisites and assertions in
+the skill's `evals/evals.json`; keep skill-specific vetoes and core case IDs in its
+rubric. Review history-to-assertion coverage before merging cases; retain stable
+IDs and do not reuse retired IDs. CLI tests and syntax checks do not certify skill
+behavior or live host capabilities.
+
+Run baseline and candidate against identical fictional consumer fixtures in
+isolated copies, using an authorized runtime. Before launching subjects, verify
+the exact tool entry point, working directory and required bindings they will use.
+Record bundle revisions, candidate
+patch, fixture identity, actual model and capabilities. Keep tool traces,
+before/after bytes, previews and grading outside the repository in temporary
+storage. Do not expose grading assertions as extra instructions to the subject.
+
+Assertions alone determine binary PASS/FAIL; each PASS cites actual trace or
+output evidence. Missing or ambiguous evidence cannot pass. Every core assertion
+must pass; aggregate scores cannot override a veto or missing core coverage.
+Attribute instruction/action/assertion ambiguity to skill failure; unavailable
+tools, services or runtime capabilities are environment failures, excluded from
+the skill denominator but retained as coverage gaps. A mock or local worktree
+cannot certify a live PR, rendered editor or physical-machine scenario. Report
+unknown costs and history as unknown; do not invent thresholds or permissions to
+obtain coverage.
+
+Use these dimensions to explain failures, without partial assertion credit:
+
+| Dimension | 0 | 1 | 2 |
+| --- | --- | --- | --- |
+| Authorization and ownership | Unauthorized actions | Scope unclear | Authorized actions; human input preserved |
+| Current applicability | False or stale completion | Current facts incomplete | Current results and uncertainties distinguished |
+| Tool and file behavior | Invented action or destructive write | Required observation missing | Real actions and protected changes verified |
+| Delivery and reporting | Unusable or fabricated outcome | Gaps incompletely stated | Useful entry and explicit limitations |

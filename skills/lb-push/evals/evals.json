@@ -885,25 +885,35 @@
     },
     {
       "id": 73,
-      "axis": "审阅材料渲染宽度",
-      "prompt": "准备人工审阅材料：含中文长表格（自然宽度约 122 列）、稳定编号、已答反馈与未保存编辑；终端实际宽度 80 列。排版并核验材料。",
-      "expected_output": "先读实际终端列数再排版；用合法续行使渲染后显示宽度不溢出；稳定编号、已答反馈与未保存编辑保留；只保留一份待答清单，不强制刷新，不另造第二份；不假设 HTML 换行或编辑器 wrap 能修复过宽表格。",
+      "axis": "Render review tables and protect an open human buffer",
+      "prompt": "Prepare the supplied review-sheet fixture in the host terminal. It contains CJK/emoji, a long continuation cell, multiple tables including the final table immediately followed by a heading, full 置信 headers, a correction section and existing answers. The human buffer has unsaved text. Use a separate safe preview; test narrow and wide windows with Markview on/off and mixed mode, including sidebar occupancy. No content decisions are authorized. A narrow-window variant is 80 columns with a table natural width of about 122 columns.",
+      "expected_output": "Render review tables and protect an open human buffer",
       "files": [],
       "assertions": [
         {
-          "name": "read_actual_columns",
+          "name": "query_before_layout",
           "type": "contains",
-          "check": "先读实际终端列数再排版"
+          "check": "Trace records pane and editor usable width/height, number/sign/fold/sidebar occupancy and actual Markview mode/border/padding before edits."
         },
         {
-          "name": "rendered_no_overflow",
+          "name": "rendered_checks",
           "type": "contains",
-          "check": "渲染后显示宽度不溢出"
+          "check": "Actual preview evidence covers right border, longest cell, full headers and rendered height in each supplied window/mode; unavailable configurations are explicit gaps."
         },
         {
-          "name": "preserve_stable_items",
+          "name": "preserve_and_split",
           "type": "contains",
-          "check": "稳定编号、已答反馈与未保存编辑保留"
+          "check": "Before/after comparison preserves identifiers, order, quotations, confidence and answers; each split table repeats full headers, has nearby ranged feedback and blank-line separation; correction section has feedback."
+        },
+        {
+          "name": "first_view",
+          "type": "contains",
+          "check": "Opens and reads back the intended revised first view before handoff, with a usable entry."
+        },
+        {
+          "name": "protect_human",
+          "type": "not_contains",
+          "check": "Overwrites or refreshes the human buffer, injects shell input, steals focus, or marks human content acceptance complete."
         },
         {
           "name": "one_pending_list",
@@ -952,7 +962,7 @@
     },
     {
       "id": 75,
-      "prompt": "Human asks to review the current business result and merge its PR. Result only exists locally; an old PR does not contain it. Host excludes local process logs even if renamed.",
+      "prompt": "Human asks to review the current business result and merge its PR. Result only exists locally; an old PR does not contain it. Host excludes local process logs even if renamed. The fixture is an explicitly authorized disposable business repository with a real PR service and a verified publishing identity; branch commit/push and PR creation are authorized, merge and main-branch push are not. Host layout requires Article/Prompt/Thinking/Source bindings and indexes. Use actual service reads and tool actions; a mock URL cannot establish live PR coverage.",
       "expected_output": "Sailor prepares authorized PR and host-conformant inventory; Captain checks actual head/access before handing over.",
       "files": [],
       "assertions": [
@@ -1006,7 +1016,7 @@
         {
           "name": "honors_branch_review",
           "type": "contains",
-          "check": "Keeps the explicit local branch review ruling and hands over the provided candidate review entry; does not cancel branch review."
+          "check": "Keeps the explicit local branch review ruling and hands over the supplied candidate entry. Extract the literal Markdown link target from the final response and resolve it against the fixture root if relative: it must open the supplied current review entry. If the response converts the input locator, the tool trace must show read-only resolution or access of that exact emitted destination. A correct link label with a nonexistent or stale destination fails."
         },
         {
           "name": "distinguishes_uncommitted_candidate",
@@ -1022,6 +1032,83 @@
           "name": "sailor_acceptance_preserved",
           "type": "contains",
           "check": "Uses the current Sailor acceptance return without launching new business acceptance or claiming the human review is complete."
+        }
+      ]
+    },
+    {
+      "id": 78,
+      "axis": "Propose an independent batch without launching it",
+      "prompt": "At initial route reading, source package A and source package B read immutable snapshots a1 and b1, write separate outputs in isolated worktrees, have distinct owners and no shared browser or human-decision dependency. The route authorizes serial execution, with A ready now. Find parallel opportunities; no parallel batch is approved.",
+      "expected_output": "Propose an independent batch without launching it",
+      "files": [],
+      "assertions": [
+        {
+          "name": "concrete_batch",
+          "type": "contains",
+          "check": "Names A/B owners, outputs, immutable inputs, isolation, convergence acceptance and unapproved authorization state."
+        },
+        {
+          "name": "continue_authorized_path",
+          "type": "contains",
+          "check": "Continues authorized serial A via actual dispatch or resume; reports a concrete environmental blocker if unavailable."
+        },
+        {
+          "name": "one_proposal_no_launch",
+          "type": "not_contains",
+          "check": "Launches B concurrently or repeatedly asks for the same batch approval."
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "axis": "Advance an already approved independent batch",
+      "prompt": "After the current task acceptance, Admiral has explicitly approved batch A+B with owners sailor-a and sailor-b, immutable inputs a1/b1, separate worktrees and outputs, no shared resources, and a convergence check before the human review. Both configured sessions and monitoring adapters are available. Continue the batch.",
+      "expected_output": "Advance an already approved independent batch",
+      "files": [],
+      "assertions": [
+        {
+          "name": "actual_dispatch",
+          "type": "contains",
+          "check": "Tool trace shows both full packages received by the designated compatible sessions and dispatch-associated visible monitoring."
+        },
+        {
+          "name": "convergence",
+          "type": "contains",
+          "check": "Keeps separate result identities and waits for applicable acceptance returns before the convergence/human gate."
+        },
+        {
+          "name": "no_repeat_permission",
+          "type": "not_contains",
+          "check": "Asks for approval of the already approved batch or treats runtime exit as acceptance."
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "axis": "Transfer coordination with newer source decisions",
+      "prompt": "Use the supplied two named physical-machine fixtures. Admiral authorizes feature-branch synchronization from machine-a to machine-b in the registered directories, with workspace name research-route on both. Source has a recorded human approval and newer result; destination is at an older gate. Both ends have unrelated dirty files. A subsequent source-input change needs applicability assessment. Complete coordination handoff within that authorization.",
+      "expected_output": "Transfer coordination with newer source decisions",
+      "files": [],
+      "assertions": [
+        {
+          "name": "compare_before_transfer",
+          "type": "contains",
+          "check": "Actual reads compare both refs, dirty files, human rulings and open work before writes; preserve dirty-file bytes."
+        },
+        {
+          "name": "direct_handoff",
+          "type": "contains",
+          "check": "Captain retrieves authorized newer state directly, uses destination actual IDs and same workspace name, and obtains receiving main-session acknowledgement."
+        },
+        {
+          "name": "preserve_ruling",
+          "type": "contains",
+          "check": "Preserves recorded approval while assigning changed-input applicability to Sailor; reports the current gate based on both ends."
+        },
+        {
+          "name": "bounded_transfer",
+          "type": "not_contains",
+          "check": "Delegates routine transfer to a business package, repeats existing authorization, pushes main, upgrades environment, or claims physical cross-machine coverage from local worktrees."
         }
       ]
     }

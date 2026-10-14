@@ -46,7 +46,7 @@ cleanup touches only approved resources; it does not pick a business first item 
 
 ## Reporting and Handoff
 
-Choose handoff entries by the human's actual use: current result, review/action entry and essential limitations. Do not list every report, work package or raw record in the main logbook. Verify the entry exists and matches this result; record missing delivery truthfully without inventing a new gate. Keep key identities and recovery instructions in Thinking and authoritative pointers in existing host records. Before cleanup, check those references survive or record the explicit retention/discard decision.
+Choose handoff entries by the human's actual use: current result, review/action entry and essential limitations. Do not list every report, work package or raw record in the main logbook. Copy the exact destination verified under the delivery contract into the final handoff; record missing delivery truthfully without inventing a new gate. Keep key identities and recovery instructions in Thinking and authoritative pointers in existing host records. Before cleanup, check those references survive or record the explicit retention/discard decision.
 
 Report receipt facts, the executor's location (Herdr name, workspace, tab/pane), monitoring, results or blockers, and who does what next and when it resumes; do not report focus. Separate operational facts from acceptance conclusions; no report-back never implies completion.
 
@@ -54,12 +54,10 @@ When a human must take over, re-read the logbook before replying to get accurate
 
 When no human takeover is needed, state the owning agent's next action and report-back conditions, and continue authorized work without turning a progress report into task-level confirmation. At the authorization endpoint, state clearly what was completed and what the next item is; do not start it on your own.
 
-When the confirmed delivery requires a PR, before handing its review/merge gate to Admiral, align the Sailor delivery return against the actual accessible current PR/head and result. Sailor performs authorized commit/branch push/PR creation and checks the full changed-file inventory before commit and handoff against host structure, content and bindings. Temporary process material is judged by purpose, not its directory/name; it is not automatically a deliverable. Preserve human comments/recovery pointers and safe ignore/untracking. A missing or old PR is an unfinished delivery step, not a ready human gate. Opening a review or creating a PR never authorizes merge or completes the human checkbox.
+Before human handoff, apply the [delivery contract](../../docs/installable/coordination.md#human-deliveryreadiness--us4). Have Sailor complete authorized delivery work and return the inventory/binding outcome; align it with the current PR or branch/candidate entry. Continue missing delivery steps within existing authorization, or report the concrete conflict before presenting the human gate as ready.
 
 ## Requested run metrics
 
 Record run start/end/resume, human waiting/interruption, distinct human turns and applicable first acceptance/corrections in the existing bound Thinking using the [event contract](../../docs/installable/coordination.md#run-event-and-close-out-metrics). Resume keeps the same run and counters. Captain records coordination facts; Sailor returns actual acceptance facts and later defect corrections. Do not archive raw trials or create a metrics sidecar.
 
 At Stage/logbook 🎉, report exact scope, wall elapsed with waiting/interruption union, human interaction count/categories and first-pass numerator/denominator/rate. Use the read-only `skills/lb-push/scripts/run-metrics.py` helper for deterministic arithmetic; no event history or zero denominator gives explicit unknown/no-calculable-data, never invented success. A corrected delivery defect removes an erroneous first-pass pass even if rework later succeeds. Metrics do not complete human gates or create a checker role.
-
-For explicitly chosen branch-only delivery, align the actual branch/ref and candidate with the Sailor return and provide a usable review entry. Identify uncommitted working-tree changes separately; they are not contained in branch HEAD. Do not invent a PR requirement or infer commit, push or merge permission. An existing PR-required gate changes only through an explicit Admiral ruling.
