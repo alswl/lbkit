@@ -1,6 +1,6 @@
 ---
 name: lb-plan
-version: 0.4.0
+version: 0.4.1-dev
 description: "Create a reviewable logbook draft, revise an authorized plan, or review an existing plan. Personally develop repository specs with Admiral, recover human goals, size stages to the work, match skills to individual results, and define evidence and handoffs; does not dispatch execution."
 ---
 

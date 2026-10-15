@@ -178,3 +178,19 @@ the same implementation. `scripts/` contains repository maintenance tools only.
 The former `python scripts/lb.py` compatibility entry is removed; consumers
 using it must switch to `bin/lb` on submodule upgrade. The installer requires
 only the supported launchers and package files, and adds no consumer obligations.
+
+## Release tags in master history
+
+Create a formal release metadata commit on the master lineage and annotate it
+with `vX.Y.Z`, then create a development metadata commit using `scripts/bump.py`
+to restore the authorized `x.y.z-dev` version. Keep the final master tip in the
+development state. Commits and tags remain separate, human-authorized Git actions;
+the bump tool only edits version files.
+
+All published release commits must be ancestors of master, so ordinary
+`git log --decorate` can display their tags. A temporary release worktree must
+be integrated into master before preparing the next development version.
+Historical metadata-only release commits can be integrated with an explicit
+history-only merge after verifying their diffs, preserving current content and
+the existing tag objects. Check ancestry with
+`git merge-base --is-ancestor vX.Y.Z master` before publishing.
