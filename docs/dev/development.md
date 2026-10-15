@@ -148,3 +148,35 @@ Use these dimensions to explain failures, without partial assertion credit:
 | Current applicability | False or stale completion | Current facts incomplete | Current results and uncertainties distinguished |
 | Tool and file behavior | Invented action or destructive write | Required observation missing | Real actions and protected changes verified |
 | Delivery and reporting | Unusable or fabricated outcome | Gaps incompletely stated | Useful entry and explicit limitations |
+
+## Local releases
+
+The release workflow adapts makefile-go's version preview, release commit, tag,
+and development commit sequence to lbkit's Python and skill metadata.
+A human selects the version; the command never decides to release or pushes.
+Minor versions identify new capabilities or contract changes; patch versions
+identify compatible corrections. Configuration schema versions stay independent.
+
+```sh
+make release VERSION=0.4.0                    # read-only preview
+make release VERSION=0.4.0 DRY_RUN=false     # explicitly create local commits/tag
+```
+
+Run from a clean `master` with Python 3.11+, Git and git-cliff installed.
+The script synchronizes `VERSION`, all owned `skills/lb-*/SKILL.md` frontmatter,
+`pyproject.toml` and the lbkit entry in `uv.lock`. It generates the changelog with
+Git Cliff, creates an annotated `vX.Y.Z` tag at the stable metadata commit, then
+advances master to the next patch's `-dev` version (`.dev0` for Python).
+Set `NEXT_DEV=x.y.z` to select a different subsequent development version.
+Preparation happens in a temporary worktree; tag and master references publish
+in one compare-and-swap transaction. Existing tags are never replaced.
+
+For an explicitly authorized historical release:
+`python3 scripts/release.py x.y.z --ref <ancestor-commit> --apply`.
+Use `--since <previous-baseline>` to limit its changelog to that interval.
+This creates an isolated stable metadata commit and annotated tag from that
+baseline, without changing master or rewriting history. Such tags are not
+ancestors of master: Git Cliff's ordinary master traversal does not reconstruct
+those historical release intervals. Historical release notes therefore need an
+explicit baseline range when generated. Consumers can pin these release tags.
+Review metadata, checks and any historical privacy findings before pushing.
