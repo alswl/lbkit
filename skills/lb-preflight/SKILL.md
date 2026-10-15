@@ -1,6 +1,6 @@
 ---
 name: lb-preflight
-version: 0.4.1-dev
+version: 0.4.0
 description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: lb-scaffold
-version: 0.4.1-dev
+version: 0.4.0
 description: "Initialize a new logbook by fill-in from a run-instance template under workflows/<workflow>/: fill only the three mutable slots — target date, working directories, and run rulings — collected in one pass; no free drafting, no changing structural granularity; once the three essentials are complete and human-confirmed, hand off to lb-push. With no template, or when goals and structure must change, go to lb-plan instead — this skill does not apply."
 ---
 
