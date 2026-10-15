@@ -2,7 +2,46 @@
 
 Changes generated from Git history with git-cliff.
 
-## Unreleased
+## 0.3.1
+
+### Fixes
+- Fix: verify delivery links and strengthen skill regressions (b48ff06)
+
+## 0.3.0
+
+### Features
+- Feat: align logbook coordination and protected workflow updates (fe2613e)
+
+### Maintenance
+- Chore: bump (f584602)
+
+## 0.2.0
+
+### Changes
+- Refactor lb CLI and add CI (4d3064e)
+- Add Claude Speckit skills (0ee4c57)
+- Apply consumer feedback: link commands, human status notes, quota watermarks (bc8a2e5)
+
+### Documentation
+- Document repository privacy requirements (adf8925)
+
+### Features
+- Feat: feedback by real world (32c3883)
+
+### Maintenance
+- Add Lefthook checks (fa5eb05)
+- Ci: no tests in git push (3d2f83f)
+
+## 0.1.1
+
+### Changes
+- Coordination: mixed-file index surgery; herdr: wrapper launch recipe and codex dialogs; lb-push: evals 64-66 (cfa2f4b)
+- Add repo-own AGENTS.md and CLAUDE.md symlink, unignore them (2423f00)
+
+### Documentation
+- Translate docs and skill metadata to English (cd51d17)
+
+## 0.1.0
 
 ### Changes
 - Initial commit (0163770)
@@ -16,25 +55,3 @@ Changes generated from Git history with git-cliff.
 - Rename contracts/ to docs/ and document docs vs dev-docs split (9320e2c)
 - Default Herdr resource labels to caret prefix (5831e44)
 - Add the lbkit-skills.json skills list, lbkit-agents.yaml and versioning (8bf8968)
-- Coordination: mixed-file index surgery; herdr: wrapper launch recipe and codex dialogs; lb-push: evals 64-66 (cfa2f4b)
-- Add repo-own AGENTS.md and CLAUDE.md symlink, unignore them (2423f00)
-- Refactor lb CLI and add CI (4d3064e)
-- Add Claude Speckit skills (0ee4c57)
-- Apply consumer feedback: link commands, human status notes, quota watermarks (bc8a2e5)
-
-### Documentation
-- Translate docs and skill metadata to English (cd51d17)
-- Document repository privacy requirements (adf8925)
-
-### Features
-- Feat: feedback by real world (32c3883)
-- Feat: align logbook coordination and protected workflow updates (fe2613e)
-- Feat: add Captain-led spec design and mediated dialogue
-
-### Fixes
-- Fix: verify delivery links and strengthen skill regressions (b48ff06)
-
-### Maintenance
-- Add Lefthook checks (fa5eb05)
-- Ci: no tests in git push (3d2f83f)
-- Chore: bump (f584602)
