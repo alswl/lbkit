@@ -1,6 +1,6 @@
 ---
 name: lb-status
-version: 0.4.0
+version: 0.4.1-dev
 description: "Check project progress, executor status, blockers, and the next item, maintaining emoji and a few fact fragments; when context usage is found above 80%, hand off to lb-push for automatic GC. When the user explicitly asks read-only, report only — no checkbox or acceptance changes; deep plan review belongs to lb-plan."
 ---
 
