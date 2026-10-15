@@ -2,6 +2,15 @@
 
 Changes generated from Git history with git-cliff.
 
+## 0.4.0
+
+### Documentation
+- Docs: organize changelog by historical release baselines (f98314a)
+
+### Features
+- Feat: add Captain-led spec design and mediated dialogue (64fbb01)
+- Feat: automate local releases and synchronized development versions (77bd684)
+
 ## 0.3.1
 
 ### Fixes
