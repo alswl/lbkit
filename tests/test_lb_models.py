@@ -122,7 +122,7 @@ class ModelRegressionTest(unittest.TestCase):
             p = subprocess.run(
                 [
                     sys.executable,
-                    str(KIT / "scripts/lb.py"),
+                    str(KIT / "bin/lb"),
                     "--root",
                     str(self.root),
                     *args,

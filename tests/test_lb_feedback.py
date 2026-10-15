@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CLI = Path(__file__).resolve().parents[1] / "scripts/lb.py"
+CLI = Path(__file__).resolve().parents[1] / "bin/lb"
 STAGE = "Stage 01 调研"
 TASK = "设计：整理采访提纲。 @research"
 HUMAN = "人工验证：审阅提纲。 👱"

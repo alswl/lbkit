@@ -44,7 +44,7 @@
 - 应用层编排查询和写入用例，领域层处理状态、权限、处置与技能候选；文件写入层继续执行路径边界、CAS 和原子替换。
 - 展示层集中生成文本和 JSON，数据只写 stdout，错误写 stderr。
 - 保留现有命令与别名、各层级 `--root`、`--` 后位置参数、退出码 1/2/3/4、dry-run 和 JSON 契约。
-- 新框架引入第三方依赖，必须同时处理 `pyproject.toml`、依赖锁定、子模块消费仓的可重复安装，以及 `bin/lb` / `python scripts/lb.py` 的兼容路径。help/version 不触发隐式联网安装。
+- 新框架引入第三方依赖，必须同时处理 `pyproject.toml`、依赖锁定、子模块消费仓的可重复安装，以及 `bin/lb` / `python -m logbook_cli` 的兼容路径。help/version 不触发隐式联网安装。
 - 开发文档、安装文档和“仅标准库”说明随实际依赖方案更新。不能仅在开发机安装依赖就宣布消费仓迁移完成。
 
 ## 先评测，再实施，最后验收
@@ -66,7 +66,7 @@
 
 1. 先添加模型回归用例，旧实现出现 5 个失败及 2 个缺模型/缺结果错误，覆盖混合技能名、列表标记、英文标签和文本状态写回。
 2. `uv run --locked python -m unittest discover tests`：**96 项通过**（本轮前 84 项）。覆盖原有 CAS、路径保护、所有权和拒绝行为，以及新模型、语法、CLI 参数和依赖安装。
-3. `uv run --locked ruff check src scripts/lb.py tests/test_lb_models.py tests/test_lb_cli_contract.py tests/test_lbkit_install.py` 和 `uv run --locked mypy src/logbook_cli` 通过。mypy 为基础检查，不宣称所有历史 JSON 记录都已严格类型化。
+3. `uv run --locked ruff check src scripts tests/test_lb_models.py tests/test_lb_cli_contract.py tests/test_lbkit_install.py` 和 `uv run --locked mypy src/logbook_cli` 通过。mypy 为基础检查，不宣称所有历史 JSON 记录都已严格类型化。
 4. 33 个原有 Markdown 文件加本方案共 34 个文件，163 个链接检查通过；`git diff --check` 通过。
 5. 临时消费仓安装真实 uv 环境，使用模拟 mf 验证初始化接口；从消费仓外调用链接入口 `--version` 成功。缺依赖的空 Python 环境只返回错误，不创建环境或下载依赖。
 6. `uv build` 构建 sdist 和 wheel 成功。在临时独立虚拟环境中离线安装 wheel，验证 `--help`、`--version`、英文日志读取与带 token 的写入成功。

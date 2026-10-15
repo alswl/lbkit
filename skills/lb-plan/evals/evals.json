@@ -213,7 +213,7 @@
     },
     {
       "id": 23,
-      "prompt": "The user specified the approved plain Markdown notes/demo.md; do a plan review. That directory has no in-repo scripts/lb.py or mind-forge.",
+      "prompt": "The user specified the approved plain Markdown notes/demo.md; do a plan review. That directory has no in-repo bin/lb or mind-forge.",
       "expected_output": "Read the explicit logbook and complete the read-only review, explain that a CLI check is not possible, and neither install tools nor halt the review over unrelated configuration.",
       "files": [],
       "expectations": [

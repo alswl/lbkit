@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parents[1]
-CLI = KIT / "scripts" / "lb.py"
+CLI = KIT / "bin" / "lb"
 sys.path.insert(0, str(KIT / "src"))
 
 from logbook_cli import skills  # noqa: E402

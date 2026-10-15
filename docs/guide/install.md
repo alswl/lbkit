@@ -46,7 +46,7 @@ bin/lbkit            -> ../.lbkit/bin/lbkit
 docs/<shared>.md     -> ../.lbkit/docs/installable/<shared>.md
 ```
 
-The installer links only entry points. The CLI implementation (`scripts/lb.py`, `src/logbook_cli`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
+The installer links only entry points. The CLI implementation (`src/logbook_cli/`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
 
 ### Run from anywhere
 
@@ -71,6 +71,6 @@ The installer replaces only recognized old contract links that target `.lbkit/do
 
 ## CLI dependencies
 
-The CLI now uses Click. After upgrading the pinned submodule, rerun the installer to synchronize its environment. `bin/lb` and `python3 .lbkit/scripts/lb.py` use `.lbkit/.venv`; they never install dependencies implicitly. A missing environment produces an actionable error. The standalone installer itself needs only Python's standard library.
+The CLI now uses Click. After upgrading the pinned submodule, rerun the installer to synchronize its environment. `bin/lb` use `.lbkit/.venv`; they never install dependencies implicitly. A missing environment produces an actionable error. The standalone installer itself needs only Python's standard library.
 
 For local lbkit development, run `uv sync --locked` from the lbkit checkout. The consuming repository's Python environment is separate.

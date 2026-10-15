@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CLI = Path(__file__).resolve().parents[1] / "scripts" / "lb.py"
+CLI = Path(__file__).resolve().parents[1] / "bin" / "lb"
 LOG = "projects/demo/docs/log.md"
 STAGE = "Stage 01 Demo"
 TASK = "开发：交付结果。 @core"

@@ -32,5 +32,4 @@ files = ["src/logbook_cli"]
 # Checkout launchers and standalone tests establish their source path before imports.
 [tool.ruff.lint.per-file-ignores]
 "bin/lb" = ["E402"]
-"scripts/lb.py" = ["E402"]
 "tests/test_lb_models.py" = ["E402"]

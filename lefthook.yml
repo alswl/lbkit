@@ -5,12 +5,11 @@ pre-commit:
         - "*.py"
         - "**/*.py"
         - "bin/lb"
-        - "scripts/lb.py"
       run: uv run --locked ruff check {staged_files}
 
 pre-push:
   commands:
     ruff:
-      run: uv run --locked ruff check src scripts/lb.py tests
+      run: uv run --locked ruff check src scripts tests
     mypy:
       run: uv run --locked mypy src/logbook_cli

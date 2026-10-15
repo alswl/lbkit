@@ -55,23 +55,5 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_PATH
 
 
-def cmd_task_update(args) -> int:
-    """Compatibility for historical Python callers of scripts/lb.py."""
-    from logbook_cli.render import render
-    from logbook_cli.services.tasks import update
-
-    result = update(
-        args.root,
-        args.log,
-        args.stage,
-        args.task,
-        args.status,
-        args.token,
-        args.dry_run,
-    )
-    render(result, getattr(args, "json", False))
-    return result.code
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

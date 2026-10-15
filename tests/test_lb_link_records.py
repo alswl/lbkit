@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CLI = Path(__file__).resolve().parents[1] / "scripts/lb.py"
+CLI = Path(__file__).resolve().parents[1] / "bin/lb"
 URL = "https://sources.example.com/item/1"
 
 

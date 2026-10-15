@@ -26,7 +26,7 @@ bin/lb task update projects/example/docs/logbook.md \
   --status / --token 0123... --dry-run
 bin/lb task artifact projects/example/docs/logbook.md \
   --stage 'Stage 01 实现' --task '开发：实现 CLI。 @logbooks 🤖️' \
-  --artifact '产物：[CLI](../scripts/lb.py)' --token 0123...
+  --artifact '产物：[CLI](../bin/lb)' --token 0123...
 
 # Append a todo to a confirmed stage, or place it before an existing todo in that stage
 bin/lb task add projects/example/docs/logbook.md \
@@ -121,7 +121,7 @@ lb-* entries call the CLI at their respective steps; the shared flow is in [docu
 
 `tests/test_lb_skill_flows.py` runs multi-step CLI flows on synthetic logbooks, verifying token refresh, concurrent-edit protection, artifact handoff, and read-only queries; each skill's `evals/evals.json` separately holds model decision scenarios. Passing CLI integration tests is not the same as passing model behavior evals; the latter also requires actually running the skills in a controlled environment and inspecting tool calls, file diffs, and answers — verbal plans alone are not scored.
 
-The implementation lives in `src/logbook_cli/`: `commands/` handles Click parameters, `services/` handles use cases, `storage.py` guards writes, and `render.py` handles output. `models.py` defines semantic states and task annotations; `format.py` maps Markdown labels and markers. `document.py` parses and checks; `views.py` derives status and task-query views; `edit.py` performs minimal text edits. `bin/lb` and `python3 scripts/lb.py` use the existing checkout environment. For module execution use `uv run --locked python -m logbook_cli`. Install or refresh dependencies explicitly with `uv sync --locked --no-dev --project .lbkit`; reads never install or access the network.
+The implementation lives in `src/logbook_cli/`: `commands/` handles Click parameters, `services/` handles use cases, `storage.py` guards writes, and `render.py` handles output. `models.py` defines semantic states and task annotations; `format.py` maps Markdown labels and markers. `document.py` parses and checks; `views.py` derives status and task-query views; `edit.py` performs minimal text edits. `bin/lb` use the existing checkout environment. For module execution use `uv run --locked python -m logbook_cli`. Install or refresh dependencies explicitly with `uv sync --locked --no-dev --project .lbkit`; reads never install or access the network.
 
 Reproducible fixture preparation, non-clobbering prechecks, and event collection are described in the consuming repository's behavior-eval process.
 

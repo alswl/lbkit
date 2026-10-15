@@ -1,5 +1,5 @@
-import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -7,12 +7,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-CLI = Path(__file__).parents[1] / "scripts" / "lb.py"
-SPEC = importlib.util.spec_from_file_location("lb_under_test", CLI)
-LB = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = LB
-SPEC.loader.exec_module(LB)
+from logbook_cli.cli import main
+from logbook_cli.document import LbError, discover, parse
+from logbook_cli.storage import write_bytes
+
+CLI = Path(__file__).parents[1] / "bin" / "lb"
 
 DOC = """# Demo
 
@@ -405,19 +404,19 @@ class LbCliTest(unittest.TestCase):
         )
         _, listed = self.payload("list")
         self.assertEqual(listed["logbooks"], ["projects/demo/docs/log.md"])
-        doc = LB.parse(self.log.resolve(), self.root.resolve())
+        doc = parse(self.log.resolve(), self.root.resolve())
         changed = doc.text.replace("运行中任务", "已变更任务", 1).encode()
-        real_fsync = LB.os.fsync
+        real_fsync = os.fsync
 
         def change_source(fd):
             self.log.write_text("# external edit\n", encoding="utf-8")
             real_fsync(fd)
 
         with (
-            mock.patch.object(LB.os, "fsync", side_effect=change_source),
-            self.assertRaises(LB.LbError) as raised,
+            mock.patch.object(os, "fsync", side_effect=change_source),
+            self.assertRaises(LbError) as raised,
         ):
-            LB.write_bytes(doc, changed, False)
+            write_bytes(doc, changed, False)
         self.assertEqual(raised.exception.code, 4)
         self.assertEqual(self.log.read_text(encoding="utf-8"), "# external edit\n")
 
@@ -432,9 +431,9 @@ class LbCliTest(unittest.TestCase):
             "iterdir",
             side_effect=AssertionError("must not iterate outside projects"),
         ):
-            self.assertEqual(LB.discover(repo), [])
+            self.assertEqual(discover(repo), [])
         with mock.patch("logbook_cli.services.common.parse", side_effect=OSError("read failure")):
-            code = LB.main(["--root", str(self.root), "context", "projects/demo/docs/log.md"])
+            code = main(["--root", str(self.root), "context", "projects/demo/docs/log.md"])
         self.assertEqual(code, 3)
 
 

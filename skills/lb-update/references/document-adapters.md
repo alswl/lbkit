@@ -11,7 +11,7 @@ lb-plan, lb-push, lb-update, lb-status, and lb-preflight read this workflow befo
 
 ## CLI invocation in this repository
 
-Structured reads, checks, and supported writes in this repository use [bin/lb](../../../bin/lb); commands and exit codes are in the [CLI reference](../../../docs/installable/lb-cli.md). It is invoked by agents through terminal tools and does not run automatically from loading a skill. The coordinator may run this repository's document tool; it is not a cross-repository business or evidence-gathering script. The legacy entry point `python3 scripts/lb.py` still works.
+Structured reads, checks, and supported writes in this repository use [bin/lb](../../../bin/lb); commands and exit codes are in the [CLI reference](../../../docs/installable/lb-cli.md). It is invoked by agents through terminal tools and does not run automatically from loading a skill. The coordinator may run this repository's document tool; it is not a cross-repository business or evidence-gathering script.
 
 Run the following commands from the logbooks root directory; if the current directory differs, use the absolute path of `bin/lb` and pass `--root <approved logbook root>` explicitly. The root is a path-protection boundary, not a source of authorization, and must not be widened to parent directories to bypass access denial.
 

@@ -19,6 +19,6 @@ jobs:
           version: latest-known
           enable-cache: true
       - run: uv sync --locked --all-groups
-      - run: uv run --locked ruff check src scripts/lb.py tests
+      - run: uv run --locked ruff check src scripts tests
       - run: uv run --locked mypy src/logbook_cli
       - run: uv run --locked python -m unittest discover tests

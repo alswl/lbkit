@@ -10,7 +10,7 @@ docs/          # user guides, contributor docs and reference navigation
 docs/installable/   # contracts linked as consumer docs/<name>.md on install
 bin/           # the lb, lb-anywhere, and lbkit installers
 src/           # the logbook_cli Python package
-scripts/       # the lb.py entry script
+scripts/       # repository development and maintenance tools
 tests/         # unittest tests
 ```
 
@@ -149,34 +149,32 @@ Use these dimensions to explain failures, without partial assertion credit:
 | Tool and file behavior | Invented action or destructive write | Required observation missing | Real actions and protected changes verified |
 | Delivery and reporting | Unusable or fabricated outcome | Gaps incompletely stated | Useful entry and explicit limitations |
 
-## Local releases
+## Version bumps
 
-The release workflow adapts makefile-go's version preview, release commit, tag,
-and development commit sequence to lbkit's Python and skill metadata.
-A human selects the version; the command never decides to release or pushes.
-Minor versions identify new capabilities or contract changes; patch versions
-identify compatible corrections. Configuration schema versions stay independent.
+A human selects the version change. `scripts/bump.py` synchronizes `VERSION`,
+all owned `skills/lb-*/SKILL.md` frontmatter, `pyproject.toml` and the lbkit entry
+in `uv.lock`. Configuration schema versions remain independent.
 
 ```sh
-make release VERSION=0.4.0                    # read-only preview
-make release VERSION=0.4.0 DRY_RUN=false     # explicitly create local commits/tag
+make bump                                  # preview a patch increment
+make bump SCOPE=minor                      # preview a minor increment
+make bump VERSION=0.5.0-dev DRY_RUN=false   # apply an explicit target
+python3 scripts/bump.py major --apply      # apply a major increment
 ```
 
-Run from a clean `master` with Python 3.11+, Git and git-cliff installed.
-The script synchronizes `VERSION`, all owned `skills/lb-*/SKILL.md` frontmatter,
-`pyproject.toml` and the lbkit entry in `uv.lock`. It generates the changelog with
-Git Cliff, creates an annotated `vX.Y.Z` tag at the stable metadata commit, then
-advances master to the next patch's `-dev` version (`.dev0` for Python).
-Set `NEXT_DEV=x.y.z` to select a different subsequent development version.
-Preparation happens in a temporary worktree; tag and master references publish
-in one compare-and-swap transaction. Existing tags are never replaced.
+Scope increments preserve the current development suffix. Explicit targets use
+`x.y.z` or `x.y.z-dev`; Python metadata uses the equivalent `x.y.z.dev0`.
+The default is a read-only preview. Apply writes only version metadata, after
+validating every required file. It can run with other changes in the worktree.
+It does not stage, commit, create tags, generate changelogs, switch branches or
+push. Review and perform those publishing actions separately when authorized.
 
-For an explicitly authorized historical release:
-`python3 scripts/release.py x.y.z --ref <ancestor-commit> --apply`.
-Use `--since <previous-baseline>` to limit its changelog to that interval.
-This creates an isolated stable metadata commit and annotated tag from that
-baseline, without changing master or rewriting history. Such tags are not
-ancestors of master: Git Cliff's ordinary master traversal does not reconstruct
-those historical release intervals. Historical release notes therefore need an
-explicit baseline range when generated. Consumers can pin these release tags.
-Review metadata, checks and any historical privacy findings before pushing.
+## CLI entry points
+
+`bin/lb` is the checkout and consumer launcher; it loads `src/logbook_cli/`
+and uses the existing checkout environment. Installed Python packages expose
+`lb` through `pyproject.toml`; `uv run --locked python -m logbook_cli` invokes
+the same implementation. `scripts/` contains repository maintenance tools only.
+The former `python scripts/lb.py` compatibility entry is removed; consumers
+using it must switch to `bin/lb` on submodule upgrade. The installer requires
+only the supported launchers and package files, and adds no consumer obligations.
