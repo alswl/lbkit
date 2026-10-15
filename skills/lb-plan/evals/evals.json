@@ -503,6 +503,93 @@
           "check": "Requires Stage goal completion, deletes the existing goal, or dispatches business work."
         }
       ]
+    },
+    {
+      "id": 41,
+      "axis": "Captain designs across authorized repositories using host specs",
+      "prompt": "Create a draft route for the human goal \"Coordinate the catalog export and import interfaces.\" The fixture has catalog and importer repositories, a writable Logbook with working directories already approved, a working document adapter, and bound Thinking/Sources. Admiral permits reading both repositories and writing docs/design in catalog only. The host uses plain Markdown specs, not Spec Kit. Current interfaces differ; importer owns its implementation. Develop the design with Admiral; neither implementation nor commits are authorized.",
+      "expected_output": "Captain designs across authorized repositories using host specs",
+      "files": [],
+      "assertions": [
+        {
+          "name": "personal_reads",
+          "type": "contains",
+          "check": "Actual tool traces show Captain reads the relevant interfaces and host conventions in both repositories, rather than delegating the core design."
+        },
+        {
+          "name": "host_spec",
+          "type": "contains",
+          "check": "Actual file bytes show a spec in the authorized host design location covering approach, tradeoffs, constraints, repository responsibilities/interfaces, route and pending decisions; no Spec Kit install is required."
+        },
+        {
+          "name": "record_ownership",
+          "type": "contains",
+          "check": "Draft Logbook provides a design entry and verifiable tasks; Thinking points to decisions/spec; no second executable task list or competing design copy is created."
+        },
+        {
+          "name": "bounded_summary",
+          "type": "contains",
+          "check": "Captain briefly explains the approach and open interface decision to Admiral; traces show no importer writes, implementation dispatch, commit or push."
+        },
+        {
+          "name": "preserves_directory_authorization",
+          "type": "contains",
+          "check": "Actual spec, Prompt, Thinking and Logbook preserve already-approved directory permissions and confirmation; do not re-label unchanged approved repositories as unconfirmed or draft access."
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "axis": "POC triggers explicit route reorganization and renewed discussion",
+      "prompt": "Revise the supplied Logbook: choose a streaming format, implement export, implement import, human review. Two formats remain undecided. A real compatibility POC is needed. Admiral asks for a revised proposal and permits writing the proposed spec and bound Thinking, but has not yet confirmed new task order or authorized execution. The fixture provides the original Logbook, spec, writable Thinking and a working document adapter. Prepare the POC route for discussion.",
+      "expected_output": "POC triggers explicit route reorganization and renewed discussion",
+      "files": [],
+      "assertions": [
+        {
+          "name": "poc_proposal",
+          "type": "contains",
+          "check": "Actual proposal bytes define an explicit POC todo with question, implementation scope, result/criteria and endpoint, and reorganize affected dependencies before export/import implementation."
+        },
+        {
+          "name": "renewed_discussion",
+          "type": "contains",
+          "check": "The response presents the changed route and unresolved choice for Admiral discussion; the original confirmed task order and human item remain unchanged until authorized."
+        },
+        {
+          "name": "no_implicit_execution",
+          "type": "not_contains",
+          "check": "Runs the POC, dispatches implementation, claims overall design confirmation or silently replaces the confirmed route."
+        },
+        {
+          "name": "preserves_repository_owners",
+          "type": "contains",
+          "check": "Actual proposal and route preserve importer ownership of its eventual implementation. A catalog-only POC substitute does not transfer downstream import implementation to catalog because importer is currently read-only."
+        },
+        {
+          "name": "scratch_within_scope",
+          "type": "contains",
+          "check": "All actual proposal and scratch writes remain within the authorized fixture working directories; cite complete write trace and file snapshots, not merely final deliverable locations."
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "axis": "Read-only design review preserves host records",
+      "prompt": "Review only the supplied existing spec and Logbook. The spec leaves interface ownership and acceptance thresholds undecided; directories and todos are already confirmed. No writes or execution are authorized. Explain whether this is ready for ordinary lb-push.",
+      "expected_output": "Read-only design review preserves host records",
+      "files": [],
+      "assertions": [
+        {
+          "name": "material_gaps",
+          "type": "contains",
+          "check": "Reports the unresolved ownership and acceptance decisions and affected tasks; a confirmed checklist alone is insufficient for ordinary execution."
+        },
+        {
+          "name": "readonly",
+          "type": "contains",
+          "check": "Tool traces and before/after bytes show no spec, Logbook, Thinking or proposal writes and no dispatch."
+        }
+      ]
     }
   ]
 }

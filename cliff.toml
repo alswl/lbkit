@@ -1,0 +1,27 @@
+[changelog]
+header = "# Changelog\n\nChanges generated from Git history with git-cliff.\n\n"
+body = """
+{% if version %}## {{ version | trim_start_matches(pat="v") }}{% else %}## Unreleased{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}- {{ commit.message | split(pat="\n") | first | upper_first }}{% if commit.id %} ({{ commit.id | truncate(length=7, end="") }}){% endif %}
+{% endfor %}{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = false
+filter_unconventional = false
+# Generalize consumer repository identifiers in imported commit subjects.
+commit_preprocessors = [
+  { pattern = "(?i)\\b[a-z0-9_-]+-logbooks\\b", replace = "consumer" },
+]
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Fixes" },
+  { message = "^(docs|Document|Translate)", group = "Documentation" },
+  { message = "^(chore|ci|Add Lefthook)", group = "Maintenance" },
+  { message = ".*", group = "Changes" },
+]
+filter_commits = false
+sort_commits = "oldest"

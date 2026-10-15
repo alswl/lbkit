@@ -3,7 +3,7 @@
 [English](concept.md) | [简体中文](concept.zh-CN.md)
 
 lbkit uses a **Logbook** to organize a human goal into an actionable task route.
-**Admiral** owns goals and authorization, **Captain** maintains and schedules the
+**Admiral** owns goals and authorization, **Captain** designs with Admiral and maintains the
 route, and **Sailor** performs business work and acceptance. **Herdr** provides
 visible execution resources. Work can span machines while the Logbook retains
 shared goals, responsibilities and progress.
@@ -35,6 +35,34 @@ link helps the recipient locate a result; its existence does not prove acceptanc
 With mind-forge, Prompt preserves intent/constraints and Thinking preserves
 coordination decisions, recovery information and requested run metrics. Business
 Article/Source records keep host-owned placement and bindings.
+
+## Design before execution
+
+During lb-plan, Captain personally discusses the approach with Admiral and writes
+specs in one or more authorized project repositories. Use the host's spec-driven
+workflow; Spec Kit is optional. A small task needs only a small design, and an
+applicable existing spec can be reused. The spec explains the approach, tradeoffs,
+constraints, responsibilities, interfaces, route and pending decisions. Captain
+briefly summarizes it for Admiral before ordinary execution. Reading a reference
+repository does not authorize writing it.
+
+Repository specs own the design; Logbook owns scheduling. Thinking preserves
+choices and confirmation references, and Sources may retain identified design
+material under host rules. Preflight can examine an unfinished design, but green
+preflight does not confirm it. Ordinary lb-push requires a settled core design,
+Admiral confirmation and execution authorization. A real POC needs an explicit
+todo, affected-route reorganization and renewed Admiral discussion. Its bounded
+execution returns findings to design; it does not release the remaining work.
+
+Sailor receives clear, verifiable work and chooses routine implementation details
+within the agreed constraints. Choices affecting scope, interfaces or acceptance
+return to Captain's planning. Changes are judged case by case.
+
+Admiral may speak directly with Sailor through a dialogue window permitted and
+opened by Captain. Captain recovers submitted content, decisions and open points,
+updates applicable specs/Logbook/packages, and verifies the owning Sailor has the
+current instructions before affected work resumes. Opening a window does not
+complete that recovery or establish acceptance.
 
 ## Tasks: a deliverable responsibility with completion conditions
 
@@ -76,7 +104,7 @@ There are three roles. Admiral is human; Captain and Sailor are the two agent ro
 | Role | Responsibility | Typical actions |
 | --- | --- | --- |
 | Admiral (human owner) | Goals, authorization, major tradeoffs and agreed human gates | Supply goals, confirm a route, authorize advancement and make review/merge decisions |
-| Captain (coordinating agent) | One Logbook's route, scheduling and shared state | Maintain dependencies/owners, dispatch packages, observe progress, align returns and prepare handoffs |
+| Captain (coordinating agent) | Design with Admiral, one Logbook's route and shared state | Write repository specs, maintain dependencies/owners, dispatch packages, observe progress, align returns and prepare handoffs |
 | Sailor (executor agent) | Assigned business results and acceptance | Research, write, implement, test, review, perform acceptance and return outcomes/gaps |
 
 Captain checks coordination facts: whether the return matches the current task

@@ -8,7 +8,7 @@ Owner and result: <one Sailor; one current verifiable result>
 
 Scope and exclusions: <authorized resources, machines/locations and boundaries; isolated workspace when applicable>
 
-Inputs: <current plan, result identity, authoritative source pointers and skill definitions actually read>
+Inputs: <current plan and applicable repository spec content/confirmation, result identity, authoritative source pointers and skill definitions actually read>
 
 Parameters: <only applicable document/runtime/limit values and sources; verify launcher/model/data boundary if an agent is needed>
 
@@ -24,7 +24,7 @@ Host records: <existing authoritative source/result entry when useful; no mandat
 
 Review and recovery: <required checker and finite rounds, or why unnecessary; backup/rollback when relevant; routine recovery within authorization>
 
-Escalation: <real human gates, unavailable key inputs or scope-changing choices; a stalled method does not automatically require a new approval>
+Escalation: <design choices affecting scope/interfaces/acceptance return to Captain; routine implementation discretion stays within agreed constraints; real human gates, unavailable key inputs or scope-changing choices; a stalled method does not automatically require a new approval>
 
 Handoff and retention: <key decisions in Thinking, open responsibilities, durable references before cleanup, session reuse/rotation and closure conditions>
 

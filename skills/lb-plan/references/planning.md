@@ -6,7 +6,27 @@ Read for planning, takeover, or review. Read [coordination](../../../docs/instal
 
 Recover the original request, current human goals, latest explicit decisions, logbook and bound Prompt/Thinking. Do not substitute recent technical gaps for the mission. Human-provided goals may be transcribed verbatim with their source in Thinking; agent-inferred goals remain suggestions. New projects with missing goals remain drafts. Existing headings and goals are not rewritten for cosmetic reasons.
 
-Apply a clear newer human ruling directly to the affected unfinished agent tasks and work packages. Do not let an old package's permissions override it, and do not expand unrelated scope. In review mode, output findings only: no files, proposal records or dispatch.
+Apply a clear newer human ruling directly to the affected unfinished agent tasks and work packages. First distinguish which records the current request permits writing. A request to create or draft the supplied Logbook route authorizes saving proposed result-oriented agent-task wording without requiring a settled design or human-dictated replacement lines. Record that request as the task rewrite decision source; older annotation-only Prompt/work-package limits do not override it within the same scope. Restrictions on business-repository spec writes and authorization for host Logbook drafting are separate. A request limited to writing a spec and Thinking proposal authorizes neither Logbook rewrites nor POC insertion; preserve the confirmed Logbook byte-for-byte and discuss the proposed route in the permitted records. Preserve unrelated permissions, human task wording, goals, statuses, repository ownership and any user-set order. In review mode, output findings only: no files, proposal records or dispatch.
+
+## Repository Spec Design
+
+Choose one or more authorized repositories and an overall spec entry. Read the host's design conventions and reuse its existing spec workflow, whether Spec Kit or another tool; do not install or require a particular framework. If none exists, use a concise Markdown design document in the host's appropriate documentation location. Captain may author this design within planning authorization; preserve human goals and keep large design prose outside the Logbook.
+
+At the level needed for this work, describe:
+
+- goal, exclusions and current context;
+- core approach, alternatives and reasons for the chosen route;
+- constraints, repository responsibilities, interfaces and dependencies;
+- implementation sequence and verifiable outcomes;
+- pending decisions, current assumptions and affected tasks.
+
+Captain discusses and explains these directly with Admiral. Cross-repository design includes decision ownership and coordination before Sailors take responsibility for their assigned execution. Preserve established repository responsibilities and already-approved directory permissions in both specs and companion records. A repository being read-only in this planning request does not transfer its eventual implementation to a writable repository; distinguish a local POC substitute from the responsible repository's real implementation. Spec content is authoritative; Thinking holds decision/confirmation references and Sources follows host binding rules. Do not duplicate executable task lists in specs; reference the Logbook route where scheduling is needed. Existing applicable designs and confirmations can be reused, including for established workflow runs.
+
+Keep temporary proposal files and other scratch writes inside the authorized working directories too; use in-scope staging or direct protected edits rather than a global temporary path.
+
+If a real POC is needed, define the question, permitted implementation scope, criteria and endpoint as a proposed todo. Reorganize the affected route and discuss it again with Admiral; apply confirmed changes through the document workflow, preserving human-owned items and unrelated work. A POC is not a silent feasibility check. Its clear, authorized package can later run through lb-push before the whole design is settled; return findings to the spec and resolve their effect on the route before ordinary implementation.
+
+Keep scope/interface/acceptance choices in Captain's planning; give Sailor clear, verifiable work with routine implementation discretion inside those bounds. Assess design changes case by case. Before handoff, briefly explain the overall design, constraints, route and open points, identify the current spec content and confirmation basis, and distinguish design confirmation from execution authorization. No additional confirmation is needed for the same already-confirmed content.
 
 ## Size and Template Selection
 
@@ -24,7 +44,9 @@ One concise todo names an action and verifiable result, retaining material scope
 
 Use the [work package](../assets/work-package.md) for the next authorized result; do not fully specify distant work prematurely. Record only applicable parameters. Independent checking must justify its value, use the same result identity and have finite rounds; no fixed agent count or mandatory checker for every task. A plan request does not launch agents.
 
-Create writes a draft immediately, including placeholders and unconfirmed todos, for file-based review. Revise keeps undecided scope changes as proposals while applying explicit decisions locally. Preserve evidence correspondence when renaming unfinished agent todos with `task rewrite`; changed acceptance requires renewed verification. Human items retain their protected wording and terminal states.
+Create writes a draft immediately, including in an existing unconfirmed Logbook, for file-based review. A confirmed directory or task order does not freeze all unfinished agent-task wording. When the current request authorizes writing the Logbook draft, turn action labels into a result and verification basis while preserving that scope and order; use `task rewrite` with the current request as the decision source. For example, “Implement adapter” becomes “Deliver an adapter conforming to the agreed interface, with valid-input and failure-case evidence.” If the interface or criterion is still undecided, identify it as proposed in the draft and link the relevant spec decision; do not invent agreement or a numerical threshold.
+
+Revise keeps proposed scope additions, reordered dependencies and new acceptance obligations separate from the confirmed route. Preserve evidence correspondence when refining unfinished agent todos; changed acceptance requires renewed verification. Human items retain their protected wording and terminal states. For an authorized Logbook-draft write, inspect the saved Logbook, not only the spec or Thinking: a linked design and a Thinking-only proposed route do not compensate for todos that still lack a verifiable result. Also verify that the Logbook contains an actual spec locator rather than a generic description, and that bound Thinking records the spec entry and current decisions. Use the declared document workflow for its authorized Markdown-body edit after resolving bindings; do not infer that a missing dedicated Thinking writer blocks all updates. For a spec/Thinking-only proposal, verify instead that the Logbook remains byte-identical; no task write or write preview is authorized.
 
 ## Split and Close Out
 
@@ -41,4 +63,4 @@ When the user explicitly asks to split an existing logbook, first confirm where 
 
 Item by item, confirm goal coverage, conflict-free dependencies, clear ownership, provable evidence, current work package completeness, valid parameters, and explicit authorization status. Separate observed facts, current goals, and unknowns. Finally present the plan location, paths, acceptance, and items awaiting human decisions; a file existing does not mean it was presented, and presentation does not mean execution is approved.
 
-Before exit, confirm the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation); plans short of confirmation must not enter lb-push execution.
+Ordinary execution also requires the confirmed core design described above; an authorized POC has only its bounded exception. Before exit, confirm the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation); plans short of confirmation must not enter lb-push execution.

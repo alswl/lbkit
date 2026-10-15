@@ -4,22 +4,22 @@ The lb-* entries serve the same logbook. Follow the [repository boundaries](../.
 
 | Entry | Responsibility | Where it stops |
 |---|---|---|
-| [lb-plan](../../skills/lb-plan/SKILL.md) | Verify human goals, clarify, design collaboration, split tasks, and check readiness | A reviewable plan or a precise gap; no dispatch |
+| [lb-plan](../../skills/lb-plan/SKILL.md) | Develop repository specs with Admiral, recover goals, organize tasks and check design readiness | A reviewable plan or a precise gap; no dispatch |
 | [lb-push](../../skills/lb-push/SKILL.md) | Verify current authorization, dispatch or resume, monitor, and handle execution blockers | End of authorization, a human gate, or a severe blocker; continuous serial progress within authorization |
 | [lb-update](../../skills/lb-update/SKILL.md) | Refresh verified progress, or reread human edits to align understanding | Reread is read-only by default; updates need evidence; no dispatch |
 | [lb-status](../../skills/lb-status/SKILL.md) | Observe logbooks and the authorized control plane, maintain a few status snippets | Status briefs and local diffs; does not change acceptance verdicts or control agents |
-| [lb-preflight](../../skills/lb-preflight/SKILL.md) | Full pre-run preflight: route planning and step-by-step read-only feasibility analysis | A machine-readable preflight record in Thinking and 🔮 pending-discussion blockers; no dispatch, no unblocking |
+| [lb-preflight](../../skills/lb-preflight/SKILL.md) | Inspect the current design and route, including unfinished design, through read-only feasibility analysis | A machine-readable preflight record in Thinking and 🔮 pending-discussion blockers; no dispatch, no unblocking |
 
 ## Stages and Entries
 
-This repository only exposes the lb-* coordination entries; Spec Kit's spec and implementation flows are left to the project repository's Sailors. The `.specify/` material kept here is for design reference only — it is not an executable coordination flow, and its hooks are not run. lb-plan transcribes explicit human goals or retains placeholders, and writes new draft todos before confirmation; it does not ghostwrite large blocks of project prose. Execution is delegated through lb-push; returns and human close-out go through lb-update. lb-status can be used at any stage. A plan-quality check proves readiness, not delivered completion.
+lb-plan puts Captain in design state: personally discuss the approach with Admiral and persist specs in authorized project repositories, using the host's spec-driven workflow. Spec Kit is optional; its design flow may serve Captain and its implementation flow may serve Sailor. The kit's own `.specify/` material is development reference, not an automatically executed consumer hook. Keep design prose in specs and scheduling in the Logbook; explicit human goals remain protected. lb-preflight may inform unfinished design. Ordinary lb-push requires a settled, confirmed core design and execution authorization. An explicit POC follows the bounded [design exception](coordination.md#design-state-and-execution-readiness). Returns and human close-out go through lb-update; lb-status remains available at any stage.
 
 The lifecycle is not a chapter template for logbooks. Numbers like `Stage 01` follow the real project's delivery breakdown; do not mechanically write "plan, push, update, status". Reuse valid artifacts, and do not plan from scratch when taking over or recovering from a disconnect.
 
 ## Handoffs and Changes
 
 - Goals, scope, dependencies, ownership, or acceptance criteria change: lb-plan states the impact and authorization, keeping unconfirmed proposals separate from the current path.
-- Ready and this item is authorized: lb-push starts execution. A plan existing, having been shown, or having passed analysis does not by itself authorize the start.
+- Core design and route are confirmed (or this is the explicitly authorized POC exception), inputs are ready and this item is authorized: lb-push starts execution. A plan existing, having been shown, or having passed analysis does not by itself authorize the start.
 - A 🔮 pending-discussion item exists: the affected logbook stops advancing until a human adjudicates the blockers found by lb-preflight; it resumes after the human rewrites or removes the 🔮 in the logbook.
 - The current work package is returned: within the same authorization, lb-push may use lb-update's verification flow; the human need not retype the skill name, and no separate acceptance rule set is created.
 - Evidence is missing or implementation failed: lb-update records the gap on the original item. Inspection or rework already authorized within the original work package can continue via lb-push; new scope requires separate confirmation.
@@ -30,6 +30,8 @@ The lifecycle is not a chapter template for logbooks. Numbers like `Stage 01` fo
 Explicit authorization does not lapse on skill switches, nor does the scope of authorization widen because of them. A skill handoff passes only task identity, existing artifacts, evidence, and decisions — it does not recursively load the whole skill stack.
 
 ## State Layering
+
+Design state does not introduce a CLI enum or progress marker. Repository specs hold the authoritative design; Captain recovers decisions from any permitted [direct dialogue](coordination.md#captain-mediated-admiralsailor-dialogue) before affected work resumes.
 
 Keep four kinds of facts distinct: authorization, runtime, work package, and acceptance. Real tool state keeps its control-plane name; "work package returned" is a coordination judgment, not a new Herdr enum. `idle`, `done`, or `blocked` only trigger a verification pass-back; they never automatically change acceptance verdicts.
 

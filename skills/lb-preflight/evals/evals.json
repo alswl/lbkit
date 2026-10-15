@@ -121,6 +121,49 @@
           "check": "旧的前置审批门和下载路径预检门被记录为已替代"
         }
       ]
+    },
+    {
+      "id": 7,
+      "axis": "Preflight informs an unfinished design without executing a POC",
+      "prompt": "Preflight the supplied draft spec and Logbook. Admiral has not chosen between two serialization formats. Read-only route checks and bound Thinking updates are authorized, with a working document adapter and accessible skill/environment definitions. Shared prerequisites can be checked now; compatibility requires a real implementation POC. No implementation or new Logbook marker is authorized.",
+      "expected_output": "Preflight informs an unfinished design without executing a POC",
+      "files": [],
+      "assertions": [
+        {
+          "name": "useful_checks",
+          "type": "contains",
+          "check": "Actually reads the available design, definitions and prerequisites and records useful coverage instead of refusing all preflight because design is unfinished."
+        },
+        {
+          "name": "assumptions",
+          "type": "contains",
+          "check": "Thinking identifies the spec content/assumptions examined and the affected undecided tasks; does not treat any green findings as design confirmation."
+        },
+        {
+          "name": "poc_boundary",
+          "type": "contains",
+          "check": "Routes the implementation POC to explicit planning, task reorganization and Admiral discussion; traces contain no POC implementation, business dispatch or unapproved 🔮 write."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "axis": "Spec-only changes invalidate affected preflight findings",
+      "prompt": "The Logbook and its version_token are unchanged since the supplied green preflight. Its referenced spec changed from file import to streaming import, altering input and verification assumptions. Preflight again using the available current spec, old spec/preflight record, environment definitions and writable bound Thinking. Do not execute.",
+      "expected_output": "Spec-only changes invalidate affected preflight findings",
+      "files": [],
+      "assertions": [
+        {
+          "name": "spec_comparison",
+          "type": "contains",
+          "check": "Actual reads compare current spec content with the prior preflight basis and identify affected import assumptions despite the unchanged Logbook token."
+        },
+        {
+          "name": "fresh_coverage",
+          "type": "contains",
+          "check": "Records current coverage/gaps for affected tasks, preserves prior observations as history, and does not reuse the old overall green as proof of current readiness."
+        }
+      ]
     }
   ]
 }

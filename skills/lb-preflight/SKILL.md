@@ -17,6 +17,8 @@ Read `context --json`, `check --json`, the full logbook, latest human decisions,
 
 Construct the current ordered route: each todo, result, dependencies, skills, actual execution environment and acceptance method. `next_task` is only a parse candidate. Compare the route with the previous preflight; newly added tasks, rewritten outcomes, changed machines/skill definitions and changed criteria require renewed coverage. Do not reuse an old all-green verdict for a new route. Explicit human changes supersede conflicting old work-package constraints within their scope; preflight does not grant execution authorization.
 
+Preflight may run during design before Admiral has confirmed the core approach. Read the current repository spec and identify the content/assumptions checked; a Logbook version_token alone cannot identify an independently changed spec. Report undecided design questions and affected tasks without refusing all useful checks. Compare relevant spec changes as well as route changes before reusing findings. Captain may personally read authorized repositories for design understanding; concrete business tests remain Sailor work. A real implementation POC returns to lb-plan for an explicit todo, route reorganization and Admiral discussion, not implicit execution during preflight. Green never substitutes for design confirmation.
+
 ## Feasibility
 
 Captain checks route/dependencies and declared capabilities. Sailors perform business-specific read-only feasibility observations and return current methods/gaps within the authorized preflight scope; no business implementation is dispatched. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:

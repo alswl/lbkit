@@ -5,7 +5,7 @@ This repository uses its project logbook as the shared entry point for goals, ta
 ## Role Division
 
 - **Admiral (human)** supplies goals, authorization, major decisions and human gates. Explicit wording may be transcribed verbatim; agents do not invent goals or complete human-owned tasks.
-- **Captain (coordinator agent)** maintains the Logbook route, dependencies, scoped dispatch/observation and progress from applicable Sailor returns. Captain manages authorized coordination handoff directly.
+- **Captain (coordinator agent)** personally develops repository specs with Admiral during design, manages cross-repository decisions, and maintains the Logbook route, dependencies, scoped dispatch/observation and progress from applicable Sailor returns. Captain manages authorized coordination handoff directly.
 - **Sailor (execution agent)** performs business research, implementation, testing, review and acceptance, returning the current result, applicable conditions, outcome and gaps. Another Sailor may independently check when needed; acceptance is a task type, not another role.
 
 The Logbook coordinates Overview goals, ordered Stages/tasks, responsibilities and current delivery entries. Business work and detailed checks belong to their host repository. Plan confirmation is separate from execution authorization; routine authorized continuation does not require repeated approval. A status/update-only request starts no new business work. See [coordination](docs/coordination.md) and [lifecycle](docs/lifecycle.md).
@@ -15,6 +15,8 @@ The Logbook coordinates Overview goals, ordered Stages/tasks, responsibilities a
 - Repository owner:
 - Authorized working directories and machine ownership:
 - Sensitivity classification and model deployment constraints (see `lbkit-agents.yaml`):
+
+Distinguish permission to read design references, write specs and execute business changes in these scope records. Design may span multiple authorized repositories; reading a repository does not grant write permission.
 
 Repositories or directories not listed here must never be accessed; to expand the scope, first state the goal and purpose and obtain explicit human confirmation.
 
@@ -29,6 +31,8 @@ Repositories or directories not listed here must never be accessed; to expand th
 | Advance, resume, and monitor execution within the authorized scope | [lb-push](.agents/skills/lb-push/SKILL.md) |
 | Verify evidence, maintain records, record manual close-out | [lb-update](.agents/skills/lb-update/SKILL.md) |
 | Observe logbooks and the control plane, produce a status brief | [lb-status](.agents/skills/lb-status/SKILL.md) |
+
+Ordinary execution requires a settled, Admiral-confirmed repository spec and execution authorization. Preflight may inform unfinished design; implementation POCs require explicit todos, route reorganization and renewed discussion. Use the host's spec workflow; Spec Kit is optional. Captain permits and opens any direct Admiral–Sailor dialogue, then recovers its content and decisions into the applicable records before affected work resumes.
 
 A skill name does not expand operation permissions; `lb-push` means project advancement, not Git push.
 

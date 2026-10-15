@@ -63,6 +63,12 @@ When the user requests termination, cleanup, or resource constraints force an ab
 
 When ending an execution session, first save the handoff, candidates, uncommitted-change locations and recovery conditions without inventing commit/push permission. Prefer a verified runtime-supported exit path that preserves the worktree without a dialog; never invent a flag. If only an interactive exit exists, read back the actual Keep/Remove dialog and verify both selection and meaning immediately before confirming Keep. Unknown selection, unsupported rendering or Remove means cancel if supported and retain the session, reporting the precise missing capability. Never blindly send Enter or delete a worktree as GC. Record the recovery entry after exit; keep resource deletion separate from session rotation.
 
+## Direct Dialogue Window
+
+When Captain permits direct Admiral–Sailor dialogue, inspect the owning Sailor's actual workspace/tab/pane and current package before opening a supported interaction entry. Reuse its existing execution tab when that is the appropriate window; identify the entry to Admiral without stealing focus. Any new surface uses the configured labels and explicit workspace targeting, and must reach the same Sailor rather than a duplicate executor. Read the current tool skill before choosing commands; if no safe supported entry exists, report that gap.
+
+Protect unsent human input and do not submit competing commands while the human is conversing. Recover attributable submitted messages and conclusions under the [dialogue procedure](execution.md#direct-admiralsailor-dialogue) before closing, rotating or resuming affected work. A tab existing or an idle status proves neither dialogue completion nor consent.
+
 ## Shell Input and Human Review
 
 Prefer supported noninteractive execution outside the pane's interactive shell history. When shell input is necessary, verify the target shell first: zsh requires HIST_IGNORE_SPACE, bash requires HISTCONTROL containing ignorespace (or ignoreboth), and the dispatched command requires a leading space. Configure only the authorized agent shell and verify behavior; a space alone is insufficient. Do not place secrets in pane commands or treat history suppression as secret protection. Report an unsupported history-safe route rather than fabricate a --no-history option.
