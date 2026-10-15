@@ -4,12 +4,19 @@ Changes generated from Git history with git-cliff.
 
 ## 0.4.0
 
+### Changes
+- Refactor: simplify version bumps and consolidate CLI entry points (d6ef0de)
+
 ### Documentation
 - Docs: organize changelog by historical release baselines (f98314a)
 
 ### Features
 - Feat: add Captain-led spec design and mediated dialogue (64fbb01)
 - Feat: automate local releases and synchronized development versions (77bd684)
+
+### Maintenance
+- Chore: release v0.4.0 (330a540)
+- Chore: prepare 0.4.1-dev (2612d39)
 
 ## 0.3.1
 
