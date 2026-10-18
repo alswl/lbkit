@@ -10,3 +10,7 @@ Core cases: 39–43. Every assertion must pass under the shared evidence rules.
 Cases 39–40 cover generated annotations and preservation of historical human goals. Grade actual draft/edited bytes.
 
 Cases 41–43 cover personal repository design, explicit POC replanning and read-only review. Preserve approved directory permissions and implementation ownership; proposal scratch writes are subject to the same authorized-directory boundary.
+
+Cases 44–45 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
+
+Case 46 is also core. The feedback coverage index checks assertion references only; it does not establish behavior PASS.

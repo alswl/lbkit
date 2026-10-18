@@ -1,0 +1,442 @@
+{
+  "purpose": "Stable acceptance inventory distilled from 22 feedback headings. Private identifiers are omitted. Review changes to this inventory against original requirements, independently of check mappings.",
+  "feedback": [
+    {
+      "id": "2610141649",
+      "title": "Canonical skill annotations",
+      "todos": [
+        5
+      ],
+      "criteria": [
+        {
+          "id": "generated_format",
+          "acceptance": "New annotations use four spaces, slash prefixes and separate backticks."
+        },
+        {
+          "id": "revised_format",
+          "acceptance": "Authorized annotation repair preserves human goals, task text and order."
+        },
+        {
+          "id": "legacy_input",
+          "acceptance": "Historical bare skill names remain readable."
+        }
+      ]
+    },
+    {
+      "id": "2610141650",
+      "title": "Cross-machine coordination handoff",
+      "todos": [
+        17
+      ],
+      "criteria": [
+        {
+          "id": "both_ends",
+          "acceptance": "Compare refs, dirty bytes, rulings and open work before transfer."
+        },
+        {
+          "id": "receipt",
+          "acceptance": "Direct authorized transfer uses the same workspace and obtains main-session receipt."
+        },
+        {
+          "id": "applicability",
+          "acceptance": "Preserve recorded rulings while checking changed-input applicability."
+        }
+      ]
+    },
+    {
+      "id": "2610141651",
+      "title": "Parallel opportunities during advancement",
+      "todos": [
+        9
+      ],
+      "criteria": [
+        {
+          "id": "proposal",
+          "acceptance": "Propose a concrete independent batch and continue authorized serial work."
+        },
+        {
+          "id": "approved",
+          "acceptance": "After acceptance advance an approved batch without repeat permission."
+        },
+        {
+          "id": "conflicts",
+          "acceptance": "At waits identify browser and human-input conflicts."
+        }
+      ]
+    },
+    {
+      "id": "2610141652",
+      "title": "Usable PR and host-compliant delivery",
+      "todos": [
+        16,
+        18
+      ],
+      "criteria": [
+        {
+          "id": "current_pr",
+          "acceptance": "Create and read a real accessible PR matching the current candidate, not an old PR."
+        },
+        {
+          "id": "inventory",
+          "acceptance": "Check full inventory and bindings before commit and PR handoff; reject renamed process material."
+        },
+        {
+          "id": "update_only",
+          "acceptance": "Record missing owning-Sailor checks without dispatch, destructive cleanup or lost annotations."
+        },
+        {
+          "id": "local_retention",
+          "acceptance": "After authorized untracking, verify local ignore and safe retention of recovery pointers."
+        }
+      ]
+    },
+    {
+      "id": "2610141653",
+      "title": "Rendered review preparation",
+      "todos": [
+        19
+      ],
+      "criteria": [
+        {
+          "id": "measure",
+          "acceptance": "Query actual editor dimensions and Markview configuration before layout."
+        },
+        {
+          "id": "render",
+          "acceptance": "Observe narrow/wide modes, long cells, full headers, rendered heights and right border."
+        },
+        {
+          "id": "content",
+          "acceptance": "Split semantically; preserve text/order/answers, repeat headers and provide adjacent feedback and spacing."
+        },
+        {
+          "id": "handoff",
+          "acceptance": "Open/read first view and protect unsaved human input."
+        },
+        {
+          "id": "repair_owner",
+          "acceptance": "Repair the current package through the owning Sailor, not feedback-only reporting."
+        }
+      ]
+    },
+    {
+      "id": "2610141654",
+      "title": "No redundant Stage goals",
+      "todos": [
+        6
+      ],
+      "criteria": [
+        {
+          "id": "new_goal",
+          "acceptance": "Keep Overview goal, generate no Stage goal prerequisite."
+        },
+        {
+          "id": "historical_goal",
+          "acceptance": "Preserve historical human Stage goals during unrelated edits."
+        },
+        {
+          "id": "explicit_removal",
+          "acceptance": "Remove only explicitly designated Stage goal fields."
+        }
+      ]
+    },
+    {
+      "id": "20261012-skill-coverage",
+      "title": "Task-local skill coverage",
+      "todos": [
+        5
+      ],
+      "criteria": [
+        {
+          "id": "all_agent_tasks",
+          "acceptance": "Implementation, verification and delivery get actual skills or explicit gaps, not Thinking-only lists."
+        },
+        {
+          "id": "preserve_repair",
+          "acceptance": "Annotation repair does not alter the task first line or human prose."
+        }
+      ]
+    },
+    {
+      "id": "20261012-workflow-registry",
+      "title": "Workflow and registry discovery",
+      "todos": [
+        7
+      ],
+      "criteria": [
+        {
+          "id": "joint_read",
+          "acceptance": "Read complete registry and applicable workflow even when unregistered; verify actual definitions."
+        },
+        {
+          "id": "reuse_basis",
+          "acceptance": "Explain whole, partial or inapplicable workflow reuse without importing unauthorized steps."
+        },
+        {
+          "id": "template",
+          "acceptance": "Preserve an applicable confirmed template rather than compressing it."
+        },
+        {
+          "id": "retro",
+          "acceptance": "At close-out review workflow and registry applicability using real execution evidence."
+        }
+      ]
+    },
+    {
+      "id": "20261012-repository-assignment",
+      "title": "Authorized repository assignment",
+      "todos": [
+        8
+      ],
+      "criteria": [
+        {
+          "id": "assign",
+          "acceptance": "Preview and apply initial assignment with current token and human decision, preserving task children."
+        },
+        {
+          "id": "refuse",
+          "acceptance": "Reject existing-owner transfers, mismatches and protected tasks."
+        },
+        {
+          "id": "split",
+          "acceptance": "Authorized splitting preserves original task identity/evidence and avoids duplicate scheduling."
+        }
+      ]
+    },
+    {
+      "id": "20261013-shared-todo",
+      "title": "No cross-log companion overwrite",
+      "todos": [
+        22
+      ],
+      "criteria": [
+        {
+          "id": "isolation",
+          "acceptance": "Alternating updates preserve the other log and human TODO; absent TODO is not generated."
+        },
+        {
+          "id": "preview",
+          "acceptance": "Dry-run leaves bytes intact and write results carry current tokens."
+        }
+      ]
+    },
+    {
+      "id": "20261014-host-config",
+      "title": "Host upgrade integration",
+      "todos": [
+        21
+      ],
+      "criteria": [
+        {
+          "id": "host_entries",
+          "acceptance": "Inspect obsolete host links and duplicate configuration without overwriting human-owned records."
+        }
+      ]
+    },
+    {
+      "id": "20261013-analysis-parallel",
+      "title": "Read-only analysis before execution",
+      "todos": [
+        10
+      ],
+      "criteria": [
+        {
+          "id": "preflight",
+          "acceptance": "While login is pending read independent authorized sources and join attributable findings."
+        },
+        {
+          "id": "bounds",
+          "acceptance": "Do not race shared browsers, scan unregistered directories or launch implementation."
+        },
+        {
+          "id": "plan_entry",
+          "acceptance": "Planning itself discovers and joins independent prerequisite investigation."
+        },
+        {
+          "id": "no_forced_batch",
+          "acceptance": "Do not launch extra analysis agents when there is no independent value."
+        }
+      ]
+    },
+    {
+      "id": "20261013-capability-gaps",
+      "title": "Capability coverage and moved annotations",
+      "todos": [
+        5,
+        7
+      ],
+      "criteria": [
+        {
+          "id": "coverage",
+          "acceptance": "Every applicable agent task has actual skills or an explicit gap."
+        },
+        {
+          "id": "target",
+          "acceptance": "Read actual definitions on the target environment; local installation alone is insufficient."
+        },
+        {
+          "id": "move",
+          "acceptance": "Moved tasks retain their annotations, states and human content."
+        },
+        {
+          "id": "not_green",
+          "acceptance": "Skill annotation completeness does not imply authentication or business acceptance."
+        }
+      ]
+    },
+    {
+      "id": "issue-20",
+      "title": "Effective operation and recovery facts",
+      "todos": [
+        13,
+        14
+      ],
+      "criteria": [
+        {
+          "id": "effective_scope",
+          "acceptance": "Effective configuration and actual failures override submitted intent and partial success."
+        },
+        {
+          "id": "missing_task",
+          "acceptance": "Pipeline startup with the requested task absent from the graph is not success."
+        },
+        {
+          "id": "repair",
+          "acceptance": "Continue the existing authorized correction without scope expansion."
+        },
+        {
+          "id": "restore",
+          "acceptance": "Without before-state evidence retain side effects and mark restoration unverified."
+        }
+      ]
+    },
+    {
+      "id": "issue-19",
+      "title": "Current delivery versus history",
+      "todos": [
+        15
+      ],
+      "criteria": [
+        {
+          "id": "current",
+          "acceptance": "Replace stale summaries; distinguish trial fixes, published assets and each PR."
+        },
+        {
+          "id": "preserve",
+          "acceptance": "Preserve dated history, human decisions and comments; no early cleanup."
+        }
+      ]
+    },
+    {
+      "id": "issue-12",
+      "title": "Stage headings express phase goals",
+      "todos": [
+        6
+      ],
+      "criteria": [
+        {
+          "id": "draft",
+          "acceptance": "No redundant Stage goal generated in a new draft."
+        },
+        {
+          "id": "advance",
+          "acceptance": "Preflight/advancement do not block a valid authorized route solely for missing Stage goal."
+        }
+      ]
+    },
+    {
+      "id": "issue-13",
+      "title": "Development and independent testing responsibility",
+      "todos": [
+        7
+      ],
+      "criteria": [
+        {
+          "id": "independent",
+          "acceptance": "Plan separate development self-tests and independently owned tests, candidate/entry requirements."
+        }
+      ]
+    },
+    {
+      "id": "issue-14",
+      "title": "Environment-specific acceptance",
+      "todos": [
+        11
+      ],
+      "criteria": [
+        {
+          "id": "route",
+          "acceptance": "Preserve ordered environment items and verify unknown name mappings."
+        },
+        {
+          "id": "partial_return",
+          "acceptance": "One environment passing cannot complete the others or skip the next blocked one."
+        }
+      ]
+    },
+    {
+      "id": "issue-15",
+      "title": "Compact task presentation",
+      "todos": [
+        5
+      ],
+      "criteria": [
+        {
+          "id": "names",
+          "acceptance": "Skill lines contain names only, slash/backtick form, no quote blocks or explanations."
+        },
+        {
+          "id": "spacing",
+          "acceptance": "Keep todos compact while retaining necessary heading/body separation and meaning."
+        }
+      ]
+    },
+    {
+      "id": "issue-16",
+      "title": "Actual workflow skill entry points",
+      "todos": [
+        7
+      ],
+      "criteria": [
+        {
+          "id": "actual_chain",
+          "acceptance": "Detect stale workflow command and use actual target definitions instead."
+        }
+      ]
+    },
+    {
+      "id": "issue-17",
+      "title": "Decision-oriented review entry",
+      "todos": [
+        20
+      ],
+      "criteria": [
+        {
+          "id": "decision_view",
+          "acceptance": "Present options/impacts/decisions, create an authorized supported session and read it back without stealing input."
+        }
+      ]
+    },
+    {
+      "id": "issue-18",
+      "title": "Shared review allowance continuity",
+      "todos": [
+        12
+      ],
+      "criteria": [
+        {
+          "id": "counts",
+          "acceptance": "Apply total 5, used 2, remaining 3 with original counted checks and new ruling."
+        },
+        {
+          "id": "bounds",
+          "acceptance": "Do not reset rounds, silently raise limits, repeat decided approval or infer deployment permission."
+        },
+        {
+          "id": "resume",
+          "acceptance": "When remaining allowance suffices, resume already authorized work without another limit question."
+        }
+      ]
+    }
+  ]
+}

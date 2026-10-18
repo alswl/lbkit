@@ -16,3 +16,5 @@ Core cases 1, 7 and 8 require every assertion to pass; aggregate scores cannot o
 Attribute skill/action/assertion ambiguity failures to the skill denominator. Tool absence, unavailable service or runtime capability is an environment failure, excluded from that denominator but retained as an unmet coverage gap. A core environment gap prevents an overall qualified result. Report unknown costs/history as unknown. General rate and iteration thresholds remain pending determination; do not fabricate them.
 
 Cases 7–8 cover unfinished design and spec changes independent of the Logbook token.
+
+Cases 9–10 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.

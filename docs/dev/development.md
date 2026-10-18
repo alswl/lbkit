@@ -116,6 +116,29 @@ Direct Admiral–Sailor dialogue requires Captain's permission and a verified in
 
 ## Behavior evaluation
 
+The reusable feedback acceptance inventory lives in
+`tests/fixtures/feedback_requirements.json`; its separate check mapping lives in
+`tests/fixtures/feedback_coverage.json`. Keep original feedback IDs, atomic
+requirement IDs and explicit unmapped gaps. `tests/test_feedback_coverage.py`
+checks inventory completeness, assertion references/polarity and CLI test
+locators; it does not evaluate assertion meaning or certify model behavior.
+Review inventory changes against original requirements independently of the
+mapping. New source feedback must be added to that inventory explicitly.
+
+For mutation checks, use isolated copies of the current candidate. Establish a
+passing baseline, change one relevant behavior or mapping at a time, and count
+only failures at the intended assertions as kills; syntax/import errors and
+unavailable environments are not kills. Include silent requirement deletion,
+not only broken reference tests. Report surviving mutants and the tested scope;
+a passing mapping check or killed CLI mutant does not certify live skill behavior.
+Keep mutation patches, outputs and trial reports outside the repository.
+
+Feedback-derived refinements retain host-owned records: current status replaces stale summaries locally while dated evidence stays in existing Thinking; operation returns distinguish effective configuration/results from intent and unverified recovery; planning compares workflows, definitions and shared review allowances across the confirmed route. These clarify existing acceptance and authorization duties, without requiring a new archive or configuration. The optional `task rewrite --assign-repo` adds initial assignment of an unassigned unfinished agent task under an explicit decision; default rewrites still preserve ownership. Existing owners, human items, CAS and previews remain protected. This is an additive CLI capability; no version or schema change is made without human instruction.
+
+Actionable return gaps belong in the existing task and its owning return: a configuration correction names the effective configuration, required graph inclusion and terminal results; an update-only delivery note names the owner and missing inventory/binding checks without dispatching. Recovery records retain the exact supported scope and evidence pointer even when the task completes. These clarify existing return alignment; they introduce no new host configuration, archive, approval or business execution permission.
+
+Reusable local progress and controlled-runtime fixtures live under the corresponding skill's `evals/fixtures/`. Reset messages, receipts and task states before each comparison, verify document bindings, and keep grading out of the subject workspace. Controlled adapter receipt proves message submission only, not live monitoring or business execution. A surviving instruction mutant may be masked by another applicable rule; report that outcome rather than counting a kill without the intended behavioral failure.
+
 Keep reusable inputs, authorization, environment prerequisites and assertions in
 the skill's `evals/evals.json`; keep skill-specific vetoes and core case IDs in its
 rubric. Review history-to-assertion coverage before merging cases; retain stable

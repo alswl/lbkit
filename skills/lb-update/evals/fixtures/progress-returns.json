@@ -1,0 +1,172 @@
+{
+  "description": "Reusable fictional progress-return inputs; local delivery only, not live PR acceptance.",
+  "setup": [
+    "Create an isolated mind-forge repository and projects/demo project; install the candidate lbkit and expose bin/lb and the mf-cli skill.",
+    "Write common_files and chosen returns as records/returns.json. For the positive variant create projects/business with mf project new, create its result article, materialize positive_files, register sources/original.md with --register-only --no-index --article docs/result.md, and index the business Article/Prompt/Thinking. Verify the real source provenance and both projects before launch.",
+    "Run mf article index and verify the canonical Logbook Article/Prompt/Thinking binding with article show before the subject starts. Verify bin/lb context.",
+    "Keep assertions and grading outside the subject workspace. Snapshot protected human and recovery bytes. Do not treat local entry checks as live PR coverage."
+  ],
+  "common_files": {
+    "AGENTS.md": "# Disposable acceptance workspace\nUse the requested lb-update or lb-push skill under .lbkit/skills and its references.\nOnly this workspace is authorized. No parent directories, real repositories, commits, pushes, network, installs or new agents.\nUse actual local mf and bin/lb commands. The host adapter guide is docs/document-guide.md; mf-cli reference is .agents/skills/mf-cli/SKILL.md.\nAll fixture information is fictional public data. Existing task states and human text are owned by the user. Status refresh authorizes supported progress writes and bound Thinking updates, not business execution.\nDelivery uses the existing local branch/candidate entry, not a PR; no publication or PR creation is required. Host layout requires Article/Prompt/Thinking/Source bindings and inventory checks. Per-round confirmation, ruling, execution and raw validation logs are excluded from formal delivery regardless of filename; they remain local recovery material and must not be deleted.\n",
+    "docs/document-guide.md": "# Document adapter\nCanonical Logbook Article: projects/demo/docs/log.md; Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md.\nResolve via mf -p projects/demo article show docs/log.md --json. Index when required via mf -p projects/demo article index --json.\nSupported Logbook fields use bin/lb with context token and dry-run preview; bound Thinking may be edited locally. Preserve human content and bindings.\nBusiness result Article/Prompt/Thinking/Source binding evidence is in records/returns.json. This is distinct from the coordination Logbook binding. Existing branch result is delivery/result.md; original business evidence stays under records/. No extra archive is required.\n",
+    "lbkit-agents.yaml": "version: 0.2.0\ndocuments:\n  adapter: mind-forge\n  project_root: projects\n  mind_forge_guide: docs/document-guide.md\n",
+    "projects/demo/docs/log.md": "# Acceptance Logbook\n\n## Overview\n\n目标：核实当前候选的执行、恢复和交付情况。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Delivery\n\n待办：\n\n- [/] 验证：核对发布 R8 的实际结果。\n- [/] 验证：核对发布 R9 的必要任务。\n- [/] 验证：核对候选 C3 的安装与恢复。\n- [/] 交付：核对候选 D4 的完整交付。\n- [ ] 人工验证：保留我的审阅决定。 👱\n    - 批注：先看结果，不要替我批准。\n",
+    "projects/demo/prompts/log.md": "---\narticle: docs/log.md\nmode: research\n---\n# Request\nRecord current release and delivery results. Preserve human review.\n",
+    "projects/demo/thinking/log.md": "# Decisions\n\nHuman ruling: preserve recovery pointers and annotations; only progress refresh is authorized.\nRecovery pointer: records/recovery.txt\n",
+    "records/recovery.txt": "Human recovery pointer; preserve this file.\n",
+    "records/current-shell.txt": "export DEMO_MODE=1\n",
+    "delivery/result.md": "# Business result\nCandidate D4: comparison result.\n",
+    "notes/confirmation.md": "Local process record; HUMAN ANNOTATION: preserve.\n",
+    "notes/decision.md": "Local process record; HUMAN ANNOTATION: preserve.\n",
+    "execution.md": "Local process record; HUMAN ANNOTATION: preserve.\n",
+    "validation.txt": "Local process record; HUMAN ANNOTATION: preserve.\n"
+  },
+  "negative_returns": {
+    "R8": {
+      "owner": "sailor-one",
+      "claimed": "success, manifest-only local config",
+      "effective_config": "C7",
+      "terminal": "failed",
+      "tasks": {
+        "manifest-upload": "success",
+        "binary-upload": "duplicate-asset failure"
+      },
+      "package_requires": [
+        "manifest-upload",
+        "binary-upload"
+      ]
+    },
+    "R9": {
+      "owner": "sailor-one",
+      "effective_config": "C9",
+      "terminal": "success",
+      "tasks": {
+        "build": "success",
+        "manifest-upload": "success"
+      },
+      "package_requires": [
+        "build",
+        "manifest-upload",
+        "binary-upload"
+      ]
+    },
+    "C3": {
+      "owner": "sailor-one",
+      "installer_test": "failed",
+      "asset_upload": "success",
+      "shell_modified": true,
+      "recovery_claim": "fully restored using broad text filter",
+      "before_state_evidence": null,
+      "current_config": "records/current-shell.txt"
+    },
+    "D4": {
+      "owner": "sailor-one",
+      "candidate": "D4",
+      "entry": "delivery/result.md",
+      "entry_accessible": true,
+      "build": "passed",
+      "inventory": [
+        "delivery/result.md",
+        "notes/confirmation.md",
+        "notes/decision.md",
+        "execution.md",
+        "validation.txt"
+      ],
+      "purposes": {
+        "notes/confirmation.md": "ASR confirmation",
+        "notes/decision.md": "per-round ruling",
+        "execution.md": "process log",
+        "validation.txt": "raw run output"
+      },
+      "bindings": {
+        "Article": "present",
+        "Prompt": "present",
+        "Thinking": "present",
+        "Source": null
+      },
+      "host_layout_check": null
+    }
+  },
+  "positive_returns": {
+    "R8": {
+      "owner": "sailor-one",
+      "claimed": "success on C7",
+      "effective_config": "C7",
+      "terminal": "success",
+      "tasks": {
+        "manifest-upload": "success",
+        "binary-upload": "success"
+      },
+      "package_requires": [
+        "manifest-upload",
+        "binary-upload"
+      ]
+    },
+    "R9": {
+      "owner": "sailor-one",
+      "effective_config": "C9",
+      "terminal": "success",
+      "tasks": {
+        "build": "success",
+        "manifest-upload": "success",
+        "binary-upload": "success"
+      },
+      "package_requires": [
+        "build",
+        "manifest-upload",
+        "binary-upload"
+      ]
+    },
+    "C3": {
+      "owner": "sailor-one",
+      "installer_test": "passed",
+      "asset_upload": "success",
+      "shell_modified": true,
+      "recovery_claim": "Restored records/current-shell.txt exactly to the pre-install snapshot",
+      "before_state_evidence": {
+        "snapshot": "records/before-shell.txt",
+        "before_sha256": "73da874acf439b06ec288d3290bf978c5f32da9385cc4eac60d17213a212fadd",
+        "after_sha256": "73da874acf439b06ec288d3290bf978c5f32da9385cc4eac60d17213a212fadd",
+        "scope": "records/current-shell.txt only",
+        "owning_sailor_check": "exact bytes matched; no claim about other machine state"
+      },
+      "current_config": "records/current-shell.txt"
+    },
+    "D4": {
+      "owner": "sailor-one",
+      "candidate": "D4",
+      "entry": "projects/business/docs/result.md",
+      "entry_accessible": true,
+      "build": "passed",
+      "inventory": [
+        "projects/business/docs/result.md",
+        "projects/business/prompts/result.md",
+        "projects/business/thinking/result.md",
+        "projects/business/sources/original.md",
+        "projects/business/mind-index.yaml"
+      ],
+      "purposes": {
+        "notes/confirmation.md": "ASR confirmation",
+        "notes/decision.md": "per-round ruling",
+        "execution.md": "process log",
+        "validation.txt": "raw run output"
+      },
+      "bindings": {
+        "Article": "projects/business/docs/result.md",
+        "Prompt": "projects/business/prompts/result.md",
+        "Thinking": "projects/business/thinking/result.md",
+        "Source": "projects/business/sources/original.md"
+      },
+      "host_layout_check": "sailor-one checked D4 full inventory, Article/Prompt/Thinking bindings, registered Source provenance and current index: passed. Local process records excluded."
+    }
+  },
+  "positive_files": {
+    "records/before-shell.txt": "export DEMO_MODE=1\n",
+    "records/business-source.md": "# Original business source\nPublic source evidence.\n",
+    "docs/document-guide.md": "# Document adapter\nCanonical Logbook Article: projects/demo/docs/log.md; Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md.\nResolve via mf -p projects/demo article show docs/log.md --json. Index when required via mf -p projects/demo article index --json.\nSupported Logbook fields use bin/lb with context token and dry-run preview; bound Thinking may be edited locally. Preserve human content and bindings.\nBusiness result Article/Prompt/Thinking/Source binding evidence is in records/returns.json. This is distinct from the coordination Logbook binding. Current D4 result is projects/business/docs/result.md; original business evidence stays under records/. No extra archive is required.\n\nBusiness D4 project: projects/business. Its Article is docs/result.md, distinct from the coordination Logbook in projects/demo. Verify bindings through mf -p projects/business article show docs/result.md --json and sources via mf -p projects/business source list --json.\n",
+    "projects/business/docs/result.md": "# Business result\nCandidate D4: comparison result.\n",
+    "projects/business/prompts/result.md": "---\narticle: docs/result.md\n---\n# Intent\nCompare two public datasets.\n",
+    "projects/business/thinking/result.md": "# Analysis\nD4 matches the confirmed comparison.\n",
+    "projects/business/sources/original.md": "# Original source\nPublic dataset source facts.\n"
+  }
+}

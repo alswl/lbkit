@@ -28,9 +28,13 @@ Apply explicit write limits in the current request to the objects they govern. A
 
 ## Design state
 
+Identify useful independent read-only prerequisite analyses during planning using the [preflight analysis boundary](../lb-preflight/SKILL.md#feasibility); reconcile their facts, sources and unknowns before presenting the design. This does not authorize implementation or additional directories.
+
 Captain personally works through the design with Admiral under the [design contract](../../docs/installable/coordination.md#design-state-and-execution-readiness). Select authorized repositories, read their relevant code/docs and use their spec-driven conventions to persist the design outside the Logbook. Review mode stays read-only. A narrow annotation or formatting repair does not start a new design exercise or require rewriting an applicable spec. For an existing skill annotation, use CLI `task note --kind 技能 --replace-line <current annotation line> --token <current token>`, with dry-run then write; `task rewrite` changes the task's first line. Do not replace a supported CAS write with a direct file edit after using the wrong subcommand. Follow [planning](references/planning.md#repository-spec-design) for the minimal spec, pending decisions and POC replanning. Keep core design ownership with Captain; concrete experiments and implementation belong to Sailors through separately authorized lb-push.
 
 ## Design and write
+
+Before concluding capability matching, compare applicable host workflows with the full registry and actual skill definitions. A workflow absent from the registry may still apply; stale workflow commands do not override available definitions. Distinguish development self-tests, independently owned tests and each human-confirmed environment acceptance. Preserve the approved environment order and candidate/entry mapping; an environment name or SDK enum is not proof of equivalence. Check any shared finite review budget against the whole route without inventing rounds or platform authorization.
 
 1. Recover the user's goals. Transcribe an explicitly supplied goal verbatim and record its source in Thinking; never invent or silently paraphrase a goal. Without human-authored goals, retain draft placeholders. Existing goals change only from an explicit replacement supplied by the human.
 2. Choose the smallest useful delivery structure. A small task, roughly one person-day or less, or a lightweight operational run defaults to one Stage. Use multiple stages only for real separately accepted outcomes or handoffs, explaining the reason. A final human gate is a todo when required, not an automatic extra Stage.
@@ -43,6 +47,8 @@ Captain personally works through the design with Admiral under the [design contr
    - **Bound Thinking:** record the design entry, important choices, pending decisions and current planning authorization. Use mind-forge to resolve/check the binding; authorized edits to its Markdown body follow the document workflow. An absent Thinking write subcommand alone is not a missing adapter. Preserve existing content and apply only the permitted local edit.
    - **Verification:** re-read actual Logbook and Thinking bytes. The draft must have verifiable agent results, a resolvable spec entry, and the corresponding decision/design pointer in Thinking. Keep undecided criteria proposed and existing directory approvals intact; run `check --json` and proportional adapter checks. Parser success alone does not prove these records are complete or confirm the draft.
    A spec/Thinking-only proposal follows its narrower write scope: preserve Logbook bytes and complete only the permitted records.
+
+When an explicit human decision assigns an unfinished unassigned agent task to an approved repository, use `task rewrite --assign-repo NAME` with the new `@NAME`, decision and current token; preview before writing. Do not use this to transfer an existing owner or automatically split the task.
 
 ## Handoff
 

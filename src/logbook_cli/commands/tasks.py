@@ -197,6 +197,7 @@ def note(
 
 @task.command("rewrite")
 @options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, TEXT, DECISION)
+@click.option("--assign-repo", help="Explicitly assign an unassigned task; repository name without @.")
 def rewrite(
     root: str | None,
     log: str,
@@ -207,10 +208,11 @@ def rewrite(
     json: bool,
     text: str,
     decision: str,
+    assign_repo: str | None,
 ) -> None:
     finish(
         tasks.rewrite(
-            resolve_root(root), log, stage, task, text, decision, token, dry_run
+            resolve_root(root), log, stage, task, text, decision, token, dry_run, assign_repo
         ),
         json,
     )

@@ -18,6 +18,10 @@ lb-update keeps reread (read-only default) and authorized refresh, with internal
 
 Independent review, when required by a package, uses another Sailor and the same identified candidate. Candidate check rounds are finite and keep their used count across session switches and rework. No checker is manufactured for a task requiring no independent check; no resetting limits by splitting packages or changing tools. Human review/merge decisions remain distinct from Sailor acceptance and creation of a delivery entry.
 
+Compare a shared review allowance with the confirmed route, including separately required environments and already-counted checks. An explicit human adjustment changes the total, not consumed history; apply it without asking again and remove only the resolved budget blocker. It grants no new deployment or publishing permission.
+
+For configuration-driven operations, align the final effective configuration identity, actual task inclusion and terminal task results in the Sailor return. A submitted setting or pipeline start cannot prove a task ran with that setting; partial asset success cannot turn a failed operation into acceptance. Preserve actual side effects and unknowns. Recovery claims require a before-state or equivalent evidence supporting the stated recovery scope; without it, record recovery as unverified rather than accepting a broad filter or cleanup claim. Continue routine correction through the owning Sailor within existing execution authorization; update-only requests do not launch repairs.
+
 ## Design state and execution readiness
 
 During lb-plan, Captain personally discusses the core ideas, alternatives, constraints and route with Admiral, reads relevant code and documents, and writes the design into one or more authorized project repositories. Captain owns the overall explanation and cross-repository decisions; delegating an investigation does not transfer that responsibility. Sailors own implementation, experiments, business testing and acceptance.

@@ -26,6 +26,8 @@ This boundary does not prohibit CAS reads, inspecting the protected Logbook diff
 
 ## Inputs and prerequisites
 
+Resolve linked rules relative to the real path of the document containing the link, including inside the installed `.lbkit` directory. A default file search can omit hidden directories; it is not evidence that a prerequisite is missing. Try the resolved path before reporting a missing contract.
+
 Input is the logbook location and the requested intent. Refresh progress additionally uses available candidates, original evidence or an explicit human decision; a reread does not require a completion evidence package. Before starting you must read the [configuration contract](../../docs/installable/configuration.md) and resolve documents; before writing you must read the [logbook format](../../docs/installable/logbook-format.md) and the [document adapter workflow](references/document-adapters.md).
 
 progress/close must also read the [acceptance and wrap-up workflow](references/verification.md). Without the required rules or evidence, do not change completion conclusions; missing content cannot be replaced by defaults.

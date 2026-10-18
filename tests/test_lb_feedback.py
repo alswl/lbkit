@@ -251,6 +251,69 @@ class FeedbackTest(unittest.TestCase):
         )
         self.write("rewrite", text=TASK, decision="   ", code=2)
 
+    def test_explicit_assignment_preserves_unassigned_task_and_cas(self):
+        old = "验证：复盘实现。"
+        new = old + " @sample-app"
+        self.log.write_text(
+            f"# 调研\n\n## 🚧 {STAGE}\n\n- [/] {old}\n"
+            "    - 技能：`/example-review`\n    - 状态：保留人工批注\n"
+            f"- [ ] {HUMAN}\n"
+        )
+        before = self.log.read_bytes()
+        token = self.context()["version_token"]
+        args = ["task", "rewrite", "log.md", "--stage", STAGE, "--task", old,
+                "--text", new, "--decision", "用户明确指定责任仓库", "--token", token]
+        self.cli(*args, code=4)
+        self.cli(*args, "--assign-repo", "sample-app", "--dry-run")
+        self.assertEqual(self.log.read_bytes(), before)
+        self.cli(*args, "--assign-repo", "sample-app")
+        current = self.log.read_text()
+        self.assertIn(f"- [/] {new}\n    - 技能：`/example-review`\n    - 状态：保留人工批注", current)
+        self.assertIn(f"- [ ] {HUMAN}", current)
+        self.cli(*args, "--assign-repo", "sample-app", code=4)
+        self.assertEqual(self.log.read_text(), current)
+
+    def test_assignment_rejects_transfer_mismatch_and_protected_tasks(self):
+        for old, new, repo in (
+            (TASK, "设计：转移。 @other", "other"),
+            ("设计：未定责。", "设计：定责。 @other", "sample-app"),
+            ("设计：未定责。", "设计：定责。 @sample-app @other", "sample-app"),
+            (HUMAN, "人工验证：审阅提纲。 @sample-app 👱", "sample-app"),
+        ):
+            for state in (" ", "x", "-"):
+                with self.subTest(old=old, state=state):
+                    self.log.write_text(f"# 调研\n\n## 🚧 {STAGE}\n\n- [{state}] {old}\n")
+                    before = self.log.read_bytes()
+                    self.write("rewrite", task=old, text=new, decision="明确决定",
+                               assign_repo=repo, code=4)
+                    self.assertEqual(self.log.read_bytes(), before)
+
+        for state in ("x", "-"):
+            old = "设计：已结项。"
+            self.log.write_text(f"# 调研\n\n## 🚧 {STAGE}\n\n- [{state}] {old}\n")
+            before = self.log.read_bytes()
+            self.write("rewrite", task=old, text=old + " @sample-app",
+                       decision="明确决定", assign_repo="sample-app", code=4)
+            self.assertEqual(self.log.read_bytes(), before)
+
+    def test_two_logs_never_refresh_shared_human_todo(self):
+        companion = self.root / "TODO.md"
+        companion.write_bytes(b"# Human navigation\r\n\r\nKeep this note.\r\n")
+        second = self.root / "second.md"
+        second.write_bytes(self.log.read_bytes())
+        original_companion = companion.read_bytes()
+        for name in ("log.md", "second.md", "log.md"):
+            other = second if name == "log.md" else self.log
+            other_before = other.read_bytes()
+            token = self.cli("context", name)["version_token"]
+            self.cli("task", "note", name, "--stage", STAGE, "--task", TASK,
+                     "--kind", "状态", "--text", f"当前候选 {token[:8]}", "--token", token)
+            self.assertEqual(other.read_bytes(), other_before)
+            self.assertEqual(companion.read_bytes(), original_companion)
+        companion.unlink()
+        self.cli("sync", "log.md", "--token", self.context()["version_token"])
+        self.assertFalse(companion.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -109,10 +109,11 @@ def rewrite(
     decision: str,
     token: str,
     dry_run: bool,
+    assign_repo: str | None = None,
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
-    return save(doc, rewrite_task(doc, item, text, decision), dry_run, line=item.line)
+    return save(doc, rewrite_task(doc, item, text, decision, assign_repo), dry_run, line=item.line)
 
 
 def resolve(

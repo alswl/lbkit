@@ -590,6 +590,93 @@
           "check": "Tool traces and before/after bytes show no spec, Logbook, Thinking or proposal writes and no dispatch."
         }
       ]
+    },
+    {
+      "id": 44,
+      "axis": "Workflow discovery and current skill chain",
+      "prompt": "Draft a fictional utility route. The full supplied registry covers development and testing, but omits an applicable workflow present under workflows/. That workflow names test-write while actual target definitions expose only test-plan, test-run and test-report; test-run owns case authoring. Human confirmation requires separate development and test repository responsibility and ordered dev/test/pre/production acceptance. The host fixtures and draft writer are available; no execution is authorized. The workflow also prescribes publishing to a third repository outside the approved scope; only its development/testing approach applies here. Explain the reuse decision and keep the saved todo list compact, with skill names only on skill sub-lines.",
+      "expected_output": "Workflow discovery and current skill chain",
+      "files": [],
+      "assertions": [
+        {
+          "name": "read_both_sources",
+          "type": "contains",
+          "check": "Traces read the full registry, applicable workflow and actual target definitions, and report the stale workflow entry."
+        },
+        {
+          "name": "result_coverage",
+          "type": "contains",
+          "check": "Saved draft distinguishes developer self-tests, independently owned testing and four ordered environment acceptance items with candidate/entry requirements."
+        },
+        {
+          "name": "canonical_actual_skills",
+          "type": "contains",
+          "check": "Every applicable agent task uses four-space-indented separately backticked /skill annotations or an explicit capability gap; no nonexistent test-write or explanatory prose in skill names."
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Runs business tests, deploys or treats workflow content as execution authorization."
+        },
+        {
+          "name": "reuse_rationale",
+          "type": "contains",
+          "check": "The saved planning explanation identifies partial reuse, states which workflow capabilities apply and why the third-repository publishing step does not. The draft does not import that repository or publishing authorization."
+        },
+        {
+          "name": "compact_todos",
+          "type": "contains",
+          "check": "Actual draft bytes have no blank lines between adjacent todo items or their skill children, retain blank-line separation from headings/body prose, and do not use quote blocks for skill annotations. Compacting does not remove owner, result or acceptance meaning."
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "axis": "Explicit initial repository assignment uses protected rewrite",
+      "prompt": "Revise only the unfinished unassigned task \"验证：复盘实现。\". Human explicitly assigns it to the already approved sample-app repository and supplies the new text \"验证：复盘实现。 @sample-app\". Its existing skill/status children and next human gate must remain. A working CLI/document adapter and current context are available. Do not split or transfer any other task.",
+      "expected_output": "Explicit initial repository assignment uses protected rewrite",
+      "files": [],
+      "assertions": [
+        {
+          "name": "assignment_trace",
+          "type": "contains",
+          "check": "Trace obtains current context and uses task rewrite --assign-repo sample-app with the supplied decision and token, previews then applies and reads back the result."
+        },
+        {
+          "name": "preserve_bytes",
+          "type": "contains",
+          "check": "Actual diff preserves checkbox, position, children and human gate; only the selected first line and rewrite decision note change."
+        },
+        {
+          "name": "no_bypass",
+          "type": "not_contains",
+          "check": "Adds a duplicate task, directly overwrites the Logbook, transfers an existing owner or asks again for the supplied assignment."
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "axis": "Move an authorized task without orphaning its annotations",
+      "prompt": "Revise the supplied fictional two-stage Logbook only. Admiral explicitly moves the unfinished task \"验证：核对公开资料。 @sample-data\" from Stage 01 to immediately before the existing human gate in Stage 02. Its skill child is \"    - 技能：`/example-review`\" and its status child is \"    - 状态：候选 C2；保留人工批注\". Another task with a different title has its own children. The bound host adapter supports authorized local section edits; current file and bindings are available. Preserve both stage headings, the Overview goal, human gate and every other task; do not execute.",
+      "expected_output": "Only the authorized task and its complete child block move to the requested position; no duplicate or orphaned annotations.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "moved_task_identity",
+          "type": "contains",
+          "check": "Before/after file bytes show exactly one occurrence of the moved task, with its checkbox and both child lines unchanged and contiguous at the authorized Stage 02 position. Other task children remain attached to their original task."
+        },
+        {
+          "name": "protected_structure",
+          "type": "contains",
+          "check": "Overview goal, both human-authored stage headings, human gate and all other task text/state/order remain unchanged; trace rereads current file/bindings and checks the saved result."
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Dispatches work, changes completion conclusions or adds new tasks beyond the authorized move."
+        }
+      ]
     }
   ]
 }

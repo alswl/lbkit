@@ -1,0 +1,932 @@
+{
+  "purpose": "Reusable feedback-to-assertion coverage, not execution evidence or a completion ledger. IDs correspond to feedback headings with private names removed. Each explicit gap remains unverified.",
+  "feedback": [
+    {
+      "id": "2610141649",
+      "criteria": [
+        {
+          "id": "generated_format",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 39,
+              "assertion": "canonical_skill_annotations",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "revised_format",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 40,
+              "assertion": "canonical_edit",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 40,
+              "assertion": "preserves_human_goal",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "legacy_input",
+          "checks": [
+            {
+              "test": "tests.test_lb_skills.SkillsTest.test_extracts_bare_skill_names_from_new_todo_format"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2610141650",
+      "criteria": [
+        {
+          "id": "both_ends",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 80,
+              "assertion": "compare_before_transfer",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "receipt",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 80,
+              "assertion": "direct_handoff",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 80,
+              "assertion": "bounded_transfer",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "applicability",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 80,
+              "assertion": "preserve_ruling",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2610141651",
+      "criteria": [
+        {
+          "id": "proposal",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 78,
+              "assertion": "concrete_batch",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 78,
+              "assertion": "continue_authorized_path",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 78,
+              "assertion": "one_proposal_no_launch",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "approved",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 79,
+              "assertion": "actual_dispatch",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 79,
+              "assertion": "convergence",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 79,
+              "assertion": "no_repeat_permission",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "conflicts",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 76,
+              "assertion": "actual_dependency_analysis",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 76,
+              "assertion": "no_unapproved_batch",
+              "type": "not_contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2610141652",
+      "criteria": [
+        {
+          "id": "current_pr",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 75,
+              "assertion": "current_pr_entry",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 75,
+              "assertion": "no_human_merge",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "inventory",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 75,
+              "assertion": "file_scope_checks",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 75,
+              "assertion": "no_process_material",
+              "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 47,
+              "assertion": "not_ready",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 50,
+              "assertion": "delivery_return_actionable",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 51,
+              "assertion": "current_local_entry",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "update_only",
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 47,
+              "assertion": "request_return",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 47,
+              "assertion": "safe_cleanup",
+              "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 50,
+              "assertion": "no_execution_or_cleanup",
+              "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 51,
+              "assertion": "preserve_human_and_local_records",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "local_retention",
+          "checks": [],
+          "gap": "No focused authorized-untracking/local-ignore scenario; add under TODO 16 without granting cleanup here."
+        }
+      ]
+    },
+    {
+      "id": "2610141653",
+      "criteria": [
+        {
+          "id": "measure",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 73,
+              "assertion": "query_before_layout",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "render",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 73,
+              "assertion": "rendered_checks",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "content",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 73,
+              "assertion": "preserve_and_split",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "handoff",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 73,
+              "assertion": "first_view",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 73,
+              "assertion": "protect_human",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "repair_owner",
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 44,
+              "assertion": "correct_package",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 44,
+              "assertion": "forbid_captain_business_recheck",
+              "type": "not_contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2610141654",
+      "criteria": [
+        {
+          "id": "new_goal",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 39,
+              "assertion": "goal_in_overview",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 39,
+              "assertion": "no_stage_goal_gate",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "historical_goal",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 40,
+              "assertion": "preserves_human_goal",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 40,
+              "assertion": "no_new_goal_gate",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "explicit_removal",
+          "checks": [],
+          "gap": "No direct authorized-removal behavior case; add under TODO 06."
+        }
+      ]
+    },
+    {
+      "id": "20261012-skill-coverage",
+      "criteria": [
+        {
+          "id": "all_agent_tasks",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "canonical_actual_skills",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 35,
+              "assertion": "task_local_skills",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "preserve_repair",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 40,
+              "assertion": "preserves_human_goal",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20261012-workflow-registry",
+      "criteria": [
+        {
+          "id": "joint_read",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "read_both_sources",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "reuse_basis",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "reuse_rationale",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "template",
+          "checks": [
+            {
+              "skill": "lb-scaffold",
+              "case": 3,
+              "assertion": "preserve_confirmed_template",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "retro",
+          "checks": [],
+          "gap": "No lb-workflow entry exists in this checkout; choose a real owner and add a close-out scenario under TODO 07."
+        }
+      ]
+    },
+    {
+      "id": "20261012-repository-assignment",
+      "criteria": [
+        {
+          "id": "assign",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 45,
+              "assertion": "assignment_trace",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 45,
+              "assertion": "preserve_bytes",
+              "type": "contains"
+            },
+            {
+              "test": "tests.test_lb_feedback.FeedbackTest.test_explicit_assignment_preserves_unassigned_task_and_cas"
+            }
+          ]
+        },
+        {
+          "id": "refuse",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 45,
+              "assertion": "no_bypass",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_lb_feedback.FeedbackTest.test_assignment_rejects_transfer_mismatch_and_protected_tasks"
+            }
+          ]
+        },
+        {
+          "id": "split",
+          "checks": [],
+          "gap": "Initial assignment is covered, but end-to-end authorized splitting is not; define scope separately under TODO 08."
+        }
+      ]
+    },
+    {
+      "id": "20261013-shared-todo",
+      "criteria": [
+        {
+          "id": "isolation",
+          "checks": [
+            {
+              "test": "tests.test_lb_feedback.FeedbackTest.test_two_logs_never_refresh_shared_human_todo"
+            }
+          ]
+        },
+        {
+          "id": "preview",
+          "checks": [
+            {
+              "test": "tests.test_lb_feedback.FeedbackTest.test_write_token_chain_and_preview"
+            },
+            {
+              "test": "tests.test_lb_note.TaskNoteTest.test_note_appends_preserving_existing_companion"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20261014-host-config",
+      "criteria": [
+        {
+          "id": "host_entries",
+          "checks": [],
+          "gap": "Installer-owned link tests do not establish consumer README/AGENTS/config migration; requires an authorized host fixture under TODO 21."
+        }
+      ]
+    },
+    {
+      "id": "20261013-analysis-parallel",
+      "criteria": [
+        {
+          "id": "preflight",
+          "checks": [
+            {
+              "skill": "lb-preflight",
+              "case": 10,
+              "assertion": "independent_reads",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-preflight",
+              "case": 10,
+              "assertion": "join_findings",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "bounds",
+          "checks": [
+            {
+              "skill": "lb-preflight",
+              "case": 10,
+              "assertion": "shared_resource_boundary",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "plan_entry",
+          "checks": [],
+          "gap": "Preflight case 10 cannot certify lb-plan entry behavior; add plan-specific scenario under TODO 10."
+        },
+        {
+          "id": "no_forced_batch",
+          "checks": [],
+          "gap": "No direct no-useful-independence analysis case; add under TODO 10."
+        }
+      ]
+    },
+    {
+      "id": "20261013-capability-gaps",
+      "criteria": [
+        {
+          "id": "coverage",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "canonical_actual_skills",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "target",
+          "checks": [
+            {
+              "skill": "lb-preflight",
+              "case": 5,
+              "assertion": "verify_target_definition",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-preflight",
+              "case": 5,
+              "assertion": "refresh_route_coverage",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "move",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 46,
+              "assertion": "moved_task_identity",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "not_green",
+          "checks": [],
+          "gap": "Add a focused annotated-but-unauthenticated candidate scenario under TODO 05/07; target-definition coverage alone is insufficient."
+        }
+      ]
+    },
+    {
+      "id": "issue-20",
+      "criteria": [
+        {
+          "id": "effective_scope",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 86,
+              "assertion": "reject_intent_as_result",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 50,
+              "assertion": "failed_run_open",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 51,
+              "assertion": "complete_applicable_agent_tasks",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "missing_task",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 87,
+              "assertion": "missing_task_not_ready",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 50,
+              "assertion": "missing_required_task_open",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 89,
+              "assertion": "actual_evidence_request",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "repair",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 86,
+              "assertion": "continue_scoped_repair",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 86,
+              "assertion": "no_scope_expansion",
+              "type": "not_contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 88,
+              "assertion": "actual_evidence_request",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 88,
+              "assertion": "receipt_verified",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 89,
+              "assertion": "receipt_verified",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "restore",
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 48,
+              "assertion": "recovery_gap",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 48,
+              "assertion": "retain_failure",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 48,
+              "assertion": "no_repair_dispatch",
+              "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 50,
+              "assertion": "recovery_unverified",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 51,
+              "assertion": "scoped_recovery",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-19",
+      "criteria": [
+        {
+          "id": "current",
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 49,
+              "assertion": "current_summary",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "preserve",
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 49,
+              "assertion": "protected_history",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 49,
+              "assertion": "no_cleanup",
+              "type": "not_contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-12",
+      "criteria": [
+        {
+          "id": "draft",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 39,
+              "assertion": "no_stage_goal_gate",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "advance",
+          "checks": [],
+          "gap": "Plan generation does not certify preflight/push behavior; add entry-specific regression under TODO 06."
+        }
+      ]
+    },
+    {
+      "id": "issue-13",
+      "criteria": [
+        {
+          "id": "independent",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "result_coverage",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "read_both_sources",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-14",
+      "criteria": [
+        {
+          "id": "route",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "result_coverage",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-preflight",
+              "case": 9,
+              "assertion": "environment_mapping",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "partial_return",
+          "checks": [],
+          "gap": "Route-generation cases do not exercise partial execution returns; add update/push scenario under TODO 11."
+        }
+      ]
+    },
+    {
+      "id": "issue-15",
+      "criteria": [
+        {
+          "id": "names",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "canonical_actual_skills",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "spacing",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "compact_todos",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-16",
+      "criteria": [
+        {
+          "id": "actual_chain",
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "read_both_sources",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 44,
+              "assertion": "canonical_actual_skills",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-17",
+      "criteria": [
+        {
+          "id": "decision_view",
+          "checks": [],
+          "gap": "Table-render review cases do not certify decision-view selection or plugin session creation; add host-integrated scenario under TODO 20."
+        }
+      ]
+    },
+    {
+      "id": "issue-18",
+      "criteria": [
+        {
+          "id": "counts",
+          "checks": [
+            {
+              "skill": "lb-preflight",
+              "case": 9,
+              "assertion": "budget_arithmetic",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-preflight",
+              "case": 9,
+              "assertion": "environment_mapping",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "bounds",
+          "checks": [
+            {
+              "skill": "lb-preflight",
+              "case": 9,
+              "assertion": "no_extra_authorization",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "resume",
+          "checks": [],
+          "gap": "Preflight 9 checks shortage; add sufficient-budget positive continuation under TODO 12."
+        }
+      ]
+    }
+  ]
+}

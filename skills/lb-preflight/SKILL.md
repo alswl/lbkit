@@ -21,6 +21,10 @@ Preflight may run during design before Admiral has confirmed the core approach. 
 
 ## Feasibility
 
+At initial route review and when a prerequisite is waiting, actively identify independent read-only analyses within the authorized scope. Compare decision inputs, owners, mutable files and shared browser/login resources; join their sourced findings before the plan/preflight conclusion. Launch only through an authorized runtime and applicable analysis authorization, without waiting for ordinary implementation approval or creating a todo per investigation. Missing/failed returns remain not-checked; no useful independence means no artificial batch. Planning uses the same analysis boundary.
+
+For a route with a finite shared review limit, report the authorized total, consumed rounds and remaining allowance against the required checks, including already-counted documentation checks. Do not reset by environment or session. Apply an explicit limit adjustment with its source, preserve consumed history, and clear only the superseded budget blocker; unrelated human gates and platform permissions remain. Unknown consumption stays unknown.
+
 Captain checks route/dependencies and declared capabilities. Sailors perform business-specific read-only feasibility observations and return current methods/gaps within the authorized preflight scope; no business implementation is dispatched. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:
 
 - expected result and applicable skill definition (actual path/version or digest);

@@ -243,7 +243,9 @@ def single_line(value: str, label: str) -> None:
         )
 
 
-def rewrite_task(doc: Document, task: Task, text: str, decision: str) -> str:
+def rewrite_task(
+    doc: Document, task: Task, text: str, decision: str, assign_repo: str | None = None
+) -> str:
     single_line(text, "task text")
     single_line(decision, "decision")
     if task.human or task.state not in (" ", "/"):
@@ -257,9 +259,16 @@ def rewrite_task(doc: Document, task: Task, text: str, decision: str) -> str:
     changed = doc.text[:start] + text + doc.text[start + len(task.text) :]
     candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
     updated = find_task(candidate, task.stage, text)
+    if assign_repo is not None:
+        single_line(assign_repo, "repository")
+        if task.repositories or updated.repositories != [assign_repo]:
+            raise LbError(
+                "--assign-repo requires an unassigned task and exactly the named repository in --text",
+                EXIT_REFUSED,
+            )
     if (
         updated.human
-        or updated.repositories != task.repositories
+        or (assign_repo is None and updated.repositories != task.repositories)
         or updated.preflight_blocker
     ):
         raise LbError(
