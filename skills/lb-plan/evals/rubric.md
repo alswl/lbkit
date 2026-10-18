@@ -14,3 +14,5 @@ Cases 41–43 cover personal repository design, explicit POC replanning and read
 Cases 44–45 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
 
 Case 46 is also core. The feedback coverage index checks assertion references only; it does not establish behavior PASS.
+
+Case 47 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.

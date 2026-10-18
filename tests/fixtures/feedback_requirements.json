@@ -353,7 +353,7 @@
       "criteria": [
         {
           "id": "independent",
-          "acceptance": "Plan separate development self-tests and independently owned tests, candidate/entry requirements."
+          "acceptance": "When the confirmed host route requires independent testing, plan separate development self-tests and independently owned tests with candidate/entry requirements; do not impose independent testing on every route."
         }
       ]
     },
@@ -426,7 +426,7 @@
       "criteria": [
         {
           "id": "counts",
-          "acceptance": "Apply total 5, used 2, remaining 3 with original counted checks and new ruling."
+          "acceptance": "For the explicitly shared allowance in this scenario, apply total 5, used 2, remaining 3 with the agreed counted independent submissions and new ruling; ordinary checks do not automatically count."
         },
         {
           "id": "bounds",

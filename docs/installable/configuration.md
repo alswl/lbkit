@@ -29,6 +29,8 @@ All relative paths resolve against the managed repository root, not the skills d
 
 `review_rounds: null` means unconfigured — not an infinite loop, and not "no review needed". A current work package requiring independent inspection must have a finite round count before dispatch: it can be proposed explicitly per the task and confirmed along with the work package, or an existing explicit limit is carried over as-is. Tasks that need no review do not get checkers created just to fill this field. Round increases or resets never arise automatically from restarting sessions, switching skills, or changing candidates.
 
+Count a round when the candidate is submitted to the independent inspection covered by the allowance. Self-tests, tool calls and visits to different environments are not automatically independent submissions. A human may define a shared route allowance, but its scope and counted events must be explicit; preserve previously agreed consumption rather than reclassifying it silently.
+
 Launch commands and arguments are used as argv — never spliced as shell fragments, no eval, no command substitution, no inferring secrets from materials. The adapter tool's documentation is authoritative for actual invocation syntax. The default launcher's name proves nothing about its engine or permission mode.
 
 ## Collaboration Parameters

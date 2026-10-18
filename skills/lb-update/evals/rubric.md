@@ -12,3 +12,5 @@ Case 44 checks repair through the owning Sailor; case 47 checks update-only refu
 Cases 48–49 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
 
 Cases 50–51 are core paired local progress scenarios: reject incomplete returns and accept sufficient scoped returns. Case 50 requires an actionable owning-return note in the actual delivery task, not only a chat warning. Case 51 prevents a refusal-only implementation from passing. These fixtures do not establish live PR or remote execution coverage.
+
+Case 52 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.

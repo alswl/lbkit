@@ -168,7 +168,7 @@
     {
       "id": 9,
       "axis": "Shared review allowance follows environment route",
-      "prompt": "Preflight a fictional utility route with confirmed dev, test, pre and production acceptance in that order. The shared review allowance was two; two rounds were consumed by offline tests and contract review. The human now explicitly sets the total to five and authorizes continuing preflight. Existing records and document adapter are available. SDK labels do not document whether test equals dev. No deployment is authorized.",
+      "prompt": "Preflight a fictional utility route with confirmed dev, test, pre and production acceptance in that order. The human explicitly defined a shared allowance for independent submissions across this route. It was two; one independently submitted offline-test candidate and one independently submitted contract review consumed both rounds. Four further independent submissions, one per environment, are explicitly required; ordinary self-tests are not counted. The human now explicitly sets the total to five and authorizes continuing preflight. Existing records and document adapter are available. SDK labels do not document whether test equals dev. No deployment is authorized.",
       "expected_output": "Shared review allowance follows environment route",
       "files": [],
       "assertions": [
@@ -210,6 +210,33 @@
           "name": "shared_resource_boundary",
           "type": "not_contains",
           "check": "Concurrently drives the shared browser, scans unregistered directories, creates a todo per investigation or performs implementation/deployment."
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "axis": "Review a small route without manufacturing tests, environments or review consumption",
+      "prompt": "Use /lb-plan in review mode and /lb-preflight to assess projects/demo/docs/log.md, the confirmed design and records/review-history.json. Give the current plan issues, if any, and the applicable remaining independent review allowance. Read actual local records and applicable skill/workflow definitions. This is read-only: no plan changes, business tests, extra agents or execution.",
+      "expected_output": "The authorized single-repository self-check remains sufficient; budget 3 minus one independent submission leaves 2.",
+      "files": [
+        "../../lb-update/evals/fixtures/task-semantics.json"
+      ],
+      "fixture_variant": "planning",
+      "assertions": [
+        {
+          "name": "scope_fit",
+          "type": "contains",
+          "check": "Read the actual confirmed design, registry and workflow; accept the single-repository documentation/self-check approach without requiring a separate test repository, reviewer or deployment environment."
+        },
+        {
+          "name": "review_count_scope",
+          "type": "contains",
+          "check": "Report total 3, used 1, remaining 2 under the declared independent-submission scope. Unit/format checks and dev/test previews consume no additional rounds and do not create a budget blocker."
+        },
+        {
+          "name": "no_unrequested_changes",
+          "type": "not_contains",
+          "check": "Modify Logbook/Thinking/configuration, dispatch agents, execute business tests or manufacture a formatting/editor readiness gate during the read-only review."
         }
       ]
     }

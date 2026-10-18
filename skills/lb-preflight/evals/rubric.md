@@ -18,3 +18,5 @@ Attribute skill/action/assertion ambiguity failures to the skill denominator. To
 Cases 7–8 cover unfinished design and spec changes independent of the Logbook token.
 
 Cases 9–10 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
+
+Case 11 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.

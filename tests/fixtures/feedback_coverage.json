@@ -630,6 +630,24 @@
               "case": 51,
               "assertion": "complete_applicable_agent_tasks",
               "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 52,
+              "assertion": "diagnosis_complete",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 52,
+              "assertion": "release_incomplete",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 52,
+              "assertion": "local_tool_accepted",
+              "type": "contains"
             }
           ]
         },
@@ -799,6 +817,12 @@
               "case": 44,
               "assertion": "read_both_sources",
               "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 47,
+              "assertion": "scope_fit",
+              "type": "contains"
             }
           ]
         }
@@ -906,6 +930,12 @@
               "skill": "lb-preflight",
               "case": 9,
               "assertion": "environment_mapping",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-preflight",
+              "case": 11,
+              "assertion": "review_count_scope",
               "type": "contains"
             }
           ]

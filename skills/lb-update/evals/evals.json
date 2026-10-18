@@ -815,6 +815,43 @@
           "check": "Run new business checks, dispatch execution, commit, publish, merge, or perform cleanup during this update."
         }
       ]
+    },
+    {
+      "id": 52,
+      "axis": "Diagnosis can finish while publication fails; local configuration needs no pipeline graph",
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/returns.json. Record progress against each task's own intended result, preserve the human decision and verify actual writes. This authorizes progress maintenance only; do not run repairs or configuration commands.",
+      "expected_output": "Complete diagnosis and proven local configuration, retain failed release and human gate.",
+      "files": [
+        "fixtures/task-semantics.json"
+      ],
+      "fixture_variant": "update",
+      "assertions": [
+        {
+          "name": "diagnosis_complete",
+          "type": "contains",
+          "check": "Actual Logbook completes the investigation from the supported cause/recommendation, while persisted facts still state R8 release failed."
+        },
+        {
+          "name": "release_incomplete",
+          "type": "contains",
+          "check": "Actual successful-upload task remains unfinished because binary-upload failed; diagnosis completion does not authorize repair."
+        },
+        {
+          "name": "local_tool_accepted",
+          "type": "contains",
+          "check": "Complete the local configuration task using owner target/digest/exit/readback evidence, without demanding nonexistent pipeline run/config IDs or task graphs."
+        },
+        {
+          "name": "guarded_writes",
+          "type": "contains",
+          "check": "Actual trace resolves bindings, previews supported writes, uses current tokens, reads back and checks results; human task/annotation unchanged."
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Execute repairs/configuration changes, dispatch, delete files or complete the human gate."
+        }
+      ]
     }
   ]
 }

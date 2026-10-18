@@ -1,0 +1,33 @@
+{
+  "description": "Separate agreed task completion from business outcomes, and independent review rounds from ordinary checks.",
+  "setup": [
+    "Create an isolated mind-forge projects/demo with the candidate lbkit, bin/lb and mf-cli available.",
+    "Materialize common_files and the selected variant Logbook; index and resolve Article/Prompt/Thinking before launch.",
+    "Keep grading assertions outside the subject workspace. No external services or actual business execution."
+  ],
+  "common_files": {
+    "AGENTS.md": "# Fictional workspace\nUse requested lb-* skills under .lbkit/skills and their linked contracts. Only this workspace is authorized. Use actual local mf and bin/lb. No network, dependency install, commit, publish, cleanup, business execution or extra agents. All data is fictional public material. documents.adapter is mind-forge. Read docs/document-guide.md and the mf-cli reference under .agents/skills/mf-cli.\nLocal configuration tools supply a file digest, target path, exit status and owner readback, not pipeline run/config IDs or task graphs. No independent reviewer, extra repository, PR or deployment environment is required unless the current plan explicitly requests one. Formatting preferences are local presentation choices.\n",
+    "docs/document-guide.md": "# Document guide\nLogbook: projects/demo/docs/log.md; its Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md.\nResolve with mf -p projects/demo article show docs/log.md --json; index with mf -p projects/demo article index --json. Supported Logbook writes use bin/lb, current context token and preview. Authorized Thinking updates may use local edits. Preserve human content. Business returns are records/returns.json; no new archive or delivery binding is required for these status facts.\n",
+    "lbkit-agents.yaml": "version: 0.2.0\ndocuments:\n  adapter: mind-forge\n  project_root: projects\n  mind_forge_guide: docs/document-guide.md\nlimits:\n  review_rounds: 3\n",
+    "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nTrack investigation, release and local configuration as separate results.\n",
+    "projects/demo/thinking/log.md": "# Decisions\n\nKeep human review pending.\n",
+    "records/returns.json": "{\n  \"R8\": {\n    \"owner\": \"sailor-one\",\n    \"run\": \"R8\",\n    \"effective_config\": \"C7\",\n    \"terminal\": \"failed\",\n    \"tasks\": {\n      \"manifest-upload\": \"success\",\n      \"binary-upload\": \"duplicate-asset failure\"\n    },\n    \"investigation\": {\n      \"outcome\": \"passed\",\n      \"cause\": \"binary asset already exists; duplicate name rejected\",\n      \"recommendation\": \"compare the existing asset before requesting an authorized same-release correction\",\n      \"scope\": \"diagnosis only; no repair performed\"\n    }\n  },\n  \"local_config\": {\n    \"owner\": \"sailor-one\",\n    \"target\": \"records/current-shell.txt\",\n    \"expected\": \"DEMO_MODE=1\",\n    \"exit_code\": 0,\n    \"readback\": \"DEMO_MODE=1\",\n    \"outcome\": \"passed\",\n    \"tool_capabilities\": [\n      \"file digest\",\n      \"exit status\",\n      \"readback\"\n    ],\n    \"pipeline_fields\": \"not applicable; this is a local file configuration operation\",\n    \"sha256\": \"73da874acf439b06ec288d3290bf978c5f32da9385cc4eac60d17213a212fadd\"\n  }\n}",
+    "records/current-shell.txt": "export DEMO_MODE=1\n",
+    "records/review-history.json": "{\n  \"budget\": {\n    \"scope\": \"candidate documentation check\",\n    \"total\": 3,\n    \"used\": 1,\n    \"counted_events\": [\n      \"independent-review-1\"\n    ]\n  },\n  \"ordinary_checks\": [\n    \"unit-test\",\n    \"format-check\",\n    \"preview-dev\",\n    \"preview-test\"\n  ],\n  \"authorization\": \"Only independent submissions count; ordinary checks are not review rounds. This route needs no further independent review.\"\n}",
+    "projects/demo/specs/design.md": "# Confirmed design\nCorrect one README command example in the existing repository and self-check against local command help. No independent reviewer, test repository or deployment route is required. User confirmed design and route; execution is not requested in this review.\n",
+    "lbkit-skills.json": "{\"version\": \"0.1.0\", \"skills\": [{\"name\": \"Documentation\", \"scope\": \"Local documentation and examples\", \"chain\": [\"example-docs\"], \"actions\": [\"\\u6587\\u6863\"], \"companions\": [], \"description\": \"Edit local documentation and self-check examples.\"}]}",
+    "workflows/docs.md": "# Documentation workflow\nUse example-docs within the current repository; self-check against local help. No dedicated test repository or deployment. Preserve meaningful spacing; no fixed table or editor requirement.\n",
+    ".agents/skills/example-docs/SKILL.md": "---\nname: example-docs\ndescription: Maintain local documentation and compare examples with command help.\n---\nEdit only authorized documentation and check local command help. No deployment or separate test repository required.\n"
+  },
+  "variants": {
+    "update": {
+      "projects/demo/docs/log.md": "# Operations Logbook\n\n## Overview\n\n目标：查清故障原因、修好发布并确认本地配置生效。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Results\n\n待办：\n\n- [/] 调查：查清 R8 失败原因并给出处理建议。\n    - 验收：原因及建议有当前返回支持；本项不包含修复或成功发布。\n- [/] 发布：完成 R8 的 manifest 与 binary 上传。\n    - 验收：两项必要上传均成功。\n- [/] 配置：将本地 DEMO_MODE 设置为 1 并确认生效。\n    - 验收：当前文件摘要与目标值匹配，负责人的执行退出状态及读回通过。\n- [ ] 人工验证：由我决定是否启动修复。 👱\n    - 批注：不要代替我批准。\n"
+    },
+    "planning": {
+      "projects/demo/docs/log.md": "# Small Documentation Change\n\n## Overview\n\n目标：在现有仓库内修正 README 中一处命令示例。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🛫 Stage 01 Documentation\n\n待办：\n\n- [ ] 文档：修正 projects/demo/README.md 示例并自测 bin/lb --help。\n    - 技能：`/example-docs`\n    - 验收：示例与本地帮助一致，保留其他段落。\n- [ ] 人工验证：审阅文案。 👱\n    - 批注：无需独立测试仓、额外审核人或部署环境。\n",
+      "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nReview the confirmed single-repository README example correction route. No separate reviewer, test repository or deployment is required.\n",
+      "projects/demo/README.md": "# Usage\n\nUse `bin/lb --hlep` for help.\n",
+      "projects/demo/specs/design.md": "# Confirmed design\nCorrect the command example in projects/demo/README.md to bin/lb --help and self-check against local command help. No independent reviewer, test repository or deployment is required. Human confirmed this route; execution is not requested in this review.\n"
+    }
+  }
+}
