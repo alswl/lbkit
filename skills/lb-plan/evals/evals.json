@@ -635,7 +635,9 @@
       "axis": "Explicit initial repository assignment uses protected rewrite",
       "prompt": "Revise only the unfinished unassigned task \"验证：复盘实现。\". Human explicitly assigns it to the already approved sample-app repository and supplies the new text \"验证：复盘实现。 @sample-app\". Its existing skill/status children and next human gate must remain. A working CLI/document adapter and current context are available. Do not split or transfer any other task.",
       "expected_output": "Explicit initial repository assignment uses protected rewrite",
-      "files": [],
+      "files": [
+        "fixtures/initial-assignment.json"
+      ],
       "assertions": [
         {
           "name": "assignment_trace",

@@ -1,0 +1,22 @@
+{
+  "scope": "Fictional local behavior evaluation; no live service claim.",
+  "environment": {
+    "documents_adapter": "mind-forge",
+    "article": "projects/demo/docs/log.md",
+    "prompt": "projects/demo/prompts/log.md",
+    "thinking": "projects/demo/thinking/log.md",
+    "tools": [
+      "working bin/lb with current-token CAS",
+      "working mf with verified unique article/prompt/thinking bindings"
+    ],
+    "authorization": "Only scoped logbook progress/planning writes; no commits, pushes, merge, cleanup or business dispatch.",
+    "status_edit_policy": "Unsupported status-fragment replacements may use a scoped local edit after reread and protected diff review; supported fields must use CLI.",
+    "repositories": "sample-app is the approved current workspace; preserve other-app ownership."
+  },
+  "logbook": "# Sample Logbook\n\n## Overview\n\n目标：交付当前成果。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Delivery\n\n待办：\n\n- [/] 验证：复盘实现。\n    - 技能：`/example-skill`\n    - 状态：测试准备中。\n- [ ] 验证：保留另一仓库归属。 @other-app\n- [ ] 人工验证：审阅新版。 👱\n    - 批注：等我决定。\n",
+  "thinking": "# Decisions\n\n2026-10-01: C1 was uncommitted; PR 12 was not merged. Historical evidence must remain.\n",
+  "prompt": "Use /lb-plan to revise only the unfinished unassigned task 验证：复盘实现。 in projects/demo/docs/log.md. I explicitly assign it to the already approved sample-app repository and supply the new text 验证：复盘实现。 @sample-app. Keep existing children, state, position and human gate; do not transfer any other task. Make the authorized edit and check the result.",
+  "preserve_files": {
+    "records/recovery.txt": "keep recovery pointer\n"
+  }
+}

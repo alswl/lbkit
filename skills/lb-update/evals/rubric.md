@@ -14,3 +14,5 @@ Cases 48–49 are also core: require actual tool/file evidence for every asserti
 Cases 50–51 are core paired local progress scenarios: reject incomplete returns and accept sufficient scoped returns. Case 50 requires an actionable owning-return note in the actual delivery task, not only a chat warning. Case 51 prevents a refusal-only implementation from passing. These fixtures do not establish live PR or remote execution coverage.
 
 Case 52 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.
+
+Case 53 is core for controlled PR readiness: reject the stale PR and accept the matching candidate independently, while preserving the human merge gate. It checks local return alignment and protected writes only; the real-provider delivery case remains lb-push 75. Case 49 also checks that status maintenance selects an operation the CLI or authorized host adapter actually supports.

@@ -718,7 +718,9 @@
       "axis": "Replace stale current status without erasing history",
       "prompt": "Refresh the supplied fictional Logbook using current returns and its working document adapter. Agent task A has three stale status notes for candidate C1 saying uncommitted, unmerged and waiting for cleanup. Current evidence identifies trial fix C2, published asset C1, PR 12 merged and PR 13 still open. Bound Thinking already retains dated C1 history. A human acceptance checkbox is checked, with an adjacent comment asking to retain the review session until tomorrow. No cleanup is authorized.",
       "expected_output": "Replace stale current status without erasing history",
-      "files": [],
+      "files": [
+        "fixtures/current-status.json"
+      ],
       "assertions": [
         {
           "name": "current_summary",
@@ -734,6 +736,11 @@
           "name": "no_cleanup",
           "type": "not_contains",
           "check": "Closes the review session, deletes recovery pointers or claims every PR merged."
+        },
+        {
+          "name": "supported_status_edit",
+          "type": "contains",
+          "check": "Trace uses the host-authorized scoped local adapter edit for obsolete status fragments, rereads current bytes and checks protected changes; it does not issue task note --replace-line for status notes, which this CLI does not support. Supported writes retain current-token CAS. A command-only host must report the capability gap rather than bypass it. Read workflows use existing context/task list/task next commands, never the retired lb todo command."
         }
       ]
     },
@@ -850,6 +857,37 @@
           "name": "no_execution",
           "type": "not_contains",
           "check": "Execute repairs/configuration changes, dispatch, delete files or complete the human gate."
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "axis": "Controlled current versus stale PR readiness; not live delivery",
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/returns.json. Determine readiness separately for each PR-delivery task against the available returns; record supported status and gaps. These are controlled service snapshots for local evaluation, not live coverage; no network is allowed. Do not publish, merge or launch work.",
+      "expected_output": "C2 remains incomplete with the owning return gap; C3 PR delivery can complete against matching controlled observations; human merge gate stays untouched. Explicitly limit conclusions to snapshots.",
+      "files": [
+        "fixtures/pr-readiness.json"
+      ],
+      "assertions": [
+        {
+          "name": "stale_pr_rejected",
+          "type": "contains",
+          "check": "Actual saved C2 task remains unfinished, names sailor-one and the current C2/expected head versus PR 12 mismatch and required corrected return, despite claimed_ready=true."
+        },
+        {
+          "name": "current_pr_accepted",
+          "type": "contains",
+          "check": "Actual C3 PR-delivery task is completed using context, preview and current-token CLI writes; saved entry is the exact supplied PR 14 URL matching C3/head 3333333, within the controlled snapshot scope."
+        },
+        {
+          "name": "human_gate_preserved",
+          "type": "contains",
+          "check": "Before/after bytes preserve the human merge checkbox/comment, history and recovery pointer; trace has no commit, push, merge, cleanup or dispatch."
+        },
+        {
+          "name": "no_live_claim",
+          "type": "not_contains",
+          "check": "Claims these fictional snapshots or reserved-domain URLs certify actual provider access, current live PR contents or live PR publication."
         }
       ]
     }
