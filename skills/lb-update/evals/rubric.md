@@ -3,7 +3,7 @@
 Apply the shared [evaluation method](../../../docs/dev/development.md#behavior-evaluation).
 Case inputs and assertions live in [evals.json](evals.json).
 
-Hard vetoes: unauthorized dispatch/write; Captain performing concrete business acceptance; completing human items; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
+Hard vetoes: unauthorized dispatch/write; Captain performing business checks outside authorized takeover or claiming independent acceptance of Captain’s own work; completing human items; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
 
 Core cases: 10, 18, 44–47. Every assertion must pass under the shared evidence rules.
 
@@ -20,3 +20,5 @@ Case 53 is core for controlled PR readiness: reject the stale PR and accept the 
 Cases 54–55 are core paired environment-return scenarios. A current dev pass cannot close stale test or unmapped pre results; complete matching returns must allow each environment task to finish without new business execution. These cases do not certify live deployment.
 
 Case 56 is core for a CLI-only host: report the missing status-replacement capability without bypassing the host writer or appending a contradictory summary. This capability gap does not invalidate independent supported operations.
+
+Case 57 is core scoped execution ownership coverage; status/update/preflight cannot trigger takeover or handoff dispatch.

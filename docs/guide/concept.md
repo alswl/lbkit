@@ -109,8 +109,8 @@ There are three roles. Admiral is human; Captain and Sailor are the two agent ro
 
 Captain checks coordination facts: whether the return matches the current task
 and result, whether its conclusion still applies, whether delivery is accessible
-and whether the next step is authorized. Concrete content checks, business tests
-and acceptance belong to Sailor. Missing/conflicting returns remain gaps and
+and whether the next step is authorized. In normal execution, concrete content checks, business tests
+and acceptance belong to Sailor; scoped Captain execution follows the takeover section below. Missing/conflicting returns remain gaps and
 are sent back to Sailor within execution authorization. A status/progress-only
 request authorizes no new business execution.
 
@@ -220,3 +220,17 @@ flowchart LR
     C -->|Align return and update progress| L
     C -->|Usable human delivery entry| A
 ```
+
+## Scoped Captain execution
+
+Normal work goes to Sailor. During authorized lb-push, a difficult investigation,
+direction-setting problem or repeated ineffective repair can automatically enter
+[lb-takeover](../../skills/lb-takeover/SKILL.md). Captain verifies safe release of
+conflicting Sailor writes, then personally operates in the isolated business
+worktree. The scoped problem stays with Captain until its exit condition is met.
+[lb-handoff](../../skills/lb-handoff/SKILL.md) recovers the candidate, decisions,
+checks and remaining work, verifies the receiving Sailor's receipt/readiness,
+and returns to ordinary advancement. Existing scope and human gates still apply.
+Captain self-checks remain attributed to Captain and cannot replace a required
+independent review. Mode selection cannot upgrade the actual main-session model;
+an unavailable suitable model is an explicit capability gap.

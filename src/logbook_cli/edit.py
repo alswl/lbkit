@@ -118,7 +118,7 @@ def append_note(
     semantic = field_value(note.removeprefix(ALARM_MARKER + " "))
     if semantic:
         field, annotation_value, _ = semantic
-        if field in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS):
+        if field in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS, Field.STATUS):
             if not annotation_value.strip() or "<!--" in annotation_value:
                 raise LbError(
                     "task detail must be nonempty visible single-line text", EXIT_USAGE
@@ -139,10 +139,10 @@ def append_note(
             task.human
             or kind is None
             or not semantic
-            or semantic[0] not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS)
+            or semantic[0] not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS, Field.STATUS)
         ):
             raise LbError(
-                "replacement requires explicit Source/Acceptance/Skills on an agent task",
+                "replacement requires explicit Source/Acceptance/Skills/Status on an agent task",
                 EXIT_REFUSED,
             )
         targets = [

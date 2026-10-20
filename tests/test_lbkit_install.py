@@ -236,6 +236,12 @@ class LbkitInstallTest(unittest.TestCase):
             .resolve()
             .is_file()
         )
+        for name in ("lb-takeover", "lb-handoff"):
+            for registry in (".agents", ".claude"):
+                skill = self.repo / registry / "skills" / name
+                self.assertTrue((skill / "SKILL.md").is_file())
+                self.assertTrue((skill / "../../docs/installable/coordination.md").resolve().is_file())
+            self.assertTrue((self.repo / ".agents/skills" / name / "../lb-push/SKILL.md").resolve().is_file())
         old.unlink()
         old.symlink_to("../user-owned.md")
         self.assertIn(

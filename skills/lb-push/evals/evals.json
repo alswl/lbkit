@@ -11,7 +11,7 @@
         "Repeated working output does not reset the clock",
         "Verify existing candidates and unfinished calls to avoid duplicate side effects",
         "Do not kill the process just because monitoring expired",
-        "Report the concrete blocker and the decision needed; the coordinator does not take over the business"
+        "Report the actual remaining blocker/decision; a timeout alone does not justify takeover, and any direct recovery must first satisfy scoped safe-ownership and authorization rules"
       ]
     },
     {
@@ -1399,6 +1399,89 @@
           "check": "Deletes a branch or protected worktree, uses force removal, fetches, commits, pushes, merges, starts another executor or dispatches the next business task."
         }
       ]
+    },
+    {
+      "id": 92,
+      "axis": "Automatic takeover and handoff inside authorized advancement",
+      "prompt": "Use lb-push for P1 in projects/demo/docs/log.md. Three owning-Sailor attempts were ineffective; resolve the scoped threshold problem and return remaining independent review to its owner. This turn ends after controlled receipt/readiness and current ownership/status reconciliation; use actual tools, no real Sailor execution.",
+      "expected_output": "Automatic takeover and handoff inside authorized advancement",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "safe_transfer",
+          "type": "contains",
+          "check": "Trace reads current owner/dirty candidate, requests pause and reads paused=true before the first business edit."
+        },
+        {
+          "name": "direct_repair",
+          "type": "contains",
+          "check": "Captain actually changes threshold.py to implement inclusive comparison and runs check_threshold.py successfully in worktrees/problem; advice alone fails."
+        },
+        {
+          "name": "verified_handoff",
+          "type": "contains",
+          "check": "Trace sends the actual repaired candidate and remaining independent review to sailor-one, then reads accepted P1 receipt and monitor_ready=true."
+        },
+        {
+          "name": "preserved_state",
+          "type": "contains",
+          "check": "Human notes and human item/annotation bytes are unchanged; checkpoint attributes Captain self-test, preserves R1 failed first outcome and review used 1/2. After safe ownership, trace maintains one 🧑‍✈️ takeover task status via a previewed/token-guarded task note; after verified handoff replaces it without the emoji, preserving first-line task text."
+        },
+        {
+          "name": "automatic_scoped_modes",
+          "type": "not_contains",
+          "check": "Asks mode-only confirmation, merely recommends takeover without actual repair, delegates the difficult repair to another agent, resets counters or advances beyond receipt endpoint."
+        }
+      ],
+      "fixture_variant": "ready"
+    },
+    {
+      "id": 93,
+      "axis": "Ordinary failure remains Sailor correction",
+      "prompt": "Resume lb-push: suitable owning Sailor made one simple typo, knows the local fix and is progressing. No direction question or repeated ineffective method exists; execution and correction are authorized.",
+      "expected_output": "Ordinary failure remains Sailor correction",
+      "files": [],
+      "assertions": [
+        {
+          "name": "ordinary_correction",
+          "type": "contains",
+          "check": "In the scenario decision, choose continued correction through the existing Sailor and alignment of its eventual return; do not perform a Captain business edit or ask mode-only permission. This case does not certify actual message submission."
+        },
+        {
+          "name": "no_gratuitous_takeover",
+          "type": "not_contains",
+          "check": "Switches to Captain business execution merely because one check failed."
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "axis": "Ready takeover automatically hands back",
+      "prompt": "Resume lb-push with current P1 takeover exit condition met. Use actual runtime and return remaining independent review to its existing owner; stop after verified receipt/readiness and current ownership/status reconciliation.",
+      "expected_output": "Ready takeover automatically hands back",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "received_current_package",
+          "type": "contains",
+          "check": "Actual received message identifies current dirty worktree/candidate, inclusive fix, Captain self-test, remaining independent review, scope, constraints and report-back entry; trace reads accepted receipt and monitor readiness."
+        },
+        {
+          "name": "counters_and_owner",
+          "type": "contains",
+          "check": "Checkpoint identifies sailor-one as executor after verified transfer, preserves R1/failed first outcome and review used 1/2; human notes/item/annotation unchanged. Current takeover task status is replaced without 🧑‍✈️ only after receipt/readiness; use guarded note replacement and preserve task first line."
+        },
+        {
+          "name": "no_manual_prompt",
+          "type": "not_contains",
+          "check": "Waits for separate handoff confirmation, keeps implementing routine follow-up in Captain, or marks independent review complete."
+        }
+      ],
+      "fixture_variant": "handoff_ready"
     }
   ]
 }

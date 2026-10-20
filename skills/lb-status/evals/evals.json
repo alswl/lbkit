@@ -289,6 +289,28 @@
           "check": "Preserve all human task first lines/checkboxes/notes"
         }
       ]
+    },
+    {
+      "id": 24,
+      "axis": "Observe pending execution ownership without switch",
+      "prompt": "Read-only status for projects/demo/docs/log.md. Captain has prepared handoff to sailor-one, but actual runtime has no receipt. Report execution ownership, current candidate and next action; no changes.",
+      "expected_output": "Observe pending execution ownership without switch",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "pending_owner",
+          "type": "contains",
+          "check": "Report Captain open transfer responsibility, scoped problem, missing receipt and next action; all files unchanged. Show 🧑‍✈️ as the recorded Captain takeover with handoff pending, without treating the emoji as receipt."
+        },
+        {
+          "name": "no_switch",
+          "type": "not_contains",
+          "check": "Sends a package, starts takeover/repair, completes handoff or changes task status."
+        }
+      ],
+      "fixture_variant": "receipt_missing"
     }
   ]
 }

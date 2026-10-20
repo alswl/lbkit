@@ -4,7 +4,7 @@ version: 0.4.1-dev
 description: "Initialize a new logbook by fill-in from a run-instance template under workflows/<workflow>/: fill only the three mutable slots — target date, working directories, and run rulings — collected in one pass; no free drafting, no changing structural granularity; once the three essentials are complete and human-confirmed, hand off to lb-push. With no template, or when goals and structure must change, go to lb-plan instead — this skill does not apply."
 ---
 
-Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 
 # Initialize a run instance from a workflow template

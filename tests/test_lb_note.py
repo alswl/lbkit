@@ -76,6 +76,52 @@ class TaskNoteTest(unittest.TestCase):
         self.assertEqual(result.returncode, 4)
         self.assertEqual(self.log.read_bytes(), before)
 
+    def test_status_handoff_replacement_is_guarded_and_preserves_human_bytes(self):
+        content = (
+            f"# Demo\r\n\r\n## 🚧 {STAGE}\r\n\r\n- [/] {TASK}\r\n"
+            "    - 状态：🧑‍✈️ Captain 接手 <!-- human note -->\r\n"
+            "    - 状态：unrelated human fact\r\n"
+            "- [ ] 人工验证：确认结果。 👱\r\n"
+        ).encode()
+        self.log.write_bytes(content)
+        token = self.token()
+        args = self.note_args(token, "--kind", "Status", "--replace-line", "6",
+                              "--text", "sailor-one 已接收；独立检查待回报")
+        preview = self.cli(*args, "--dry-run", "--json")
+        self.assertEqual(preview.returncode, 0, preview.stderr)
+        self.assertEqual(self.log.read_bytes(), content)
+        result = self.cli(*args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expected = content.replace("🧑‍✈️ Captain 接手".encode(),
+                                   "sailor-one 已接收；独立检查待回报".encode())
+        self.assertEqual(self.log.read_bytes(), expected)
+        self.assertEqual(self.cli(*args).returncode, 4)
+        self.assertEqual(self.log.read_bytes(), expected)
+        wrong = self.note_args(self.token(), "--kind", "Status", "--replace-line", "8",
+                               "--text", "wrong task")
+        self.assertEqual(self.cli(*wrong).returncode, 4)
+        self.assertEqual(self.log.read_bytes(), expected)
+
+    def test_status_replacement_cannot_overwrite_another_kind_or_human_status(self):
+        before = self.log.read_bytes()
+        wrong_kind = self.note_args(self.token(), "--kind", "Status", "--replace-line", "6",
+                                    "--text", "wrong kind")
+        self.assertEqual(self.cli(*wrong_kind).returncode, 4)
+        self.assertEqual(self.log.read_bytes(), before)
+        self.log.write_text(self.log.read_text() + "    - 状态：human progress\n")
+        human_before = self.log.read_bytes()
+        human = ("task", "note", LOG, "--stage", STAGE,
+                 "--task", "人工验证：确认结果。 👱", "--kind", "Status",
+                 "--replace-line", "9", "--text", "replacement", "--token", self.token())
+        self.assertEqual(self.cli(*human).returncode, 4)
+        self.assertEqual(self.log.read_bytes(), human_before)
+
+    def test_status_rejects_empty_or_hidden_values(self):
+        for value in ("Status:", "状态：<!-- hidden"):
+            before = self.log.read_bytes()
+            self.assertEqual(self.cli(*self.note_args(self.token(), "--text", value)).returncode, 2)
+            self.assertEqual(self.log.read_bytes(), before)
+
     def test_empty_or_hidden_task_details_refuse_without_hiding_human_gate(self):
         before = self.log.read_bytes()
         for text in ("Source:", "Acceptance: <!-- hide the human gate", "Skills: <!-- hide"):

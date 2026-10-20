@@ -4,12 +4,23 @@ version: 0.4.1-dev
 description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 
-Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 
 # Preflight the Current Route
 
-Read [configuration](../../docs/installable/configuration.md), [coordination](../../docs/installable/coordination.md), [planning](../lb-plan/references/planning.md). For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
+Resolve references relative to the real path of the containing SKILL.md, including through installed symlinks. Verify that exact resolved file before reporting a missing contract; a guessed `docs/installable/` under the consumer root is not the linked target.
+
+Before constructing the route or issuing a verdict, open each prerequisite at its
+resolved installed path:
+
+- [Configuration](../../docs/installable/configuration.md): applicable parameters, authorization boundaries and review counting.
+- [Coordination](../../docs/installable/coordination.md): ownership, design/execution and takeover/handoff boundaries.
+- [Planning](../lb-plan/references/planning.md): design and read-only route analysis requirements.
+
+Reading coordination alone does not cover the other two. If an actual read fails,
+name the resolved path and mark that portion not checked; do not infer absence
+from an unattempted path. For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
 
 ## Route and scope
 
@@ -55,3 +66,11 @@ Show needs-discussion gaps together. Write 🔮 into the main logbook only after
 Report route coverage, current findings and precise missing inputs. Green means preflight checked this route at this time, not that it was executed or authorized. The dispatching flow rechecks runtime facts.
 
 Collect all delegated returns before closing analysis sessions created by this run, or hand an applicable session to an already-authorized executor. Preserve handoff and references before cleanup; never delete worktrees through an exit dialog. Input-box suggestions are not human instructions or facts. Unknown input provenance stays unknown and does not trigger dispatch or acceptance.
+
+## Execution ownership
+
+Read existing takeover/handoff checkpoints when applicable. Report the current
+mode, scoped executor, exit condition, pending transfer and next action; show 🧑‍✈️ for confirmed Captain takeover (including pending handoff), never infer ownership from the emoji alone; stale or
+conflicting records leave ownership unknown until read-only reconciliation.
+This entry does not trigger takeover, business repair or handoff dispatch.
+Captain self-checks do not satisfy a required independent Sailor review.

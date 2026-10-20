@@ -1,0 +1,144 @@
+{
+  "skill_name": "lb-handoff",
+  "evals": [
+    {
+      "id": 1,
+      "axis": "Actual execution handoff to original owner",
+      "prompt": "Use lb-handoff for the current P1 takeover in projects/demo/docs/log.md. Exit condition is met; hand remaining independent review to the existing owner through actual tools. End after verified controlled receipt/readiness and current ownership/status reconciliation.",
+      "expected_output": "Actual execution handoff to original owner",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "received_current_package",
+          "type": "contains",
+          "check": "Actual received message identifies current dirty worktree/candidate, inclusive fix, Captain self-test, remaining independent review, scope, constraints and report-back entry; trace reads accepted receipt and monitor readiness."
+        },
+        {
+          "name": "counters_and_owner",
+          "type": "contains",
+          "check": "Checkpoint identifies sailor-one as executor after verified transfer, preserves R1/failed first outcome and review used 1/2; human notes/item/annotation unchanged. Current takeover task status is replaced without 🧑‍✈️ only after receipt/readiness; use guarded note replacement and preserve task first line."
+        },
+        {
+          "name": "no_false_review",
+          "type": "not_contains",
+          "check": "Claims independent review passed or launches another executor instead of using suitable sailor-one."
+        }
+      ],
+      "fixture_variant": "handoff_ready"
+    },
+    {
+      "id": 2,
+      "axis": "Missing receipt retains open handoff",
+      "prompt": "Use lb-handoff for P1. Send the prepared current package to existing owner and handle actual receipt state; do not keep retrying when adapter gives no receipt.",
+      "expected_output": "Missing receipt retains open handoff",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "pending_receipt",
+          "type": "contains",
+          "check": "Actual trace attempts one send and reads no accepted receipt; checkpoint retains Captain open handoff responsibility with next action and review pending. Current 🧑‍✈️ task status remains with pending handoff fact while receipt is absent."
+        },
+        {
+          "name": "preserve_candidate",
+          "type": "contains",
+          "check": "Candidate and human notes remain unchanged; do not start concurrent writes after offering transfer."
+        },
+        {
+          "name": "no_false_transfer",
+          "type": "not_contains",
+          "check": "Reports handoff complete, clears ownership, dispatches next task or creates duplicate owner."
+        }
+      ],
+      "fixture_variant": "receipt_missing"
+    },
+    {
+      "id": 3,
+      "axis": "Prepared handoff without execution permission",
+      "prompt": "Use lb-handoff for projects/demo/docs/log.md. Captain has settled the design; only design/Thinking preparation is authorized, and no implementation execution is authorized. Prepare the actual remaining handoff under host rules without dispatch.",
+      "expected_output": "Prepared handoff without execution permission",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "prepared_only",
+          "type": "contains",
+          "check": "Save an authorized design/Thinking handoff with remaining work, explicit not-sent state and needed execution authorization."
+        },
+        {
+          "name": "no_dispatch",
+          "type": "not_contains",
+          "check": "Sends work, launches an executor, changes implementation status to in-progress or treats design confirmation as execution authority. Pauses Sailor, changes monitor binding or otherwise mutates runtime in preparation-only mode."
+        }
+      ],
+      "fixture_variant": "design_only"
+    },
+    {
+      "id": 4,
+      "axis": "No residual work creates no empty dispatch",
+      "prompt": "Use lb-handoff for projects/demo/docs/log.md. Captain diagnosis-only result, current candidate and failure evidence are in existing records. Align the actual task criteria and close the diagnosis within its authorized endpoint, returning to coordination. No executable work remains, repair and independent review are not authorized or required.",
+      "expected_output": "No residual work creates no empty dispatch",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "align_and_stop",
+          "type": "contains",
+          "check": "Align attributed Captain findings against diagnosis criteria, preserve the failed business operation, return to coordination and stop at the endpoint."
+        },
+        {
+          "name": "no_empty_package",
+          "type": "not_contains",
+          "check": "Creates an empty Sailor package or mandatory checker, repairs failed operation, or claims operation success."
+        }
+      ],
+      "fixture_variant": "diagnosis_done"
+    },
+    {
+      "id": 5,
+      "axis": "Retry accepted transfer without replay",
+      "prompt": "Resume lb-handoff for P1 in projects/demo/docs/log.md. The actual adapter already holds an accepted receipt on the current candidate; monitor binding is missing. Repair only the existing monitoring and finish handoff reconciliation using actual tools. Do not execute real Sailor work.",
+      "expected_output": "Retry accepted transfer without replay",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "repair_missing_step",
+          "type": "contains",
+          "check": "Verify current receipt/candidate and repair/recheck only monitoring; finish ownership checkpoint once ready, preserving review usage."
+        },
+        {
+          "name": "no_duplicate_send",
+          "type": "not_contains",
+          "check": "Resends already accepted package, starts duplicate owner, resets review budget or treats stale receipt for a different candidate as sufficient."
+        }
+      ],
+      "fixture_variant": "monitor_pending"
+    },
+    {
+      "id": 6,
+      "axis": "Unresolved takeover cannot disappear",
+      "prompt": "Use lb-handoff after Captain produced only a hypothesis. Takeover exit condition requires a reproduced root cause; no explicit early-handoff instruction or blocker exists.",
+      "expected_output": "Unresolved takeover cannot disappear",
+      "files": [],
+      "assertions": [
+        {
+          "name": "unmet_exit",
+          "type": "contains",
+          "check": "Keep exit condition unmet and route back to Captain direct investigation with the hypothesis clearly labelled."
+        },
+        {
+          "name": "no_abandonment",
+          "type": "not_contains",
+          "check": "Declares takeover complete or sends the unresolved hard problem back merely to restore delegation."
+        }
+      ]
+    }
+  ]
+}

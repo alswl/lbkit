@@ -233,3 +233,23 @@ Historical metadata-only release commits can be integrated with an explicit
 history-only merge after verifying their diffs, preserving current content and
 the existing tag objects. Check ancestry with
 `git merge-base --is-ancestor vX.Y.Z master` before publishing.
+
+## Scoped Captain execution migration
+
+`lb-push` now selects scoped `lb-takeover` automatically for difficult work and
+`lb-handoff` when its exit condition is met. This relaxes the former unconditional
+Sailor-only execution boundary. Consumers adopting it should reconcile explicit
+local prohibitions in their own AGENTS/runtime instructions; shared skills never
+override them. Existing authorization covers mode changes, not new business scope.
+Captain direct checks retain attribution and do not replace required independent
+review. Ownership checkpoints use existing Thinking/host records; no new consumer
+configuration, CLI state or mandatory archive is introduced. New skills are picked
+up by the installer's existing directory enumeration. Re-run the installer after
+upgrading the submodule. No version or schema bump is made without human instruction.
+
+The takeover display uses `状态：🧑‍✈️ Captain 接手` under the task, with host
+field-language preservation. `task note --kind Status/状态 --replace-line` now
+replaces a matching agent-task Status line under the existing CAS/preview rules.
+It preserves comment suffixes and line endings, rejects stale/mismatched writes
+and still forbids human-task replacement. This additive CLI capability avoids
+competing current statuses; it introduces no parsed emoji/state or schema change.

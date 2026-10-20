@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-handoff"
+  short_description: "Return Captain execution to Sailor with verified receipt"

@@ -94,6 +94,20 @@ For newly inserted notes, the first recognized field label selects Chinese or En
 
 Skill annotations accept mixed bare/backticked names, optional slash prefixes, and separators `、`, `,`, `，`, `→`, or `->`. One trailing parenthesized condition is preserved in the raw value. Invalid chains return diagnostics and an empty chain instead of partial names. Tasks without action prefixes remain in the document model, but are not skill-catalog candidates. Work-package text matches remain heuristic candidates, never verified identity bindings.
 
+## Captain takeover display
+
+A confirmed scoped takeover uses a current task status detail, for example:
+
+```markdown
+    - 状态：🧑‍✈️ Captain 接手
+```
+
+Keep it while handoff receipt/readiness is pending, then replace it with the
+receiving executor's actual status. This is a display convention under the
+[coordination protocol](coordination.md#scoped-takeover-and-execution-handoff),
+not a new checkbox/CLI state or an addition to the task first line. Guarded note
+writes and human-content protections still apply.
+
 ## Canonical output and observations
 
 New or changed skill annotations use four spaces and slash/backtick skill spans:

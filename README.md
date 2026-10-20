@@ -9,10 +9,10 @@ Reusable Logbook coordination skills, Markdown contracts, and the `lb` CLI for h
 **lbkit** is a shared kit that gets mounted as a `.lbkit` Git submodule in a consuming repository. It provides the coordination skills, document contracts, and CLI that let a human owner, a coordinator agent, and executor agents deliver real projects through a plain Markdown **logbook** — the single source of scheduling truth.
 
 - **Admiral (human)** — owns goals, risk acceptance, and irreversible decisions
-- **Captain (coordination agent)** — maintains goals/routes, dependencies, dispatch and progress from applicable Sailor returns
+- **Captain (coordination agent)** — maintains goals/routes, dependencies, dispatch and progress; personally executes scoped difficult work through takeover
 - **Sailors (execution agents)** — perform business work, testing, review and acceptance, returning current results and outcomes
 
-Authorization boundaries, applicable Sailor returns, and human checkpoints are contracts, not options. Plans don't authorize execution; agents cannot complete human-owned items. They can record when human review starts.
+Authorization boundaries, applicable executor results, and human checkpoints are contracts, not options. Plans don't authorize execution; agents cannot complete human-owned items. They can record when human review starts.
 
 ## Install
 
@@ -27,6 +27,8 @@ Follow the [installation and upgrade guide](docs/guide/install.md). mind-forge i
 | [lb-plan](skills/lb-plan/SKILL.md) | Verify goals, draft todos for confirmation, design stages and work packages |
 | [lb-preflight](skills/lb-preflight/SKILL.md) | Read-only preflight: route planning and step-by-step feasibility |
 | [lb-push](skills/lb-push/SKILL.md) | Dispatch, resume, and monitor execution within granted authorization |
+| [lb-takeover](skills/lb-takeover/SKILL.md) | Captain personally resolves a scoped difficult problem |
+| [lb-handoff](skills/lb-handoff/SKILL.md) | Return execution to Sailor with verified receipt |
 | [lb-update](skills/lb-update/SKILL.md) | Refresh verified progress, or reread human edits without writing |
 | [lb-status](skills/lb-status/SKILL.md) | Observe logbooks and the control plane, report status briefs |
 

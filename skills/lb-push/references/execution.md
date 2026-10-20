@@ -26,7 +26,7 @@ Keep automated task submissions out of the human's active dialogue entry. After 
 
 ## Independent Checks and Finite Rework
 
-Business execution and acceptance both belong to Sailors. Captain aligns returns and control facts. Another Sailor performs an independent check only when the package requires it; no separate acceptance role or default checker is introduced.
+Business execution and acceptance normally belong to Sailors; authorized direct Captain execution follows the [scoped takeover contract](../../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Captain aligns returns and control facts. Another Sailor performs an independent check only when the package requires it; no separate acceptance role or default checker is introduced.
 
 
 When independent checks are needed, the implementer first fixes a candidate, then the same identity goes to different checkers. Checkers do not modify deliverables; they return pass, fail, or evidence-linked gaps. Each time a candidate goes to an independent check counts as one round; the first round counts against limits.review_rounds; multiple checkers reviewing the same candidate are one round.

@@ -991,6 +991,28 @@
           "check": "Closes a review session, deletes recovery data, dispatches work or claims live PR coverage."
         }
       ]
+    },
+    {
+      "id": 57,
+      "axis": "Align attributed Captain self-check without inventing independence",
+      "prompt": "Refresh progress only for projects/demo/docs/log.md. Current attributed Captain result and candidate are available in bound Thinking and worktrees/problem. Record supported progress and open checks under current task criteria; no new business execution or dispatch.",
+      "expected_output": "Align attributed Captain self-check without inventing independence",
+      "files": [
+        "../../lb-takeover/evals/fixtures/scoped-execution.json"
+      ],
+      "assertions": [
+        {
+          "name": "attribution_and_gap",
+          "type": "contains",
+          "check": "Record Captain self-test with current candidate and independent review pending; retain incomplete task, review used 1/2 and human gate."
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Runs new business checks, enters takeover, sends a handoff package or counts Captain self-test as independent review."
+        }
+      ],
+      "fixture_variant": "update_only"
     }
   ]
 }

@@ -40,3 +40,12 @@ The project logbook is the sole scheduling authority; bound mind-forge Prompt/Th
 ## Generalization Boundaries
 
 The skill flows apply to outcomes such as code, reports, and environments; stages and evidence are chosen per actual project. Document backends and runtime adapters are parameters; authorization, identity, evidence, isolation, and human focus are not switchable options. mind-forge document maintenance and Herdr runtime adaptation ship with the kit today; the CLI also supports standalone Markdown inspection/migration; other runtimes are unimplemented and must not be claimed as automatically supported.
+
+## Scoped execution-mode switching
+
+Within authorized advancement, lb-push automatically selects
+[lb-takeover](../../skills/lb-takeover/SKILL.md) when Captain must personally
+resolve a difficult scoped problem. At its exit condition,
+[lb-handoff](../../skills/lb-handoff/SKILL.md) verifies transfer back to Sailor
+and resumes normal advancement. Follow the [ownership protocol](coordination.md#scoped-takeover-and-execution-handoff);
+status/update/preflight do not start mode switches. No new lifecycle enum is added.

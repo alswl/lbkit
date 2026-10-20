@@ -4,10 +4,12 @@ version: 0.4.1-dev
 description: "Check project progress, executor status, blockers, and the next item, maintaining emoji and a few fact fragments; when context usage is found above 80%, hand off to lb-push for automatic GC. When the user explicitly asks read-only, report only — no checkbox or acceptance changes; deep plan review belongs to lb-plan."
 ---
 
-Captain maintains the Logbook goal/route and coordination; Sailors own concrete business work, testing, review and acceptance. Align a current Sailor return (task/package, result, conditions, outcome and gaps) before recording completion. A status/update-only request dispatches no business work.
+Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 
 # Check project status
+
+In the status brief, visibly print `🧑‍✈️ Captain` when verified records show active takeover or handoff awaiting receipt/readiness. Identify pending ownership explicitly; the emoji alone is not proof. Explicit read-only requests still write no files.
 
 mode is recorded (per the records) or live (joining approved live observation). When the user explicitly wants records only, use recorded; for ordinary progress queries, default to live when an identifiable dispatched executor exists, otherwise recorded. An explicit request for live observation also uses live. When query capability is unavailable, report "live status unknown"; do not repair the runtime environment.
 
@@ -30,3 +32,11 @@ Locate the designated or uniquely identifiable logbook and read the [configurati
 ## Output and stopping
 
 Give a briefing per the question; when runtime state is involved, include the executor name and workspace/tab/pane, observation time or recent activity, blockers, and the next action. A single factual question does not require the full template, and focus is not reported. If local writes occurred, briefly describe the changes and unverified items; apart from the automatic GC above, pure queries never reverse into acceptance or advancement flows. Return a requested human-readable list in the briefing; do not create or refresh a companion checklist file. For read-only todo filtering use `bin/lb task list`, and for the next item `bin/lb task next`; still verify scheduling semantics against the logbook source.
+
+## Execution ownership
+
+Read existing takeover/handoff checkpoints when applicable. Report the current
+mode, scoped executor, exit condition, pending transfer and next action; show 🧑‍✈️ for confirmed Captain takeover (including pending handoff), never infer ownership from the emoji alone; stale or
+conflicting records leave ownership unknown until read-only reconciliation.
+This entry does not trigger takeover, business repair or handoff dispatch.
+Captain self-checks do not satisfy a required independent Sailor review.
