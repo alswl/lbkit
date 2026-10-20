@@ -1,0 +1,18 @@
+{
+  "description": "An explicitly authorized task replacement versus a proposal-only request; real CLI state and protected historical evidence.",
+  "setup": [
+    "Create an isolated fictional consumer with the real CLI, installed skill/contract links and existing document bindings under its host adapter.",
+    "Keep assertions and audit logs outside the subject workspace. Record all real CLI argv, outputs and before/after Logbook bytes so intermediate scheduling states can be checked.",
+    "Create empty workdirs/sample-app and workdirs/sample-tests as approved planning repositories. No business reads, writes or execution are needed there.",
+    "The original task is paused with no live owner or pending runtime responsibility. Its C1 artifact is historical and is not acceptance of either replacement.",
+    "Pair the current implementation and guidance with the preceding snapshot. Render {{WORKSPACE}} to each subject absolute root; prompts and normalized protected inputs must match, with only those generated absolute paths differing."
+  ],
+  "files": {
+    "AGENTS.md": "# Fictional consumer\nRead docs/document-guide.md and use the requested installed skill and actual local tools. Only this workspace is authorized. Preserve human goals, comments, task evidence, companion records and recovery material. No network, installs, commits, pushes, cleanup, new agents or business execution. The existing package is paused; there is no live owner or open runtime responsibility. Repository names sample-app and sample-tests are approved solely for the requested planning change.\n",
+    "projects/demo/docs/log.md": "# Sample Split\n\n## Overview\n\n目标：保留原始决定并交付可核验样例。\n\n工作目录：\n\n- local\n  - `{{WORKSPACE}}/workdirs/sample-app`\n  - `{{WORKSPACE}}/workdirs/sample-tests`\n\n## 🚧 Stage 01 Delivery\n\n目标：保留人工提供的阶段目标。\n\n待办：\n\n- [/] 开发：交付并核验样例成果。\n    - 来源：人工确认的原始任务。\n    - 技能：`/example-skill`\n    - 验收：旧条件仅适用于原始整体任务。\n    - 产物：[历史 C1](../../../records/result.txt)\n    <!-- keep human comment -->\n- [ ] 人工验证：审阅结果。 👱\n    - 批注：请保留此处人工输入。\n",
+    "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nPreserve original result identity and evidence; no business execution.\n",
+    "projects/demo/thinking/log.md": "# Decisions\n\n2026-10-01: Original aggregate package paused; C1 remains historical, not acceptance of new work.\n",
+    "records/result.txt": "historical sample C1; preserve verbatim\n",
+    "records/recovery.txt": "keep recovery pointer\n"
+  }
+}

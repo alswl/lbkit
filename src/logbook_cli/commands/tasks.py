@@ -218,6 +218,28 @@ def rewrite(
     )
 
 
+@task.command("split")
+@options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, DECISION)
+@click.option("--into", "texts", multiple=True, required=True, help="Replacement task text, in approved order; repeat at least twice.")
+def split(
+    root: str | None,
+    log: str,
+    stage: str,
+    task: str,
+    token: str,
+    dry_run: bool,
+    json: bool,
+    decision: str,
+    texts: tuple[str, ...],
+) -> None:
+    finish(
+        tasks.split(
+            resolve_root(root), log, stage, task, texts, decision, token, dry_run
+        ),
+        json,
+    )
+
+
 @task.command("resolve")
 @options(
     ROOT,

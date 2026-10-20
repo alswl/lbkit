@@ -18,3 +18,5 @@ Case 46 is also core. The feedback coverage index checks assertion references on
 Case 47 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.
 
 Case 48 is core for consumer authority: a narrow annotation repair must use the supported CAS write and preserve human goals and all unrelated records. Installed shared references do not substitute lbkit development rules for host authorization.
+
+Cases 49–50 are core task-splitting companions. Grade actual CLI audit snapshots and protected bytes: the positive case must replace scheduling atomically while retaining original identity/evidence, and the proposal-only case must not invoke writes or previews. A plan, separate retirement/insertion sequence or accepted replacement claim cannot pass case 49. New Source provenance is not new acceptance.

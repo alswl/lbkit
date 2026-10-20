@@ -122,6 +122,14 @@ Direct Admiral–Sailor dialogue requires Captain's permission and a verified in
 
 ## Behavior evaluation
 
+The optional `task split` command adds atomic replacement of an explicitly
+authorized unfinished agent package. It retains the original identity and
+evidence using the existing skipped/not-applicable disposition, and creates
+ordered not-started tasks with source provenance. It adds no document schema,
+configuration or consumer adoption requirement. Repository coverage and human
+protections are enforced by the CLI; authorization and evidence applicability
+remain the caller's responsibility. Existing task commands keep their behavior.
+
 The reusable feedback acceptance inventory lives in
 `tests/fixtures/feedback_requirements.json`; its separate check mapping lives in
 `tests/fixtures/feedback_coverage.json`. Keep original feedback IDs, atomic

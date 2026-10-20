@@ -11,7 +11,13 @@ from logbook_cli.document import (
     root_path,
     safe_path,
 )
-from logbook_cli.edit import add_task, append_note, resolve_task, rewrite_task
+from logbook_cli.edit import (
+    add_task,
+    append_note,
+    resolve_task,
+    rewrite_task,
+    split_task,
+)
 from logbook_cli.format import CHECKBOX
 from logbook_cli.models import TaskState
 from logbook_cli.services.common import Result, load, save, writable
@@ -114,6 +120,28 @@ def rewrite(
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
     return save(doc, rewrite_task(doc, item, text, decision, assign_repo), dry_run, line=item.line)
+
+
+def split(
+    root: str,
+    log: str,
+    stage: str,
+    task: str,
+    texts: tuple[str, ...],
+    decision: str,
+    token: str,
+    dry_run: bool,
+) -> Result:
+    doc = writable(root, log, token)
+    item = find_task(doc, stage, task)
+    return save(
+        doc,
+        split_task(doc, item, texts, decision),
+        dry_run,
+        line=item.line,
+        original_task=item.identity,
+        replacement_tasks=list(texts),
+    )
 
 
 def resolve(

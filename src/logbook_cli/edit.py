@@ -314,6 +314,68 @@ def resolve_task(
     )
 
 
+def split_task(
+    doc: Document, task: Task, texts: tuple[str, ...], decision: str
+) -> str:
+    """Replace one runnable package while keeping its identity and evidence."""
+    single_line(decision, "decision")
+    if task.human or task.state not in (" ", "/"):
+        raise LbError("only unfinished agent tasks may be split", EXIT_REFUSED)
+    if len(texts) < 2:
+        raise LbError("split requires at least two --into values", EXIT_USAGE)
+    for text in texts:
+        single_line(text, "replacement task")
+        if text.startswith(("- [", "* [", "+ [")):
+            raise LbError("--into is task text only, without a checkbox", EXIT_USAGE)
+    existing = {t.text for s in doc.stages if s.title == task.stage for t in s.tasks}
+    if len(set(texts)) != len(texts) or existing.intersection(texts):
+        raise LbError("replacement task text must be new and unique", EXIT_REFUSED)
+
+    changed = doc.text[: task.state_at] + "-" + doc.text[task.state_at + 1 :]
+    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    original = find_task(retired, task.stage, task.text)
+    changed = resolve_task(
+        retired,
+        original,
+        "not-applicable",
+        decision,
+        "Original package replaced by: " + json.dumps(texts, ensure_ascii=False),
+    )
+    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    original = find_task(retired, task.stage, task.text)
+    last = task_content_end(retired, original)
+    at = retired.offsets[last] + len(retired.lines[last])
+    newline = "\r\n" if b"\r\n" in doc.data else "\n"
+    source = prefix(Field.SOURCE, doc.locale) + (
+        f"Split from original task {task.identity}; verify acceptance separately."
+    )
+    additions = "".join(
+        f"- [ ] {text}{newline}    - {source}{newline}" for text in texts
+    )
+    changed = retired.text[:at] + additions + retired.text[at:]
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    replacements = [find_task(candidate, task.stage, text) for text in texts]
+    if any(t.human or t.preflight_blocker for t in replacements):
+        raise LbError("split cannot create human tasks or preflight gates", EXIT_REFUSED)
+    if task.repositories:
+        original_repositories = set(task.repositories)
+        replacement_repositories = {r for t in replacements for r in t.repositories}
+        if (
+            any(not t.repositories for t in replacements)
+            or replacement_repositories != original_repositories
+        ):
+            raise LbError(
+                "split must preserve the original repository coverage without transfer",
+                EXIT_REFUSED,
+            )
+    elif any(len(t.repositories) > 1 for t in replacements):
+        raise LbError(
+            "each replacement of an unassigned task may name at most one repository",
+            EXIT_REFUSED,
+        )
+    return changed
+
+
 def add_link(doc: Document, stage_name: str, link: str) -> tuple[str, int]:
     """Append one Markdown link to a delivery stage's related-links block."""
     if "\n" in link or "\r" in link or not LINK_RE.fullmatch(link.strip()):

@@ -494,8 +494,38 @@
         },
         {
           "id": "split",
-          "checks": [],
-          "gap": "Initial assignment is covered, but end-to-end authorized splitting is not; define scope separately under TODO 08."
+          "checks": [
+            {
+              "skill": "lb-plan",
+              "case": 49,
+              "assertion": "atomic_scheduling_replacement",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 49,
+              "assertion": "provenance_and_protected_content",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 50,
+              "assertion": "proposal_only_preserves_files",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-plan",
+              "case": 50,
+              "assertion": "no_proposal_write_or_dispatch",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_lb_split.TaskSplitTest.test_split_preserves_original_evidence_and_replaces_scheduling_once"
+            },
+            {
+              "test": "tests.test_lb_split.TaskSplitTest.test_invalid_replacements_never_retire_original_or_insert_partial_tasks"
+            }
+          ]
         }
       ]
     },
