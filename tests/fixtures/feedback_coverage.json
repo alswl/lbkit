@@ -259,7 +259,7 @@
         {
           "id": "local_retention",
           "checks": [],
-          "gap": "No focused authorized-untracking/local-ignore scenario; add under TODO 16 without granting cleanup here."
+          "gap": "No focused authorized-untracking/local-ignore scenario; existing coverage grants no cleanup permission."
         }
       ]
     },
@@ -375,7 +375,7 @@
         {
           "id": "explicit_removal",
           "checks": [],
-          "gap": "No direct authorized-removal behavior case; add under TODO 06."
+          "gap": "No direct authorized-removal behavior case."
         }
       ]
     },
@@ -451,7 +451,7 @@
         {
           "id": "retro",
           "checks": [],
-          "gap": "No lb-workflow entry exists in this checkout; choose a real owner and add a close-out scenario under TODO 07."
+          "gap": "No lb-workflow entry exists in this checkout; close-out behavior has no entry-specific coverage."
         }
       ]
     },
@@ -559,7 +559,7 @@
         {
           "id": "host_entries",
           "checks": [],
-          "gap": "Installer-owned link tests do not establish consumer README/AGENTS/config migration; requires an authorized host fixture under TODO 21."
+          "gap": "Installer-owned link tests do not establish consumer README/AGENTS/config migration; no authorized host fixture covers it."
         }
       ]
     },
@@ -597,12 +597,12 @@
         {
           "id": "plan_entry",
           "checks": [],
-          "gap": "Preflight case 10 cannot certify lb-plan entry behavior; add plan-specific scenario under TODO 10."
+          "gap": "Preflight case 10 cannot certify lb-plan entry behavior; no plan-specific scenario covers it."
         },
         {
           "id": "no_forced_batch",
           "checks": [],
-          "gap": "No direct no-useful-independence analysis case; add under TODO 10."
+          "gap": "No direct no-useful-independence analysis case."
         }
       ]
     },
@@ -651,7 +651,7 @@
         {
           "id": "not_green",
           "checks": [],
-          "gap": "Add a focused annotated-but-unauthenticated candidate scenario under TODO 05/07; target-definition coverage alone is insufficient."
+          "gap": "No focused annotated-but-unauthenticated candidate scenario; target-definition coverage alone is insufficient."
         }
       ]
     },
@@ -850,7 +850,7 @@
         {
           "id": "advance",
           "checks": [],
-          "gap": "Plan generation does not certify preflight/push behavior; add entry-specific regression under TODO 06."
+          "gap": "Plan generation does not certify preflight/push behavior; no entry-specific regression covers it."
         }
       ]
     },
@@ -994,7 +994,7 @@
         {
           "id": "decision_view",
           "checks": [],
-          "gap": "Table-render review cases do not certify decision-view selection or plugin session creation; add host-integrated scenario under TODO 20."
+          "gap": "Table-render review cases do not certify decision-view selection or plugin session creation; no host-integrated scenario covers them."
         }
       ]
     },
@@ -1038,7 +1038,7 @@
         {
           "id": "resume",
           "checks": [],
-          "gap": "Preflight 9 checks shortage; add sufficient-budget positive continuation under TODO 12."
+          "gap": "Preflight 9 checks shortage; sufficient-budget positive continuation is not covered."
         }
       ]
     }
