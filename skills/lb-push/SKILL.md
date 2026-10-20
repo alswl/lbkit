@@ -50,7 +50,7 @@ Browser work goes to the Sailor using the host-declared browser tools with a tas
 
 Before the first external write, verify the authenticated identity belongs to the human owner, and write any body in their judgment and voice — never cast a coordinator or Sailor as the externally accountable party. Authenticated profile or a verified account mapping can establish ownership; key names or local authorship cannot. Pause the dependent write when identity or voice is unclear; a tooling capability gap does not authorize switching to a semantically different channel. When the write publishes a reviewed result, verify feedback clearance on each surface separately — thread comments, review threads and inline comments each state their own resolution; an empty surface clears only itself and never substitutes for the others.
 
-cleanup touches only approved resources; it does not pick a business first item or dispatch follow-up tasks. Deleting a completed worktree falls under the root-rule exception; reuse, retention, and cleanup of sessions and monitoring are judged by the model against the scene, without affecting other projects.
+cleanup touches only approved resources; it does not pick a business first item or dispatch follow-up tasks. Deleting a completed worktree follows the consuming repository's applicable cleanup authorization; reuse, retention, and cleanup of sessions and monitoring are judged by the model against the scene, without affecting other projects.
 
 ## Reporting and Handoff
 

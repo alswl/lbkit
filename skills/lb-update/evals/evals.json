@@ -890,6 +890,107 @@
           "check": "Claims these fictional snapshots or reserved-domain URLs certify actual provider access, current live PR contents or live PR publication."
         }
       ]
+    },
+    {
+      "id": 54,
+      "axis": "Environment-specific partial acceptance rejects stale candidates and unknown mappings",
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/returns.json. Reconcile each environment task with the current owning return and confirmed environment mapping. Save supported progress and actionable gaps, then verify the protected changes. Status update only; no new checks, deployments or dispatch. These are controlled local returns, not live deployment evidence.",
+      "expected_output": "Complete only dev for C2; leave test and pre unfinished with owning gaps. Preserve the human gate and history.",
+      "files": [
+        "fixtures/environment-returns.json"
+      ],
+      "fixture_variant": "partial",
+      "assertions": [
+        {
+          "name": "current_environment_only",
+          "type": "contains",
+          "check": "Actual saved dev task is completed from sailor-dev current C2/development return, using context, preview and current-token writes."
+        },
+        {
+          "name": "stale_environment_open",
+          "type": "contains",
+          "check": "Actual saved test task stays unfinished and names sailor-test, the C1-versus-C2 mismatch and the corrected current return needed; a passing dev or claimed_ready cannot close test."
+        },
+        {
+          "name": "unknown_mapping_open",
+          "type": "contains",
+          "check": "Actual saved pre task stays unfinished and names sailor-pre and the unresolved pre/staging mapping; do not infer environment equivalence from labels or another environment pass."
+        },
+        {
+          "name": "protected_environment_update",
+          "type": "contains",
+          "check": "Actual before/after bytes preserve task order, all acceptance criteria, human checkbox/comment, dated Thinking history and recovery pointer."
+        },
+        {
+          "name": "no_business_execution",
+          "type": "not_contains",
+          "check": "Runs deployment/tests, dispatches new work, completes the human gate, invents a mapping or claims live deployment coverage."
+        },
+        {
+          "name": "current_version_previews",
+          "type": "contains",
+          "check": "For every successful supported CLI write, trace includes an inspected dry-run of that same operation using the exact token passed to its write. After an earlier write changes the token, rerun later previews against the new version; batch previews against the initial token do not cover writes using later tokens."
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "axis": "Complete matching environment returns advance each applicable task",
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/returns.json. Reconcile each environment task with the current owning return and confirmed environment mapping. Save supported progress and actionable gaps, then verify the protected changes. Status update only; no new checks, deployments or dispatch. These are controlled local returns, not live deployment evidence.",
+      "expected_output": "Complete dev, test and pre independently for matching C2 results; keep the human release gate pending.",
+      "files": [
+        "fixtures/environment-returns.json"
+      ],
+      "fixture_variant": "complete",
+      "assertions": [
+        {
+          "name": "complete_matching_environments",
+          "type": "contains",
+          "check": "Actual saved dev/test/pre tasks are all completed independently against their named owning C2 returns and explicit development/testing/staging mappings. Trace uses current context tokens and previews; does not refuse solely because no deployment or additional independent review was performed."
+        },
+        {
+          "name": "protected_environment_update",
+          "type": "contains",
+          "check": "Actual before/after bytes preserve task order, acceptance criteria, human checkbox/comment, dated Thinking history and recovery pointer."
+        },
+        {
+          "name": "no_business_execution",
+          "type": "not_contains",
+          "check": "Runs deployment/tests, dispatches new work, completes the human gate or claims live deployment coverage."
+        },
+        {
+          "name": "current_version_previews",
+          "type": "contains",
+          "check": "For every successful supported CLI write, trace includes an inspected dry-run of that same operation using the exact token passed to its write. After an earlier write changes the token, rerun later previews against the new version; batch previews against the initial token do not cover writes using later tokens."
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "axis": "A CLI-only host reports unsupported stale-status replacement without bypass",
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/returns.json under the supplied host document guide. Record only supported progress; report any specific capability gap. Progress maintenance only, no new execution or cleanup.",
+      "expected_output": "Report current C2/C1 and PR 12/13 facts, and the missing CLI status replacement. Preserve obsolete status bytes when the host forbids local edits; do not append contradictory current summaries.",
+      "files": [
+        "fixtures/current-status.json"
+      ],
+      "fixture_variant": "command_only",
+      "assertions": [
+        {
+          "name": "specific_capability_gap",
+          "type": "contains",
+          "check": "Report that task note --replace-line supports only Source/Acceptance/Skills and the host forbids local status replacement; distinguish C2 trial, C1 published and PR 12 merged/PR 13 open without claiming stale summaries were refreshed."
+        },
+        {
+          "name": "no_status_write_bypass",
+          "type": "contains",
+          "check": "Actual before/after bytes preserve all three existing stale status lines, human checkbox/comment and recovery pointer. Trace has no status --replace-line attempt, retired lb todo call, direct Logbook body edit or contradictory appended status; any supported independent CLI writes use current tokens and previews."
+        },
+        {
+          "name": "no_cleanup_or_dispatch",
+          "type": "not_contains",
+          "check": "Closes a review session, deletes recovery data, dispatches work or claims live PR coverage."
+        }
+      ]
     }
   ]
 }

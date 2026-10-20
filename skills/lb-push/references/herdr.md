@@ -1,10 +1,10 @@
 # Herdr Operating Conventions
 
-This file applies only to runtime.adapter=herdr. Before performing Herdr operations, read this file and the environment's Herdr tool skill, and verify available parameters against the current interface; do not load its CLI details when this adapter is not selected. Authorization and execution isolation are defined by [AGENTS.md](../../../AGENTS.md).
+This file applies only to runtime.adapter=herdr. Before performing Herdr operations, read this file and the environment's Herdr tool skill, and verify available parameters against the current interface; do not load its CLI details when this adapter is not selected. Authorization and execution isolation follow the consuming repository's root `AGENTS.md` and current task authorization.
 
 ## Launch and Isolation
 
-The control scope is the current workspace and authorized sessions. Business execution packages are operated by the owning agent in an independent Git worktree under the original repository; deleting a completed worktree falls under the root rule's cleanup exception; the coordinator must not do cross-repo worktree setup or business environment provisioning on the agent's behalf. If no owning agent capable of that setup exists, report the prerequisite instead of bypassing the boundary.
+The control scope is the current workspace and authorized sessions. Business execution packages are operated by the owning agent in an independent Git worktree under the original repository; deleting a completed worktree follows the consuming repository's applicable cleanup authorization; the coordinator must not do cross-repo worktree setup or business environment provisioning on the agent's behalf. If no owning agent capable of that setup exists, report the prerequisite instead of bypassing the boundary.
 
 The executor agent uses a dedicated tab distinct from the coordinator's main tab and keeps its working directory. Create with `--no-focus`; background operations must explicitly target the agent, tab, or pane. Operations that cannot avoid stealing focus are left to the human.
 

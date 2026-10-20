@@ -1,6 +1,6 @@
 # Execution, Review, and Recovery
 
-Read before dispatching, resuming, or authorized cleanup. This file defines the operating process; tool commands come from the selected adapter. The [Repository Boundaries](../../../AGENTS.md) and the [Configuration Contract](../../../docs/installable/configuration.md) always apply.
+Read before dispatching, resuming, or authorized cleanup. This file defines the operating process; tool commands come from the selected adapter. The boundaries in the consuming repository's root `AGENTS.md` and the [Configuration Contract](../../../docs/installable/configuration.md) always apply.
 
 ## Runtime Adapter Contract
 
@@ -45,7 +45,7 @@ Hand logins, identity, approvals, or upstream rejections straight to the human; 
 
 ## Cleanup Branch
 
-When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. A completed worktree may be deleted by the owning Sailor, protecting deliverables and user changes per the root rules — this grants no other permissions such as branch deletion. When an authorized integration (e.g. squash into `master`) finds uncommitted changes in the target worktree, save them as a named stash first and report its name; delete only the worktrees and branches registered for this run, and report unregistered directories instead of removing them. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
+When cleanup is explicitly requested, touch only approved sessions or resources; do not force-pick the first unchecked business item, and do not dispatch tasks along the way. The owning Sailor may delete a completed worktree within the consuming repository's applicable cleanup authorization, protecting deliverables and user changes; this grants no other permissions such as branch deletion. When an authorized integration (e.g. squash into `master`) finds uncommitted changes in the target worktree, save them as a named stash first and report its name; delete only the worktrees and branches registered for this run, and report unregistered directories instead of removing them. Retention, reuse, and cleanup of sessions and monitoring are judged by the model against open responsibilities and contextual value.
 
 On abnormal shutdown or a human-requested termination, first save the handoff, open responsibilities, and recovery conditions. Record session closure, task failure, project cancellation, and delivery completion separately; managing a group does not automatically include cleaning up old services.
 

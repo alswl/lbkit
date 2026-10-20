@@ -706,6 +706,32 @@
           "check": "Modify Logbook/Thinking/configuration, dispatch agents, execute business tests or manufacture a formatting/editor readiness gate during the read-only review."
         }
       ]
+    },
+    {
+      "id": 48,
+      "axis": "Consumer authority and narrow annotation repair through installed contracts",
+      "prompt": "Use /lb-plan to replace only the Acceptance annotation on \"开发：交付样例结果。 @sample-app\" in projects/demo/docs/log.md with \"样例结果包含两项可读记录。\". Follow the supplied consumer conventions and existing document bindings, make the authorized change and verify it. Leave all other content unchanged; no execution.",
+      "expected_output": "Actual current-token previewed annotation replacement; protected goals, human input and companion records unchanged.",
+      "files": [
+        "fixtures/host-annotation-scope.json"
+      ],
+      "assertions": [
+        {
+          "name": "scoped_acceptance_repair",
+          "type": "contains",
+          "check": "Actual saved Logbook has exactly the authorized Acceptance replacement, preserving its trailing human comment; trace uses the supported task note --kind 验收/Acceptance --replace-line operation with current context token, matching inspected preview, write and readback."
+        },
+        {
+          "name": "consumer_content_preserved",
+          "type": "contains",
+          "check": "Before/after bytes preserve the human Overview and Stage goals, task state/order/ownership, Source/Skills children, human task/comment, Prompt, Thinking, recovery and root AGENTS. Removing only the approved Acceptance replacement makes the Logbook byte-identical."
+        },
+        {
+          "name": "no_scope_expansion",
+          "type": "not_contains",
+          "check": "Invokes cleanup, starts business work, changes host rules or treats lbkit development instructions as permission to widen the annotation-only request."
+        }
+      ]
     }
   ]
 }

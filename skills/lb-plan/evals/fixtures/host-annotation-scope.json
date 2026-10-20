@@ -1,0 +1,16 @@
+{
+  "description": "Narrow annotation repair in an installed consumer whose local rules own goals and write scope.",
+  "setup": [
+    "Initialize a fictional consumer with real mf, bin/lb and installed skill/contract symlinks. Materialize files; index and verify the existing Article/Prompt/Thinking bindings.",
+    "Keep the real lbkit development AGENTS.md in .lbkit, distinct from the consumer root AGENTS.md. Do not put assertions or grading inside the subject workspace."
+  ],
+  "files": {
+    "AGENTS.md": "# Fictional consumer\nOnly this workspace is authorized. All data is fictional public data. No network, dependency installation, commits, pushes, merges, new agents or business execution. Read docs/document-guide.md. Use the requested skill under .lbkit/skills and the actual local mf/bin/lb tools. Preserve human content.\nCurrent task permits only the specified Acceptance annotation replacement. Overview and historical Stage goals, task states/order/ownership, human comments and companion records must remain unchanged. No cleanup.\n",
+    "docs/document-guide.md": "# Document adapter\nArticle: projects/demo/docs/log.md; Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md. Resolve with mf -p projects/demo article show docs/log.md --json. Supported Logbook writes use bin/lb with the current context token and an inspected dry-run of the same operation and version before each write. No new bindings or record backends are required.\n",
+    "lbkit-agents.yaml": "version: 0.2.0\ndocuments:\n  adapter: mind-forge\n  project_root: projects\n  mind_forge_guide: docs/document-guide.md\n",
+    "projects/demo/docs/log.md": "# Sample Logbook\n\n## Overview\n\n目标：Compare two public datasets.\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Draft\n\n目标：保留人工提供的阶段目标。\n\n待办：\n\n- [/] 开发：交付样例结果。 @sample-app\n    - 来源：人工确认的原任务。\n    - 技能：`/example-skill`\n    - 验收：旧验收条件。 <!-- keep human comment -->\n- [ ] 人工验证：审阅结果。 👱\n    - 批注：保留人工输入。\n",
+    "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nOnly repair the specified Acceptance annotation.\n",
+    "projects/demo/thinking/log.md": "# Decisions\n\n2026-10-01: Human goals and task order confirmed.\n",
+    "records/recovery.txt": "keep recovery pointer\n"
+  }
+}

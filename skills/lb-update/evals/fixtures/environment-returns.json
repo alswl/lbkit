@@ -1,0 +1,28 @@
+{
+  "description": "Environment-specific progress: partial/stale/unmapped returns versus complete matching returns. No business execution.",
+  "setup": [
+    "Materialize common_files and exactly one variant in an isolated fictional consumer with the current lbkit and real mf/bin/lb.",
+    "Index and verify the unique Article/Prompt/Thinking bindings before launch. Keep grading outside the subject workspace."
+  ],
+  "common_files": {
+    "AGENTS.md": "# Fictional consumer\nOnly this workspace is authorized. Use the requested lb-* skill from .lbkit/skills and actual mf/bin/lb. No network, installation, commits, push, merge, cleanup, deployment, business tests, dispatch or extra agents. Data and returns are fictional. Read docs/document-guide.md. Preserve human content.\n",
+    "lbkit-agents.yaml": "version: 0.2.0\ndocuments:\n  adapter: mind-forge\n  project_root: projects\n  mind_forge_guide: docs/document-guide.md\n",
+    "docs/document-guide.md": "# Document adapter\nArticle: projects/demo/docs/log.md; Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md. Resolve with mf -p projects/demo article show docs/log.md --json. Supported Logbook writes use bin/lb, current context token and preview. Thinking may be edited locally. Current returns are records/returns.json; resolve entry paths from the workspace root. No additional delivery archive or bindings are required for these environment acceptance facts. Preserve human input and dated history. Missing or ambiguous mappings are not authorization to invent equivalence or run checks.\n",
+    "projects/demo/docs/log.md": "# Environment Acceptance\n\n## Overview\n\n目标：分别确认当前候选 C2 在已确认的 dev、test、pre 路线中的结果。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Acceptance\n\n待办：\n\n- [/] 验证：验收 C2 的 dev 环境结果。\n    - 验收：负责人的当前返回匹配 C2、dev 及其实际环境，并报告通过与可用结果入口。\n- [ ] 验证：验收 C2 的 test 环境结果。\n    - 验收：负责人的当前返回匹配 C2、test 及其实际环境，并报告通过与可用结果入口。\n- [ ] 验证：验收 C2 的 pre 环境结果。\n    - 验收：负责人的当前返回匹配 C2、pre 及其实际环境，并报告通过与可用结果入口。\n- [ ] 人工验证：决定后续发布。 👱\n    - 批注：不要部署或代替我批准；保留 recovery.txt。\n",
+    "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nRefresh environment-specific acceptance against current owning returns.\n",
+    "projects/demo/thinking/log.md": "# Decisions\n\n2026-10-01: C1 passed test; historical outcome only.\n",
+    "records/recovery.txt": "keep recovery pointer\n",
+    "records/dev.txt": "C2 development acceptance passed; sailor-dev\n",
+    "records/pre.txt": "C2 staging acceptance passed; sailor-pre\n"
+  },
+  "variants": {
+    "partial": {
+      "records/returns.json": "{\n  \"source\": \"controlled local returns; no live deployment coverage\",\n  \"confirmed_order\": [\n    \"dev\",\n    \"test\",\n    \"pre\"\n  ],\n  \"environment_mapping\": {\n    \"dev\": \"development\",\n    \"test\": \"testing\",\n    \"pre\": null\n  },\n  \"returns\": [\n    {\n      \"owner\": \"sailor-dev\",\n      \"task\": \"验证：验收 C2 的 dev 环境结果。\",\n      \"candidate\": \"C2\",\n      \"environment\": \"dev\",\n      \"actual_environment\": \"development\",\n      \"acceptance\": \"passed\",\n      \"entry\": \"records/dev.txt\"\n    },\n    {\n      \"owner\": \"sailor-test\",\n      \"task\": \"验证：验收 C2 的 test 环境结果。\",\n      \"candidate\": \"C1\",\n      \"environment\": \"test\",\n      \"actual_environment\": \"testing\",\n      \"acceptance\": \"passed\",\n      \"claimed_ready\": true,\n      \"entry\": \"records/test.txt\"\n    },\n    {\n      \"owner\": \"sailor-pre\",\n      \"task\": \"验证：验收 C2 的 pre 环境结果。\",\n      \"candidate\": \"C2\",\n      \"environment\": \"pre\",\n      \"actual_environment\": \"staging\",\n      \"acceptance\": \"passed\",\n      \"entry\": \"records/pre.txt\"\n    }\n  ]\n}\n",
+      "records/test.txt": "C1 testing acceptance passed; sailor-test\n"
+    },
+    "complete": {
+      "records/returns.json": "{\n  \"source\": \"controlled local returns; no live deployment coverage\",\n  \"confirmed_order\": [\n    \"dev\",\n    \"test\",\n    \"pre\"\n  ],\n  \"environment_mapping\": {\n    \"dev\": \"development\",\n    \"test\": \"testing\",\n    \"pre\": \"staging\"\n  },\n  \"returns\": [\n    {\n      \"owner\": \"sailor-dev\",\n      \"task\": \"验证：验收 C2 的 dev 环境结果。\",\n      \"candidate\": \"C2\",\n      \"environment\": \"dev\",\n      \"actual_environment\": \"development\",\n      \"acceptance\": \"passed\",\n      \"entry\": \"records/dev.txt\"\n    },\n    {\n      \"owner\": \"sailor-test\",\n      \"task\": \"验证：验收 C2 的 test 环境结果。\",\n      \"candidate\": \"C2\",\n      \"environment\": \"test\",\n      \"actual_environment\": \"testing\",\n      \"acceptance\": \"passed\",\n      \"entry\": \"records/test.txt\"\n    },\n    {\n      \"owner\": \"sailor-pre\",\n      \"task\": \"验证：验收 C2 的 pre 环境结果。\",\n      \"candidate\": \"C2\",\n      \"environment\": \"pre\",\n      \"actual_environment\": \"staging\",\n      \"acceptance\": \"passed\",\n      \"entry\": \"records/pre.txt\"\n    }\n  ]\n}\n",
+      "records/test.txt": "C2 testing acceptance passed; sailor-test\n"
+    }
+  }
+}

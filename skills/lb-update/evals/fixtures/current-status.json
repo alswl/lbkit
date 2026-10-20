@@ -49,5 +49,14 @@
   "files": {
     "records/trial.txt": "C2 trial accepted\n",
     "records/published.txt": "C1 published\n"
-  }
+  },
+  "variants": {
+    "command_only": {
+      "status_edit_policy": "All Logbook edits require current-token bin/lb writes. Direct Logbook edits are forbidden; report unsupported replacement capability. Supported independent updates may still use the CLI. Thinking may be edited locally."
+    }
+  },
+  "setup": [
+    "Materialize the logbook, uniquely bound Prompt/Thinking, returns and files in an isolated consumer with actual mf and bin/lb.",
+    "For fixture_variant command_only, replace the host document guide status-edit policy with variants.command_only.status_edit_policy; otherwise use environment.status_edit_policy. Keep grading outside the subject workspace."
+  ]
 }

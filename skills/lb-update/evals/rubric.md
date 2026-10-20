@@ -16,3 +16,7 @@ Cases 50–51 are core paired local progress scenarios: reject incomplete return
 Case 52 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.
 
 Case 53 is core for controlled PR readiness: reject the stale PR and accept the matching candidate independently, while preserving the human merge gate. It checks local return alignment and protected writes only; the real-provider delivery case remains lb-push 75. Case 49 also checks that status maintenance selects an operation the CLI or authorized host adapter actually supports.
+
+Cases 54–55 are core paired environment-return scenarios. A current dev pass cannot close stale test or unmapped pre results; complete matching returns must allow each environment task to finish without new business execution. These cases do not certify live deployment.
+
+Case 56 is core for a CLI-only host: report the missing status-replacement capability without bypassing the host writer or appending a contradictory summary. This capability gap does not invalidate independent supported operations.

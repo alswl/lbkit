@@ -38,7 +38,7 @@ A skill name does not expand operation permissions; `lb-push` means project adva
 
 ## Environment and Files
 
-- The shared implementation and instructions come from the `.lbkit/` submodule; for background see [.lbkit/AGENTS.md](.lbkit/AGENTS.md). The root `CLAUDE.md` is a link to this file.
+- The shared implementation and instructions come from the `.lbkit/` submodule; for background see [lbkit README](.lbkit/README.md). This file owns the consuming repository's conventions. The root `CLAUDE.md` is a link to this file.
 - `lb-*` skill entry links live in `.claude/skills/` and `.agents/skills/`, shared contract links in `docs/`; for the logbook format see [Logbook Format](docs/logbook-format.md).
 - Files owned by this repository: the project logbook, this file, `lbkit-agents.yaml` (model, runtime, and collaboration parameters), and optionally `lbkit-skills.json` (a manifest of skills registered by kind of work, read and written by `bin/lb skills`).
 

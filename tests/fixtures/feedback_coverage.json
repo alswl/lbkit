@@ -171,6 +171,24 @@
               "case": 75,
               "assertion": "no_human_merge",
               "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 53,
+              "assertion": "stale_pr_rejected",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 53,
+              "assertion": "current_pr_accepted",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 53,
+              "assertion": "no_live_claim",
+              "type": "not_contains"
             }
           ]
         },
@@ -774,6 +792,12 @@
               "case": 49,
               "assertion": "no_cleanup",
               "type": "not_contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 56,
+              "assertion": "no_status_write_bypass",
+              "type": "contains"
             }
           ]
         }
@@ -850,8 +874,38 @@
         },
         {
           "id": "partial_return",
-          "checks": [],
-          "gap": "Route-generation cases do not exercise partial execution returns; add update/push scenario under TODO 11."
+          "checks": [
+            {
+              "skill": "lb-update",
+              "case": 54,
+              "assertion": "current_environment_only",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 54,
+              "assertion": "stale_environment_open",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 54,
+              "assertion": "unknown_mapping_open",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 54,
+              "assertion": "protected_environment_update",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-update",
+              "case": 55,
+              "assertion": "complete_matching_environments",
+              "type": "contains"
+            }
+          ]
         }
       ]
     },

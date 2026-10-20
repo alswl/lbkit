@@ -1,6 +1,6 @@
 # Logbook Lifecycle
 
-The lb-* entries serve the same logbook. Follow the [repository boundaries](../../AGENTS.md); shared definitions live in [Coordination](coordination.md), [Format](logbook-format.md), and [Configuration](configuration.md). Operation order is constrained by each skill's main file and its conditionally required references; not every request needs to traverse the full flow.
+The lb-* entries serve the same logbook. Follow the boundaries in the consuming repository's root `AGENTS.md`; shared definitions live in [Coordination](coordination.md), [Format](logbook-format.md), and [Configuration](configuration.md). Operation order is constrained by each skill's main file and its conditionally required references; not every request needs to traverse the full flow.
 
 | Entry | Responsibility | Where it stops |
 |---|---|---|

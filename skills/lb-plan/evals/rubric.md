@@ -16,3 +16,5 @@ Cases 44–45 are also core: require actual tool/file evidence for every asserti
 Case 46 is also core. The feedback coverage index checks assertion references only; it does not establish behavior PASS.
 
 Case 47 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.
+
+Case 48 is core for consumer authority: a narrow annotation repair must use the supported CAS write and preserve human goals and all unrelated records. Installed shared references do not substitute lbkit development rules for host authorization.
