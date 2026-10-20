@@ -28,7 +28,7 @@ Follow the [installation and upgrade guide](docs/guide/install.md). mind-forge i
 | [lb-preflight](skills/lb-preflight/SKILL.md) | Read-only preflight: route planning and step-by-step feasibility |
 | [lb-push](skills/lb-push/SKILL.md) | Dispatch, resume, and monitor execution within granted authorization |
 | [lb-takeover](skills/lb-takeover/SKILL.md) | Captain personally resolves a scoped difficult problem |
-| [lb-handoff](skills/lb-handoff/SKILL.md) | Return execution to Sailor with verified receipt |
+| [lb-handback](skills/lb-handback/SKILL.md) | Return execution to Sailor with verified receipt |
 | [lb-update](skills/lb-update/SKILL.md) | Refresh verified progress, or reread human edits without writing |
 | [lb-status](skills/lb-status/SKILL.md) | Observe logbooks and the control plane, report status briefs |
 

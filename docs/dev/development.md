@@ -237,7 +237,7 @@ the existing tag objects. Check ancestry with
 ## Scoped Captain execution migration
 
 `lb-push` now selects scoped `lb-takeover` automatically for difficult work and
-`lb-handoff` when its exit condition is met. This relaxes the former unconditional
+`lb-handback` when its exit condition is met. This relaxes the former unconditional
 Sailor-only execution boundary. Consumers adopting it should reconcile explicit
 local prohibitions in their own AGENTS/runtime instructions; shared skills never
 override them. Existing authorization covers mode changes, not new business scope.
@@ -253,3 +253,8 @@ replaces a matching agent-task Status line under the existing CAS/preview rules.
 It preserves comment suffixes and line endings, rejects stale/mismatched writes
 and still forbids human-task replacement. This additive CLI capability avoids
 competing current statuses; it introduces no parsed emoji/state or schema change.
+
+The scoped execution return skill is renamed from `lb-handoff` to `lb-handback`.
+Consumers should update explicit skill references when adopting this revision.
+Captain identity and coordination responsibility persist through execution handback;
+this clarifies the existing role boundary and adds no consumer configuration.

@@ -177,7 +177,7 @@ flowchart LR
 常规工作交给 Sailor。在已获执行授权的 lb-push 中，方向性问题、困难调查或反复无效的修复
 可自动进入 [lb-takeover](../../skills/lb-takeover/SKILL.md)。Captain 先确认相关 Sailor
 安全暂停冲突写入，再在隔离的业务 worktree 中亲自操作，不把接手的问题委派给其他 Agent。
-达到明确的退出条件后，自动进入 [lb-handoff](../../skills/lb-handoff/SKILL.md)，整理当前候选、
+达到明确的退出条件后，自动进入 [lb-handback](../../skills/lb-handback/SKILL.md)，整理当前候选、
 设计结论、检查结果与剩余工作，确认接收者实际收到且执行/监控就绪，再恢复分发。
 切换沿用原有授权和人类关卡；Captain 自测不能冒充要求的独立验收。
 技能本身不能升级主会话模型；缺少适合的高能力模型时，应如实报告能力缺口。

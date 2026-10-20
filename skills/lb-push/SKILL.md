@@ -43,8 +43,9 @@ If host rules prohibit direct execution, retain that boundary and report it.
 During takeover Captain executes the scoped problem personally after verified
 safe ownership transfer; do not run the ordinary Sailor dispatch loop for that
 same scope. Unaffected authorized work may continue. Once the explicit exit
-condition is met, automatically run [lb-handoff](../lb-handoff/SKILL.md), verify
-actual receipt/readiness and resume this loop within the original endpoint.
+condition is met, automatically run [lb-handback](../lb-handback/SKILL.md), verify
+actual receipt/readiness and resume this loop as Captain within the original endpoint.
+Only scoped execution changes hands; retain coordination, monitoring and acceptance.
 Retain incomplete handoff ownership if receipt fails. No remaining executable
 work means result alignment and return to coordination, not an empty dispatch.
 Status/update entry and cleanup do not trigger this selection. Persist/recover the

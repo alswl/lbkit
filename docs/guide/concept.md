@@ -228,7 +228,7 @@ direction-setting problem or repeated ineffective repair can automatically enter
 [lb-takeover](../../skills/lb-takeover/SKILL.md). Captain verifies safe release of
 conflicting Sailor writes, then personally operates in the isolated business
 worktree. The scoped problem stays with Captain until its exit condition is met.
-[lb-handoff](../../skills/lb-handoff/SKILL.md) recovers the candidate, decisions,
+[lb-handback](../../skills/lb-handback/SKILL.md) recovers the candidate, decisions,
 checks and remaining work, verifies the receiving Sailor's receipt/readiness,
 and returns to ordinary advancement. Existing scope and human gates still apply.
 Captain self-checks remain attributed to Captain and cannot replace a required

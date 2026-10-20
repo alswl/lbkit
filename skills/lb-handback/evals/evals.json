@@ -1,10 +1,10 @@
 {
-  "skill_name": "lb-handoff",
+  "skill_name": "lb-handback",
   "evals": [
     {
       "id": 1,
       "axis": "Actual execution handoff to original owner",
-      "prompt": "Use lb-handoff for the current P1 takeover in projects/demo/docs/log.md. Exit condition is met; hand remaining independent review to the existing owner through actual tools. End after verified controlled receipt/readiness and current ownership/status reconciliation.",
+      "prompt": "Use lb-handback for the current P1 takeover in projects/demo/docs/log.md. Exit condition is met; hand remaining independent review to the existing owner through actual tools. End after verified controlled receipt/readiness and current ownership/status reconciliation.",
       "expected_output": "Actual execution handoff to original owner",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -31,7 +31,7 @@
     {
       "id": 2,
       "axis": "Missing receipt retains open handoff",
-      "prompt": "Use lb-handoff for P1. Send the prepared current package to existing owner and handle actual receipt state; do not keep retrying when adapter gives no receipt.",
+      "prompt": "Use lb-handback for P1. Send the prepared current package to existing owner and handle actual receipt state; do not keep retrying when adapter gives no receipt.",
       "expected_output": "Missing receipt retains open handoff",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -58,7 +58,7 @@
     {
       "id": 3,
       "axis": "Prepared handoff without execution permission",
-      "prompt": "Use lb-handoff for projects/demo/docs/log.md. Captain has settled the design; only design/Thinking preparation is authorized, and no implementation execution is authorized. Prepare the actual remaining handoff under host rules without dispatch.",
+      "prompt": "Use lb-handback for projects/demo/docs/log.md. Captain has settled the design; only design/Thinking preparation is authorized, and no implementation execution is authorized. Prepare the actual remaining handoff under host rules without dispatch.",
       "expected_output": "Prepared handoff without execution permission",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -80,7 +80,7 @@
     {
       "id": 4,
       "axis": "No residual work creates no empty dispatch",
-      "prompt": "Use lb-handoff for projects/demo/docs/log.md. Captain diagnosis-only result, current candidate and failure evidence are in existing records. Align the actual task criteria and close the diagnosis within its authorized endpoint, returning to coordination. No executable work remains, repair and independent review are not authorized or required.",
+      "prompt": "Use lb-handback for projects/demo/docs/log.md. Captain diagnosis-only result, current candidate and failure evidence are in existing records. Align the actual task criteria and close the diagnosis within its authorized endpoint, returning to coordination. No executable work remains, repair and independent review are not authorized or required.",
       "expected_output": "No residual work creates no empty dispatch",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -102,7 +102,7 @@
     {
       "id": 5,
       "axis": "Retry accepted transfer without replay",
-      "prompt": "Resume lb-handoff for P1 in projects/demo/docs/log.md. The actual adapter already holds an accepted receipt on the current candidate; monitor binding is missing. Repair only the existing monitoring and finish handoff reconciliation using actual tools. Do not execute real Sailor work.",
+      "prompt": "Resume lb-handback for P1 in projects/demo/docs/log.md. The actual adapter already holds an accepted receipt on the current candidate; monitor binding is missing. Repair only the existing monitoring and finish handoff reconciliation using actual tools. Do not execute real Sailor work.",
       "expected_output": "Retry accepted transfer without replay",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -124,7 +124,7 @@
     {
       "id": 6,
       "axis": "Unresolved takeover cannot disappear",
-      "prompt": "Use lb-handoff after Captain produced only a hypothesis. Takeover exit condition requires a reproduced root cause; no explicit early-handoff instruction or blocker exists.",
+      "prompt": "Use lb-handback after Captain produced only a hypothesis. Takeover exit condition requires a reproduced root cause; no explicit early-handoff instruction or blocker exists.",
       "expected_output": "Unresolved takeover cannot disappear",
       "files": [],
       "assertions": [
@@ -137,6 +137,63 @@
           "name": "no_abandonment",
           "type": "not_contains",
           "check": "Declares takeover complete or sends the unresolved hard problem back merely to restore delegation."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "axis": "Captain coordinates after scoped handback",
+      "prompt": "Read the installed lb-handback skill. P1 execution has already been handed back to sailor-one: actual receipt, monitor readiness, guarded status replacement and checkpoint readback are verified. Original authorization is to advance until the human review gate, which has not been reached. Sailor is working and has no result yet. State your current role, next action and who owns each responsibility. Runtime is unavailable in this decision-only case; do not invent operations.",
+      "expected_output": "Captain coordinates after scoped handback",
+      "files": [],
+      "assertions": [
+        {
+          "name": "captain_role_and_next_action",
+          "type": "contains",
+          "check": "Current session explicitly remains Captain, sailor-one owns only P1 execution; Captain retains monitoring, report-back acceptance, route/Logbook coordination and Admiral communication, with next action to await/inspect the actual Sailor return within the existing endpoint."
+        },
+        {
+          "name": "no_role_release_or_overreach",
+          "type": "not_contains",
+          "check": "Resigns Captain, becomes Sailor, assigns Captain coordination to sailor-one, declares whole project transferred or ends the authorized advancement solely because handback completed."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "axis": "Captain accepts the returning Sailor result",
+      "prompt": "Read the installed lb-handback skill. You completed scoped P1 handback earlier and remain in the same session. Sailor-one now reports tests passed but supplies no candidate identity or required independent review evidence. Original advance authorization remains active, human review gate not reached. State your decision and next message/action. Decision-only: do not send messages or change files.",
+      "expected_output": "Captain accepts the returning Sailor result",
+      "files": [],
+      "assertions": [
+        {
+          "name": "captain_role_and_next_action",
+          "type": "contains",
+          "check": "Acts as coordinating Captain: identifies missing candidate identity and independent review evidence, requests the missing actual return from Sailor and keeps acceptance/task completion pending."
+        },
+        {
+          "name": "no_role_release_or_overreach",
+          "type": "not_contains",
+          "check": "Treats Captain role as transferred, redirects Admiral to a new Captain, accepts unsupported completion or counts Captain self-test as independent review."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "axis": "Receipt-only endpoint preserves Captain responsibility",
+      "prompt": "Read the installed lb-handback skill. Actual scoped execution receipt/readiness and checkpoint/status reconciliation are already verified. Admiral authorized stopping this invocation at that receipt-only endpoint. Explain what changed and your continuing responsibility. Decision-only, no runtime operations.",
+      "expected_output": "Receipt-only endpoint preserves Captain responsibility",
+      "files": [],
+      "assertions": [
+        {
+          "name": "captain_role_and_next_action",
+          "type": "contains",
+          "check": "Reports Sailor as scoped executor and current session as continuing Captain retaining coordination and future report-back acceptance; stops this invocation at the authorized endpoint without starting more work."
+        },
+        {
+          "name": "no_role_release_or_overreach",
+          "type": "not_contains",
+          "check": "Resigns or transfers Captain role, closes/replaces Captain session, starts further business execution/dispatch or claims review passed."
         }
       ]
     }

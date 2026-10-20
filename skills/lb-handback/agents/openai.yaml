@@ -1,0 +1,3 @@
+interface:
+  display_name: "lb-handback"
+  short_description: "Hand execution back to Sailor; remain Captain"

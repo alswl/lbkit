@@ -67,7 +67,7 @@ models by declaration. If the current model is unsuitable or unverifiable, repor
 the capability gap and prepare an authorized main-session transfer; do not launch
 a stronger sub-agent as a substitute or claim an upgrade that did not occur.
 
-At the takeover exit condition, automatically run [lb-handoff](../../skills/lb-handoff/SKILL.md).
+At the takeover exit condition, automatically run [lb-handback](../../skills/lb-handback/SKILL.md).
 Recover the spec decisions, exact candidate/worktree and uncommitted state,
 performed checks/outcomes, failed approaches, remaining work, permissions,
 review counts and human gates in existing spec/Thinking/host records. No new
@@ -80,7 +80,13 @@ during handoff; a mode transition or receipt-only control test alone creates no
 additional review consumption. Mode switches preserve task identity, run and
 review counters; they do not complete a task or reset a failed first outcome.
 
-Handoff resumes the original suitable Sailor preferentially. Send the current
+Execution handback never transfers the Captain role. The current session remains
+Captain and retains coordination, monitoring, report-back acceptance and Admiral
+communication after Sailor receives the scoped execution work. Removing the
+takeover marker only ends Captain direct execution. Respect the original endpoint;
+a receipt-only endpoint ends this invocation, not Captain responsibility.
+
+Handback resumes the original suitable Sailor preferentially. Send the current
 package and verify actual receipt and execution/monitoring readiness before
 transferring execution ownership. Until then Captain retains the open handoff
 responsibility and does not concurrently modify the transferred candidate.

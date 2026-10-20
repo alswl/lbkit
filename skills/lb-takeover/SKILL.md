@@ -1,7 +1,7 @@
 ---
 name: lb-takeover
 version: 0.4.1-dev
-description: "Captain personally tackles a scoped direction-setting problem, difficult investigation or repeatedly ineffective repair without delegating it. Use when asked to take over or work on it yourself, and automatically from authorized lb-push when direct Captain reasoning and execution are needed. Preserve authorization and safely recover Sailor ownership; hand back through lb-handoff once the exit condition is met."
+description: "Captain personally tackles a scoped direction-setting problem, difficult investigation or repeatedly ineffective repair without delegating it. Use when asked to take over or work on it yourself, and automatically from authorized lb-push when direct Captain reasoning and execution are needed. Preserve authorization and safely recover Sailor ownership; hand back through lb-handback once the exit condition is met."
 ---
 
 # Captain takes over execution
@@ -45,7 +45,7 @@ progress refresh or read-only preflight does not authorize entry.
    remains difficult. Report precise findings/blockers without inventing success.
 6. At the exit condition, record actual changes, candidate identity, checks and
    limitations as Captain's direct result and automatically enter
-   [lb-handoff](../lb-handoff/SKILL.md). A diagnosis may finish while the business
+   [lb-handback](../lb-handback/SKILL.md). A diagnosis may finish while the business
    operation remains failed. Self-checks never satisfy required independent review. Submission alone does not finish handoff: complete its receipt/readiness and current executor/status reconciliation, including replacing the active 🧑‍✈️ task detail, before reporting transfer complete.
 
 After interruption, reread the checkpoint and actual disk/runtime state before

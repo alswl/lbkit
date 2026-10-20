@@ -1,10 +1,16 @@
 ---
-name: lb-handoff
+name: lb-handback
 version: 0.4.1-dev
-description: "Return a scoped Captain takeover to normal Sailor execution. Use when asked to hand off or resume delegation, and automatically when lb-takeover reaches its exit condition. Recover current design/candidate/checks, prepare remaining work and verify the receiving Sailor's actual receipt before resuming lb-push. Not a generic human delivery or cross-machine Captain migration skill."
+description: "Return a scoped Captain takeover to normal Sailor execution. The current session stays Captain and retains coordination. Use when asked to hand back execution or resume delegation, and automatically when lb-takeover reaches its exit condition. Recover current design/candidate/checks, prepare remaining work and verify the receiving Sailor's actual receipt before resuming lb-push. Not a generic human delivery or cross-machine Captain migration skill."
 ---
 
 # Hand execution back to Sailor
+
+The current session remains Captain before, during and after handback. Transfer
+only the identified business execution scope to Sailor; retain project coordination,
+route decisions, monitoring, report-back acceptance and Admiral communication.
+Removing the takeover marker ends direct execution, never the Captain role.
+Do not appoint Sailor as Captain or close/replace the Captain session.
 
 Read the [takeover contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),
 current Logbook, actual takeover checkpoint/result, spec and host authorization.
