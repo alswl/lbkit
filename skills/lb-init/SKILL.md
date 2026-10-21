@@ -8,6 +8,10 @@ description: "Set up or refresh a Logbook repository's .lbkit submodule and thin
 
 The consuming repository owns project logs, its `AGENTS.md`, `lbkit-agents.yaml`, and the optional `lbkit-skills.json` skills list; install does not create the list. lbkit owns the shared skill implementations, contracts, templates, and CLI. Read the consuming repository's instructions and Git state before changing it. Preserve existing project content and local configuration.
 
+## User-facing line guidance
+
+Installation and configuration replies normally need no Logbook line. If a migration question concerns a specific existing Logbook item, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): name the file, item and verified `L50` position; do not create a Logbook just to supply a locator.
+
 ## New connection
 
 1. Verify mind-forge is installed (`mf version`) and the target can maintain a mind repository. It is required, not a best-effort optional integration. If missing, use the available mf-cli installation guidance to prepare or perform an authorized installation; never silently skip it or report lbkit ready. Confirm the lbkit remote and intended revision with the user or existing repository records. A submodule needs a committed revision; when commits are prohibited, prepare files and report that registration must wait.

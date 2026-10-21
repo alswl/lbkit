@@ -59,6 +59,10 @@ First determine whether this is preparation-only, result close-out, or an author
    in the existing checkpoint. Replace the matching current task status with Sailor execution status without 🧑‍✈️ through token-guarded `task note --replace-line`; do not change task first line. Status replacement is supported by the current CLI: a refusal requires correcting the token/task/line/kind or reporting the concrete gap, not falling back to a direct Logbook edit. Return to [lb-push](../lb-push/SKILL.md), continuing
    within its original endpoint without asking again. A receipt-only execution endpoint still includes this ownership/status writeback; it excludes subsequent business execution, not handoff reconciliation. Do not report handoff complete while the current checkpoint or task status still says Captain is executing. Status-only invocations neither send packages nor start this continuation.
 
+## User-facing line guidance
+
+In preparation, pending-transfer and completed-handback replies, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): identify the affected Logbook task at its current `L50` position, who owns execution and the next action. Give any remaining human gate its own verified line, and retain the usable result/runtime entry. Reread after status reconciliation; a line reference is not proof of receipt or readiness.
+
 This hands business execution back to Sailor. Cross-machine Captain migration,
 final human delivery, resource cleanup and Git publishing retain their separate
 contracts and permissions. No new state field, archive or configuration is needed.

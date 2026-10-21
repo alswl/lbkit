@@ -90,6 +90,10 @@ When no human takeover is needed, state the owning agent's next action and repor
 
 Before human handoff, apply the [delivery contract](../../docs/installable/coordination.md#human-deliveryreadiness--us4). Have Sailor complete authorized delivery work and return the inventory/binding outcome; align it with the current PR or branch/candidate entry. Continue missing delivery steps within existing authorization, or report the concrete conflict before presenting the human gate as ready.
 
+## User-facing line guidance
+
+Apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators) to progress reports, blockers, decisions and handoffs: give the current task or human gate as `L50` plus its name, and the next item's line when reporting an endpoint. After writeback, reread positions before replying. Keep the verified result/review/login entry alongside the Logbook locator so the human can both locate the route item and perform the action; existing authorization still permits continuation without a new confirmation.
+
 ## Requested run metrics
 
 Record run start/end/resume, human waiting/interruption, distinct human turns and applicable first acceptance/corrections in the existing bound Thinking using the [event contract](../../docs/installable/coordination.md#run-event-and-close-out-metrics). Resume keeps the same run and counters. Captain records coordination facts; Sailor returns actual acceptance facts and later defect corrections. Do not archive raw trials or create a metrics sidecar.

@@ -52,6 +52,10 @@ When an explicit human decision assigns an unfinished unassigned agent task to a
 
 For an explicitly authorized task split with replacement results and order already specified, follow [task splitting](references/planning.md#split-one-task). Use the supported atomic `task split` operation with current-token preview and write. A proposal-only request changes no Logbook bytes; a split does not authorize starting the replacement tasks.
 
+## User-facing line guidance
+
+For draft confirmation, route revisions and read-only review findings, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators). Identify the Logbook and give current `L50` task/heading positions for the proposed route, affected items and pending decisions. Point to directories/stages/todo ranges where useful for confirmation; keep the spec link for design detail. A proposal saved only in spec/Thinking has no new Logbook lines: cite existing affected items only when verified.
+
 ## Handoff
 
 Briefly explain the core design, constraints, route and pending decisions; link the current repository spec and Logbook rather than repeating either document. Establish Admiral confirmation of that design content before ordinary execution; an explicitly authorized POC follows the bounded exception in the design contract. The directories, stages and todos must be human-confirmed, and goals must come from the human, before execution. Existing explicit confirmation need not be requested again. Plan confirmation is distinct from execution authorization; planning dispatches no execution agents.

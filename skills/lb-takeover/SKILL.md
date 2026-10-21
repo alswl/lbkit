@@ -48,6 +48,10 @@ progress refresh or read-only preflight does not authorize entry.
    [lb-handback](../lb-handback/SKILL.md). A diagnosis may finish while the business
    operation remains failed. Self-checks never satisfy required independent review. Submission alone does not finish handoff: complete its receipt/readiness and current executor/status reconciliation, including replacing the active 🧑‍✈️ task detail, before reporting transfer complete.
 
+## User-facing line guidance
+
+In user-facing takeover findings, blockers and exit reports, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): identify the scoped Logbook task with its current `L50` position and name, and cite an exact status/criterion line when that is the subject of a decision. Keep runtime/worktree and result entries alongside it. This does not add a mode-switch confirmation.
+
 After interruption, reread the checkpoint and actual disk/runtime state before
 resuming. Reconcile pending commands and partial ownership changes; do not repeat
 side effects or silently resume stale Sailor work. Report the scoped executor,

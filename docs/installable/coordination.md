@@ -6,6 +6,26 @@ The Logbook expresses Admiral's goal as an Overview, ordered Stages and tasks. A
 
 A work package assigns Sailor the current task reference, inputs, scope/permissions, result, applicable completion conditions and report-back entry. It can be a message or existing host record. It is not a second scheduling checklist and does not require a file per dispatch. Task, package and continuing agent session remain separate objects, as defined in the task/session/resource distinction.
 
+## Human-facing Logbook locators
+
+When a reply asks Admiral to confirm, decide, review or act on an existing
+Logbook item, include its current line in `L50` form alongside the stage/task
+name and the requested action. Use the same guidance for item-specific progress,
+blockers and next steps when it helps the human find the relevant text. Identify
+the Logbook path once; distinguish paths when referring to multiple files. A
+clickable file/line link may accompany the visible `L50` label. For several nearby
+items, use a useful range such as `L50–L58` rather than dumping every line.
+
+Obtain physical source lines from the current file and `context --json` where
+available; reread after writes before reporting final positions. Cite the task's
+first line for task-level discussion, or the exact heading/annotation line when
+that is what needs review. Lines are navigation hints, not durable task identity
+or write authorization: retain task text/stage matching and CAS protections.
+When a file has not been saved or a position cannot be verified, give the known
+path/heading/task and state that the line is unavailable; never invent one.
+General capability/configuration answers need no Logbook locator, and adding a
+locator does not create a new confirmation gate or require a Logbook edit.
+
 ## Roles, authorization and returns — US2
 
 Admiral is the human owner of goals, major tradeoffs, authorization and applicable human gates. Captain personally develops the design with Admiral, then maintains the route, dependencies/owners, authorized dispatch/monitoring, return alignment, progress and coordination handoff. Sailor normally performs business implementation, investigation, testing, review and acceptance; scoped takeover below permits Captain to execute directly. Another Sailor may independently check a result when needed; this creates no separate acceptance role, default checker count or universal verification gate.

@@ -90,6 +90,14 @@ The existing unittest suite remains the regression baseline. Ruff and basic mypy
 
 ## Human edits and progress refresh
 
+Human-facing lb skill replies now provide current Logbook line locators (`L50`)
+where they help locate a confirmation, decision, review, blocker or next action.
+The coordination contract defines freshness and fallback rules; each skill
+identifies its applicable interaction points. This is presentation guidance,
+not a new approval gate, consumer configuration or document schema. Physical
+lines remain navigation hints rather than stable task identifiers. Versions are
+unchanged pending explicit human instruction.
+
 `lb-update` keeps two intents in one entry. A human edit notification defaults to
 read-only alignment with the current logbook. It does not create mind-forge
 bindings, write Thinking, sync markers or begin execution. A reliable prior

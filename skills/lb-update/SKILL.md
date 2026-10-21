@@ -65,6 +65,10 @@ Organizing the skill manifest (when the user asks):
 - A skill chain may include skills that exist only inside a business repository (e.g. its `.claude/skills/`); scope it to that repository in `scope` and state the repository and skill path in `description`; the Sailor must run inside that repository to invoke it.
 - Present the organized result as a table for human confirmation, then run `skills add` entry by entry.
 
+## User-facing line guidance
+
+Apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators) when reporting reread findings, written changes, incomplete items or decisions needed. Give the affected task/annotation and current `L50` position; after writes use the resulting file, not preview or old-file positions. Cite old positions only as explicitly labeled history when a reliable baseline exists. For a deleted item, identify its text and a verified surviving heading/neighbor when useful, without presenting the old line as current.
+
 ## Delivery and stopping
 
 For a reread, summarize the current understanding, verified differences (if a reliable baseline exists), and affected plans or evidence; state that no files were changed. For a refresh, summarize actual writes, their evidence, incomplete items and who owns the next one. Read available records within the authorized scope; when new execution or out-of-scope evidence gathering is needed, report the precise gap without dispatching it.

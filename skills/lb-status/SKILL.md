@@ -33,6 +33,10 @@ Locate the designated or uniquely identifiable logbook and read the [configurati
 
 Give a briefing per the question; when runtime state is involved, include the executor name and workspace/tab/pane, observation time or recent activity, blockers, and the next action. A single factual question does not require the full template, and focus is not reported. If local writes occurred, briefly describe the changes and unverified items; apart from the automatic GC above, pure queries never reverse into acceptance or advancement flows. Return a requested human-readable list in the briefing; do not create or refresh a companion checklist file. For read-only todo filtering use `bin/lb task list`, and for the next item `bin/lb task next`; still verify scheduling semantics against the logbook source.
 
+## User-facing line guidance
+
+Apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators) in the briefing: identify the Logbook and pair the current/first unchecked task, blockers and next human action with verified `L50` positions. In a requested task list, include each listed task's line. A project-wide summary or runtime-only factual answer need not enumerate task lines; read-only requests remain read-only.
+
 ## Execution ownership
 
 Read existing takeover/handoff checkpoints when applicable. Report the current

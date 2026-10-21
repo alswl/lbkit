@@ -24,6 +24,10 @@ Fill in the blanks; do not design. The precondition is that `workflows/<workflow
 4. After writing, run `check --json`; `LINK_UNVERIFIED` for external URLs is an expected notice, not a structural error to fix.
 5. Wrap-up: show a summary of the filled slot values (not a full restatement) and ask the human for a quick confirm. Once the three essentials (working directories, stage breakdown, todo manifest) are complete and confirmed, exit is granted; advancement is handed to lb-push.
 
+## User-facing line guidance
+
+In the slot-value confirmation, point to the saved working directories, stage breakdown and todo manifest using current lines such as `L20`, `L35` and `L50–L58`, with brief labels. Follow the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators); reread after generation. Before an instance exists, identify the template section or missing slot without inventing instance lines.
+
 ## Boundaries
 
 - Only create new instances; modifying an existing logbook goes to lb-update, replanning to lb-plan.
