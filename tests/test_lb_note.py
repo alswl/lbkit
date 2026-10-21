@@ -38,7 +38,7 @@ class TaskNoteTest(unittest.TestCase):
         )
 
     def token(self) -> str:
-        return json.loads(self.cli("context", LOG, "--json").stdout)["version_token"]
+        return json.loads(self.cli('log', 'context', LOG, "--json").stdout)["version_token"]
 
     def note_args(self, token: str, *extra: str) -> tuple[str, ...]:
         return (
@@ -49,7 +49,7 @@ class TaskNoteTest(unittest.TestCase):
             STAGE,
             "--task",
             TASK,
-            "--token",
+            '--expect-version',
             token,
             *extra,
         )
@@ -58,7 +58,7 @@ class TaskNoteTest(unittest.TestCase):
         for kind, value in (("Source", "💬 owner 2026-10-14 new input"), ("Acceptance", "current result must pass"), ("Skills", "example-skill, `/another-skill`")):
             result = self.cli(*self.note_args(self.token(), "--kind", kind, "--text", value), "--json")
             self.assertEqual(result.returncode, 0, result.stderr)
-        context = json.loads(self.cli("context", LOG, "--json").stdout)
+        context = json.loads(self.cli('log', 'context', LOG, "--json").stdout)
         task = context["stages"][0]["tasks"][0]
         annotations = task["annotations"]
         skills = next(a for a in annotations if a["kind"] == "skills")
@@ -112,7 +112,7 @@ class TaskNoteTest(unittest.TestCase):
         human_before = self.log.read_bytes()
         human = ("task", "note", LOG, "--stage", STAGE,
                  "--task", "人工验证：确认结果。 👱", "--kind", "Status",
-                 "--replace-line", "9", "--text", "replacement", "--token", self.token())
+                 "--replace-line", "9", "--text", "replacement", '--expect-version', self.token())
         self.assertEqual(self.cli(*human).returncode, 4)
         self.assertEqual(self.log.read_bytes(), human_before)
 
@@ -129,7 +129,7 @@ class TaskNoteTest(unittest.TestCase):
                 result = self.cli(*self.note_args(self.token(), "--text", text))
                 self.assertEqual(result.returncode, 2, result.stderr)
                 self.assertEqual(self.log.read_bytes(), before)
-                self.assertEqual(len(json.loads(self.cli("context", LOG, "--json").stdout)["stages"][0]["tasks"]), 2)
+                self.assertEqual(len(json.loads(self.cli('log', 'context', LOG, "--json").stdout)["stages"][0]["tasks"]), 2)
 
     def test_replacement_preserves_human_comment_and_line_endings(self):
         self.log.write_bytes((f"# Demo\r\n\r\n## 🚧 {STAGE}\r\n\r\n- [/] {TASK}\r\n    - 验收：old <!-- human comment -->").encode())
@@ -208,7 +208,7 @@ class TaskNoteTest(unittest.TestCase):
             "人工验证：确认结果。 👱",
             "--text",
             "说明",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(human.returncode, 4)
@@ -229,7 +229,7 @@ class TaskNoteTest(unittest.TestCase):
             TASK,
             "--artifact",
             "产物：新报告",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -239,10 +239,10 @@ class TaskNoteTest(unittest.TestCase):
     def test_human_task_accepts_only_status_note(self) -> None:
         human = "人工验证：确认结果。 👱"
         base = ("task", "note", LOG, "--stage", STAGE, "--task", human)
-        refused = self.cli(*base, "--kind", "交接", "--text", "x", "--token", self.token())
+        refused = self.cli(*base, "--kind", "交接", "--text", "x", '--expect-version', self.token())
         self.assertEqual(refused.returncode, 4)
         result = self.cli(
-            *base, "--kind", "状态", "--text", "证书已就绪", "--token", self.token()
+            *base, "--kind", "状态", "--text", "证书已就绪", '--expect-version', self.token()
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(
@@ -262,7 +262,7 @@ class TaskNoteTest(unittest.TestCase):
             TASK,
             "--artifact",
             "新报告",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0, result.stderr)

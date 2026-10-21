@@ -152,7 +152,11 @@ def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
                     "outcome",
                     "result_identity",
                 }
-                if not isinstance(record, dict) or set(record) != required:
+                if (
+                    not isinstance(record, dict)
+                    or not required.issubset(record)
+                    or set(record) - required - {"local_digest"}
+                ):
                     raise ValueError("invalid observation fields")
                 if record["outcome"] not in OUTCOMES:
                     raise ValueError("invalid observation outcome")
@@ -222,6 +226,9 @@ def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dic
                     reason = "task inputs or result changed"
             except ValueError:
                 reason = "bound task missing or ambiguous"
+        if reason is None and record.get("local_digest"):
+            if local_digest(doc, record["target"]) != record["local_digest"]:
+                reason = "local delivery bytes changed or disappeared"
         result.append(
             {
                 **record,
@@ -259,3 +266,19 @@ def encode(record: dict) -> str:
         .replace(">", "\\u003e")
     )
     return MARKER + value + " -->"
+
+
+def local_digest(doc: Document, target: str) -> str | None:
+    """Only fingerprint regular local files inside the permitted root."""
+    from pathlib import Path
+    from urllib.parse import unquote, urlparse
+
+    parsed = urlparse(target)
+    if parsed.scheme not in {"", "file"} or parsed.netloc:
+        return None
+    raw = Path(unquote(parsed.path)).expanduser()
+    path = (raw if raw.is_absolute() else doc.path.parent / raw).resolve()
+    if not path.is_relative_to(doc.root) or not path.is_file():
+        return None
+    with path.open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()

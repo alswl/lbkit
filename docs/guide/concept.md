@@ -1,6 +1,5 @@
 # Core concepts
 
-[English](concept.md) | [简体中文](concept.zh-CN.md)
 
 lbkit uses a **Logbook** to organize a human goal into an actionable task route.
 **Admiral** owns goals and authorization, **Captain** designs with Admiral and maintains the
@@ -148,7 +147,7 @@ session. Prepare another session when isolation, an independent check, approved
 parallel work or context recovery actually needs it. Sessions, tasks and packages
 are separate objects: closing a session does not accept a task.
 
-The host's `lbkit-agents.yaml` declares the runtime adapter, allowed launchers and
+The host's `lbkit.yaml` declares the runtime adapter, registered agents (launchers) and
 collaboration parameters. Configuration selects tooling/parameters, not business
 permissions. Herdr is the currently provided adapter. Other scheduling environments
 need explicit host adapter capabilities; changing a launcher alone does not prove

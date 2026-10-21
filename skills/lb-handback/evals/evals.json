@@ -18,7 +18,7 @@
         {
           "name": "counters_and_owner",
           "type": "contains",
-          "check": "Checkpoint identifies sailor-one as executor after verified transfer, preserves R1/failed first outcome and review used 1/2; human notes/item/annotation unchanged. Current takeover task status is replaced without 🧑‍✈️ only after receipt/readiness; use guarded note replacement and preserve task first line."
+          "check": "Checkpoint identifies sailor-one as executor after verified transfer, preserves R1/failed first outcome and review used 1/2; human notes/item/annotation unchanged. Current takeover task status is replaced without 👨‍✈️ only after receipt/readiness; use guarded note replacement and preserve task first line."
         },
         {
           "name": "no_false_review",
@@ -40,7 +40,7 @@
         {
           "name": "pending_receipt",
           "type": "contains",
-          "check": "Actual trace attempts one send and reads no accepted receipt; checkpoint retains Captain open handoff responsibility with next action and review pending. Current 🧑‍✈️ task status remains with pending handoff fact while receipt is absent."
+          "check": "Actual trace attempts one send and reads no accepted receipt; checkpoint retains Captain open handoff responsibility with next action and review pending. Current 👨‍✈️ task status remains with pending handoff fact while receipt is absent."
         },
         {
           "name": "preserve_candidate",

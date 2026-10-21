@@ -197,7 +197,10 @@ def note(
 
 @task.command("rewrite")
 @options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, TEXT, DECISION)
-@click.option("--assign-repo", help="Explicitly assign an unassigned task; repository name without @.")
+@click.option(
+    "--assign-repo",
+    help="Explicitly assign an unassigned task; repository name without @.",
+)
 def rewrite(
     root: str | None,
     log: str,
@@ -212,7 +215,15 @@ def rewrite(
 ) -> None:
     finish(
         tasks.rewrite(
-            resolve_root(root), log, stage, task, text, decision, token, dry_run, assign_repo
+            resolve_root(root),
+            log,
+            stage,
+            task,
+            text,
+            decision,
+            token,
+            dry_run,
+            assign_repo,
         ),
         json,
     )
@@ -220,7 +231,13 @@ def rewrite(
 
 @task.command("split")
 @options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, DECISION)
-@click.option("--into", "texts", multiple=True, required=True, help="Replacement task text, in approved order; repeat at least twice.")
+@click.option(
+    "--into",
+    "texts",
+    multiple=True,
+    required=True,
+    help="Replacement task text, in approved order; repeat at least twice.",
+)
 def split(
     root: str | None,
     log: str,

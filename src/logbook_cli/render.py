@@ -5,10 +5,6 @@ from collections import Counter
 
 from logbook_cli.services.common import Result
 
-# Legacy catalog display remains Chinese; document-generated views use document locale.
-CATALOG_SCOPE_LABEL = "范围："
-CATALOG_COMPANION_LABEL = "随行："
-
 
 def render(result: Result, as_json: bool, view: str = "default") -> None:
     value = result.value
@@ -34,18 +30,6 @@ def render(result: Result, as_json: bool, view: str = "default") -> None:
             print(
                 f"{value['stage']}:{value['line']}: [{value['state']}] {value['text']}"
             )
-    elif view == "skills":
-        assert isinstance(value, dict)
-        for entry in value["skills"]:
-            actions = (
-                f"  [{'、'.join(entry['actions'])}]" if entry.get("actions") else ""
-            )
-            print(f"{entry['name']}: {' → '.join(entry['chain'])}{actions}")
-            print(f"    {CATALOG_SCOPE_LABEL}{entry['scope']}")
-            for item in entry.get("companions", []):
-                print(f"    {CATALOG_COMPANION_LABEL}{item['skill']}（{item['when']}）")
-            if entry.get("description"):
-                print("    " + entry["description"])
     elif view == "extract":
         assert isinstance(value, dict)
         for item in value["candidates"]:

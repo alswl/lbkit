@@ -1,6 +1,6 @@
 # <Work Package Name>
 
-所属日志与检查项：<canonical logbook, stage, and exact task text>
+Logbook and task:<canonical logbook, stage, and exact task text>
 
 Authorization: <current human decision/source, scope, permitted operations, endpoint; superseded constraints and their replacements if any>
 

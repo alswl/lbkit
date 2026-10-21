@@ -14,7 +14,13 @@ def activate(entry: str) -> None:
     python = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     if python.exists() and Path(sys.prefix).resolve() != environment.resolve():
         os.execv(str(python), [str(python), entry, *sys.argv[1:]])
-    if importlib.util.find_spec("click") is None:
+    def installed(name):
+        try:
+            return importlib.util.find_spec(name) is not None
+        except ModuleNotFoundError:
+            return False
+
+    if not all(installed(name) for name in ("click", "yaml", "ruamel.yaml")):
         print(
             f"lb: CLI dependencies are missing; run uv sync --locked --no-dev --project {kit}",
             file=sys.stderr,

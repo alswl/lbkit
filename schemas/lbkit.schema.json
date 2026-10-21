@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "lbkit configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "settings",
+    "agents"
+  ],
+  "properties": {
+    "version": {
+      "const": "0.2.0"
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "default_agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documents": {
+          "type": "object"
+        },
+        "roles": {
+          "type": "object"
+        },
+        "browser": {
+          "type": "object"
+        },
+        "auth": {
+          "type": "object"
+        },
+        "limits": {
+          "type": "object"
+        },
+        "runtime": {
+          "type": "object"
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status",
+          "launcher",
+          "model",
+          "deployment",
+          "suitable_for"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "draft",
+              "available",
+              "deprecated",
+              "retired"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "launcher": {
+            "type": "object",
+            "required": [
+              "command",
+              "args"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1
+          },
+          "deployment": {
+            "enum": [
+              "internal",
+              "external",
+              "unknown"
+            ]
+          },
+          "suitable_for": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

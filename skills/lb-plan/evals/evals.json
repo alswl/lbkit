@@ -300,7 +300,7 @@
     },
     {
       "id": 30,
-      "prompt": "The repository root has lbkit-skills.json, whose 「speckit 按任务区间实现」 entry's scope says 「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」. Draft or complete the 技能 sub-line for Stage 04's todo 「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @sample-media」; the todo has no 「技能：」 yet, and the spec branch's tasks.md has T027 (asserting the tool list is exactly 16 items) and T028 (replaying the MCP baseline).",
+      "prompt": "The repository root has lbkit-skills.yaml recipes, whose 「speckit 按任务区间实现」 entry's scope says 「待办文字没写 speckit 但工作包把它划进 tasks.md 区间的也算」. Draft or complete the 技能 sub-line for Stage 04's todo 「测试：MCP 回归通过，Pi 的工具清单中没有 shell、文件写入和任意 HTTP。 @sample-media」; the todo has no 「技能：」 yet, and the spec branch's tasks.md has T027 (asserting the tool list is exactly 16 items) and T028 (replaying the MCP baseline).",
       "expected_output": "Read registry scope and tasks.md/work package, then put only speckit-implement on the skill sub-line; task-range explanation stays in the work package.",
       "files": [],
       "expectations": [
@@ -312,18 +312,18 @@
     },
     {
       "id": 31,
-      "prompt": "The repository root has no lbkit-skills.json. Draft a todo for a new Stage: 「开发：为博客新增 RSS 全文输出。」, and a 技能 sub-line suggestion is needed.",
-      "expected_output": "Without a list, judge by the original rules; do not force-fill when no skill evidence exists, and do not create lbkit-skills.json because of it.",
+      "prompt": "The repository root has no lbkit-skills.yaml recipes. Draft a todo for a new Stage: 「开发：为博客新增 RSS 全文输出。」, and a 技能 sub-line suggestion is needed.",
+      "expected_output": "Without a list, judge by the original rules; do not force-fill when no skill evidence exists, and do not create lbkit-skills.yaml recipes because of it.",
       "files": [],
       "expectations": [
-        "Do not create lbkit-skills.json or call skills add",
+        "Do not create lbkit-skills.yaml recipes or call config recipe create",
         "Do not force-fill the skill sub-line without evidence",
         "The rest of the planning process proceeds as usual"
       ]
     },
     {
       "id": 32,
-      "prompt": "In lbkit-skills.json, both 「speckit 功能规格设计」 and 「speckit 按任务区间实现」 include 开发 in their actions. Draft the 技能 sub-line for the skm logbook's todo 「开发：验证并在 README 固化一条命令：克隆 matt skills 到本地并安装到全部本地 agent targets。 @skm」; the skm repository has .specify/, but this work has no corresponding spec or tasks.md, and the work package is E2E verification plus a README edit.",
+      "prompt": "In lbkit-skills.yaml recipes, both 「speckit 功能规格设计」 and 「speckit 按任务区间实现」 include 开发 in their actions. Draft the 技能 sub-line for the skm logbook's todo 「开发：验证并在 README 固化一条命令：克隆 matt skills 到本地并安装到全部本地 agent targets。 @skm」; the skm repository has .specify/, but this work has no corresponding spec or tasks.md, and the work package is E2E verification plus a README edit.",
       "expected_output": "The action prefix and the repository having .specify/ are both only hints; by scope this is not a speckit task, and adding one README paragraph does not fit create-readme either — so leave it blank and explain why in the draft.",
       "files": [],
       "expectations": [
@@ -335,7 +335,7 @@
     },
     {
       "id": 33,
-      "prompt": "lbkit-skills.json has an entry 「博客导出与发布（blog.example.com）」 whose scope is limited to blog.example.com, with skill chain mf-cli → agent-browser and a description pointing to that repository's AGENTS.md process. Now draft the 技能 sub-line for another site repository, docs.example.com: 「部署：发布文档站到线上。」.",
+      "prompt": "lbkit-skills.yaml recipes has an entry 「博客导出与发布（blog.example.com）」 whose scope is limited to blog.example.com, with skill chain mf-cli → agent-browser and a description pointing to that repository's AGENTS.md process. Now draft the 技能 sub-line for another site repository, docs.example.com: 「部署：发布文档站到线上。」.",
       "expected_output": "That entry is limited to blog.example.com and does not apply to other repositories; do not apply it to docs.example.com, treat it as no match, and you may suggest registering a new entry for that repository.",
       "files": [],
       "expectations": [
@@ -346,7 +346,7 @@
     },
     {
       "id": 34,
-      "prompt": "In lbkit-skills.json, 「speckit 按任务区间实现」 carries companions: spec-status (check progress before dispatch and after report-back), comment-prune (before committing finished implementation), spec-update (write back to the spec before switching executors). Prepare the work package for 「开发：Electron 内嵌 Pi 导演替换 claude -p…」, where the executor will switch from Zhipu to Codex.",
+      "prompt": "In lbkit-skills.yaml recipes, 「speckit 按任务区间实现」 carries companions: spec-status (check progress before dispatch and after report-back), comment-prune (before committing finished implementation), spec-update (write back to the spec before switching executors). Prepare the work package for 「开发：Electron 内嵌 Pi 导演替换 claude -p…」, where the executor will switch from Zhipu to Codex.",
       "expected_output": "Write the main skill chain as speckit-implement; put the relevant companion skills into the same skill sub-line or the work package per their when (spec-update before switching executors, spec-status before dispatch, comment-prune after completion), without splitting companions into separate todos.",
       "files": [],
       "expectations": [
@@ -421,7 +421,7 @@
     {
       "id": 38,
       "axis": "登记表匹配",
-      "prompt": "lbkit-skills.json 只有一条限定 go-cli 专仓 仓库的专仓整链（chain 含 Go 单测、TUI 测试框架 构建、市场上架、制品安装；companion 终端审阅）和三条通用单技能（制品安装、代码平台操作、终端审阅），没有通用 CLI 升级安装整链条目。规划任务：Herdr 升级——对齐社区 tag、用 内部流水线 重构建、安装、人工审阅。",
+      "prompt": "lbkit-skills.yaml recipes 只有一条限定 go-cli 专仓 仓库的专仓整链（chain 含 Go 单测、TUI 测试框架 构建、市场上架、制品安装；companion 终端审阅）和三条通用单技能（制品安装、代码平台操作、终端审阅），没有通用 CLI 升级安装整链条目。规划任务：Herdr 升级——对齐社区 tag、用 内部流水线 重构建、安装、人工审阅。",
       "expected_output": "按 scope 选中 code-platform-cli、artifact-install-cli、terminal-review；不引入 go-cli 专仓 专链的 Go/TUI 测试框架/上架步骤；把缺通用 CLI 交付链条目如实报告为 registry gap，并区分缺 内部流水线 构建技能的 capability gap；缺链条目不阻塞主流程，构建、交付、安装与人工审阅从通用单技能自身 scope 覆盖。",
       "files": [],
       "assertions": [

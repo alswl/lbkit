@@ -16,7 +16,7 @@ the Logbook path once; distinguish paths when referring to multiple files. A
 clickable file/line link may accompany the visible `L50` label. For several nearby
 items, use a useful range such as `L50–L58` rather than dumping every line.
 
-Obtain physical source lines from the current file and `context --json` where
+Obtain physical source lines from the current file and `log context --json` where
 available; reread after writes before reporting final positions. Cite the task's
 first line for task-level discussion, or the exact heading/annotation line when
 that is what needs review. Lines are navigation hints, not durable task identity
@@ -121,7 +121,7 @@ gate alone is not remaining Sailor work. This execution handoff is distinct from
 of Captain coordination and from final human delivery.
 
 For a confirmed active takeover, maintain one task detail such as
-`状态：🧑‍✈️ Captain 接手` (or `Status: 🧑‍✈️ Captain takeover` under the
+`Status: 👨‍✈️ Captain takeover` (localized labels follow the
 host's existing field language). Add it only after verified execution ownership.
 During handoff awaiting receipt/readiness retain the marker with a short pending
 handoff fact; after transfer replace that same detail with the current Sailor
@@ -131,6 +131,13 @@ dry-run/readback and `--replace-line` for the existing matching status line.
 Do not delete/rewrite the task or append competing current statuses. The emoji is
 a display cue, never a parsed state, owner identity, authorization or independent
 acceptance claim. Read-only entry points report it without changing files.
+
+Receiving a Sailor return alone does not enter scoped takeover or activate its marker.
+While verified scoped takeover is active, prefix every user-facing progress update
+and final reply with `👨‍✈️`, including replies during pending handback. Recover this
+state from the existing checkpoint after interruption. Stop the prefix only when
+execution ownership and current task status are reconciled. The marker reports
+ownership; it does not grant authority or prove runtime identity.
 
 Captain's direct result uses the same task/result/conditions/outcome/limitations
 fields as a Sailor return and records Captain as the executor. Self-checks may
@@ -253,3 +260,7 @@ A later human-reported delivery defect supplies a package_correction linked to t
 ### 🎉 output
 
 Captain reports exact Stage/logbook scope, total elapsed (and wait/interruption/union breakdown), distinct human turns by category and first-pass numerator/denominator/percentage, or explicit unknown/no-calculable-data values. Link to the bound Thinking entry, not a newly created report. An applicable human gate or unfinished responsibility remains visible; metrics never turn cancellation or cleanup into successful delivery.
+
+## Current lifecycle and close-out operations
+
+The [operations contract](lifecycle-operations.md) defines the compact CLI-generated status, lifecycle transitions in existing skills, accessible-delivery responsibility, run event/closeout CLI, workflow provenance and main-branch lb-retro. It supersedes older statements that page status is never created or that lifecycle has no persisted state. Existing human text and gates remain protected; legacy migration is explicit. A lifecycle is not runtime state or execution authorization.

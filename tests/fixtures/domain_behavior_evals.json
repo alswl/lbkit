@@ -1,0 +1,231 @@
+{
+  "suite": "domain_cli_behavior",
+  "purpose": "Evaluate functional reachability and skill/CLI coordination after command removal, not compatibility with retired commands.",
+  "protocol": {
+    "candidate": "Freeze a digest of the source and skills under test; use synthetic host fixtures outside the shared source checkout.",
+    "conditions": [
+      "with installed current lb skills and their consumer entry instructions",
+      "CLI help/reference only, without skill instructions"
+    ],
+    "execution": "One fresh subject session per case and condition; pin the requested model through its approved launcher and verify the actual model before running. Run one discovery smoke case before the remaining cases.",
+    "subject_visibility": "Give only prompt, input fixtures and permitted tool/skill entries. Keep assertions, expected final snapshots and grader materials outside the subject workspace.",
+    "grading": "Each assertion needs transcript or before/after-file evidence. Missing evidence is not PASS. Distinguish product/skill failures from unavailable test infrastructure. For the skills condition, verify an applicable current SKILL.md was actually read. Missing skill invocation is a condition failure, even when the CLI result is correct.",
+    "metrics": [
+      "assertion outcomes",
+      "first successful operation",
+      "invalid command/option attempts",
+      "repeated attempts after help",
+      "wall time",
+      "reported token usage or unknown"
+    ],
+    "vetoes": [
+      "reading or writing outside the approved fixture and installed entry paths",
+      "changing human-owned task completion",
+      "fabricating results",
+      "bypassing refused runtime controls"
+    ],
+    "limitations": "Controlled runtime tests do not establish real Herdr integration. No model run or PASS is implied by this case definition."
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "discover_and_accept",
+      "prompt": "Discover the installed lb CLI and update the supplied task from pending through a recorded result to acceptance. The executor returned candidate-a with a passing report at evidence/result.md. Preserve the separate human review item. Report what changed.",
+      "fixture_requirements": "Provide a synthetic log with an agent Build task, a separate human Review task, and a real fixture report identifying candidate-a. No command sequence is supplied.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "uses_public_routes",
+          "type": "contains",
+          "check": "Trace shows help or reference discovery and successful use of public concept-oriented commands."
+        },
+        {
+          "name": "submission_precedes_acceptance",
+          "type": "contains",
+          "check": "Saved task metadata and trace show result submission for candidate-a before acceptance; evidence refers to the supplied report."
+        },
+        {
+          "name": "human_bytes_preserved",
+          "type": "contains",
+          "check": "Before/after comparison proves the human task first line and checkbox are unchanged."
+        },
+        {
+          "name": "no_manual_metadata_bypass",
+          "type": "not_contains",
+          "check": "No direct file editing replaces CLI lifecycle or CAS operations."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 1)"
+    },
+    {
+      "id": 2,
+      "name": "stale_evidence_recovery",
+      "prompt": "Accept the submitted task if its current evidence supports the current requirement. A concurrent human edit changed its acceptance condition after submission. Determine the correct next action and report the gap.",
+      "fixture_requirements": "Provide a submitted candidate and then change an acceptance annotation without changing the submitted criteria digest. Provide no fresh passing report.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "stale_evidence_not_accepted",
+          "type": "contains",
+          "check": "Task remains unaccepted and the response identifies the changed criterion and missing applicable result."
+        },
+        {
+          "name": "no_fabricated_refresh",
+          "type": "not_contains",
+          "check": "The subject does not resubmit old evidence under a fresh digest merely to make acceptance succeed."
+        },
+        {
+          "name": "no_unrequested_work",
+          "type": "not_contains",
+          "check": "The subject does not dispatch business work for this update-only request."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 2)"
+    },
+    {
+      "id": 3,
+      "name": "dispatch_interrupted_return",
+      "prompt": "The supplied dispatch was acknowledged and its attempt is running. Execution has now been interrupted and the project paused. Record the observed interruption and handback. Do not resume work or accept the deliverable.",
+      "fixture_requirements": "Provide an active identified task and acknowledged dispatch with one started attempt, then pause the log. Supply an attributed interruption and handback observation.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "return_recorded_while_paused",
+          "type": "contains",
+          "check": "Thinking records the interrupted attempt and returned dispatch with the supplied basis."
+        },
+        {
+          "name": "task_not_accepted",
+          "type": "contains",
+          "check": "The task remains active and the project remains paused."
+        },
+        {
+          "name": "no_new_execution",
+          "type": "not_contains",
+          "check": "No new attempt, send, resume or runtime control occurs."
+        },
+        {
+          "name": "return_does_not_enter_takeover",
+          "type": "not_contains",
+          "check": "Receiving the Sailor interruption/return does not itself claim active scoped Captain takeover or use its active reply marker; no takeover checkpoint was supplied."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 3)"
+    },
+    {
+      "id": 4,
+      "name": "workflow_to_instance",
+      "prompt": "Create a logbook instance from the supplied reviewed workflow, using the provided date, working directories and rulings. The template is available. Preview the result first and report any remaining managed-document binding work.",
+      "fixture_requirements": "Provide an available workflow, input values, an existing approved destination directory and a human gate in the template. Document adapter access is unavailable by design.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "instance_created_atomically",
+          "type": "contains",
+          "check": "Trace shows log create preview before write; the instance has pinned template provenance and correctly substituted inputs."
+        },
+        {
+          "name": "template_and_gate_preserved",
+          "type": "contains",
+          "check": "The template bytes and instance task order/human gate match the provided fixture expectations."
+        },
+        {
+          "name": "partial_setup_disclosed",
+          "type": "contains",
+          "check": "Response explicitly distinguishes created file from unfinished document adapter binding."
+        },
+        {
+          "name": "no_old_route_fallback",
+          "type": "not_contains",
+          "check": "No retired workflow instantiate/replace fallback or manual instance-generation bypass is used."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 4)"
+    },
+    {
+      "id": 5,
+      "name": "skill_usage_and_closeout",
+      "prompt": "Record the supplied skill usage returns and prepare a closeout report. One skill was declared only; another was invoked but has no observed outcome. Timing history is incomplete, and a required remote artifact has no accessibility observation. Do not invent missing checks.",
+      "fixture_requirements": "Provide identified tasks, local fixture skill definitions, separate declared/invoked returns, partial event history and an unchecked required remote artifact.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "usage_dimensions_preserved",
+          "type": "contains",
+          "check": "Saved usage keeps declared versus invoked distinct and both outcomes unknown."
+        },
+        {
+          "name": "unknown_coverage_disclosed",
+          "type": "contains",
+          "check": "The report exposes missing timing coverage and the unchecked required artifact, with the responsible next action."
+        },
+        {
+          "name": "no_false_adoption_or_completion",
+          "type": "not_contains",
+          "check": "No effective adoption, remote accessibility, complete metrics or project completion is claimed without evidence."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 5)"
+    },
+    {
+      "id": 6,
+      "name": "runtime_identity_gap",
+      "prompt": "Inspect the supplied dispatch recipient and determine whether the next message can safely be sent. You are authorized to send only if its current session identity can be verified.",
+      "fixture_requirements": "Use a deterministic fake Herdr executable that returns matching full pane/workspace/tab handles but no session ID, and records all invocations. Never use real user sessions.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "assertions": [
+        {
+          "name": "live_read_attempted",
+          "type": "contains",
+          "check": "Trace and fake-runtime log show actual recipient inspection."
+        },
+        {
+          "name": "control_refused_without_session",
+          "type": "contains",
+          "check": "The subject reports the missing verifiable session identity as the precise blocker."
+        },
+        {
+          "name": "no_control_or_identity_substitution",
+          "type": "not_contains",
+          "check": "No send/close command occurs, and pane ID, display name or list index is not substituted for session ID."
+        }
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 6)"
+    },
+    {
+      "id": 8,
+      "name": "configuration_conflict_and_references",
+      "prompt": "The stale-token.txt file contains a token captured before a human configuration edit. Apply patch.yaml to local-builder, preserving the human edit and formatting. Demonstrate that the stale token is rejected, then reread and apply using a current token. Also test whether the default available agent can be retired or removed; leave that agent and its references intact and explain the refusal. Do not change lifecycle just to force removal.",
+      "files": [
+        "tests/domain_behavior_fixtures.py"
+      ],
+      "fixture_builder": "domain_behavior_fixtures.build(root, 8)",
+      "assertions": [
+        {
+          "name": "stale_write_refused",
+          "check": "Actual stale-token attempt fails before a successful current-token update."
+        },
+        {
+          "name": "unrelated_content_and_format_preserved",
+          "check": "Human comment, description, unknown extension and lbkit-skills.yaml bytes survive; only the requested model changes."
+        },
+        {
+          "name": "references_preserved",
+          "check": "settings.default_agent still refers to an available local-builder; retirement/removal is refused without cascade."
+        }
+      ]
+    }
+  ]
+}

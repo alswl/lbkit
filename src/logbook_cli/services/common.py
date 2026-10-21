@@ -32,6 +32,14 @@ def writable(root: str, log: str, token: str) -> Document:
     doc = load(root, log)
     require_token(doc, token)
     require_preflight_clear(doc)
+    from logbook_cli.document import EXIT_REFUSED, LbError
+    from logbook_cli.lifecycle import get
+
+    if get(doc)["value"] in {"paused", "completed", "terminated"}:
+        raise LbError(
+            "lifecycle stops ordinary writes; reconcile/reopen via state-set",
+            EXIT_REFUSED,
+        )
     return doc
 
 

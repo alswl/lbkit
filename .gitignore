@@ -33,3 +33,6 @@ venv/
 Thumbs.db
 *.tmp
 *.swp
+
+# Isolated local execution and validation checkouts.
+/.worktrees/

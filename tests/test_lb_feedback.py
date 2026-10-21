@@ -35,7 +35,7 @@ class FeedbackTest(unittest.TestCase):
         return json.loads(result.stdout) if result.returncode in (0, 1) else None
 
     def context(self):
-        return self.cli("context", "log.md")
+        return self.cli('log', 'context', "log.md")
 
     def write(self, action, task=TASK, token=None, code=0, **options):
         args = [
@@ -46,7 +46,7 @@ class FeedbackTest(unittest.TestCase):
             STAGE,
             "--task",
             task,
-            "--token",
+            '--expect-version',
             token or self.context()["version_token"],
         ]
         for key, value in options.items():
@@ -56,11 +56,11 @@ class FeedbackTest(unittest.TestCase):
     def test_completed_stage_new_task_warns_until_sync(self):
         self.log.write_text("# Demo\n\n## ✅ Stage 01 Demo\n\n待办：\n- [x] Research: previous\n")
         token = self.context()["version_token"]
-        self.cli("task", "add", "log.md", "--stage", "Stage 01 Demo", "--text", "Research: new", "--token", token)
-        issues = self.cli("check", "log.md", code=1)
+        self.cli("task", "add", "log.md", "--stage", "Stage 01 Demo", "--text", "Research: new", '--expect-version', token)
+        issues = self.cli('log', 'check', "log.md", code=1)
         self.assertEqual([i["code"] for i in issues], ["STAGE_EMOJI"])
-        self.cli("sync", "log.md", "--token", self.context()["version_token"])
-        self.assertEqual(self.cli("check", "log.md"), [])
+        self.cli('log', 'sync', "log.md", '--expect-version', self.context()["version_token"])
+        self.assertEqual(self.cli('log', 'check', "log.md"), [])
 
     def test_write_token_chain_and_preview(self):
         first = self.context()["version_token"]
@@ -74,7 +74,7 @@ class FeedbackTest(unittest.TestCase):
             TASK,
             "--status",
             "/",
-            "--token",
+            '--expect-version',
             first,
             "--dry-run",
         )
@@ -83,10 +83,10 @@ class FeedbackTest(unittest.TestCase):
         token = result["version_token"]
         self.assertEqual(token, hashlib.sha256(self.log.read_bytes()).hexdigest())
         self.assertNotEqual(token, first)
-        synced = self.cli("sync", "log.md", "--token", token)
+        synced = self.cli('log', 'sync', "log.md", '--expect-version', token)
         self.assertEqual(synced["version_token"], self.context()["version_token"])
         self.write("update", status="x", token=first, code=4)
-        no_op = self.cli("sync", "log.md", "--token", synced["version_token"])
+        no_op = self.cli('log', 'sync', "log.md", '--expect-version', synced["version_token"])
         self.assertEqual(no_op["version_token"], synced["version_token"])
 
     def test_before_task_keeps_child_lines_and_rejects_ambiguity(self):
@@ -101,7 +101,7 @@ class FeedbackTest(unittest.TestCase):
             "--before-task",
             HUMAN,
         ]
-        self.cli(*args, "--token", self.context()["version_token"])
+        self.cli(*args, '--expect-version', self.context()["version_token"])
         self.assertIn(
             "    - 技能：interview\n- [ ] 测试：试访。\n- [ ] " + HUMAN,
             self.log.read_text(),
@@ -110,7 +110,7 @@ class FeedbackTest(unittest.TestCase):
             *args,
             "--before-line",
             "7",
-            "--token",
+            '--expect-version',
             self.context()["version_token"],
             code=2,
         )
@@ -125,7 +125,7 @@ class FeedbackTest(unittest.TestCase):
             "验证：归档。",
             "--before-task",
             HUMAN,
-            "--token",
+            '--expect-version',
             self.context()["version_token"],
             code=4,
         )
@@ -180,10 +180,10 @@ class FeedbackTest(unittest.TestCase):
                 "note": "无需另行审阅",
             },
         )
-        self.cli("sync", "log.md", "--token", self.context()["version_token"])
+        self.cli('log', 'sync', "log.md", '--expect-version', self.context()["version_token"])
         self.assertEqual(self.context()["stages"][0]["derived_emoji"], "✅")
-        self.assertEqual(self.cli("check", "log.md"), [])
-        self.assertIn("取消", self.cli("state", "log.md")["summary"])
+        self.assertEqual(self.cli('log', 'check', "log.md"), [])
+        self.assertIn("取消", self.cli('log', 'state', "log.md")["summary"])
         self.assertIn("[-] " + HUMAN, self.log.read_text())
         self.log.write_text(
             self.log.read_text().replace(HUMAN, "人工验证：全新审阅 👱")
@@ -191,7 +191,7 @@ class FeedbackTest(unittest.TestCase):
         self.assertNotEqual(self.context()["stages"][0]["derived_emoji"], "✅")
         self.assertIn(
             "INVALID_RESOLUTION",
-            {x["code"] for x in self.cli("check", "log.md", code=1)},
+            {x["code"] for x in self.cli('log', 'check', "log.md", code=1)},
         )
 
     def test_resolve_cannot_cancel_open_human_task_or_bypass_preflight(self):
@@ -236,7 +236,7 @@ class FeedbackTest(unittest.TestCase):
         self.assertEqual(self.context()["stages"][0]["derived_emoji"], "🚧")
         self.assertIn(
             "INVALID_RESOLUTION",
-            {x["code"] for x in self.cli("check", "log.md", code=1)},
+            {x["code"] for x in self.cli('log', 'check', "log.md", code=1)},
         )
         self.log.write_text(
             original.replace(record, "    ```\n" + record + "\n    ```")
@@ -262,7 +262,7 @@ class FeedbackTest(unittest.TestCase):
         before = self.log.read_bytes()
         token = self.context()["version_token"]
         args = ["task", "rewrite", "log.md", "--stage", STAGE, "--task", old,
-                "--text", new, "--decision", "用户明确指定责任仓库", "--token", token]
+                "--text", new, "--decision", "用户明确指定责任仓库", '--expect-version', token]
         self.cli(*args, code=4)
         self.cli(*args, "--assign-repo", "sample-app", "--dry-run")
         self.assertEqual(self.log.read_bytes(), before)
@@ -305,13 +305,13 @@ class FeedbackTest(unittest.TestCase):
         for name in ("log.md", "second.md", "log.md"):
             other = second if name == "log.md" else self.log
             other_before = other.read_bytes()
-            token = self.cli("context", name)["version_token"]
+            token = self.cli('log', 'context', name)["version_token"]
             self.cli("task", "note", name, "--stage", STAGE, "--task", TASK,
-                     "--kind", "状态", "--text", f"当前候选 {token[:8]}", "--token", token)
+                     "--kind", "状态", "--text", f"当前候选 {token[:8]}", '--expect-version', token)
             self.assertEqual(other.read_bytes(), other_before)
             self.assertEqual(companion.read_bytes(), original_companion)
         companion.unlink()
-        self.cli("sync", "log.md", "--token", self.context()["version_token"])
+        self.cli('log', 'sync', "log.md", '--expect-version', self.context()["version_token"])
         self.assertFalse(companion.exists())
 
 

@@ -47,7 +47,7 @@ Contract files (`docs/installable/`) and skills (`skills/`) are installed into c
 1. **Relative links must also resolve inside the consuming repository.** Skills live at the installed `.agents/skills/lb-X/`, symlinked to `.lbkit/skills/lb-X/`; contracts live in the consumer's `docs/`, pointing to `.lbkit/docs/installable/`. Within a skill, reference contracts as `../../docs/installable/...` in SKILL.md (`../../../docs/installable/...` from the references subdirectory); within a contract, reference skills as `../../skills/...`. You can write paths according to lbkit's internal layout — inside a consuming repository they resolve through the symlinks to the same file under `.lbkit/`.
 2. **Update `manifest()` in `bin/lbkit`** if you add a new top-level directory or file that must be installed.
 3. **Run the full test suite**; for installer-related changes also run `uv run --locked python -m unittest tests.test_lbkit_install`.
-4. **The consuming repository owns** its project logbook, `AGENTS.md`, `lbkit-agents.yaml`, and optional `lbkit-skills.json`; do not inject new obligations into it through shared contracts without documenting them here.
+4. **The consuming repository owns** its project logbook, `AGENTS.md`, `lbkit.yaml`, `lbkit-skills.yaml`; do not inject new obligations into it through shared contracts without documenting them here.
 
 When referring to consumer authorization, name the consuming repository's root
 `AGENTS.md` explicitly. A relative link to lbkit's own `AGENTS.md` resolves into
@@ -57,7 +57,7 @@ host's rules and current authorization, not a presumed exception in lbkit's rule
 
 ## Versioning and Evolution
 
-lbkit uses semantic versioning; the current version is recorded in the root `VERSION` file (first release 0.1.0) and printed by `bin/lb --version`. The version covers three kinds of objects: lbkit as a whole (shared contracts, CLI, and installer), each lb-* skill (the `version` field in SKILL.md frontmatter), and the config formats owned by consuming repositories (`version` in `lbkit-agents.yaml`, `"version"` in `lbkit-skills.json`). On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Configuration schema versions remain independent compatibility identifiers. Only the human decides and authorizes version upgrades. Agents must not automatically bump package, skill, or configuration versions. Report compatibility implications separately; update versions and dependent metadata only on explicit instruction. Semantic versioning informs the human release decision. Each consuming repository still pins one exact revision via the submodule pointer and chooses its own upgrade timing — updating the submodule pointer is the upgrade. Therefore:
+lbkit uses semantic versioning; the current version is recorded in the root `VERSION` file (first release 0.1.0) and printed by `bin/lb --version`. The version covers three kinds of objects: lbkit as a whole (shared contracts, CLI, and installer), each lb-* skill (the `version` field in SKILL.md frontmatter), and the config formats owned by consuming repositories (`version` in `lbkit.yaml` and `lbkit-skills.yaml`). On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Configuration schema versions remain independent compatibility identifiers. Only the human decides and authorizes version upgrades. Agents must not automatically bump package, skill, or configuration versions. Report compatibility implications separately; update versions and dependent metadata only on explicit instruction. Semantic versioning informs the human release decision. Each consuming repository still pins one exact revision via the submodule pointer and chooses its own upgrade timing — updating the submodule pointer is the upgrade. Therefore:
 
 - Keep contract changes backward compatible where possible (adding fields beats changing semantics).
 - Note the change points of breaking changes in the corresponding contract document so consumers can evaluate whether to upgrade.
@@ -84,7 +84,7 @@ The CLI uses Click and uv. The installer remains a small standard-library bootst
 
 `commands/` adapts Click parameters, `services/` implements use cases, `storage.py` owns guarded writes, and `render.py` owns CLI output. `models.py` defines semantic task/stage states and annotations. `format.py` owns Markdown labels and marker mappings. `document.py` parses once, and skill extraction consumes its task annotations.
 
-The runtime dependency change requires consumer environment setup; its release version is for the human to decide. Existing command names, JSON fields, error codes, tokens and dry-run behavior remain compatible. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
+The runtime dependency change requires consumer environment setup; its release version is for the human to decide. The concept-oriented command migration replaces old command paths and option spellings; target-file CAS and dry-run guarantees remain. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
 
 The existing unittest suite remains the regression baseline. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
 
@@ -255,7 +255,7 @@ configuration, CLI state or mandatory archive is introduced. New skills are pick
 up by the installer's existing directory enumeration. Re-run the installer after
 upgrading the submodule. No version or schema bump is made without human instruction.
 
-The takeover display uses `状态：🧑‍✈️ Captain 接手` under the task, with host
+The takeover display uses `Status: 👨‍✈️ Captain takeover` under the task, with host
 field-language preservation. `task note --kind Status/状态 --replace-line` now
 replaces a matching agent-task Status line under the existing CAS/preview rules.
 It preserves comment suffixes and line endings, rejects stale/mismatched writes
@@ -266,3 +266,41 @@ The scoped execution return skill is renamed from `lb-handoff` to `lb-handback`.
 Consumers should update explicit skill references when adopting this revision.
 Captain identity and coordination responsibility persist through execution handback;
 this clarifies the existing role boundary and adds no consumer configuration.
+
+## Lifecycle operations adoption
+
+The current CLI introduces opt-in lifecycle metadata and generated short page status, template contract/render/provenance operations, guarded Thinking event writes, delivery-link audit, a host feedback ledger and offline dispatch bindings. Consumers adopting these commands must review the installable lifecycle-operations contract and integrate the updated skill steps. Old human-authored page status is preserved and may need explicit migration. No historical project/template/feedback conversion is automatic. The new shared lb-workflow name may collide with a host-owned skill; the existing installer preserves it and reports the conflict. No force overwrite is added. The installer manifest discovers both new skills and the new installable contract dynamically. Package/config/skill release versions are not bumped.
+
+Atomic workflow maintenance adds single-file `workflow update` with candidate preview/CAS, and destination-aware create-only instance validation. Skills continue to own semantic edits, bindings and recovery; no multi-file transaction or new host configuration is added. Directory substitution preserves following rulings; declared YAML front matter is retained. Unclosed Thinking syntax refuses event append. Retro explicitly limits coverage to its fixed snapshot rather than discovering other branches; session cleanup remains an execution-skill responsibility. No existing templates or logs are migrated automatically.
+
+## Instruction language and maintenance
+
+Write lbkit instructions and documentation in English. Keep localized parser/UI constants and localization fixtures unchanged where they test or specify the supported format. Integrate new skill behavior into the responsible existing step; remove superseded procedures instead of appending parallel workflows. Shared contracts own command schemas and common rules; skill entrypoints own decisions, sequencing and recovery.
+
+## Domain command migration
+
+Stable task metadata is opt-in; existing Markdown remains intact, but consumers must use the new command paths. Identified tasks require semantic transitions and refuse legacy checkbox/structural mutation. Old top-level aliases, runtime commands, workflow instantiate/replace and option aliases are removed. New workflow templates start in draft and need explicit availability before instantiation; existing unknown-status templates retain compatibility. Shared skills use the domain command contract, with human ownership and authorization unchanged. Toolkit diagnostics add PyYAML for safe declaration parsing; no package or skill version is bumped automatically.
+
+## Configuration files
+
+The configuration contract replaces `lbkit-agents.yaml` with `lbkit.yaml`
+(settings and agents) and `lbkit-skills.json` with `lbkit-skills.yaml` (recipes). Recipes
+stay separate because they describe the host's whole skill set, not lbkit settings, and
+change on a different cadence; they no longer reference an agent. All configuration
+commands live under `lb config`; `lb agent` stays the runtime session group.
+The project is early, so the CLI carries no migration commands or legacy reads, and the
+installer only creates missing files from templates; the agent maintaining a host rewrites
+older files by hand (see the configuration contract). CLI operations preserve unknown
+fields and comments, require CAS and mutate one registry object. Model evaluation must
+compare current skills against help/docs only on the same frozen candidate.
+
+## Installed skill discovery and incomplete closeout
+
+The consumer instruction template now identifies local skill directory symlinks
+and exact CLI paths before task routing. Existing hosts adopt that short entry
+section deliberately; installing links does not overwrite host AGENTS.md.
+Configuration-only maintenance routes to lb-init without requiring installation
+or document bindings. Closeout reporting names the existing owner and missing
+evidence; it does not dispatch work or create a new task. Behavior fixtures use
+the same entry section so discovery instructions are product content, not hidden
+grader hints. No package, skill, or configuration version changes are included.

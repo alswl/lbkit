@@ -31,7 +31,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - When adding a new top-level installed directory or file, update `manifest()` in `bin/lbkit` accordingly.
 - On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Config schema versions describe compatibility and are independent of release suffixes. Only the human may decide and authorize version upgrades. Do not automatically bump `VERSION`, package versions, skill frontmatter versions, or config format versions when changing implementation. Report any release or compatibility implications and wait for an explicit version instruction; synchronize dependent metadata only with that instruction.
 - CLI write commands must carry the `version_token` (SHA-256 CAS) returned by `context --json` to prevent concurrent-write conflicts; do not bypass this.
-- The consuming repository owns its logbook, `AGENTS.md`, and `lbkit-agents.yaml`; do not inject new obligations into consumers through shared contracts without documenting them in docs/dev.
+- The consuming repository owns its logbook, `AGENTS.md`, `lbkit.yaml`, and `lbkit-skills.yaml`; do not inject new obligations into consumers through shared contracts without documenting them in docs/dev.
 
 ## References
 

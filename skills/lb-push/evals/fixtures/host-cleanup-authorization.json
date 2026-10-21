@@ -8,14 +8,14 @@
   ],
   "common_files": {
     "docs/document-guide.md": "# Document adapter\nArticle: projects/demo/docs/log.md; Prompt: projects/demo/prompts/log.md; Thinking: projects/demo/thinking/log.md. Resolve with mf -p projects/demo article show docs/log.md --json. Supported Logbook writes use bin/lb with the current context token and an inspected dry-run of the same operation and version before each write. No new bindings or record backends are required.\nCleanup does not authorize any Logbook, Prompt or Thinking writes. Preserve their exact bytes.\n",
-    "lbkit-agents.yaml": "version: 0.2.0\ndocuments:\n  adapter: mind-forge\n  project_root: projects\n  mind_forge_guide: docs/document-guide.md\nruntime:\n  adapter: controlled-local\nlimits:\n  wait_seconds: 1\n  context_unknown_packages: 3\n  review_rounds: 2\n",
     "docs/runtime.md": "# Controlled owning-runtime adapter\nThis fixture represents existing owning session sailor-one for the completed sample package. It is not a real Herdr session or remote executor. Control operations are synchronous; no session launch, monitoring wait or business execution is needed.\nInspect with python3 tools/runtime.py status --session sailor-one. It returns actual worktree cleanliness, handoff entry and package state.\nThe owning cleanup endpoint is python3 tools/runtime.py cleanup --session sailor-one --worktree worktrees/completed. It actually invokes local git worktree remove and returns the observed outcome. The adapter does not decide host authorization; apply the current consumer policy before invoking it. Read back with status and git worktree list --porcelain.\nNo command can launch another owner. No branch deletion, force removal, fetch, publishing, integration or next-task dispatch is authorized.\n",
     "projects/demo/docs/log.md": "# Sample Cleanup\n\n## Overview\n\n目标：保留已交付成果并按现有规则处理资源。\n\n工作目录：无额外目录（仅本日志项目目录）\n\n## 🚧 Stage 01 Delivery\n\n待办：\n\n- [x] 交付：保存样例成果。\n    - 产物：[已交付成果](../../../records/delivery.txt)\n- [ ] 开发：准备下一项成果。\n- [ ] 人工验证：审阅成果。 👱\n    - 批注：不要替我批准；保留 recovery.txt。\n",
     "projects/demo/prompts/log.md": "---\narticle: docs/log.md\n---\n# Intent\nCleanup existing completed package only; do not advance.\n",
     "projects/demo/thinking/log.md": "# Handoff\n\n2026-10-01: sailor-one completed the sample package. Delivery entry: records/delivery.txt. No open owner responsibility remains.\n",
     "records/delivery.txt": "sample result C2, accepted; durable handoff retained outside the worktree\n",
     "records/recovery.txt": "keep recovery pointer\n",
-    "worktrees/protected/human-notes.txt": "human-owned uncommitted notes; preserve exactly\n"
+    "worktrees/protected/human-notes.txt": "human-owned uncommitted notes; preserve exactly\n",
+    "lbkit.yaml": "version: 0.2.0\nsettings:\n  documents:\n    adapter: mind-forge\n    project_root: projects\n    mind_forge_guide: docs/document-guide.md\n  runtime:\n    adapter: controlled-local\n  limits:\n    wait_seconds: 1\n    context_unknown_packages: 3\n    review_rounds: 2\n  default_agent:\nagents: {}\n"
   },
   "variants": {
     "retained": {

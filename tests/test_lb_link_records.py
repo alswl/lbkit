@@ -25,10 +25,10 @@ class LinkObservationTest(unittest.TestCase):
         return json.loads(result.stdout) if result.returncode in (0, 1) else None
 
     def context(self):
-        return self.cli("context", "log.md")
+        return self.cli('log', 'context', "log.md")
 
     def verify(self, line, **kwargs):
-        args = ["link", "verify", "log.md", "--line", str(line), "--target", URL, "--label", "Reference", "--observed-at", kwargs.pop("at", "2026-10-14T08:00:00+08:00"), "--observer", "sailor-a", "--basis", "host tool observation", "--token", kwargs.pop("token", self.context()["version_token"])]
+        args = ['log', 'links', 'record-check', "log.md", "--line", str(line), "--target", URL, "--label", "Reference", "--observed-at", kwargs.pop("at", "2026-10-14T08:00:00+08:00"), "--observer", "sailor-a", "--basis", "host tool observation", '--expect-version', kwargs.pop("token", self.context()["version_token"])]
         code = kwargs.pop("code", 0)
         for key, value in kwargs.items():
             args.append("--" + key.replace("_", "-"))
@@ -37,7 +37,7 @@ class LinkObservationTest(unittest.TestCase):
         return self.cli(*args, code=code)
 
     def unchecked(self):
-        return [i["line"] for i in self.cli("check", "log.md") if i["code"] == "LINK_UNVERIFIED"]
+        return [i["line"] for i in self.cli('log', 'check', "log.md") if i["code"] == "LINK_UNVERIFIED"]
 
     def test_overview_and_human_links_require_no_task_or_artifact(self):
         original = self.log.read_bytes()
@@ -105,10 +105,10 @@ class LinkObservationTest(unittest.TestCase):
 
     def test_malformed_hidden_record_and_unrelated_local_link_checks(self):
         self.log.write_text(self.log.read_text() + '\n<!-- lb-link-verification {} -->\n[Missing](missing.md)\n')
-        codes = {i["code"] for i in self.cli("check", "log.md", code=1)}
+        codes = {i["code"] for i in self.cli('log', 'check', "log.md", code=1)}
         self.assertTrue({"LINK_VERIFICATION_INVALID", "LOCAL_LINK_MISSING", "LINK_UNVERIFIED"} <= codes)
         self.log.write_text(self.log.read_text().replace('<!-- lb-link-verification {} -->', '```\n<!-- lb-link-verification {} -->\n```'))
-        self.assertNotIn("LINK_VERIFICATION_INVALID", {i["code"] for i in self.cli("check", "log.md", code=1)})
+        self.assertNotIn("LINK_VERIFICATION_INVALID", {i["code"] for i in self.cli('log', 'check', "log.md", code=1)})
 
     def test_replay_deduplicates_and_html_delimiters_are_escaped(self):
         self.verify(4)

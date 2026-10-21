@@ -1,6 +1,6 @@
 ---
 name: lb-preflight
-version: 0.4.1-dev
+version: 0.5.0-dev
 description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 
@@ -24,7 +24,7 @@ from an unattempted path. For writes, read [format](../../docs/installable/logbo
 
 ## Route and scope
 
-Read `context --json`, `check --json`, the full logbook, latest human decisions, and current work packages. Missing directories, stages or todos are planning gaps; do not invent them. Existing 🔮 markers prevent advancing this project, not read-only reconciliation or independently authorized repository maintenance. Apply the current request and actual operation object before declaring work blocked.
+Read `log context --json`, `log check --json`, the full logbook, latest human decisions, and current work packages. Missing directories, stages or todos are planning gaps; do not invent them. Existing 🔮 markers prevent advancing this project, not read-only reconciliation or independently authorized repository maintenance. Apply the current request and actual operation object before declaring work blocked.
 
 Construct the current ordered route: each todo, result, dependencies, skills, actual execution environment and acceptance method. `next_task` is only a parse candidate. Compare the route with the previous preflight; newly added tasks, rewritten outcomes, changed machines/skill definitions and changed criteria require renewed coverage. Do not reuse an old all-green verdict for a new route. Explicit human changes supersede conflicting old work-package constraints within their scope; preflight does not grant execution authorization.
 
@@ -61,7 +61,7 @@ Maintain a preflight section in the bound Thinking record, keyed by date and the
 
 No step may disappear: a missing, failed or timed-out analysis is not-checked with a reason. Reference original material through `existing host records` where useful; do not copy raw records or create a second task list. A new record must not overwrite historical evidence merely because the file name is unchanged.
 
-Show needs-discussion gaps together. Write 🔮 into the main logbook only after explicit human confirmation. A ruling already supplied in the conversation is recorded as cleared; do not write a new unresolved marker for it. Existing markers must be rewritten or removed by the human; CLI `sync` and task writes have no bypass. Markers do not alter acceptance, and are distinct from an unplanned 🚨 blocker or an expected human gate.
+Show needs-discussion gaps together. Write 🔮 into the main logbook only after explicit human confirmation. A ruling already supplied in the conversation is recorded as cleared; do not write a new unresolved marker for it. Existing markers must be rewritten or removed by the human; CLI `log sync` and task writes have no bypass. Markers do not alter acceptance, and are distinct from an unplanned 🚨 blocker or an expected human gate.
 
 Report route coverage, current findings and precise missing inputs. Green means preflight checked this route at this time, not that it was executed or authorized. The dispatching flow rechecks runtime facts.
 
@@ -74,7 +74,7 @@ In the findings and any input/decision request, apply the [locator guidance](../
 ## Execution ownership
 
 Read existing takeover/handoff checkpoints when applicable. Report the current
-mode, scoped executor, exit condition, pending transfer and next action; show 🧑‍✈️ for confirmed Captain takeover (including pending handoff), never infer ownership from the emoji alone; stale or
+mode, scoped executor, exit condition, pending transfer and next action; show 👨‍✈️ for confirmed Captain takeover (including pending handoff), never infer ownership from the emoji alone; stale or
 conflicting records leave ownership unknown until read-only reconciliation.
 This entry does not trigger takeover, business repair or handoff dispatch.
 Captain self-checks do not satisfy a required independent Sailor review.

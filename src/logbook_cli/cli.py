@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from logbook_cli.commands import links, logbook, skills, tasks
+from logbook_cli.commands import domains, tasks, workflows
 from logbook_cli.commands.common import ROOT
 from logbook_cli.document import EXIT_PATH, LbError
 
@@ -31,10 +31,9 @@ def app(ctx: click.Context, root: str | None) -> None:
         click.echo(ctx.get_help())
 
 
-logbook.register(app)
 app.add_command(tasks.task)
-app.add_command(skills.skills)
-app.add_command(links.link)
+app.add_command(workflows.workflow)
+domains.register(app)
 
 
 def main(argv: list[str] | None = None) -> int:

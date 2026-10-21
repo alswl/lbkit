@@ -64,13 +64,13 @@ class TaskQueryTest(unittest.TestCase):
         alternate = self.root / "records/demo/docs/log.md"
         alternate.parent.mkdir(parents=True)
         alternate.write_bytes(self.log.read_bytes())
-        listed = self.cli("list", "--projects-dir", "records", "--json")
+        listed = self.cli('log', 'list', "--projects-dir", "records", "--json")
         self.assertEqual(listed.returncode, 0, listed.stderr)
         self.assertEqual(json.loads(listed.stdout)["logbooks"], ["records/demo/docs/log.md"])
         tasks = self.cli("task", "list", "--projects-dir", "records", "--json")
         self.assertEqual(tasks.returncode, 0, tasks.stderr)
         self.assertEqual(len(json.loads(tasks.stdout)), 3)
-        invalid = self.cli("list", "--projects-dir", "../outside", "--json")
+        invalid = self.cli('log', 'list', "--projects-dir", "../outside", "--json")
         self.assertEqual(invalid.returncode, 3)
 
 

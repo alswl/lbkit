@@ -77,6 +77,13 @@ def update(
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
+    from logbook_cli.task_identity import bindings
+
+    if any(t.line == item.line for t, _, _ in bindings(doc).values()):
+        raise LbError(
+            "identified task: use start/record-result/accept/cancel/reopen",
+            EXIT_REFUSED,
+        )
     if item.human and not (item.status is TaskState.TODO and status == "/"):
         raise LbError(
             "refusing to change a human-owned task checkbox except from not-started to in-progress",
@@ -119,7 +126,12 @@ def rewrite(
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
-    return save(doc, rewrite_task(doc, item, text, decision, assign_repo), dry_run, line=item.line)
+    return save(
+        doc,
+        rewrite_task(doc, item, text, decision, assign_repo),
+        dry_run,
+        line=item.line,
+    )
 
 
 def split(
@@ -134,6 +146,13 @@ def split(
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
+    from logbook_cli.task_identity import bindings
+
+    if any(t.line == item.line for t, _, _ in bindings(doc).values()):
+        raise LbError(
+            "identified task: use lifecycle actions; structural identity changes require an explicit migration",
+            EXIT_REFUSED,
+        )
     return save(
         doc,
         split_task(doc, item, texts, decision),
@@ -157,6 +176,13 @@ def resolve(
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
+    from logbook_cli.task_identity import bindings
+
+    if any(t.line == item.line for t, _, _ in bindings(doc).values()):
+        raise LbError(
+            "identified task: use lifecycle actions; structural identity changes require an explicit migration",
+            EXIT_REFUSED,
+        )
     return save(
         doc,
         resolve_task(doc, item, disposition, decision, note),

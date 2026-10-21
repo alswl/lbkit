@@ -41,11 +41,10 @@ class CliContractTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), (BIN.parent.parent / "VERSION").read_text().strip())
 
-    def test_aliases_and_mutually_exclusive_insertion(self):
-        for alias in ("context", "show", "next"):
-            result = self.run_cli(alias, "log.md", "--json")
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("version_token", json.loads(result.stdout))
+    def test_context_and_mutually_exclusive_insertion(self):
+        result = self.run_cli("log", "context", "log.md", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("version_token", json.loads(result.stdout))
         result = self.run_cli(
             "task",
             "add",
@@ -58,7 +57,7 @@ class CliContractTest(unittest.TestCase):
             "old",
             "--before-line",
             "5",
-            "--token",
+            '--expect-version',
             "unused",
             "--json",
         )
@@ -66,7 +65,7 @@ class CliContractTest(unittest.TestCase):
         self.assertEqual(result.stdout, "")
 
     def test_help_needs_no_existing_root(self):
-        for command in ((), ("context",), ("task", "update")):
+        for command in ((), ('log', 'context',), ("task", "update")):
             with self.subTest(command=command):
                 result = self.run_cli("--root", "missing", *command, "--help")
                 self.assertEqual(result.returncode, 0)
@@ -76,9 +75,9 @@ class CliContractTest(unittest.TestCase):
 
     def test_root_supported_at_each_command_level(self):
         for args in (
-            ("--root", str(self.root), "context", "log.md", "--json"),
-            ("context", "log.md", "--root", str(self.root), "--json"),
-            ("context", "log.md", f"--root={self.root}", "--json"),
+            ("--root", str(self.root), 'log', 'context', "log.md", "--json"),
+            ('log', 'context', "log.md", "--root", str(self.root), "--json"),
+            ('log', 'context', "log.md", f"--root={self.root}", "--json"),
         ):
             with self.subTest(args=args):
                 result = self.run_cli(*args, cwd=self.root.parent)
@@ -88,7 +87,7 @@ class CliContractTest(unittest.TestCase):
 
     def test_executable_bin_entrypoint_from_other_directory(self):
         result = subprocess.run(
-            [str(BIN), "context", "log.md", "--root", str(self.root), "--json"],
+            [str(BIN), 'log', 'context', "log.md", "--root", str(self.root), "--json"],
             cwd=self.root.parent,
             check=False,
             capture_output=True,
@@ -100,7 +99,7 @@ class CliContractTest(unittest.TestCase):
 
     def test_end_of_options_preserves_root_named_file(self):
         (self.root / "--root").write_bytes(self.log.read_bytes())
-        result = self.run_cli("context", "--json", "--", "--root")
+        result = self.run_cli('log', 'context', "--json", "--", "--root")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["path"], "--root")
 
@@ -118,9 +117,9 @@ class CliContractTest(unittest.TestCase):
                 companion = self.root / "TODO.md"
                 if present:
                     companion.write_bytes(b"human\r\n")
-                context = self.run_cli("context", "log.md", "--json")
+                context = self.run_cli('log', 'context', "log.md", "--json")
                 token = json.loads(context.stdout)["version_token"]
-                result = self.run_cli("sync", "log.md", "--token", token)
+                result = self.run_cli('log', 'sync', "log.md", '--expect-version', token)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 if present:
                     self.assertEqual(companion.read_bytes(), b"human\r\n")
@@ -130,9 +129,9 @@ class CliContractTest(unittest.TestCase):
     def test_expected_errors_leave_stdout_empty(self):
         for args, code in (
             (("unknown",), 2),
-            (("check", "--json"), 2),
-            (("context", "missing.md", "--json"), 3),
-            (("--root", str(self.log), "list", "--json"), 3),
+            (('log', 'check', "--json"), 2),
+            (('log', 'context', "missing.md", "--json"), 3),
+            (("--root", str(self.log), 'log', 'list', "--json"), 3),
         ):
             with self.subTest(args=args):
                 result = self.run_cli(*args)
@@ -143,7 +142,7 @@ class CliContractTest(unittest.TestCase):
 
     def test_nested_root_and_dry_run_do_not_write(self):
         before = self.log.read_bytes()
-        context = self.run_cli("context", "log.md", "--json")
+        context = self.run_cli('log', 'context', "log.md", "--json")
         token = json.loads(context.stdout)["version_token"]
         for prefix in (
             ("--root", str(self.root), "task", "update"),
@@ -160,7 +159,7 @@ class CliContractTest(unittest.TestCase):
                     "开发：示例",
                     "--status",
                     "/",
-                    "--token",
+                    '--expect-version',
                     token,
                     "--dry-run",
                     "--json",

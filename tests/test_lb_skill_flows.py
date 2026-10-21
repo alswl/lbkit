@@ -48,7 +48,7 @@ class SkillCliFlowsTest(unittest.TestCase):
         return json.loads(result.stdout) if result.returncode in (0, 1) else None
 
     def context(self):
-        return self.run_cli("context", LOG)
+        return self.run_cli('log', 'context', LOG)
 
     def task_args(self, action, context, *args):
         return (
@@ -59,7 +59,7 @@ class SkillCliFlowsTest(unittest.TestCase):
             STAGE,
             "--task",
             TASK,
-            "--token",
+            '--expect-version',
             context["version_token"],
             *args,
         )
@@ -77,7 +77,7 @@ class SkillCliFlowsTest(unittest.TestCase):
         self.write_with_preview(*self.task_args("update", first, "--status", "/"))
         received = self.context()
         self.assertNotEqual(first["version_token"], received["version_token"])
-        self.write_with_preview("sync", LOG, "--token", received["version_token"])
+        self.write_with_preview('log', 'sync', LOG, '--expect-version', received["version_token"])
         self.assertEqual(self.context()["stages"][0]["emoji"], "🚧")
 
         # This supplied premise represents a completed evidence review, not a CLI decision.
@@ -89,7 +89,7 @@ class SkillCliFlowsTest(unittest.TestCase):
                 "artifact", self.context(), "--artifact", "产物：[报告](report.md)"
             )
         )
-        self.write_with_preview("sync", LOG, "--token", self.context()["version_token"])
+        self.write_with_preview('log', 'sync', LOG, '--expect-version', self.context()["version_token"])
         result = self.context()
         self.assertTrue(result["next_task"]["human"])
         self.assertEqual(result["next_task"]["state"], " ")
@@ -97,8 +97,9 @@ class SkillCliFlowsTest(unittest.TestCase):
         expected = DOC.replace("## 🛫", "## 🚧").replace(
             f"- [ ] {TASK}", f"- [x] {TASK}\n    - 产物：[报告](report.md)"
         )
+        expected = expected.replace("# 合成航程\n", "# 合成航程\n\n> 状态：❔ 状态未核对 · Stage 01 · 待人工\n", 1)
         self.assertEqual(self.log.read_text(encoding="utf-8"), expected)
-        self.assertEqual(self.run_cli("check", LOG), [])
+        self.assertEqual(self.run_cli('log', 'check', LOG), [])
 
     def test_readonly_context_and_check_leave_mismatched_emoji_untouched(self):
         self.log.write_text(
@@ -107,7 +108,7 @@ class SkillCliFlowsTest(unittest.TestCase):
         before = self.log.read_bytes()
         context = self.context()
         self.assertEqual(context["stages"][0]["derived_emoji"], "🚧")
-        issues = self.run_cli("check", LOG, code=1)
+        issues = self.run_cli('log', 'check', LOG, code=1)
         self.assertTrue(issues)
         self.assertEqual(self.log.read_bytes(), before)
 
@@ -129,14 +130,14 @@ class SkillCliFlowsTest(unittest.TestCase):
             *self.task_args("artifact", old, "--artifact", "产物：[报告](report.md)")
         )
         before_retry = self.log.read_bytes()
-        self.run_cli("sync", LOG, "--token", old["version_token"], code=4)
+        self.run_cli('log', 'sync', LOG, '--expect-version', old["version_token"], code=4)
         self.assertEqual(self.log.read_bytes(), before_retry)
         # Read back the successful step before deciding what remains to run.
         self.assertEqual(
             self.log.read_text(encoding="utf-8").count("产物：[报告](report.md)"), 1
         )
         fresh = self.context()
-        self.run_cli("sync", LOG, "--token", fresh["version_token"])
+        self.run_cli('log', 'sync', LOG, '--expect-version', fresh["version_token"])
         self.assertEqual(
             self.log.read_text(encoding="utf-8").count("产物：[报告](report.md)"), 1
         )

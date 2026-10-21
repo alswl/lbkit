@@ -1,35 +1,16 @@
 ---
 name: lb-scaffold
-version: 0.4.1-dev
+version: 0.5.0-dev
 description: "Initialize a new logbook by fill-in from a run-instance template under workflows/<workflow>/: fill only the three mutable slots — target date, working directories, and run rulings — collected in one pass; no free drafting, no changing structural granularity; once the three essentials are complete and human-confirmed, hand off to lb-push. With no template, or when goals and structure must change, go to lb-plan instead — this skill does not apply."
 ---
 
-Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
+# Initialize a run instance
 
+Fill an existing confirmed template; do not design a new route or dispatch execution. Read the host AGENTS.md, [configuration](../../docs/installable/configuration.md), [planning](../lb-plan/references/planning.md), [format](../../docs/installable/logbook-format.md), [document adapters](../lb-update/references/document-adapters.md) and the [workflow CLI contract](../../docs/installable/lifecycle-operations.md#workflow-cli). Goals, scope or structure changes belong to lb-plan; template defects belong to authorized lb-workflow maintenance.
 
-# Initialize a run instance from a workflow template
-
-Fill in the blanks; do not design. The precondition is that `workflows/<workflow>/` provides a run-instance template (todo manifest, front matter, goal template sentence, and established rulings); with no template, or when the human wants to change goals, scope, or structure, switch to [lb-plan](../lb-plan/SKILL.md). This skill does not dispatch execution.
-
-## Prerequisites
-
-1. Read the [configuration contract](../../docs/installable/configuration.md) to resolve documents; read the [lb-plan planning workflow](../lb-plan/references/planning.md) (template-first clause), the [logbook format](../../docs/installable/logbook-format.md), and the [document adapter workflow](../lb-update/references/document-adapters.md).
-2. Locate the template: the article with the 「运行实例模板」 section under `workflows/<name>/docs/`, along with its prompt contract. Verify the three named slots (target date, working directories, run rulings), complete goal sentences, stages, todos and established manual gates. An article/object identifier is an input to run rulings, not a replacement for target date. If the workflow does not exist, or the template section, slots or established rulings are missing, stop and state the gap; never ghost-write the template and never switch to free drafting.
-
-## Required workflow
-
-1. Resolve the mutable slots: target date (default: yesterday), working directories (checked against the on-site state), and run rulings (default: carry over all of the template's 「既定裁定」). Ask only about slots with no default or that conflict with the on-site state; collect answers with one compact numbered list instead of asking item by item.
-2. Fill in and generate the main logbook: front matter (workflow and prev-run, never a skills list), title, file naming, date placeholders, and the todo manifest are each replaced per the template — never restate the skill's own workflow, add or drop todos, adjust granularity, touch manual gates, or write wave notes (`🔀` convention follows the template and the logbook format). The goal sentence comes from the template: once the template is human-confirmed and finalized, that counts as its writing; when the human rewrites it on the instance, their wording governs.
-3. Companion records: mind-forge is required; bound Thinking records the source (workflow and `prev-run` instance), slot values, and where each ruling came from; register bindings and the project index per the document adapter. Skills appear only as names on the applicable todo sub-line; source pointers may use existing host records, without copying originals.
-4. After writing, run `check --json`; `LINK_UNVERIFIED` for external URLs is an expected notice, not a structural error to fix.
-5. Wrap-up: show a summary of the filled slot values (not a full restatement) and ask the human for a quick confirm. Once the three essentials (working directories, stage breakdown, todo manifest) are complete and confirmed, exit is granted; advancement is handed to lb-push.
-
-## User-facing line guidance
-
-In the slot-value confirmation, point to the saved working directories, stage breakdown and todo manifest using current lines such as `L20`, `L35` and `L50–L58`, with brief labels. Follow the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators); reread after generation. Before an instance exists, identify the template section or missing slot without inventing instance lines.
-
-## Boundaries
-
-- Only create new instances; modifying an existing logbook goes to lb-update, replanning to lb-plan.
-- Never change the `workflows/` templates themselves; record discovered template defects in the conversation and let the human fix the template.
-- For scheduling, authorization, and listener boundaries, AGENTS.md and the corresponding skills govern; the existence of a template does not exempt this skill from confirmation — it only collapses confirmation into one round of slot-value review.
+1. Inspect the requested output first. If it exists, preserve its bytes and report the partial state and recovery needed; do not overwrite it or invent an alternate path. Use `lb workflow show NAME --json` and `lb workflow check NAME --json`, where NAME is the workflow directory name, not its path. Read its template and prompt contract. Missing template sections, slots or human goals are gaps, not permission to draft freely.
+2. Resolve date (default yesterday), machine-grouped working directories and run rulings (default established rulings). Check directories against authorized on-site facts. Collect only missing/conflicting inputs in one compact question. An object identifier is a ruling, not a substitute for date. Fill YAML placeholders, including `prev-run`, explicitly; do not infer a previous run.
+3. Save the three-slot JSON input in an approved scratch file. `--input-file` takes that file path, not inline JSON or separate date/subject flags. Use exactly `date`, `working_directories`, `rulings`; see the contract example. Run `lb workflow render NAME --input-file FILE --expect-version TOKEN --json` using show's token. Review preserved goals, tasks/order, human gates, front matter and visible ruling prose; do not add tasks, independent Stage goals, skill inventories or wave notes.
+4. Preview `lb log create PATH --from-workflow NAME --input-file FILE --expect-version TOKEN --dry-run --json`, then apply without `--dry-run`. It validates at the output path and creates only the main file, preserving template provenance. Run `lb log check LOG --json`; external-link verification notices are not structural errors. Under [lifecycle operations](../../docs/installable/lifecycle-operations.md), record draft and then ready only from actual confirmation via `log state-set`; its one-line status is CLI-owned.
+5. Complete the selected adapter's companion bindings and index separately; for mind-forge, resolve and verify bound Prompt/Thinking and record source workflow/previous run, slot values and ruling sources. If the invocation explicitly covers only the main file, report bindings/index pending. Never call a partial scaffold complete or retry by overwriting it. Skills appear only on applicable task annotations, not front matter or a top-level list.
+6. Report actual file effects, verification gaps and remaining responsibility. Show a compact slot summary with current line locators under the [locator contract](../../docs/installable/coordination.md#human-facing-logbook-locators). Obtain missing confirmation of directories, stages and tasks in one round; reuse existing explicit confirmation. A confirmed template supplies its human-authored goal, but does not authorize execution. Hand advancement to lb-push only within its separate authorization.

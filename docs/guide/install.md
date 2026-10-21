@@ -21,7 +21,7 @@ The installer performs these operations:
 
 If mf is missing or initialization fails, the installer stops before it writes shared links. The installer preserves existing files. It does not commit or push.
 
-After installation, configure `lbkit-agents.yaml` for mind-forge and the actual runtime. Fill the generated `AGENTS.md` with the repository's rules. See the [configuration reference](../installable/configuration.md).
+After installation, configure `lbkit.yaml` for mind-forge and the actual runtime, and register the repository's skill recipes in `lbkit-skills.yaml` when useful. Fill the generated `AGENTS.md` with the repository's rules. See the [configuration reference](../installable/configuration.md).
 
 ### Without a separate checkout
 
@@ -35,7 +35,7 @@ git submodule add https://github.com/alswl/lbkit.git .lbkit
 
 Once it detects `.lbkit` is already a registered submodule, install skips the Git operations and refreshes the locked CLI environment, links and templates. `--repo` defaults to the current directory, so it can be omitted when run from the repository root.
 
-The consuming repository owns its project logs, `AGENTS.md`, `lbkit-agents.yaml`, and the optional `lbkit-skills.json`. lbkit owns the shared implementation and instructions. Installed links:
+The consuming repository owns its project logs, `AGENTS.md`, `lbkit.yaml` and `lbkit-skills.yaml`. lbkit owns the shared implementation and instructions. Installed links:
 
 ```text
 .agents/skills/lb-*  -> ../../.lbkit/skills/lb-*

@@ -41,7 +41,7 @@ Judge timeouts per the task's nature, usually with 10 consecutive minutes withou
 
 When key information is missing, the owning agent investigates within authorization; consult the human for out-of-scope information or key inputs that cannot be obtained. For external platform work-item status and the like, trust an actual platform read — no speculative attribution about process or required fields; report exactly what the evidence shows. Deviation from the confirmed plan can be corrected and continued; when the plan itself is wrong in direction, on major decisions, or the scope changes, stop and hand to the human for judgment. Handle routine recovery within existing authorization; do not auto-create tasks for recovery.
 
-Hand logins, identity, approvals, or upstream rejections straight to the human; switching tools or auto-approving parameters is not a way around approval. When login must be arranged in advance, read `auth.recurring_login_hint` from the host's `lbkit-agents.yaml`; without a reliable hint, check the actual login state — never infer a fixed expiry rhythm. Before resuming execution, confirm the original task is still authorized, the candidate and inputs are still valid, and monitoring is ready again.
+Hand logins, identity, approvals, or upstream rejections straight to the human; switching tools or auto-approving parameters is not a way around approval. When login must be arranged in advance, read `settings.auth.recurring_login_hint` from the host's `lbkit.yaml`; without a reliable hint, check the actual login state — never infer a fixed expiry rhythm. Before resuming execution, confirm the original task is still authorized, the candidate and inputs are still valid, and monitoring is ready again.
 
 ## Cleanup Branch
 

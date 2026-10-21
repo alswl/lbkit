@@ -49,3 +49,7 @@ resolve a difficult scoped problem. At its exit condition,
 [lb-handback](../../skills/lb-handback/SKILL.md) verifies transfer back to Sailor
 and resumes normal advancement. Follow the [ownership protocol](coordination.md#scoped-takeover-and-execution-handoff);
 status/update/preflight do not start mode switches. No new lifecycle enum is added.
+
+## Current lifecycle and close-out operations
+
+The [operations contract](lifecycle-operations.md) defines the compact CLI-generated status, lifecycle transitions in existing skills, accessible-delivery responsibility, run event/closeout CLI, workflow provenance and main-branch lb-retro. It supersedes older statements that page status is never created or that lifecycle has no persisted state. Existing human text and gates remain protected; legacy migration is explicit. A lifecycle is not runtime state or execution authorization.

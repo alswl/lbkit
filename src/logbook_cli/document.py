@@ -281,6 +281,10 @@ def stage_state(stage: Stage) -> str | None:
 
 
 def next_task(doc: Document) -> Task | None:
+    from logbook_cli.lifecycle import get
+
+    if get(doc)["value"] in {"paused", "completed", "terminated"}:
+        return None
     return next(
         (
             task
@@ -810,7 +814,9 @@ def find_task(doc: Document, stage_name: str, task_text: str) -> Task:
 
 def require_token(doc: Document, token: str | None) -> None:
     if not token:
-        raise LbError("write commands require --token from context", EXIT_REFUSED)
+        raise LbError(
+            "write commands require --expect-version from log context", EXIT_REFUSED
+        )
     if token != doc.token:
         raise LbError(
             "version token differs; reread context before writing", EXIT_REFUSED

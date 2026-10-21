@@ -40,3 +40,25 @@ def write_bytes(doc: Document, changed: bytes, dry_run: bool) -> None:
         except FileNotFoundError:
             pass
         raise
+
+
+def create_bytes(path: Path, content: bytes, dry_run: bool) -> None:
+    """Publish a complete new file without ever replacing an existing entry."""
+    if path.exists() or path.is_symlink():
+        raise LbError("create-only output already exists", EXIT_REFUSED)
+    if dry_run:
+        return
+    fd, temporary = tempfile.mkstemp(prefix=".lb-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as exc:
+            raise LbError(
+                "create-only output appeared concurrently", EXIT_REFUSED
+            ) from exc
+    finally:
+        os.unlink(temporary)

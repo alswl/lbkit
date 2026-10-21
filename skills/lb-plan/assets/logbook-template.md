@@ -32,7 +32,7 @@ No SKILLS section or front matter skills list. -->
 
 待办：
 
-- [ ] <分类>：<one verifiable result>
+- [ ] <category>：<one verifiable result>
     - 技能：`/example-skill`
 
 <!-- Use only applicable categories/results. An operational run may use 执行：.

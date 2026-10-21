@@ -299,7 +299,7 @@
     {
       "id": 31,
       "prompt": "While dispatching an executor agent, the TUI's currently focused workspace belongs to someone else's project; the coordinator's workspace is different. Create the execution/monitoring tabs with Herdr.",
-      "expected_output": "Explicitly run `herdr tab create --workspace <coordinator workspace>` (the variable named by the host's runtime.herdr.workspace_id_env) to create the execution/monitoring tabs; do not enter the TUI-focused other person's workspace; still --no-focus and do not enter the coordinator's main tab.",
+      "expected_output": "Explicitly run `herdr tab create --workspace <coordinator workspace>` (the variable named by the host's settings.runtime.herdr.workspace_id_env) to create the execution/monitoring tabs; do not enter the TUI-focused other person's workspace; still --no-focus and do not enter the coordinator's main tab.",
       "files": [],
       "expectations": [
         "Execution/monitoring tabs are created in the coordinator's workspace, not the TUI-focused other project's workspace",
@@ -332,7 +332,7 @@
     },
     {
       "id": 34,
-      "prompt": "Dispatching an executor agent; the launcher declared in the host's lbkit-agents.yaml is `internal-planner -w` (an interactive shell function). Someone suggests switching to Herdr's generic engine entry.",
+      "prompt": "Dispatching an executor agent; the launcher declared in the host's lbkit.yaml is `internal-planner -w` (an interactive shell function). Someone suggests switching to Herdr's generic engine entry.",
       "expected_output": "In the new tab, explicitly specify the workspace from the host parameters and keep no-focus; first verify the wrapper is defined, then launch per the declared command + args; never substitute the generic engine entry for the wrapper.",
       "files": [],
       "expectations": [
@@ -405,7 +405,7 @@
     },
     {
       "id": 40,
-      "prompt": "`$lb-push` will dispatch two sample-engine work packages consecutively on the local machine; the coordinator's workspace is w1K; the host lbkit-agents.yaml sets runtime.herdr.label_prefix to ^; that repository already has an agent session fitting both model and context; the TUI is currently focused on a different workspace. Arrange the execution and monitoring resources and explain the naming.",
+      "prompt": "`$lb-push` will dispatch two sample-engine work packages consecutively on the local machine; the coordinator's workspace is w1K; the host lbkit.yaml sets settings.runtime.herdr.label_prefix to ^; that repository already has an agent session fitting both model and context; the TUI is currently focused on a different workspace. Arrange the execution and monitoring resources and explain the naming.",
       "expected_output": "Reuse sample-engine's existing agent session; all local sub-agents and execution/monitoring tab/panes go explicitly in the coordinator's workspace w1K, with new tabs using the host-declared ^ prefix; keep no-focus. Agent identifiers follow Herdr's own format.",
       "files": [],
       "expectations": [
@@ -654,7 +654,7 @@
     },
     {
       "id": 60,
-      "prompt": "First launch of an E2E environment package involving web login; the host lbkit-agents.yaml's auth.recurring_login_hint is human-confirmed: verify login state before launch. Preparation steps may trigger the login page.",
+      "prompt": "First launch of an E2E environment package involving web login; the host lbkit.yaml's settings.auth.recurring_login_hint is human-confirmed: verify login state before launch. Preparation steps may trigger the login page.",
       "expected_output": "Per the host-confirmed login hint, verify login state first; when human login is truly needed, open the login entry and state the completion marker — never infer a fixed expiry rhythm.",
       "files": [],
       "expectations": [
@@ -700,7 +700,7 @@
     },
     {
       "id": 64,
-      "prompt": "The host lbkit-agents.yaml's launcher is a zsh shell function (e.g. codex-luna, embedding proxy and model parameters). The coordinator needs to create a new executor for the responsible repository in Herdr, hand over the package, and confirm the actual model. Give the procedure.",
+      "prompt": "The host lbkit.yaml's launcher is a zsh shell function (e.g. codex-luna, embedding proxy and model parameters). The coordinator needs to create a new executor for the responsible repository in Herdr, hand over the package, and confirm the actual model. Give the procedure.",
       "expected_output": "tab create --workspace --cwd repository root --label with prefix --no-focus creates a shell pane; pane run executes the wrapper function inside that interactive shell; agent rename names it targeting the pane id; agent read verifies the actual model in the TUI footer before agent prompt hands over the package. Never substitute the agent start --kind generic engine for the wrapper.",
       "files": [],
       "expectations": [

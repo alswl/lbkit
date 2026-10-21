@@ -66,7 +66,7 @@ class SkillUsageTest(unittest.TestCase):
 
     def test_reports_only_work_dir_sessions_since_date(self):
         result = subprocess.run(
-            [sys.executable, str(CLI), "--root", str(self.root), "skills", "usage", "--since", "2026-10-01", "--json"],
+            [sys.executable, str(CLI), "--root", str(self.root), "skill", 'history', "--since", "2026-10-01", "--json"],
             env={**os.environ, "HOME": str(self.home)},
             check=False,
             capture_output=True,

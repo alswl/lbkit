@@ -45,11 +45,11 @@ class LinkTest(unittest.TestCase):
         )
 
     def token(self) -> str:
-        return json.loads(self.cli("context", LOG, "--json").stdout)["version_token"]
+        return json.loads(self.cli('log', 'context', LOG, "--json").stdout)["version_token"]
 
     def add(self, stage: str, link: str) -> subprocess.CompletedProcess[str]:
         return self.cli(
-            "link", "add", LOG, "--stage", stage, "--link", link, "--token", self.token()
+            'log', 'links', "add", LOG, "--stage", stage, "--link", link, '--expect-version', self.token()
         )
 
     def test_add_appends_to_block_or_creates_it_before_todo(self) -> None:
@@ -65,11 +65,11 @@ class LinkTest(unittest.TestCase):
         self.assertEqual(self.add("Stage 01 One", "not a link").returncode, 2)
 
     def test_rewrite_verifies_only_rewritten_targets(self) -> None:
-        args = ("link", "rewrite", LOG, "--from", f"file://{self.wt}/", "--to")
-        missing = self.cli(*args, f"file://{self.main}/nope/", "--token", self.token())
+        args = ('log', 'links', "rewrite", LOG, "--from", f"file://{self.wt}/", "--to")
+        missing = self.cli(*args, f"file://{self.main}/nope/", '--expect-version', self.token())
         self.assertEqual(missing.returncode, 4)
         self.assertIn("rewritten link target missing", missing.stderr)
-        result = self.cli(*args, f"file://{self.main}/", "--token", self.token(), "--json")
+        result = self.cli(*args, f"file://{self.main}/", '--expect-version', self.token(), "--json")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(json.loads(result.stdout)["rewritten"]), 1)
         text = self.log.read_text(encoding="utf-8")

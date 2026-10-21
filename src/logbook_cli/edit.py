@@ -139,7 +139,8 @@ def append_note(
             task.human
             or kind is None
             or not semantic
-            or semantic[0] not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS, Field.STATUS)
+            or semantic[0]
+            not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS, Field.STATUS)
         ):
             raise LbError(
                 "replacement requires explicit Source/Acceptance/Skills/Status on an agent task",
@@ -314,9 +315,7 @@ def resolve_task(
     )
 
 
-def split_task(
-    doc: Document, task: Task, texts: tuple[str, ...], decision: str
-) -> str:
+def split_task(doc: Document, task: Task, texts: tuple[str, ...], decision: str) -> str:
     """Replace one runnable package while keeping its identity and evidence."""
     single_line(decision, "decision")
     if task.human or task.state not in (" ", "/"):
@@ -356,7 +355,9 @@ def split_task(
     candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
     replacements = [find_task(candidate, task.stage, text) for text in texts]
     if any(t.human or t.preflight_blocker for t in replacements):
-        raise LbError("split cannot create human tasks or preflight gates", EXIT_REFUSED)
+        raise LbError(
+            "split cannot create human tasks or preflight gates", EXIT_REFUSED
+        )
     if task.repositories:
         original_repositories = set(task.repositories)
         replacement_repositories = {r for t in replacements for r in t.repositories}

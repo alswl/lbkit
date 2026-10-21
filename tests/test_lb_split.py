@@ -45,12 +45,12 @@ class TaskSplitTest(unittest.TestCase):
         return json.loads(result.stdout) if code in (0, 1) else None
 
     def context(self):
-        return self.cli("context", "log.md")
+        return self.cli('log', 'context', "log.md")
 
     def split(self, children=CHILDREN, task=ORIGINAL, token=None, dry_run=False, code=0):
         args = [
             "task", "split", "log.md", "--stage", STAGE, "--task", task,
-            "--decision", "人工明确授权按所列顺序拆分", "--token",
+            "--decision", "人工明确授权按所列顺序拆分", '--expect-version',
             token or self.context()["version_token"],
         ]
         for text in children:
@@ -85,7 +85,7 @@ class TaskSplitTest(unittest.TestCase):
             self.assertEqual([a["kind"] for a in child["annotations"]], ["source"])
             self.assertIn(identity, child["annotations"][0]["value"])
         self.assertEqual(
-            [i["code"] for i in self.cli("check", "log.md", code=1)],
+            [i["code"] for i in self.cli('log', 'check', "log.md", code=1)],
             ["STAGE_EMOJI"],
         )
         after = self.log.read_bytes()
@@ -168,4 +168,4 @@ class TaskSplitTest(unittest.TestCase):
         current = self.log.read_bytes()
         self.assertNotIn(b"\n", current.replace(b"\r\n", b""))
         self.assertIn(b"    - Artifact: C1\r\n    - Resolution:", current)
-        self.assertEqual(self.cli("check", "log.md", code=1)[0]["code"], "STAGE_EMOJI")
+        self.assertEqual(self.cli('log', 'check', "log.md", code=1)[0]["code"], "STAGE_EMOJI")

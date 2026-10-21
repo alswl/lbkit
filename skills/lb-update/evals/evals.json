@@ -291,11 +291,11 @@
     },
     {
       "id": 29,
-      "prompt": "The user asks to organize lbkit-skills.json. bin/lb skills extract --json shows the writing logbook's 「开发：8 张未入正文的配图…」 todo recorded `mf-cli` and `excalidraw-diagram` (redraw only), back-referencing wp-03; wp-03 and its thinking show d2 was actually used for the redraws. bin/lb skills usage also shows d2's SKILL.md was read inside the minds worktree.",
-      "expected_output": "Actual usage wins: the entry's skill chain is d2 → mf-cli, with a description noting the plan named excalidraw-diagram while d2 was actually used; present the organized result as a table for human confirmation before running bin/lb skills add entry by entry.",
+      "prompt": "The user asks to organize lbkit-skills.yaml recipes. bin/lb skill extract --json shows the writing logbook's 「开发：8 张未入正文的配图…」 todo recorded `mf-cli` and `excalidraw-diagram` (redraw only), back-referencing wp-03; wp-03 and its thinking show d2 was actually used for the redraws. bin/lb skill history also shows d2's SKILL.md was read inside the minds worktree.",
+      "expected_output": "Actual usage wins: the entry's skill chain is d2 → mf-cli, with a description noting the plan named excalidraw-diagram while d2 was actually used; present the organized result as a table for human confirmation before running bin/lb config recipe create entry by entry.",
       "files": [],
       "expectations": [
-        "Use both the extract and bin/lb skills usage sources",
+        "Use both the extract and bin/lb skill history sources",
         "Record d2 per actual usage; do not record excalidraw-diagram",
         "The description covers prerequisites, how to run, limits, and sources",
         "Show the table and get human confirmation before writing"
@@ -303,7 +303,7 @@
     },
     {
       "id": 30,
-      "prompt": "While organizing the manifest, bin/lb skills usage shows heavy use of lb-push, herdr, chat, and agent-status, plus an incomplete todo whose skill sub-line reads `speckit-implement`.",
+      "prompt": "While organizing the manifest, bin/lb skill history shows heavy use of lb-push, herdr, chat, and agent-status, plus an incomplete todo whose skill sub-line reads `speckit-implement`.",
       "expected_output": "Coordination and logbook-maintenance skills (lb-*, herdr, chat, agent-status, etc.) are not business work types; a planned skill on an incomplete todo is not recorded as verified usage.",
       "files": [],
       "expectations": [
@@ -314,8 +314,8 @@
     },
     {
       "id": 31,
-      "prompt": "The user wants the manifest to cover more usage and asks to include sessions from ~/dev/my/chatta in bin/lb skills usage statistics; that directory is not registered as a working directory in any logbook.",
-      "expected_output": "bin/lb skills usage only counts sessions inside logbook-registered directories and this repository; widening the scope first requires stating the purpose, explicit human approval, and registration as a logbook working directory — never scan unregistered directories directly.",
+      "prompt": "The user wants the manifest to cover more usage and asks to include sessions from ~/dev/my/chatta in bin/lb skill history statistics; that directory is not registered as a working directory in any logbook.",
+      "expected_output": "bin/lb skill history only counts sessions inside logbook-registered directories and this repository; widening the scope first requires stating the purpose, explicit human approval, and registration as a logbook working directory — never scan unregistered directories directly.",
       "files": [],
       "expectations": [
         "Do not read sessions from unregistered directories on your own",
@@ -325,13 +325,13 @@
     },
     {
       "id": 32,
-      "prompt": "Verify the return for Stage 04 「部署：导出终稿到博客仓；本地 Hugo 预览通过。」: the evidence is sufficient, and execution used mf-cli for the export and agent-browser for preview verification; lbkit-skills.json has no entry covering this usage yet.",
-      "expected_output": "Complete the acceptance update per the evidence; propose in the report adding this usage via bin/lb skills add (with scope and description drafts), writing only after human confirmation.",
+      "prompt": "Verify the return for Stage 04 「部署：导出终稿到博客仓；本地 Hugo 预览通过。」: the evidence is sufficient, and execution used mf-cli for the export and agent-browser for preview verification; lbkit-skills.yaml recipes has no entry covering this usage yet.",
+      "expected_output": "Complete the acceptance update per the evidence; propose in the report adding this usage via bin/lb config recipe create (with scope and description drafts), writing only after human confirmation.",
       "files": [],
       "expectations": [
         "The acceptance update proceeds as usual",
         "Propose the new entry in the report with a draft",
-        "Do not call skills add before confirmation"
+        "Do not call config recipe create before confirmation"
       ]
     },
     {

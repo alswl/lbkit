@@ -1,6 +1,6 @@
 ---
 name: lb-takeover
-version: 0.4.1-dev
+version: 0.5.0-dev
 description: "Captain personally tackles a scoped direction-setting problem, difficult investigation or repeatedly ineffective repair without delegating it. Use when asked to take over or work on it yourself, and automatically from authorized lb-push when direct Captain reasoning and execution are needed. Preserve authorization and safely recover Sailor ownership; hand back through lb-handback once the exit condition is met."
 ---
 
@@ -20,7 +20,7 @@ progress refresh or read-only preflight does not authorize entry.
 2. Recover the owning Sailor's candidate, worktree, uncommitted/user changes,
    prior attempts, live commands/side effects, review counts and open duties.
    Resolve the coordination root and isolated business worktree to actual absolute paths. Run document/runtime operations from the coordination root and business commands from the worktree; do not mix their relative paths in one assumed cwd. Use the host-declared runtime and its actual supported operations, following
-   [execution rules](../lb-push/references/execution.md). Verify a safe pause or
+   [execution rules](../lb-push/references/execution.md). Under [lifecycle operations](../../docs/installable/lifecycle-operations.md), preserve dispatch/run/package identity and verify current recipient/input/ownership using full Herdr IDs or a verified unique name, never list indexes. Prefer same-machine transfer; do not migrate existing work or credentials implicitly. Verify a safe pause or
    release of conflicting writes before taking ownership; an unanswered pause
    message is insufficient. Do not kill a running operation or reset changes.
    Preserve unrelated approved work and human dialogue/unsent input.
@@ -35,7 +35,7 @@ progress refresh or read-only preflight does not authorize entry.
    Logbook writes use the [document adapter](../lb-update/references/document-adapters.md),
    fresh context version_token, preview and readback; mode is not a new CLI field.
    After safe ownership is verified, maintain the task's current status detail
-   with `🧑‍✈️ Captain 接手` (or the host's English wording), using the protected
+   with `👨‍✈️ Captain takeover` (or the host's English wording), using the protected
    `task note` operation with preview/current token. Replace the matching current
    line via `--replace-line`; preserve human text and task first line. Do not show
    active takeover while safe ownership is still pending.
@@ -46,9 +46,11 @@ progress refresh or read-only preflight does not authorize entry.
 6. At the exit condition, record actual changes, candidate identity, checks and
    limitations as Captain's direct result and automatically enter
    [lb-handback](../lb-handback/SKILL.md). A diagnosis may finish while the business
-   operation remains failed. Self-checks never satisfy required independent review. Submission alone does not finish handoff: complete its receipt/readiness and current executor/status reconciliation, including replacing the active 🧑‍✈️ task detail, before reporting transfer complete.
+   operation remains failed. Self-checks never satisfy required independent review. Submission alone does not finish handoff: complete its receipt/readiness and current executor/status reconciliation, including replacing the active 👨‍✈️ task detail, before reporting transfer complete.
 
 ## User-facing line guidance
+
+While scoped takeover is active, prefix every user-facing progress update and final reply with `👨‍✈️`. Keep the prefix during pending handback. Stop using it only after execution ownership and the current task status are reconciled; a prepared handoff alone does not end takeover. After interruption, recover this presentation state from the existing checkpoint before replying.
 
 In user-facing takeover findings, blockers and exit reports, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): identify the scoped Logbook task with its current `L50` position and name, and cite an exact status/criterion line when that is the subject of a decision. Keep runtime/worktree and result entries alongside it. This does not add a mode-switch confirmation.
 

@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=.lbkit/schemas/lbkit.schema.json
+version: 0.2.0
+# Configuration only. Agents do not certify installation or authentication.
+# Skill recipes live in lbkit-skills.yaml.
+settings:
+  default_agent: null
+  documents:
+    adapter: mind-forge
+    project_root: projects
+    mind_forge_guide: null
+  runtime:
+    adapter: null
+    quota: {}
+    herdr:
+      workspace_id_env: HERDR_WORKSPACE_ID
+      label_prefix: ^
+      shell: null
+      permission_mode: null
+  roles:
+    human_owner_label: null
+    coordinator_label: null
+  browser:
+    profile: null
+  auth:
+    recurring_login_hint: null
+  limits:
+    wait_seconds: 30
+    review_rounds: null
+    context_unknown_packages: 3
+agents: {}

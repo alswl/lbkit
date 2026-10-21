@@ -302,7 +302,7 @@
         {
           "name": "pending_owner",
           "type": "contains",
-          "check": "Report Captain open transfer responsibility, scoped problem, missing receipt and next action; all files unchanged. Show 🧑‍✈️ as the recorded Captain takeover with handoff pending, without treating the emoji as receipt."
+          "check": "Report Captain open transfer responsibility, scoped problem, missing receipt and next action; all files unchanged. Show 👨‍✈️ as the recorded Captain takeover with handoff pending, without treating the emoji as receipt."
         },
         {
           "name": "no_switch",

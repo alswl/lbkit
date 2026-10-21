@@ -37,7 +37,7 @@ class TaskAddTest(unittest.TestCase):
         )
 
     def token(self) -> str:
-        return json.loads(self.cli("context", LOG, "--json").stdout)["version_token"]
+        return json.loads(self.cli('log', 'context', LOG, "--json").stdout)["version_token"]
 
     def args(self, text: str, *extra: str) -> tuple[str, ...]:
         return (
@@ -48,7 +48,7 @@ class TaskAddTest(unittest.TestCase):
             STAGE,
             "--text",
             text,
-            "--token",
+            '--expect-version',
             self.token(),
             *extra,
         )

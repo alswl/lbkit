@@ -16,7 +16,7 @@ from logbook_cli.document import (
     summary_lines,
 )
 from logbook_cli.format import MARKER_PATTERN
-from logbook_cli.services.common import Result, load, save, writable
+from logbook_cli.services.common import Result, load, save
 from logbook_cli.views import state_snapshot
 
 
@@ -48,7 +48,11 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
 
 
 def sync(root: str, log: str, token: str, dry_run: bool) -> Result:
-    doc = writable(root, log, token)
+    doc = load(root, log)
+    from logbook_cli.document import require_preflight_clear, require_token
+
+    require_token(doc, token)
+    require_preflight_clear(doc)
     changed = doc.text
     replacements = []
     changed_stages = 0
@@ -61,8 +65,11 @@ def sync(root: str, log: str, token: str, dry_run: bool) -> Result:
             )
             replacements.append((stage.heading_start, stage.heading_end, new))
             changed_stages += 1
+    from logbook_cli.lifecycle import get
+
+    managed = get(doc)["managed"]
     summaries = summary_lines(doc)
-    for record in summaries:
+    for record in [] if managed else summaries:
         if not record["owned"] or record["target"] == record["raw"]:
             continue
         original = doc.text[record["start"] : record["end"]]
@@ -78,6 +85,18 @@ def sync(root: str, log: str, token: str, dry_run: bool) -> Result:
         )
     for start, end, value in sorted(replacements, reverse=True):
         changed = changed[:start] + value + changed[end:]
+    from logbook_cli.document import parse_text
+    from logbook_cli.lifecycle import get, render
+
+    if (
+        get(doc)["managed"]
+        or not doc.status_lines
+        or any(
+            r["raw"].startswith(("> 状态：❔ ", "> Status: ❔ "))
+            for r in doc.status_lines
+        )
+    ):
+        changed = render(parse_text(changed.encode(), doc.path, doc.root))
     return save(
         doc,
         changed,

@@ -20,7 +20,12 @@ PROJECTS = click.option(
 )
 LOG = click.argument("log")
 DRY_RUN = click.option("--dry-run", is_flag=True, help="Preview without writing.")
-TOKEN = click.option("--token", required=True, help="version_token from context.")
+TOKEN = click.option(
+    "--expect-version",
+    "token",
+    required=True,
+    help="version_token of the file being changed.",
+)
 STAGE = click.option(
     "--stage", required=True, help="Exact stage title without status marker."
 )

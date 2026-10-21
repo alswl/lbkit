@@ -38,7 +38,7 @@ def repository_root(path: Path) -> Path:
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
     docs = kit / "docs/installable"
-    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "src/logbook_cli", kit / "lbkit-agents.template.yaml", kit / "AGENTS.template.md", kit / "pyproject.toml", kit / "uv.lock"]
+    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "src/logbook_cli", kit / "lbkit.template.yaml", kit / "lbkit-skills.template.yaml", kit / "AGENTS.template.md", kit / "pyproject.toml", kit / "uv.lock"]
     if any(not path.exists() for path in required) or not skills.is_dir() or not docs.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
@@ -164,10 +164,8 @@ def init_mind_forge(repo: Path, dry_run: bool) -> str | None:
     return None
 
 
-def legacy_config_hint(repo: Path) -> None:
-    """lbkit-agents.yaml used to live at .agents/lb.yaml; never move it silently."""
-    if (repo / ".agents/lb.yaml").exists() and not (repo / "lbkit-agents.yaml").exists():
-        print("Move the agent config to the repository root: git mv .agents/lb.yaml lbkit-agents.yaml")
+def missing_config(repo: Path) -> list[str]:
+    return [name for name in ("lbkit.yaml", "lbkit-skills.yaml") if not (repo / name).exists()]
 
 
 def install_runtime(kit: Path) -> None:
@@ -213,15 +211,14 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
         print("uv sync --locked --no-dev --project .lbkit")
         for link_rel, target_rel in planned.items():
             print(f"{link_rel} -> {relative_link(repo / link_rel, repo / target_rel)}")
-        if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
-            print("lbkit-agents.yaml <- .lbkit/lbkit-agents.template.yaml")
+        for name in missing_config(repo):
+            print(f"{name} <- .lbkit/{name.removesuffix('.yaml')}.template.yaml")
         if not (repo / "AGENTS.md").exists():
             print("AGENTS.md <- lbkit stub (fill in local rules)")
         if not (repo / "CLAUDE.md").exists() and not (repo / "CLAUDE.md").is_symlink():
             print("CLAUDE.md -> AGENTS.md")
         if not (repo / "minds.yaml").exists():
             print("mind-forge required: verify mf; initialize minds.yaml + projects/ via mf init")
-        legacy_config_hint(repo)
         return
 
     actual = manifest(destination)
@@ -231,9 +228,9 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     install_runtime(destination)
     created = install_links(repo, actual)
     retire_links(repo, dry_run=False)
-    if not (repo / "lbkit-agents.yaml").exists() and not (repo / ".agents/lb.yaml").exists():
-        with (repo / "lbkit-agents.yaml").open("x", encoding="utf-8") as target:
-            target.write((destination / "lbkit-agents.template.yaml").read_text(encoding="utf-8"))
+    for name in missing_config(repo):
+        with (repo / name).open("x", encoding="utf-8") as target:
+            target.write((destination / f"{name.removesuffix('.yaml')}.template.yaml").read_text(encoding="utf-8"))
     if not (repo / "AGENTS.md").exists():
         (repo / "AGENTS.md").write_text((destination / "AGENTS.template.md").read_text(encoding="utf-8"), encoding="utf-8")
         created.append(Path("AGENTS.md"))
@@ -247,17 +244,25 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     if result.returncode:
         raise InstallError(f"bin/lb validation failed: {result.stderr.strip()}")
     print(f"lbkit ready at {destination}; installed {len(created)} entries")
-    print("Fill lbkit-agents.yaml as needed; keep AGENTS.md and lbkit-agents.yaml in the consuming repository.")
-    legacy_config_hint(repo)
+    print("Fill lbkit.yaml and lbkit-skills.yaml as needed; keep AGENTS.md and both files in the consuming repository.")
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in {"doctor", "adapter"}:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+        from logbook_cli.bootstrap import activate
+        activate(str(Path(__file__).resolve()))
+        from logbook_cli.diagnostics import main as diagnostics_main
+        return diagnostics_main(argv)
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     command = subparsers.add_parser("install", help="add .lbkit submodule and shared links")
     command.add_argument("--repo", type=Path, default=Path.cwd(), help="target Git repository root")
     command.add_argument("--source", help="lbkit Git URL; defaults to this checkout's origin")
     command.add_argument("--dry-run", action="store_true", help="show planned operations without writing")
+    subparsers.add_parser("doctor", help="read-only local toolkit diagnosis")
+    subparsers.add_parser("adapter", help="list/check runtime adapter availability")
     args = parser.parse_args(argv)
     try:
         install(args.repo, Path(__file__).resolve().parents[1], args.source, args.dry_run)

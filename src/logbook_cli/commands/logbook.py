@@ -54,8 +54,30 @@ def sync(root: str | None, log: str, token: str, dry_run: bool, json: bool) -> N
     finish(logbook.sync(resolve_root(root), log, token, dry_run), json)
 
 
+@click.command(
+    "state-set", help="Record lifecycle and generate its compact status line."
+)
+@options(
+    ROOT,
+    LOG,
+    TOKEN,
+    DRY_RUN,
+    JSON,
+    click.option(
+        "--lifecycle",
+        type=click.Choice(
+            ["draft", "ready", "active", "paused", "completed", "terminated"]
+        ),
+        required=True,
+    ),
+    click.option("--basis", required=True),
+)
+def state_set(root, log, token, dry_run, json, lifecycle, basis):
+    from logbook_cli.lifecycle import set_state
+
+    finish(set_state(resolve_root(root), log, lifecycle, basis, token, dry_run), json)
+
+
 def register(app: click.Group) -> None:
-    for command in (list_logs, context, check, state, sync):
+    for command in (list_logs, context, check, state, sync, state_set):
         app.add_command(command)
-    app.add_command(context, "show")
-    app.add_command(context, "next")

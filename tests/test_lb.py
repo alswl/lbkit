@@ -75,14 +75,14 @@ class LbCliTest(unittest.TestCase):
         return result, json.loads(result.stdout)
 
     def token(self):
-        _, value = self.payload("context", "projects/demo/docs/log.md")
+        _, value = self.payload('log', 'context', "projects/demo/docs/log.md")
         return value["version_token"]
 
     def test_list_context_and_fences(self):
-        result, listed = self.payload("list")
+        result, listed = self.payload('log', 'list')
         self.assertEqual(result.returncode, 0)
         self.assertEqual(listed["logbooks"], ["projects/demo/docs/log.md"])
-        _, data = self.payload("context", "projects/demo/docs/log.md")
+        _, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertEqual(data["next_task"]["state"], "/")
         self.assertEqual(data["next_task"]["repositories"], ["core"])
         self.assertEqual(len(data["stages"]), 2)
@@ -93,23 +93,23 @@ class LbCliTest(unittest.TestCase):
         self.assertEqual(data["work_directories"][1]["machine"], "remote `build-host`")
 
     def test_check_and_sync_preserves_body(self):
-        result, issues = self.payload("check", "projects/demo/docs/log.md")
+        result, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertEqual(result.returncode, 1)
         self.assertIn("SKIPPED_EXPLICIT", {i["code"] for i in issues})
         before = self.log.read_bytes()
         result = self.cli(
-            "sync", "projects/demo/docs/log.md", "--token", self.token(), "--dry-run"
+            'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token(), "--dry-run"
         )
         self.assertEqual(result.returncode, 0)
         self.assertEqual(before, self.log.read_bytes())
         self.assertIn("--- projects/demo/docs/log.md", result.stdout)
         result, dry = self.payload(
-            "sync", "projects/demo/docs/log.md", "--token", self.token(), "--dry-run"
+            'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token(), "--dry-run"
         )
         self.assertIn("diff", dry)
         self.assertEqual(
             self.cli(
-                "sync", "projects/demo/docs/log.md", "--token", self.token()
+                'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token()
             ).returncode,
             0,
         )
@@ -134,7 +134,7 @@ class LbCliTest(unittest.TestCase):
             "开发：运行中任务。 @core 🤖️",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             token,
         )
         self.assertEqual(
@@ -150,7 +150,7 @@ class LbCliTest(unittest.TestCase):
             "开发：运行中任务。 @core 🤖️",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0)
@@ -165,7 +165,7 @@ class LbCliTest(unittest.TestCase):
             "人工验证：人类确认。 👱",
             "--artifact",
             "x",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 4)
@@ -179,7 +179,7 @@ class LbCliTest(unittest.TestCase):
             "人工验证：人类确认。 👱",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             self.token(),
             "--dry-run",
         )
@@ -195,7 +195,7 @@ class LbCliTest(unittest.TestCase):
             "开发：运行中任务。 @core 🤖️",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             stale,
         )
         self.assertEqual(result.returncode, 4)
@@ -205,7 +205,7 @@ class LbCliTest(unittest.TestCase):
             "# Demo\n\n## 🛫 Stage 01 Build\n\n相关链接：\n- [PR](https://example.invalid/pr)\n\n待办：\n- [ ] 开发：任务。\n",
             encoding="utf-8",
         )
-        result, issues = self.payload("check", "projects/demo/docs/log.md")
+        result, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertEqual(result.returncode, 0)
         self.assertEqual([item["code"] for item in issues], ["LINK_UNVERIFIED"])
 
@@ -216,10 +216,10 @@ class LbCliTest(unittest.TestCase):
             "# Demo\n\n## 总览\n\n- [ ] 人工验证：旧全局清单。\n\n## 🛫 Stage 01 Build\n\n- [ ] 开发：阶段首项。\n",
             encoding="utf-8",
         )
-        result, data = self.payload("context", "projects/demo/docs/log.md")
+        result, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertEqual(result.returncode, 0)
         self.assertEqual(data["next_task"]["text"], "开发：阶段首项。")
-        result, data = self.payload("state", "projects/demo/docs/log.md")
+        result, data = self.payload('log', 'state', "projects/demo/docs/log.md")
         self.assertEqual(data["next_task"]["text"], "开发：阶段首项。")
 
     def test_duplicate_in_one_stage_and_unknown_or_nested_checkbox(self):
@@ -230,7 +230,7 @@ class LbCliTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        result, issues = self.payload("check", "projects/demo/docs/log.md")
+        result, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertIn("UNKNOWN_TASK_STATE", {item["code"] for item in issues})
         result = self.cli(
             "task",
@@ -242,7 +242,7 @@ class LbCliTest(unittest.TestCase):
             "开发：重复。",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 4)
@@ -262,7 +262,7 @@ class LbCliTest(unittest.TestCase):
             "开发：运行中任务。 @core 🤖️",
             "--artifact",
             "产物：[报告](report.md)",
-            "--token",
+            '--expect-version',
             token,
             "--dry-run",
         )
@@ -275,7 +275,7 @@ class LbCliTest(unittest.TestCase):
         self.assertIn("    - 产物：[报告](report.md)\r\n".encode(), data)
         self.assertNotIn(b"\n", data.replace(b"\r\n", b""))
         self.outside.write_text("# x")
-        self.assertEqual(self.cli("context", str(self.outside)).returncode, 3)
+        self.assertEqual(self.cli('log', 'context', str(self.outside)).returncode, 3)
 
     def test_eof_artifact_and_fence_links_are_ignored(self):
         self.log.write_text(
@@ -291,7 +291,7 @@ class LbCliTest(unittest.TestCase):
             "开发：EOF",
             "--artifact",
             "产物：EOF",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0)
@@ -301,7 +301,7 @@ class LbCliTest(unittest.TestCase):
             + "\n````\n# hidden\n[bad](https://ignored.invalid)\n```\nstill fenced\n````\n",
             encoding="utf-8",
         )
-        _, issues = self.payload("check", "projects/demo/docs/log.md")
+        _, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertNotIn(
             "LINK_UNVERIFIED", [x["code"] for x in issues if x["line"] > 30]
         )
@@ -312,12 +312,12 @@ class LbCliTest(unittest.TestCase):
             + "\n<!--\n# hidden\n## ⚠️ Stage 88 Comment\n- [x] 开发：隐藏\n[link](https://hidden.invalid)\n-->\n````\n# fence\n``` trailing\n## ⚠️ Stage 77 StillHidden\n````   \n",
             encoding="utf-8",
         )
-        _, data = self.payload("context", "projects/demo/docs/log.md")
+        _, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertEqual(
             [stage["title"] for stage in data["stages"]],
             ["Stage 01 Build", "Stage 02 Done"],
         )
-        _, issues = self.payload("check", "projects/demo/docs/log.md")
+        _, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertNotIn(
             "LINK_UNVERIFIED", [x["code"] for x in issues if x["line"] > 30]
         )
@@ -327,7 +327,7 @@ class LbCliTest(unittest.TestCase):
             "# Demo\n\n## 🛫 Stage 01 Build\n\n- [ ] first <!-- note -->\n- [ ] second\n<!-- example\n- [x] hidden\n--> - [ ] ambiguous\n",
             encoding="utf-8",
         )
-        _, data = self.payload("context", "projects/demo/docs/log.md")
+        _, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertEqual(data["next_task"]["text"], "first <!-- note -->")
         result = self.cli(
             "task",
@@ -339,12 +339,12 @@ class LbCliTest(unittest.TestCase):
             "first <!-- note -->",
             "--status",
             "x",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("- [x] first <!-- note -->", self.log.read_text())
-        _, issues = self.payload("check", "projects/demo/docs/log.md")
+        _, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertIn("COMMENT_STRUCTURE_AMBIGUOUS", {item["code"] for item in issues})
 
     def test_old_warning_stage_sync_and_directory_body_boundary(self):
@@ -355,11 +355,11 @@ class LbCliTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        _, issues = self.payload("check", "projects/demo/docs/log.md")
+        _, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertNotIn("DIRECTORY_FORMAT", {item["code"] for item in issues})
         self.assertEqual(
             self.cli(
-                "sync", "projects/demo/docs/log.md", "--token", self.token()
+                'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token()
             ).returncode,
             0,
         )
@@ -372,7 +372,7 @@ class LbCliTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        _, issues = self.payload("check", "projects/demo/docs/log.md")
+        _, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         codes = {item["code"] for item in issues}
         self.assertTrue({"DIRECTORY_GROUP", "DIRECTORY_PATH"}.issubset(codes))
         self.assertIn("LOCAL_LINK_UNVERIFIED", codes)
@@ -382,16 +382,16 @@ class LbCliTest(unittest.TestCase):
         link = self.root / "projects" / "demo" / "docs" / "escape.md"
         link.symlink_to(self.outside)
         self.assertEqual(
-            self.cli("context", "projects/demo/docs/escape.md").returncode, 3
+            self.cli('log', 'context', "projects/demo/docs/escape.md").returncode, 3
         )
-        _, listed = self.payload("list")
+        _, listed = self.payload('log', 'list')
         self.assertEqual(listed["logbooks"], ["projects/demo/docs/log.md"])
-        self.assertEqual(self.cli("check").returncode, 2)
+        self.assertEqual(self.cli('log', 'check').returncode, 2)
 
     def test_symlink_loop_is_a_path_error_not_a_traceback(self):
         loop = self.root / "projects" / "demo" / "docs" / "loop.md"
         loop.symlink_to("loop.md")
-        result = self.cli("context", "projects/demo/docs/loop.md")
+        result = self.cli('log', 'context', "projects/demo/docs/loop.md")
         self.assertEqual(result.returncode, 3)
         self.assertNotIn("Traceback", result.stderr)
 
@@ -402,7 +402,7 @@ class LbCliTest(unittest.TestCase):
         (self.root / "projects" / "escape-project").symlink_to(
             external, target_is_directory=True
         )
-        _, listed = self.payload("list")
+        _, listed = self.payload('log', 'list')
         self.assertEqual(listed["logbooks"], ["projects/demo/docs/log.md"])
         doc = parse(self.log.resolve(), self.root.resolve())
         changed = doc.text.replace("运行中任务", "已变更任务", 1).encode()
@@ -433,7 +433,7 @@ class LbCliTest(unittest.TestCase):
         ):
             self.assertEqual(discover(repo), [])
         with mock.patch("logbook_cli.services.common.parse", side_effect=OSError("read failure")):
-            code = main(["--root", str(self.root), "context", "projects/demo/docs/log.md"])
+            code = main(["--root", str(self.root), 'log', 'context', "projects/demo/docs/log.md"])
         self.assertEqual(code, 3)
 
 
@@ -481,11 +481,11 @@ class PreflightGateTest(unittest.TestCase):
         return result, json.loads(result.stdout)
 
     def token(self):
-        _, value = self.payload("context", "projects/demo/docs/log.md")
+        _, value = self.payload('log', 'context', "projects/demo/docs/log.md")
         return value["version_token"]
 
     def test_context_reports_blockers_of_any_indent(self):
-        _, data = self.payload("context", "projects/demo/docs/log.md")
+        _, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertFalse(data["preflight_clear"])
         self.assertEqual(len(data["preflight_blockers"]), 2)
         self.assertEqual(data["preflight_blockers"][0]["stage"], "Stage 01 Build")
@@ -494,7 +494,7 @@ class PreflightGateTest(unittest.TestCase):
         self.assertFalse(data["stages"][0]["tasks"][2]["preflight"])
 
     def test_check_reports_preflight_blocker(self):
-        result, issues = self.payload("check", "projects/demo/docs/log.md")
+        result, issues = self.payload('log', 'check', "projects/demo/docs/log.md")
         self.assertEqual(result.returncode, 1)
         codes = {i["code"] for i in issues}
         self.assertIn("PREFLIGHT_BLOCKER", codes)
@@ -502,7 +502,7 @@ class PreflightGateTest(unittest.TestCase):
     def test_writes_refused_while_blocked_and_resume_after_human_resolution(self):
         token = self.token()
         for command in (
-            ("sync", "projects/demo/docs/log.md", "--token", token),
+            ('log', 'sync', "projects/demo/docs/log.md", '--expect-version', token),
             (
                 "task",
                 "update",
@@ -513,7 +513,7 @@ class PreflightGateTest(unittest.TestCase):
                 "验证：收尾。",
                 "--status",
                 "/",
-                "--token",
+                '--expect-version',
                 token,
             ),
             (
@@ -526,7 +526,7 @@ class PreflightGateTest(unittest.TestCase):
                 "开发：已完成。",
                 "--artifact",
                 "产物：[x](x.md)",
-                "--token",
+                '--expect-version',
                 token,
             ),
         ):
@@ -541,7 +541,7 @@ class PreflightGateTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        result, data = self.payload("context", "projects/demo/docs/log.md")
+        result, data = self.payload('log', 'context', "projects/demo/docs/log.md")
         self.assertTrue(data["preflight_clear"])
         result = self.cli(
             "task",
@@ -553,7 +553,7 @@ class PreflightGateTest(unittest.TestCase):
             "验证：收尾。",
             "--status",
             "/",
-            "--token",
+            '--expect-version',
             self.token(),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -603,11 +603,11 @@ class StateAndSummaryTest(unittest.TestCase):
         return result, json.loads(result.stdout)
 
     def token(self):
-        _, value = self.payload("context", "projects/demo/docs/log.md")
+        _, value = self.payload('log', 'context', "projects/demo/docs/log.md")
         return value["version_token"]
 
     def test_state_snapshot_is_structured(self):
-        result, data = self.payload("state", "projects/demo/docs/log.md")
+        result, data = self.payload('log', 'state', "projects/demo/docs/log.md")
         self.assertEqual(result.returncode, 0)
         self.assertEqual(
             data["summary"], "状态：🚧 Stage 01 Build · 下一项：开发：第一项。"
@@ -630,7 +630,7 @@ class StateAndSummaryTest(unittest.TestCase):
 
     def test_sync_rewrites_owned_summary_but_keeps_human_tail(self):
         _, dry = self.payload(
-            "sync", "projects/demo/docs/log.md", "--token", self.token(), "--dry-run"
+            'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token(), "--dry-run"
         )
         self.assertEqual(dry["changed_stages"], 1)
         self.assertEqual(dry["summary_updated"], 1)
@@ -638,7 +638,7 @@ class StateAndSummaryTest(unittest.TestCase):
         self.assertNotIn("+mo`", dry["diff"])
         self.assertEqual(
             self.cli(
-                "sync", "projects/demo/docs/log.md", "--token", self.token()
+                'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token()
             ).returncode,
             0,
         )
@@ -649,7 +649,7 @@ class StateAndSummaryTest(unittest.TestCase):
         )
         self.assertIn("## 🚧 Stage 01 Build", text)
 
-    def test_sync_keeps_free_form_summary_and_never_creates_one(self):
+    def test_sync_keeps_free_form_summary_and_creates_missing_compact_line(self):
         self.log.write_text(
             self.log.read_text(encoding="utf-8").replace(
                 "> 状态：🛫 旧阶段 —— 人类注释保留",
@@ -658,7 +658,7 @@ class StateAndSummaryTest(unittest.TestCase):
             encoding="utf-8",
         )
         _, dry = self.payload(
-            "sync", "projects/demo/docs/log.md", "--token", self.token(), "--dry-run"
+            'log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token(), "--dry-run"
         )
         self.assertEqual(dry["summary_updated"], 0)
         self.assertEqual(dry["summary_kept_human"], 1)
@@ -672,8 +672,8 @@ class StateAndSummaryTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        self.cli("sync", "projects/demo/docs/log.md", "--token", self.token())
-        self.assertNotIn("状态：", self.log.read_text(encoding="utf-8"))
+        self.cli('log', 'sync', "projects/demo/docs/log.md", '--expect-version', self.token())
+        self.assertIn("> 状态：❔ 状态未核对 · Stage 01", self.log.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

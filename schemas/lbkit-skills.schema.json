@@ -1,70 +1,86 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/alswl/lbkit/schemas/lbkit-skills.schema.json",
-  "title": "lbkit-skills.json",
-  "description": "Optional repository-root skill manifest: skill chains registered by work type, referenced by lb-plan when drafting the 「技能：」 todo sub-line. Read and appended to by bin/lb skills.",
+  "title": "lbkit skill recipes",
   "type": "object",
-  "additionalProperties": false,
-  "required": ["version", "skills"],
+  "required": [
+    "version",
+    "recipes"
+  ],
   "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "Path to this schema, for editor validation."
-    },
     "version": {
-      "enum": ["0.1.0"],
-      "description": "Manifest format version, a semantic version string."
+      "const": "0.2.0"
     },
-    "skills": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/kind" }
-    }
-  },
-  "$defs": {
-    "nonEmpty": { "type": "string", "pattern": "\\S" },
-    "kind": {
+    "recipes": {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "scope", "chain"],
-      "properties": {
-        "name": {
-          "$ref": "#/$defs/nonEmpty",
-          "description": "Work type, semantically named, unique within the manifest."
-        },
-        "scope": {
-          "$ref": "#/$defs/nonEmpty",
-          "description": "Scope of use, written as 「适用：…；不适用：…」 (applies-to / not-for), distinguished by the nature of the work — not replaced by action prefixes or repository names."
-        },
-        "chain": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/nonEmpty" },
-          "description": "Skill names in invocation order; may include skills that exist only inside a business repository."
-        },
-        "actions": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Common todo action prefixes (e.g. 设计, 开发); informational only, never used for mechanical matching."
-        },
-        "companions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["skill", "when"],
-            "properties": {
-              "skill": { "$ref": "#/$defs/nonEmpty" },
-              "when": {
-                "$ref": "#/$defs/nonEmpty",
-                "description": "When it is used incidentally."
-              }
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status",
+          "applies_to",
+          "excludes",
+          "steps",
+          "companions"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "draft",
+              "available",
+              "deprecated",
+              "retired"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "applies_to": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
             }
           },
-          "description": "Skills used incidentally along the main skill chain, with no todo of their own."
-        },
-        "description": {
-          "type": "string",
-          "description": "Background for the next coordinator: prerequisites, how to run it, limits and what not to use, and the source logbook or work package."
+          "excludes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "companions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "skill",
+                "when"
+              ],
+              "properties": {
+                "skill": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "when": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
         }
       }
     }

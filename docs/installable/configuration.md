@@ -1,97 +1,132 @@
-# Configuration and Invocation Parameter Contract
+# Configuration contract
 
-lb-* skills use `lbkit-agents.yaml` at the consuming repository root (older versions live at `.agents/lb.yaml`; content unchanged — just move it to the root when upgrading), read and interpreted by the skills per this contract. Collaboration parameters such as host titles, Herdr, browser, and login hints live in the same file; see "Collaboration Parameters" below. This file does not declare any background program that auto-loads or executes configuration. Configuration selects implementations and fills in defaults; it grants no permissions. The authorization, isolation, focus, monitoring, and evidence boundaries in the consuming repository's `AGENTS.md` cannot be switched off through configuration.
+The consuming repository owns two configuration files: `lbkit.yaml` (lbkit settings
+and launchable agents) and `lbkit-skills.yaml` (work-type skill recipes). Recipes
+describe the repository's own skill set, which may include skills from any source;
+lbkit reads them but does not own that choice. A missing `lbkit-skills.yaml` reads as
+no recipes. Configuration
+never grants execution, repository access or publication permission.
 
-## Defaults and Per-Run Parameters
+## Model
 
-Each call first pins down the target logbook and operation mode, then resolves the fields this run will use. Priority: explicit user specification this run → parameters explicitly recorded in the currently authorized work package → repository defaults. Launcher overrides may only pick declared candidates, never supply arbitrary commands. Only values matching the current authorization and the repository's hard constraints are valid; approval cannot be self-manufactured by writing override values into a work package.
+| File | Domain | Contents |
+| --- | --- | --- |
+| `lbkit.yaml` | `settings` | Document backend, runtime adapter, collaboration parameters, `default_agent` |
+| `lbkit.yaml` | `agents` | Launchable agents keyed by stable kebab-case ID |
+| `lbkit-skills.yaml` | `recipes` | Work-type skill combinations keyed by stable kebab-case ID |
 
-There are no implicit extra project config files, environment-variable overrides, or "newest file wins". Natural-language parameters must also be made explicit within this run's context as same-named fields with sources, and choices affecting later handoffs are written into the existing work package or handoff record. Ordinary calls do not change repository default configuration; lb-status and read-only planning in particular must not write configuration back.
+An agent has `status`, optional `name` and `description`, `launcher` (a `command`
+and `args` array), `model`, `deployment` (`internal`, `external`, `unknown`), and
+`suitable_for` (text array). Launcher arguments are data, never shell-executed by
+configuration commands. All launch choices use this single registry. An agent here
+is a definition; `lb agent` binds and controls live sessions.
 
-Mapping overrides field by field; lists are replaced wholesale. `runtime.launcher` is an atomic value — an override must supply both `command` and `args` together, and old launcher arguments are never spliced onto a new command. `runtime.launcher` and `launcher_alternatives` together form the selectable range; an explicitly chosen command + args must exactly match one of the options, and model and deployment metadata are read from that option, never improvised by the caller. Without an explicit choice, pick within the range per task needs and record the reason; prefer the default option when adaptability ties. No automatic failover.
+A recipe has `status`, optional `name` and `description`, `applies_to`, `excludes`,
+`steps` (ordered skill names), and `companions` (objects with `skill` and `when`).
+A recipe does not name an agent: which agent runs the work is decided per dispatch
+from data sensitivity and fit. Applicability and exclusions are separate text arrays; the CLI does not interpret natural-language
+prefixes. Skill names reference independently installed definitions, not other
+recipes; availability/readiness is checked with `lb skill show/check` at use time.
 
-All relative paths resolve against the managed repository root, not the skills directory or the current shell directory. Prefer the user-specified existing logbook, then the currently explicitly bound logbook; `project_root` only aids discovery — the root is not itself a project. When multiple projects cannot be uniquely determined, clarify instead of scanning the project repository. Managed logbook workflows require mind-forge, minds.yaml and valid document bindings. A missing dependency blocks the dependent workflow, not read-only inspection, migration diagnosis or authorized maintenance of lbkit itself. There is no silent markdown fallback.
+An optional agent `provider` selects its provider quota hints in `settings.runtime.quota`.
+IDs remain stable when descriptions change. Unknown fields are preserved, not
+interpreted or silently removed. Do not store credentials, session handles, run
+history or adoption results here. `lb agent` owns session bindings; Thinking owns
+usage evidence. `config agent show` and `config recipe show` return an `object_digest` for
+pinning the exact configuration used in execution evidence. Skill usage pins the
+actual definition digest independently; recording a recipe is not proof of use.
 
-## Fields
+## Collaboration parameters
 
-| Field | Type and meaning | Used by |
-|---|---|---|
-| version | Semantic version string; current format 0.2.0. Legacy 0.1.0 / `schema: 1` require explicit migration before managed workflow writes; read-only diagnosis remains available | Entries that read the configuration |
-| documents.adapter | mind-forge (required); markdown in legacy configuration requires migration | Document reading and authorized writing by lb-* entries |
-| documents.project_root | Non-empty path; `projects` in this repository, overridable to an approved directory | Entries that need project discovery |
-| runtime.adapter | Non-empty adapter name; `herdr` ships with the kit today | push; status when requesting live state |
-| runtime.launcher | Default launch option: `command` a non-empty string, `args` a string array, plus the model metadata below | push when creating or replacing a session |
-| runtime.launcher_alternatives | Array of candidate options with the same structure; chosen per need, never auto-tried in sequence | push |
-| runtime.quota | Mapping from provider name to `{prefer_other_above, pause_above, window}`: two usage fractions in 0–1 with prefer ≤ pause, and the usage window they apply to (e.g. `5h`, `7d`); optional, empty by default | push before dispatch, reuse and GC; status when reporting executors |
-| limits.wait_seconds | Integer in 1–60; the wait cap for a single observation, default 30 seconds — not a project-task timeout or stagnation limit | push's waiting steps |
-| limits.context_unknown_packages | Positive integer; default 3 completed packages before safe-boundary rotation when context usage cannot be measured; not a context percentage | push |
-| limits.review_rounds | Positive integer or null; maximum rounds a candidate is submitted to independent inspection, including the first | plan's inspection design, push's review control, update's return judgment |
+`settings.documents` contains `adapter`, `project_root` and `mind_forge_guide`.
+The current managed-document adapter is `mind-forge`; the host guide supplies
+actual object mapping. Missing required values are resolved from authorized
+read-only evidence or a human answer, never invented.
 
-`review_rounds: null` means unconfigured — not an infinite loop, and not "no review needed". A current work package requiring independent inspection must have a finite round count before dispatch: it can be proposed explicitly per the task and confirmed along with the work package, or an existing explicit limit is carried over as-is. Tasks that need no review do not get checkers created just to fill this field. Round increases or resets never arise automatically from restarting sessions, switching skills, or changing candidates.
+`settings.runtime` contains `adapter`, optional provider `quota` declarations and
+`herdr` parameters (`workspace_id_env`, `label_prefix`, `shell`,
+`permission_mode`). It contains no launcher or launcher alternatives.
+`settings.roles`, `browser`, `auth`, and `limits` retain host collaboration
+parameters; auth contains guidance only, never secrets. Limits include
+`wait_seconds`, `review_rounds` and `context_unknown_packages`. Limits and quota
+hints do not authorize new work, approvals or data access. Configuration paths
+are relative to the host root. Missing optional values do not block unrelated
+work; missing values required for the next operation must be verified or supplied
+by the human. Do not infer them from templates or another repository.
 
-Count a round when the candidate is submitted to the independent inspection covered by the allowance. Self-tests, tool calls and visits to different environments are not automatically independent submissions. A human may define a shared route allowance, but its scope and counted events must be explicit; preserve previously agreed consumption rather than reclassifying it silently.
+Operation modes are per-call inputs, never global defaults. A read-only request
+never initializes or migrates files. Do not turn authorization, evidence checks,
+isolation, focus or visible monitoring obligations into configuration switches.
 
-Launch commands and arguments are used as argv — never spliced as shell fragments, no eval, no command substitution, no inferring secrets from materials. The adapter tool's documentation is authoritative for actual invocation syntax. The default launcher's name proves nothing about its engine or permission mode.
-
-## Collaboration Parameters
-
-The following fields live in the same `lbkit-agents.yaml`; shared skills read them at the steps that need the values and never treat template values as facts. The installer copies the [template](../../lbkit-agents.template.yaml) when the file does not exist and keeps any existing file.
-
-| Field | When used |
-|---|---|
-| `roles.human_owner_label`, `roles.coordinator_label` | Display titles for the human owner and the coordinator; identity and authorization still follow the consuming repository's `AGENTS.md` |
-| `runtime.herdr.workspace_id_env` | Environment variable name to read when Herdr is chosen and tabs must be created in the coordinator's workspace |
-| `runtime.herdr.label_prefix` | Visible label prefix for new Herdr tabs and panes; named session identifiers follow the runtime syntax; the template default is `^`, which the host may change to its own convention |
-| `runtime.herdr.shell` | When the wrapped launcher is a shell function and must be verified inside an interactive shell |
-| `runtime.herdr.permission_mode` | Tool mode used when the host has authorized auto-approval; this field never widens authorization |
-| `browser.profile` | When authorized browser work genuinely needs an agent-specific profile |
-| `auth.recurring_login_hint` | Login-cadence hint with a reliable existing basis; when empty, do not speculate about expiry frequency |
-| `documents.mind_forge_guide` | Path to the host-provided mapping guide for the required mind-forge document workflow |
-
-Paths are relative to the consuming repository root. Current values must not be inferred from `.lbkit/` templates, other repositories, command names, or past evals. When a value is missing, `null`, conflicts with host rules, or cannot be verified as genuine, first verify read-only within existing authorization; if the value is still needed to continue, tell the human the required field, its purpose, and candidate values, and wait for an answer. When an optional value is missing, skip preparations that depend on it instead of blocking unrelated work. When a consultation's outcome affects later work, the human or an agent authorized to maintain rules writes it back to the host file — never into the shared template.
+`settings.default_agent` is null or an available agent ID.
 
 ## Model Selection and Data Boundaries
 
-Every candidate option must also declare `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes); `provider` is optional and names the `runtime.quota` entry that applies to the option. `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
+Every agent declares `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes); `provider` is optional and names the `settings.runtime.quota` entry that applies to the option. `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
 
 Before creating or reusing a session, determine data sensitivity from repository rules, user instructions, and actual inputs; filter candidates next; compare reasoning depth, context size, tool capability, latency, and cost last. Sensitive inputs go only to internal; when sensitivity is unknown, external and unknown are also off limits. Cross-repository tasks are chosen by the strictest input requirement. A local CLI or proxy never re-judges an external deployment as internal.
 
-Choosing a suitable candidate within existing task authorization needs no per-instance model consultation; record the option, the reason, the data classification, and the deployment basis. If no suitable candidate exists, provenance is unclear, or launch is unavailable, report the exact gap — never fall back to directly launching codex/claude, switching proxies, or altering the candidate range. Changing the candidate range is a configuration change, not something derived from ordinary task authorization.
+Choosing a suitable candidate within existing task authorization needs no per-instance model consultation; record the option, the reason, the data classification, and the deployment basis. If no suitable candidate exists, provenance is unclear, or launch is unavailable, report the exact gap — never fall back to directly launching codex/claude, switching proxies, or altering the approved agent registry. Changing the approved agent registry is a configuration change, not something derived from ordinary task authorization.
 
 Model boundaries equally cover eval samples, subagents, retries, and recovery. Before reusing a session, verify the actual model and the applicability of its existing context before submitting material; repository content is never sent to a non-compliant model to satisfy a check. After launch and before dispatch, verify the actual model, deployment option, and permission parameters; stop dispatch on any mismatch.
 
 ### Quota Watermarks
 
-Before dispatching or reusing an executor, read the current usage of each configured provider from what the provider actually shows (status-line 5-hour / 7-day usage, `weekly N% left`, and the like). Above `prefer_other_above`, new dispatches go to another eligible provider with headroom; running packages are not interrupted. Above `pause_above`, pause that provider's executors: no new dispatch or reuse, idle sessions exit after saving the handoff and the resume command, until the human lifts the pause or resets the quota. Unreadable usage is reported as unknown and never guessed; a status line without a quota warning counts as headroom. The coordinator's own provider is not paused but should avoid large reads and writes. Record any switch or pause and its reason in the handoff. Quota is a selection constraint after data-boundary filtering, never a reason to widen the candidate range.
+Before dispatching or reusing an executor, read the current usage of each configured provider from what the provider actually shows (status-line 5-hour / 7-day usage, `weekly N% left`, and the like). Above `prefer_other_above`, new dispatches go to another eligible provider with headroom; running packages are not interrupted. Above `pause_above`, pause that provider's executors: no new dispatch or reuse, idle sessions exit after saving the handoff and the resume command, until the human lifts the pause or resets the quota. Unreadable usage is reported as unknown and never guessed; a status line without a quota warning counts as headroom. The coordinator's own provider is not paused but should avoid large reads and writes. Record any switch or pause and its reason in the handoff. Quota is a selection constraint after data-boundary filtering, never a reason to widen the approved agent registry.
 
 ### Wrapped Launchers
 
 The consuming repository's `AGENTS.md` may whitelist launch commands. Passing a read-only configuration check proves nothing about service reachability, actual routing, or suitability for sensitive data.
 
-Runtime parameters such as the task, output format, resume identifier, or disabled tools must not override the model, profile, provider, or proxy the wrapper binds; candidate and deployment limits must not be bypassed through command aliases, extra arguments, environment variables, or hidden subprocesses. The wrapper calling the engine internally does not authorize the coordinator to call the engine directly.
+Runtime parameters such as the task, output format, resume identifier, or disabled tools must not override the model, agent, provider, or proxy the wrapper binds; candidate and deployment limits must not be bypassed through command aliases, extra arguments, environment variables, or hidden subprocesses. The wrapper calling the engine internally does not authorize the coordinator to call the engine directly.
 
-## Missing Values, Conflicts, and Validation
+## Lifecycle
 
-Validate structure, types, and values before using fields. When existing configuration fails to parse, the version is unsupported, a field spelling is unknown, or a value is out of range, report the configuration problem explicitly — never silently ignore it or quietly change defaults. When only the recorded logbook status is requested, an explicit downgrade to a read-only report of known documents is still allowed, but real-time verification must not be claimed.
+Create always starts at `draft`. Legal transitions are:
 
-Tasks that need no tooling do not require launcher, wait, or review parameters to be complete; existing session recovery does not force a new session. If a valid launcher is missing before creating or replacing an execution process, stop that step. Other runtime adapters are not implemented in the kit: they can be adopted only when the current environment provides explicit capability, parameter mapping, and authorization, and the consuming repository boundaries still apply. When the consuming repository explicitly requires Herdr-visible monitoring, never auto-degrade to polling or hidden subprocesses.
+- `draft → available` or `draft → retired`.
+- `available → deprecated`.
+- `deprecated → available` or `deprecated → retired`.
+- `retired → draft` (review again before making it available).
 
-Do not turn authorization confirmation, evidence verification, worktree isolation, focus stealing, or monitoring start into boolean switches. Goals, repositories, checklist items, candidates, evidence, owners, and authorization bases are per-run work inputs, not hardcoded defaults.
+Only retired objects can be removed. The `default_agent` cannot be deprecated,
+retired or removed; change the default explicitly first. The CLI never cascades.
+Available means approved for selection, not installed, authenticated or running.
+Skills select only available entries and verify actual capabilities separately.
 
-## Per-Run Operation Modes
+## Commands and guarded writes
 
-mode is a call input to the entry, not part of the global default configuration; it can be inferred from an explicit request, so users need not memorize parameter names.
+```text
+lb config show|check|resolve|update
+lb config agent list|show|create|update|set-status|remove
+lb config recipe list|show|create|update|set-status|remove
+```
 
-| Entry | Modes | Key boundary |
-|---|---|---|
-| lb-plan | create / revise / review | review is read-only; taking over an existing plan is usually revise |
-| lb-push | advance / resume / cleanup | cleanup handles only authorized resources; it does not dispatch project items |
-| lb-update | reread / refresh; writes use format / progress / close | Reread human edits without writing by default; refresh aligns applicable current Sailor acceptance returns before completion updates |
-| lb-status | recorded / live | Explicit recorded relies on records only; an ordinary progress query with a dispatched executor defaults to live, and missing capability is reported as explicitly unknown |
-| lb-preflight | run | Read-only preflight with step-by-step feasibility analysis; blockers are written back as 🔮 after human confirmation; any unresolved 🔮 halts the whole logbook |
+Each leaf supports `--root DIR` and JSON output. Reads return the `version_token` of
+the file holding the object (`config show` and `config check` cover both files); `show`
+also returns the object digest. Recipe writes require an existing `lbkit-skills.yaml`;
+copy `.lbkit/lbkit-skills.template.yaml` when the installer did not create it. Existing-file mutations
+require `--expect-version TOKEN` for that file. Create/update/set-status read one YAML or JSON
+mapping with `--input-file FILE`; `set-status` accepts only `status`. Update is a
+recursive field patch: omitted and unknown fields survive. Lists are replaced as
+units. Use null to clear an optional reference. Status is changed only through
+set-status. Commands modify one agent or recipe, validate all references before
+publication, support `--dry-run`, and return a diff. CLI writers are serialized
+and reject stale tokens. External editors do not participate in the CLI lock;
+byte checks detect edits observed before atomic replacement.
 
-Status observation modes are separate from write permissions: recorded/live may both maintain emoji and a few fact snippets; when "read-only / no modifications" is explicitly requested, writing is forbidden. Stagnation is usually bounded by 10 consecutive minutes without effective progress, judged per the task's character; no fixed total task duration limit is added, and wait_seconds is not that limit.
+`config resolve [--agent ID] [--input-file overrides.yaml]` returns settings,
+field sources and the selected agent/digest. Overrides contain only `settings`;
+the explicit agent option wins over overrides, which win over stored settings.
+Resolution neither writes configuration nor starts agents or skills. Skills own
+selection, authorization, orchestration, and evidence judgment.
 
-A request to review a known document may still be inspected read-only when mind-forge is unavailable, but must report that managed-workflow validation is incomplete. Do not initialize, migrate, or publish as a side effect of a read-only request.
+## Older files
 
-Role display aliases preserve existing `roles.human_owner_label` and `roles.coordinator_label` compatibility keys. The domain roles remain Admiral (human), Captain (coordination agent) and Sailor (execution agent); checking/acceptance is Sailor work, not a third agent role. Runtime resources and deployment selection grant no extra authorization.
+The CLI reads only the current format and ships no migration commands. If a host
+still has `lbkit-agents.yaml` or `lbkit-skills.json`, the agent maintaining its
+configuration rewrites them into `lbkit.yaml` and `lbkit-skills.yaml`: settings and
+launchers become `settings` and `agents`, skill entries become `recipes` with explicit
+`applies_to`/`excludes`. New objects start as draft. Show the diff for human
+confirmation, run `lb config check`, and delete the old files only when the human
+agrees. The installer only creates missing files from their templates.

@@ -44,6 +44,7 @@ class LbkitInstallTest(unittest.TestCase):
             dest,
             ignore=shutil.ignore_patterns(
                 ".git",
+                ".worktrees",
                 "__pycache__",
                 ".venv",
                 "dist",
@@ -160,7 +161,7 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("mind-forge is required", result.stderr)
         self.assertFalse((self.repo / "bin").exists())
-        self.assertFalse((self.repo / "lbkit-agents.yaml").exists())
+        self.assertFalse((self.repo / "lbkit.yaml").exists())
         self.assertFalse((self.repo / "minds.yaml").exists())
         (self.repo / "minds.yaml").write_text("schema: '1'\nprojects: []\n")
         result = self.run_install(env=dict(os.environ, PATH=str(minimal)))
@@ -201,7 +202,10 @@ class LbkitInstallTest(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "lbkit-agents.yaml <- .lbkit/lbkit-agents.template.yaml", result.stdout
+            "lbkit.yaml <- .lbkit/lbkit.template.yaml", result.stdout
+        )
+        self.assertIn(
+            "lbkit-skills.yaml <- .lbkit/lbkit-skills.template.yaml", result.stdout
         )
         self.assertIn("AGENTS.md <- lbkit stub (fill in local rules)", result.stdout)
         self.assertIn("CLAUDE.md -> AGENTS.md", result.stdout)
@@ -291,21 +295,14 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertEqual(installer["retire_links"](self.repo, False), [])
         self.assertTrue((outside / "evidence.md").is_symlink())
 
-    def test_legacy_agent_config_gets_a_move_hint_only(self):
-        legacy = self.repo / ".agents" / "lb.yaml"
-        legacy.parent.mkdir()
-        legacy.write_text("version: 0.1.0\n", encoding="utf-8")
+    def test_existing_config_is_not_replaced(self):
+        (self.repo / "lbkit.yaml").write_text("local", encoding="utf-8")
         result = self.run_install("--dry-run")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("git mv .agents/lb.yaml lbkit-agents.yaml", result.stdout)
-        self.assertNotIn(
-            "lbkit-agents.yaml <- .lbkit/lbkit-agents.template.yaml", result.stdout
+        self.assertNotIn("lbkit.yaml <- .lbkit/lbkit.template.yaml", result.stdout)
+        self.assertIn(
+            "lbkit-skills.yaml <- .lbkit/lbkit-skills.template.yaml", result.stdout
         )
-        self.assertTrue(legacy.exists())
-        (self.repo / "lbkit-agents.yaml").write_text(
-            "version: 0.1.0\n", encoding="utf-8"
-        )
-        self.assertNotIn("git mv .agents/lb.yaml", self.run_install("--dry-run").stdout)
 
     def test_existing_agents_md_is_not_replaced(self):
         (self.repo / "AGENTS.md").write_text("local rules", encoding="utf-8")

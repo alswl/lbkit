@@ -8,7 +8,7 @@ Read the designated logbook, existing returns, and decisions; do not query live 
 
 ## live mode
 
-When the user asks for live status, or an ordinary progress query involves an identifiable dispatched executor, read the adapter's read-only interface documentation and query status and recent activity with explicit identifiers. For Herdr, use the environment-provided tool skill; never load or execute launch and recovery flows.
+When the user asks for live status, or an ordinary progress query involves an identifiable dispatched executor, read the adapter's read-only interface documentation and query status and recent activity with explicit identifiers. For a bound lbkit dispatch, use `bin/lb agent inspect LOG DISPATCH --thinking THINKING --live --json` first. It reports current identity and control readiness without sending. Missing or mismatched session identity means control is unavailable; do not substitute pane IDs or saved bindings. Use the environment-provided runtime skill only when a needed read is not covered by this adapter; never load or execute launch and recovery flows.
 
 When query capability is missing or configuration is invalid, fall back to documented facts and state "live status unknown"; do not start substitute tools or change configuration. A missing session identifier does not prove no executor is running. Stagnation conclusions require activity timestamps and output evidence — never infer them from a single working snapshot.
 

@@ -36,14 +36,13 @@ def verify(
     bind_task: str | None = None,
     result_identity: str | None = None,
 ) -> Result:
-    from urllib.parse import urlparse
-
     from logbook_cli.document import EXIT_REFUSED, EXIT_USAGE, LbError, links_for
     from logbook_cli.link_records import (
         OUTCOMES,
         comment_records,
         digest,
         encode,
+        local_digest,
         occurrence,
         task_binding,
         timestamp,
@@ -62,10 +61,6 @@ def verify(
         or "\r" in result_identity
     ):
         raise LbError("result identity must be a nonempty single line", EXIT_USAGE)
-    if urlparse(target).scheme not in ("http", "https"):
-        raise LbError(
-            "verification target must be an external HTTP(S) link", EXIT_USAGE
-        )
     try:
         timestamp(observed_at)
     except ValueError as exc:
@@ -112,6 +107,9 @@ def verify(
         outcome=outcome,
         result_identity=result_identity,
     )
+    fingerprint = local_digest(doc, target)
+    if fingerprint:
+        record["local_digest"] = fingerprint
     record["record_id"] = digest(record)
     newline = "\r\n" if b"\r\n" in doc.data else "\n"
     changed = doc.text

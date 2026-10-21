@@ -1,9 +1,13 @@
 [project]
 name = "lbkit"
-version = "0.4.1.dev0"
+version = "0.5.0.dev0"
 description = "Read and safely update cross-repository collaboration logbooks"
 requires-python = ">=3.11"
-dependencies = ["click>=8.1,<9"]
+dependencies = [
+    "click>=8.1,<9",
+    "pyyaml>=6,<7",
+    "ruamel-yaml>=0.18,<0.19",
+]
 
 [project.scripts]
 lb = "logbook_cli.cli:main"

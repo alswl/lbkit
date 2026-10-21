@@ -67,7 +67,7 @@ def rewrite(
 
 
 @link.command(
-    "verify", help="Register an offline observation of one existing external link."
+    "record-check", help="Register an offline observation of one existing link."
 )
 @options(
     ROOT,
@@ -126,3 +126,14 @@ def verify(
         ),
         json,
     )
+
+
+@link.command(
+    "audit", help="Inventory artifact links and their current offline observations."
+)
+@options(ROOT, LOG, JSON)
+def audit(root, log, json):
+    from logbook_cli.services.closeout import audit_links
+    from logbook_cli.services.common import Result, load
+
+    finish(Result(audit_links(load(resolve_root(root), log))), json)

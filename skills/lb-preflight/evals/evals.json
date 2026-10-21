@@ -38,7 +38,7 @@
         "The control plane shows two tab create calls, and the pane run launchers use internal-reader",
         "Launch commands carry no -w (no worktree created)",
         "No external-* or any external candidate appears",
-        "lbkit-agents.yaml or the configuration contract is cited as the candidate source"
+        "lbkit.yaml or the configuration contract is cited as the candidate source"
       ]
     },
     {

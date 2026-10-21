@@ -1,74 +1,52 @@
-# CR 改进方案：文档模型与 CLI 分层
+# Review design: document model and CLI layers
 
-状态：已按人类确认实施，完成本仓自动验收；CR 由人类裁定。对应 2026-10-11 的 Fude 评论。
+Status: implemented under human authorization; repository checks passed. Human review remains a human decision. This records the design associated with the 2026-10-11 Fude comments; validation below is historical, not a claim about the current candidate.
 
-## 问题与已验证事实
+## Diagnosed problems
 
-- `skills.extract()` 已调用 `document.parse()`，却另用 `TASK_RE` 重新识别任务，造成两套任务语法：主解析器支持 `* [ ]`，技能提取却忽略它。
-- 技能行使用 `findall` 加备用分隔策略。实测 `技能：\`mf-cli\`、source-check` 只提取 `mf-cli`，静默遗漏第二个技能。
-- `Skills: mf-cli, source-check` 不被识别。中文标签、标点和 emoji 同时承担存储格式、显示与业务判断职责。
-- `stage_state()` 返回 emoji，`summary_derived()` 与 `state_snapshot()` 再用 emoji 比较业务状态。
-- 命令注册和处理函数集中在 `cli.py`；入口、业务写入、原子替换与输出尚未充分分离。直接换框架不能解决这些耦合。
-- 本轮重跑现有 unittest：84 项通过。上述技能提取问题在临时研究日志中单独复现；未写入真实消费仓。
+- Skill extraction called the document parser but rescanned tasks with another regex, omitting `* [ ]` tasks accepted by the main parser.
+- Mixed backticked and bare skill names silently lost the second name; English Skills labels were not recognized.
+- Localized labels and emoji combined storage, rendering and business-state decisions. Stage state returned emoji that other services compared as semantic state.
+- CLI registration, handlers, writes and output were concentrated in one module. Changing frameworks alone would not remove that coupling.
+- The initial baseline had 84 passing tests; temporary fixtures reproduced the extraction defects without modifying consumers.
 
-## 任务和技能模型
+## Model and representation
 
-保留 Markdown 为人类可编辑的事实源，不新增一套平行任务清单。
+Keep Markdown as the editable source of truth, without a parallel task list. Define TaskState, StageStatus, Owner, Task, TaskAnnotation and SkillChain with stable English enum values and retained source ranges/text. Extract skills from parsed task annotations, not a second task regex. Tasks without action prefixes remain tasks even when excluded from registry candidates.
 
-1. 在模型层明确 TaskState、StageStatus、Owner、Task、TaskAnnotation 与 SkillChain。语义使用稳定的英文枚举值；源行、范围和原文留在节点上，供诊断和精确修改使用。
-2. Markdown 解析器统一产出任务及其所属子项，技能提取遍历这些任务。去掉 `skills.py` 的第二套任务识别正则。模型允许没有动作前缀的任务；是否收录到技能候选由明确规则决定，不能把无法推断动作等同于无法识别任务。
-3. 技能值使用独立解析函数，明确支持裸名称、反引号名称、斜杠前缀、链顺序、分隔符与尾部说明。混合形式不能静默丢项；无法可靠解析时保留原文并返回诊断。
-4. 工作包引用保留来源信息。现有“前八行、中文标题、引号内前缀匹配”只作为旧格式的启发式候选，不能当作唯一身份或验收依据。若要新增显式关联格式，另行定义兼容迁移，不能在本轮假造绑定。
+Parse skill chains explicitly: bare/backticked names, slash prefixes, order, separators and trailing explanations. Ambiguous values retain their source and return diagnostics rather than silently dropping items. Legacy work-package matching by early lines, localized headings and quoted prefixes remains heuristic, not identity or acceptance proof; explicit binding needs a separate compatibility design.
 
-## 文本表示与语义分离
+Centralize bilingual field mappings such as `技能` / `Skills` and `处置` / `Resolution`. Parse ownership and gate markers at the same boundary. Stage semantic states map to emoji for rendering; a settled list can include cancellation rather than success. Preserve source labels, unrelated text, line endings and human suffixes on writeback. Keep existing JSON fields, state characters and derived_emoji compatible. Label mappings alone do not establish general multilingual support; mixed labels and default rendering need explicit tests.
 
-- Markdown 适配层集中定义字段键与语言标签映射，例如 `skills` 对应 `技能` / `Skills`，`resolution` 对应 `处置` / `Resolution`。中文标签、冒号和显示标记不散落在业务判断里。
-- StageStatus 使用 NOT_STARTED、IN_PROGRESS、SETTLED 等语义值；emoji 只是现有 Markdown 的渲染映射。所有已处置也不等于所有任务成功，保留当前取消/不适用语义。
-- Owner、预检阻塞与人工介入标记同样在适配边界解析成语义字段。现有中文与 emoji 格式继续可读可写。
-- 写回保留已有文档的标签形式、无关文本、换行和人类尾注。不能读取英文后无条件生成中文；新文档的默认表示需要在格式契约中明确。
-- JSON 的现有字段、状态字符和 `derived_emoji` 保持兼容；内部状态不再依赖这些序列化值。新增语义字段若有必要，采用明确的兼容扩展。
-- 单独处理 CLI 消息与 TODO 展示文案；抽取常量不能被宣称为已经支持完整多语言。语言识别、混合标签和默认渲染必须有明确测试边界。
+## CLI migration
 
-## CLI 迁移范围与规范来源
+The human requested a mainstream framework and reference to the Python CLI guidance in github.com/alswl/guides. Inspection found Python server and Go CLI guides, but no separate Python CLI standard. Applicable principles were explicit domain types, layers, uv/uv.lock/uv_build, thin command modules, services and clear output streams/exit codes. HTTP, database and Go-specific mechanisms were not imported.
 
-用户明确要求采用社区主流 CLI 框架，并参考 `github.com/alswl/guides` 的 Python CLI 标准。
+Click was selected and approved for command groups, shared options and independent registration. It was a project decision, not a framework mandated by those guides.
 
-已核查用户指定的本地 `github.com/alswl/guides` 检出，当前 `master` 的工作树无修改，只有 `python-server-guides.md` 和 `go-cli-guides.md`，未找到单独的 Python CLI 规范。已阅读这两份文档：前者要求显式领域类型、分层、uv、uv.lock 与 uv_build；后者要求薄命令入口、按命令拆文件、命令调用服务、明确输出流和退出码。这里只引用适用于 lbkit 的工程原则，不引入 HTTP、数据库或 Go 专属机制替代。
+- Entrypoints own registration, help/version, argument adaptation and error mapping.
+- Logbook/task/skill command modules reuse root, JSON, token and dry-run options.
+- Services compose use cases; domain code handles state, ownership, disposition and skill candidates; storage retains path checks, CAS and atomic replacement.
+- Presentation emits data to stdout and errors to stderr. Preserve aliases, root at each command level, positional arguments after `--`, exit codes 1/2/3/4 and JSON/dry-run contracts.
+- Declare and lock dependencies; support reproducible consumer installation and both bin/lb and python -m logbook_cli. Help/version never install dependencies implicitly. Update installation and standard-library-only claims with the actual dependency model.
 
-框架建议采用 Click：它直接支持命令组、公共选项和独立命令注册，适合保留 lbkit 现有参数与退出码契约。此选型是本项目的建议，不是上述 guides 中已经规定的 Python CLI 标准。使用 uv 管理依赖及锁文件，并在迁移前补全消费仓安装方案；用户已确认采用此方案。
+## Validation sequence
 
-与框架无关的拆分边界：
+Add regressions for the reported failures, mixed chains, fences/comments, unknown labels, actionless tasks and ambiguity. Compare equivalent English/Chinese semantic snapshots and minimal writes, including CRLF, human suffixes, cancellation and stale tokens. Unify parsing before isolating label mappings; migrate command groups without mixing in unrelated semantic changes. Test missing dependencies, fresh consumer installation, non-repository cwd, help/version and output streams. Finish with full tests, links and isolated installation; never resolve human review automatically.
 
-- CLI 入口只负责应用注册、help/version、参数适配和错误到退出码的映射。
-- 按 `logbook`、`task`、`skills` 拆分命令模块；复用 root、JSON、token、dry-run 参数定义。
-- 应用层编排查询和写入用例，领域层处理状态、权限、处置与技能候选；文件写入层继续执行路径边界、CAS 和原子替换。
-- 展示层集中生成文本和 JSON，数据只写 stdout，错误写 stderr。
-- 保留现有命令与别名、各层级 `--root`、`--` 后位置参数、退出码 1/2/3/4、dry-run 和 JSON 契约。
-- 新框架引入第三方依赖，必须同时处理 `pyproject.toml`、依赖锁定、子模块消费仓的可重复安装，以及 `bin/lb` / `python -m logbook_cli` 的兼容路径。help/version 不触发隐式联网安装。
-- 开发文档、安装文档和“仅标准库”说明随实际依赖方案更新。不能仅在开发机安装依赖就宣布消费仓迁移完成。
+## Historical implementation and evidence
 
-## 先评测，再实施，最后验收
+models.py, format.py and messages.py separate semantic models, bilingual encoding and task presentation. Skill extraction walks parsed annotations; invalid chains return source plus diagnostics. Click modules live in commands/, use cases in services/, writes in storage.py and presentation in render.py. No arguments shows help; aliases, root options and error codes remain supported.
 
-1. 在真实 CLI 黑盒测试与模型测试中补齐上述三个失败场景，再补技能链混合分隔、围栏/注释、未知标签、无动作前缀和歧义输入。
-2. 为中英文等价日志验证相同语义快照；为每种支持的表示验证解析与最小写回，包括 CRLF、人类尾注、取消处置和 CAS 冲突。非 emoji 表示只按确定的语法测试，不能自创后宣称兼容。
-3. 先统一任务及技能解析，再隔离标签/标记映射。每步保持现有黑盒契约，不与 CLI 框架替换同时进行大规模语义变更。
-4. GitHub 规范定位、迁移方案评审完成后，按命令组逐步迁移 CLI，并补依赖缺失、全新消费仓安装、非仓库 cwd、help/version 和 stdout/stderr 测试。
-5. 最终跑全量测试、文档链接检查和隔离消费仓安装验收。逐条回复 CR；不自动将人类评审标为已解决。
+The installer creates the locked runtime in the consumer's .lbkit/.venv; launchers only use an existing environment and report repair commands when dependencies are missing. The bootstrap installer keeps standard-library argparse; the main CLI uses Click. The human corrected an unauthorized 0.3.0 bump and selected 0.2.0-dev / 0.2.0.dev0 at that time. Configuration schema stayed unchanged; release decisions remain human-owned.
 
-## 实施与验收
+Historical checks used Python 3.14.8:
 
-- 已加入 `models.py`（任务、状态、所有者、子项与技能链）、`format.py`（双语字段和标记编解码）和 `messages.py`（TODO 展示文案）。`skills.extract` 直接遍历解析后的任务子项；不再重复扫描任务行。无效技能链返回原文、空链及诊断。无动作前缀的任务仍保留，只不参与技能清单归纳。
-- Click 命令按 `commands/logbook.py`、`commands/tasks.py`、`commands/skills.py` 分组。用例在 `services/`，受保护写入在 `storage.py`，输出在 `render.py`。无参数显示帮助；历史别名、各层级 root 参数和错误码继续支持。
-- `pyproject.toml` / `uv.lock` 管理依赖。安装器在消费仓 `.lbkit/.venv` 安装锁定运行依赖，入口仅使用已有环境；缺依赖时报告修复命令。bootstrap 安装器仍使用标准库 argparse，避免依赖尚未安装时无法执行安装命令。主 `lb` CLI 已移除 argparse。
-- 从标准库执行转为需要安装 Click 运行环境，须说明消费仓迁移要求。此前 Agent 自行将版本升为 0.3.0，已按人类纠正撤回此次升级，后由人类指定为 0.2.0-dev（包元数据 0.2.0.dev0）；发布版本由人类决定。配置 schema 未改变；现有日志与 JSON 字段保持兼容，英文标签及文本状态标记为可选扩展。
+1. New regressions initially produced five failures and two missing-model/result errors.
+2. Full tests passed: 96, compared with the initial 84, covering CAS, paths, ownership, models, syntax, CLI and installation.
+3. Ruff and basic mypy checks passed; this did not establish strict typing of all historical JSON records.
+4. All 163 links across 34 Markdown files and diff whitespace checks passed.
+5. An isolated consumer installed a real uv runtime, initialized through a simulated mf and exposed --version outside its cwd. A dependency-free Python reported an error without installing anything.
+6. Source/wheel builds and offline wheel installation in a separate environment passed help/version and English read/token-guarded write checks.
 
-实际验证（Python 3.14.8）：
-
-1. 先添加模型回归用例，旧实现出现 5 个失败及 2 个缺模型/缺结果错误，覆盖混合技能名、列表标记、英文标签和文本状态写回。
-2. `uv run --locked python -m unittest discover tests`：**96 项通过**（本轮前 84 项）。覆盖原有 CAS、路径保护、所有权和拒绝行为，以及新模型、语法、CLI 参数和依赖安装。
-3. `uv run --locked ruff check src scripts tests/test_lb_models.py tests/test_lb_cli_contract.py tests/test_lbkit_install.py` 和 `uv run --locked mypy src/logbook_cli` 通过。mypy 为基础检查，不宣称所有历史 JSON 记录都已严格类型化。
-4. 33 个原有 Markdown 文件加本方案共 34 个文件，163 个链接检查通过；`git diff --check` 通过。
-5. 临时消费仓安装真实 uv 环境，使用模拟 mf 验证初始化接口；从消费仓外调用链接入口 `--version` 成功。缺依赖的空 Python 环境只返回错误，不创建环境或下载依赖。
-6. `uv build` 构建 sdist 和 wheel 成功。在临时独立虚拟环境中离线安装 wheel，验证 `--help`、`--version`、英文日志读取与带 token 的写入成功。
-
-边界：未更新真实消费仓或其子模块指针；未发布、提交或推送。没有声称本轮重新实机验收 mind-forge/Herdr/provider 集成。中文和英文以明确标签映射支持，不覆盖任意语言；旧工作包文字关联仍为启发式候选。Python 3.11 为声明的最低版本，本机运行验证使用 3.14.8。
+No real consumer/submodule pointer was updated and no publication, commit or push occurred. These checks did not revalidate live mind-forge, Herdr or provider integrations. Supported languages use explicit mappings, legacy package association remains heuristic, and Python 3.11 remains the declared minimum.

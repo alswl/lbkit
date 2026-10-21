@@ -135,7 +135,7 @@ class ModelRegressionTest(unittest.TestCase):
             return json.loads(p.stdout)
 
         rel = str(self.path.relative_to(self.root))
-        token = run("context", rel, "--json")["version_token"]
+        token = run('log', 'context', rel, "--json")["version_token"]
         token = run(
             "task",
             "resolve",
@@ -150,11 +150,11 @@ class ModelRegressionTest(unittest.TestCase):
             "human ruling",
             "--note",
             "scope removed",
-            "--token",
+            '--expect-version',
             token,
             "--json",
         )["version_token"]
-        run("sync", rel, "--token", token, "--json")
+        run('log', 'sync', rel, '--expect-version', token, "--json")
         data = self.path.read_bytes()
         self.assertIn(b"    - Resolution:", data)
         self.assertIn(b"## settled Stage 01 Research", data)
