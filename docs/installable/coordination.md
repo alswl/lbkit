@@ -68,7 +68,22 @@ mode. The switch itself needs no repeated approval and grants no additional
 execution, repository, model/provider, Git or publication permissions. Host rules
 that forbid direct execution still apply.
 
-Takeover is scoped to an identified problem/package, not the entire project.
+Explicit Admiral `Captain takeover` makes the current main Agent the executor for
+the entire currently authorized advancement, including later lb-push tasks, and
+overrides earlier delegation and parallel approvals. Only an explicit human
+instruction narrows it to one task. Task completion, an Agent-chosen exit, skill
+or repository changes and interruption recovery do not release it.
+
+Until Admiral permits dispatch again or a previously authorized handback condition
+is met, do not create, resume or prompt any other executor for this advancement:
+Herdr tabs/panes, existing sessions, sub-agents, model-backed helpers, testers and
+reviewers alike. Continue ordinary next tasks personally. Leave a required
+independent review pending and report the conflict; Captain self-tests do not
+satisfy it. Work outside this advancement need not stop; reconcile conflicting
+ownership without killing operations or discarding changes. A release covers only
+the scope Admiral names. Automatic problem-specific takeover stays bounded to its
+problem/package and never overrides an explicit takeover.
+
 Captain remains coordinator and becomes its direct executor, with a stated reason,
 allowed operations and observable exit condition. Recover the current candidate,
 uncommitted changes, prior attempts, active operations and outstanding checks.
@@ -81,37 +96,45 @@ agent or a model-backed helper. Preserve host isolation, browser ownership and
 model/data boundaries. Reuse the verified execution worktree when safe; takeover
 does not permit business writes in an unisolated coordination checkout.
 
-Use a suitable high-capability main-session model and verify the actual model and
-deployment before sensitive inputs or business execution. A skill cannot switch
-models by declaration. If the current model is unsuitable or unverifiable, report
-the capability gap and prepare an authorized main-session transfer; do not launch
-a stronger sub-agent as a substitute or claim an upgrade that did not occur.
+Takeover changes execution responsibility, not the main Agent's identity or model.
+Repeating takeover for an already-owned scope is idempotent: reconcile actual
+operations and resume from the existing checkpoint without self-pause, another
+transfer, counter resets or replayed side effects. Missing model metadata alone
+is not a gate. Explicit host model/data restrictions still apply to each actual
+operation; a concrete capability gap blocks only that operation. A skill cannot
+switch models by declaration; do not substitute a stronger sub-agent.
 
-At the takeover exit condition, automatically run [lb-handback](../../skills/lb-handback/SKILL.md).
-Recover the spec decisions, exact candidate/worktree and uncommitted state,
-performed checks/outcomes, failed approaches, remaining work, permissions,
-review counts and human gates in existing spec/Thinking/host records. No new
-mandatory file, CLI state, checkbox type or config field is introduced. A minimal
-checkpoint in existing records identifies mode, scope, current executor,
-predecessor, exit condition and next action; after interruption reread it and
-actual runtime/disk state before resuming. Missing or conflicting ownership is
-not inferred from an old summary. Apply the existing allowance’s counted events to any real independent submission
+At an automatic takeover's exit, run [lb-handback](../../skills/lb-handback/SKILL.md).
+During explicit takeover, close out each task and continue personally; hand back
+only under the release rule above. Recover the spec decisions, exact
+candidate/worktree and uncommitted state, performed checks/outcomes, failed
+approaches, remaining work, permissions, review counts and human gates in existing
+spec/Thinking/host records. lb CLI hosts record takeover instructions and ownership
+observations in [project execution JSON](lb-cli.md#execution-state-in-project-json);
+Thinking keeps reasoning and results. Non-CLI hosts use an equivalent protected
+checkpoint. Record verified ownership and the protected task status before business
+work; matching records need no rewrite. After interruption reread them and actual
+runtime/disk state. Missing or conflicting ownership is not inferred from an old summary. Apply the existing allowance’s counted events to any real independent submission
 during handoff; a mode transition or receipt-only control test alone creates no
 additional review consumption. Mode switches preserve task identity, run and
 review counters; they do not complete a task or reset a failed first outcome.
 
 Execution handback never transfers the Captain role. The current session remains
 Captain and retains coordination, monitoring, report-back acceptance and Admiral
-communication after Sailor receives the scoped execution work. Removing the
-takeover marker only ends Captain direct execution. Respect the original endpoint;
+communication after Sailor receives execution. A completed task's marker does not
+release the advancement-wide restriction. Respect the original endpoint;
 a receipt-only endpoint ends this invocation, not Captain responsibility.
 
-Handback resumes the original suitable Sailor preferentially. Send the current
+Handback reuses the requested/original Sailor when present and suitable; a paused
+or not-ready executor is resumed, not recreated. Creation or replacement requires
+permission and a concrete reason reuse is unavailable. Send the current
 package and verify actual receipt and execution/monitoring readiness before
 transferring execution ownership. Until then Captain retains the open handoff
 responsibility and does not concurrently modify the transferred candidate.
 Reuse a verified receipt on retry; reconcile partial operations rather than
-resending blindly. A summary alone is not a completed handoff. Receipt/readiness must be followed by current executor/checkpoint and task-status reconciliation before handoff is complete, including at an endpoint that stops before Sailor business execution. A new executor
+resending blindly. After receipt and monitor verification, write the actual
+recipient, evidence and remaining duties into the checkpoint, read it back and
+reconcile task status, even at a receipt-only endpoint. A new executor
 requires existing runtime/model/isolation permissions. Without execution
 authorization, save a prepared handoff with read-only runtime inspection only—no
 pause, binding change or dispatch; if no executable work
@@ -132,12 +155,15 @@ Do not delete/rewrite the task or append competing current statuses. The emoji i
 a display cue, never a parsed state, owner identity, authorization or independent
 acceptance claim. Read-only entry points report it without changing files.
 
-Receiving a Sailor return alone does not enter scoped takeover or activate its marker.
-While verified scoped takeover is active, prefix every user-facing progress update
-and final reply with `👨‍✈️`, including replies during pending handback. Recover this
-state from the existing checkpoint after interruption. Stop the prefix only when
-execution ownership and current task status are reconciled. The marker reports
-ownership; it does not grant authority or prove runtime identity.
+A takeover request restricts delegation immediately; the `👨‍✈️` prefix starts only
+after safe execution ownership is verified. Ownership checks, pause requests and a
+received Sailor return do not activate it. While takeover is active, prefix every
+user-facing progress update and final reply, including during pending handback,
+and recover this state from the checkpoint after interruption. Explicit takeover
+keeps the prefix across tasks; unknown or conflicting ownership drops the prefix
+but keeps the restriction. Stop when the advancement ends or an authorized release
+is reconciled; automatic takeover stops when ownership and task status are
+reconciled. The marker reports ownership; it grants no authority.
 
 Captain's direct result uses the same task/result/conditions/outcome/limitations
 fields as a Sailor return and records Captain as the executor. Self-checks may
@@ -207,7 +233,7 @@ Source, result, handoff and recovery entries preserve the host's existing record
 
 ## Host integration
 
-Resolve host tools/skills actually available for runtime, review, document binding and business delivery. The host owns its AGENTS/config/Logbook and no new obligations are silently injected during install. No inferred Herdr/Markview commands, profile takeover, hidden monitor substitute, new record backend or auto-install is introduced. Missing required capabilities are readiness gaps. Model/deployment, isolation, visible monitoring, bounded checks and authorization invariants remain from existing host rules.
+Resolve host tools/skills actually available for runtime, review, document binding and business delivery. The host owns its AGENTS/config/Logbook and no new obligations are silently injected during install. No inferred Herdr/Markview commands, profile takeover, hidden monitor substitute, implicit record migration or auto-install is introduced. Missing required capabilities are readiness gaps. Model/deployment, isolation, visible monitoring, bounded checks and authorization invariants remain from existing host rules.
 
 ## Run event and close-out metrics
 

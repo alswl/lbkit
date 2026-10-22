@@ -3,7 +3,7 @@
   "setup": [
     "Create independent baseline/candidate fictional consumers; install current skill/CLI links and initialize/verify real mf Article/Prompt/Thinking bindings.",
     "Create worktrees/problem as a real isolated Git worktree without commits (git worktree add --orphan), then materialize common_files and selected variant. Keep subject and grading evidence separate in temporary directories.",
-    "Verify the actual subject main-session model/deployment and permitted public fictional inputs before launch. An unverified model is an environment gap, never a fixture-provided upgrade.",
+    "Record the actual subject main-session model/deployment when available and verify permission for public fictional inputs before launch. Unknown model metadata is a reporting limitation, not by itself a takeover blocker or a fixture-provided upgrade.",
     "Capture pre/post file bytes, tool traces and adapter state outside the subject workspace; reset all receipts/calls and candidate state for every run. The runtime implementation is materialized verbatim; it intentionally does not enforce policy for the subject."
   ],
   "common_files": {

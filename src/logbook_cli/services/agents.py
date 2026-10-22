@@ -2,7 +2,7 @@
 
 import json
 
-from logbook_cli import records
+from logbook_cli import execution, records
 from logbook_cli.adapters import herdr
 from logbook_cli.document import EXIT_REFUSED, EXIT_USAGE, LbError, safe_path
 from logbook_cli.services import dispatches
@@ -22,6 +22,7 @@ def binding(doc, target, dispatch_id):
     return rows[0]
 
 
+@execution.serialized
 def bind(root, log, thinking, dispatch_id, input_file, token, dry_run):
     doc, target = dispatches.documents(root, log, thinking)
     dispatches.guard(doc, target, token, False)
@@ -85,20 +86,18 @@ def control(
     expected_session,
     expected_observation,
     token,
-    basis,
     dry_run,
+    basis=None,
     message_file=None,
+    operation_id=None,
+    execution_token=None,
 ):
     doc, target = dispatches.documents(root, log, thinking)
-    dispatches.guard(doc, target, token, action == "send")
     dispatch = dispatches.read(doc, target, dispatch_id)
-    records.single_line(basis, "basis")
+    dispatches.guard(doc, target, token, False, dispatch_id, dispatch["owner"])
+    if action == "close":
+        records.single_line(basis, "basis")
     item = binding(doc, target, dispatch_id)
-    if action == "send" and dispatch["status"] != "prepared":
-        raise LbError(
-            "send requires a prepared dispatch; reconcile receipt before retry",
-            EXIT_REFUSED,
-        )
     if action == "close" and (
         dispatch["status"] not in {"returned", "closed", "cancelled"}
         or any(a["status"] == "started" for a in dispatch["attempts"])
@@ -109,6 +108,27 @@ def control(
     message = safe_path(doc.root, message_file).read_text() if message_file else None
     if action == "send" and (not message or not message.strip()):
         raise LbError("send requires a nonempty --message-file", EXIT_USAGE)
+    if action == "send":
+        from logbook_cli.services import transport
+
+        with execution.writer(doc, dry_run):
+            # Reload both documents inside the lock, including Thinking CAS/preflight.
+            doc, target = dispatches.documents(root, log, thinking)
+            dispatches.guard(doc, target, token, False)
+            dispatch = dispatches.read(doc, target, dispatch_id)
+            item = binding(doc, target, dispatch_id)
+            return transport.send(
+                doc,
+                target,
+                dispatch,
+                item,
+                message,
+                operation_id,
+                execution_token,
+                expected_session,
+                expected_observation,
+                dry_run,
+            )
     return Result(
         herdr.control(
             item, action, expected_session, expected_observation, message, dry_run

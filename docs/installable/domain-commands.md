@@ -11,6 +11,7 @@ the next task, or equates runtime success with acceptance.
 | Task | `task identify/show/start/record-result/accept/cancel/reopen` | pending → active → submitted → accepted; cancellation and reopening retain identity |
 | Dispatch | `dispatch create/list/show/set-status/attempt` | prepared → sent → acknowledged → returned → closed; cancellation requires no running attempt |
 | Attempt | `dispatch attempt` | started → finished, failed or interrupted; a retry gets a new ID |
+| Execution facts | `log execution context/record` | caller-attributed instructions/observations; derived delegation policy, not runtime orchestration |
 | Agent | `agent bind/inspect/send/close` | saved binding is a claim; live state comes from the selected runtime |
 | Workflow | `workflow list/show/check/create/update/set-status/diff` | draft → available → deprecated → retired; retired must reopen to draft |
 | Skill | `skill list/show/check/usage/record-usage` | definition, readiness and usage are separate facts |
@@ -71,12 +72,21 @@ stop a process. Completion and session cleanup remain separate responsibilities.
 `machine`, `workspace_id`, `tab_id`, `pane_id`, `agent_id`, `session_id`, `observed_at`,
 `basis`. Use full runtime handles. `agent inspect LOG ID --thinking THINKING --live`
 reads the recipient and returns an observation token. Send/close additionally require
-`--expected-session`, `--expected-observation`, `--basis` and Thinking token; send reads
-`--message-file FILE`. Preview does live reads but no control. A transport receipt is not
-an acknowledgement. Reconcile any timeout before retrying; there is no automatic retry.
-The runtime must expose a stable session identity. Missing identity refuses controls;
-pane identity alone is insufficient. Inspection and control are separate runtime calls,
-so the adapter cannot promise a transactional runtime compare-and-swap.
+`--expected-session`, `--expected-observation` and Thinking token. Close also requires
+`--basis`; send reads `--message-file FILE`, `--operation-id` and
+`--expect-execution-version`, and journals its intent in the
+[execution record](lb-cli.md#execution-state-in-project-json) before transport.
+Preview does live reads but no control. A transport receipt is not an acknowledgement.
+Reconcile unknown delivery before a new attempt; there is no automatic retry.
+The runtime must expose a stable session identity: Herdr native `agent_session`
+references need `kind: id`, a nonempty value and the matching agent kind. Conflicting
+or path references refuse controls; pane identity cannot replace session identity.
+
+lbkit owns adapter parsing, binding validation and guarded transport. It does not
+install or repair runtime software, hooks, trust settings, launch configuration or
+connectivity; a request to test or fix lbkit does not authorize that. Report an
+unavailable external capability and continue independent authorized work.
+Inspection and control are separate calls, not a transactional runtime compare-and-swap.
 
 `skill check NAME --command EXECUTABLE` only checks executable discovery. It reports
 authentication and full readiness as unknown. It never executes configured shell code.

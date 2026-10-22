@@ -177,6 +177,10 @@ patch, fixture identity, actual model and capabilities. Keep tool traces,
 before/after bytes, previews and grading outside the repository in temporary
 storage. Do not expose grading assertions as extra instructions to the subject.
 
+Cases with a nonempty `skip_reason` are excluded from execution and the pass-rate
+denominator; list their IDs and reasons as uncovered, never PASS. Clear the reason
+only after supplying and checking the missing prerequisite.
+
 Assertions alone determine binary PASS/FAIL; each PASS cites actual trace or
 output evidence. Missing or ambiguous evidence cannot pass. Every core assertion
 must pass; aggregate scores cannot override a veto or missing core coverage.
@@ -250,10 +254,18 @@ Sailor-only execution boundary. Consumers adopting it should reconcile explicit
 local prohibitions in their own AGENTS/runtime instructions; shared skills never
 override them. Existing authorization covers mode changes, not new business scope.
 Captain direct checks retain attribution and do not replace required independent
-review. Ownership checkpoints use existing Thinking/host records; no new consumer
-configuration, CLI state or mandatory archive is introduced. New skills are picked
+review. Execution ownership uses project-local JSON for lb CLI hosts; reasoning and results
+remain in Thinking. Non-CLI hosts retain their protected records. New skills are picked
 up by the installer's existing directory enumeration. Re-run the installer after
 upgrading the submodule. No version or schema bump is made without human instruction.
+
+Explicit takeover covers the whole currently authorized advancement, including
+later lb-push tasks, until a human release or a previously authorized condition;
+task completion, skill changes and recovery do not release it. Repeated entry is
+idempotent, and missing model metadata alone no longer blocks it. Handback reuses
+an existing suitable executor before creating one and still requires independent
+monitoring. Consumers adopt this broader meaning when upgrading shared
+instructions; no host files are rewritten and no configuration is added.
 
 The takeover display uses `Status: 👨‍✈️ Captain takeover` under the task, with host
 field-language preservation. `task note --kind Status/状态 --replace-line` now
@@ -304,3 +316,22 @@ or document bindings. Closeout reporting names the existing owner and missing
 evidence; it does not dispatch work or create a new task. Behavior fixtures use
 the same entry section so discovery instructions are product content, not hidden
 grader hints. No package, skill, or configuration version changes are included.
+
+
+## Project execution JSON adoption
+
+The [execution-record design](execution-records.md) separates attributed facts,
+policy checks and runtime effects. CLI hosts store execution facts and send
+intents in `<project>/lb/<name>.json` (nearest `mind.yaml`, otherwise `--root`);
+dispatch, binding and run-event records stay in Thinking. Only records bound to
+the current Logbook are validated, so another Logbook's record cannot block it.
+`log execution context/record` replaces the unreleased draft transition commands
+without aliases or conversion; an absent JSON file does not prove an old takeover
+was released.
+
+Consumer-visible changes: `agent send` requires `--operation-id` and
+`--expect-execution-version`, drops `--basis`, and creates an empty record when
+none exists. A local advisory `lb/.lock` serializes cooperating writers. Herdr
+controls read native `agent_session` IDs and keep flat-ID compatibility. Runtime
+provisioning stays host-owned. No package, skill or configuration version is
+bumped without human instruction.

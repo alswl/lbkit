@@ -1,23 +1,25 @@
 ---
 name: lb-handback
 version: 0.5.0-dev
-description: "Return a scoped Captain takeover to normal Sailor execution. The current session stays Captain and retains coordination. Use when asked to hand back execution or resume delegation, and automatically when lb-takeover reaches its exit condition. Recover current design/candidate/checks, prepare remaining work and verify the receiving Sailor's actual receipt before resuming lb-push. Not for a Sailor interruption or return to Captain (use lb-update), human delivery, or cross-machine Captain migration."
+description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 
 # Hand execution back to Sailor
 
-The current session remains Captain before, during and after handback. Transfer
-only the identified business execution scope to Sailor; retain project coordination,
-route decisions, monitoring, report-back acceptance and Admiral communication.
-Removing the takeover marker ends direct execution, never the Captain role.
-Do not appoint Sailor as Captain or close/replace the Captain session.
+Transfer only authorized execution to Sailor. The current session remains Captain,
+retaining coordination, route decisions, monitoring, return alignment and human
+communication. Closing one task's status does not release takeover for later tasks.
 
 Read the [takeover contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),
 current Logbook, actual takeover checkpoint/result, spec and host authorization.
 Resolve the coordination root separately from the business worktree and use the correct cwd for each operation. Use [execution rules](../lb-push/references/execution.md) for runtime operations and
 [document adapters](../lb-update/references/document-adapters.md) for guarded writes.
 
-First determine whether this is preparation-only, result close-out, or an authorized execution transfer. Preparation-only allows reading available runtime facts, but never pausing Sailors, changing monitor bindings or sending work. With no executable work remaining, reconcile recorded results without manufacturing a runtime pause/transfer. Preserve existing running work outside the authorized handoff.
+Before selecting an executor, recover the release permission: an explicit human
+instruction to resume dispatch or a met, previously authorized release condition.
+Task completion, old checkpoints, prior parallel approval and later lb-push do not
+release explicit takeover. Preparation-only permits read-only runtime inspection.
+Preserve running work outside the authorized handoff.
 
 1. Reconcile what Captain actually resolved against the takeover exit condition
    and Admiral's current instructions. Separate verified facts, hypotheses,
@@ -33,38 +35,57 @@ First determine whether this is preparation-only, result close-out, or an author
    - **No executable work remains:** align the direct result through lb-update,
      replace the takeover status with the actual result/coordination status
      without 👨‍✈️, and stop at the current endpoint (or return to an already
-     authorized next route item). Do not send a completed-result announcement,
+     authorized next route item personally under retained explicit takeover).
+     Closing a completed task does not clear the advancement-wide restriction
+     or authorize a tester for the next task. Do not send a completed-result announcement,
      empty package or review request to Sailor; do not pause or rebind runtime.
      An open human review gate alone is not remaining Sailor work.
-   - **Work remains but execution is not authorized:** save the remaining package
+   - **Work remains but execution or delegation is not authorized:** save the remaining package
      in existing Thinking as 'handoff prepared, not sent', with next action and
-     needed authorization, then stop. Runtime inspection remains read-only.
-   - **Work remains and execution is authorized:** continue with steps 4–6.
-4. Prepare the executable remaining package with result, permissions, constraints,
-   input snapshot, acceptance criteria and report-back entry. Required independent
-   checks stay assigned to Sailor on the actual candidate; Captain self-tests are
-   attributed to Captain and do not count as independent review.
-5. Prefer the original Sailor if its model/context/data boundary remains suitable.
-   Under [lifecycle operations](../../docs/installable/lifecycle-operations.md), retain dispatch/run/counter identities and reconcile saved bindings with live recipient/input/ownership. Use full Herdr IDs or a verified unique name, never list indexes. Verify the actual recipient and current worktree; reconcile its stale package
-   and any pending commands. Send the complete current package via the host adapter
-   and verify actual receipt plus required execution/monitoring readiness. A final
-   chat summary or a created tab is insufficient. If receipt/readiness fails,
-   retain an open handoff responsibility and the current candidate, avoid concurrent
-   writes, and repair only the missing step within authorization. Reuse verified
-   receipt on retry; do not create a duplicate executor or resend side effects.
-   While transfer is pending, retain `👨‍✈️` in the current task status with
-   the pending handoff fact. Receipt without required readiness still leaves it
-   pending. Preserve unrelated status text and use protected note replacement.
-6. After confirmed receipt and readiness, finish the transfer by recording the receiving executor, scope and next action
-   in the existing checkpoint. Replace the matching current task status with Sailor execution status without 👨‍✈️ through token-guarded `task note --replace-line`; do not change task first line. Status replacement is supported by the current CLI: a refusal requires correcting the token/task/line/kind or reporting the concrete gap, not falling back to a direct Logbook edit. Return to [lb-push](../lb-push/SKILL.md), continuing
-   within its original endpoint without asking again. A receipt-only execution endpoint still includes this ownership/status writeback; it excludes subsequent business execution, not handoff reconciliation. Do not report handoff complete while the current checkpoint or task status still says Captain is executing. Status-only invocations neither send packages nor start this continuation.
+     needed authorization. If ordinary work remains under explicit takeover,
+     return to Captain's personal execution; if the next item requires independent
+     review, retain it pending and report the conflict without dispatch or
+     substituting self-tests. Runtime inspection remains read-only.
+   - **Work remains and execution plus delegation are authorized:** continue with steps 4–6.
+4. With the lb CLI, read [execution context](../../docs/installable/lb-cli.md#execution-state-in-project-json)
+   and record the existing release instruction, or the authorized condition with
+   its check result, naming the receiving dispatch/recipient and scope; recording
+   is not a new approval request, and a matching release is reused on recovery.
+   Prepare the remaining package with result, permissions, constraints, input
+   snapshot, acceptance criteria and report-back entry. Required independent checks
+   stay with Sailor on the actual candidate; Captain self-tests do not count. Follow
+   the [token workflow](../../docs/installable/lb-cli.md#target-file-tokens-and-a-minimal-recording-workflow)
+   and stop to review changes on a CAS conflict.
+5. Resolve the requested/original Sailor with the
+   [recipient selection rules](../lb-push/references/execution.md#runtime-adapter-contract):
+   reuse it when present and suitable, resume it when paused or not ready, and
+   create/replace only with permission and a concrete reason. Under
+   [lifecycle operations](../../docs/installable/lifecycle-operations.md), keep
+   dispatch/run/counter identities, reconcile saved bindings with the live
+   recipient, and use full Herdr IDs or a verified unique name, never list indexes.
+   Send the complete package and verify receipt plus execution/monitoring
+   readiness; a chat summary or created tab is insufficient. `lb agent send` needs
+   a stable operation ID and current Thinking and execution tokens; an unknown
+   outcome requires reconciliation, never a new ID or resend. On failure keep the
+   handoff open, avoid concurrent writes, repair only the missing step and reuse a
+   verified receipt. Keep `👨‍✈️` with the pending handoff fact while Captain still
+   owns execution, using protected note replacement.
+6. Record receipt, execution readiness, monitor readiness and ownership as separate
+   sourced observations through `log execution record`, including unknown values.
+   A submitted message is not readiness or review. Once evidence supports
+   completion, sync the page projection, replace the task note through protected
+   writes and read back; repair JSON/Markdown disagreement without another handoff.
+   Non-CLI hosts reconcile equivalent records. Return to [lb-push](../lb-push/SKILL.md)
+   within the original endpoint and release scope. Status-only invocations do not
+   send packages or start continuation.
 
 ## User-facing line guidance
 
-While scoped takeover is active, prefix every user-facing progress update and final reply with `👨‍✈️`. Keep the prefix during pending handback. Stop using it only after execution ownership and the current task status are reconciled; a prepared handoff alone does not end takeover. After interruption, recover this presentation state from the existing checkpoint before replying.
+Follow the [shared presentation and release rules](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff)
+for the `👨‍✈️` prefix in progress and final replies, including after interruption.
 
 In preparation, pending-transfer and completed-handback replies, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): identify the affected Logbook task at its current `L50` position, who owns execution and the next action. Give any remaining human gate its own verified line, and retain the usable result/runtime entry. Reread after status reconciliation; a line reference is not proof of receipt or readiness.
 
 This hands business execution back to Sailor. Cross-machine Captain migration,
 final human delivery, resource cleanup and Git publishing retain their separate
-contracts and permissions. No new state field, archive or configuration is needed.
+contracts and permissions. Execution JSON does not authorize publication or cleanup.

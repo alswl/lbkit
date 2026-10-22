@@ -2,13 +2,36 @@
 
 This file applies only to runtime.adapter=herdr. Before performing Herdr operations, read this file and the environment's Herdr tool skill, and verify available parameters against the current interface; do not load its CLI details when this adapter is not selected. Authorization and execution isolation follow the consuming repository's root `AGENTS.md` and current task authorization.
 
-## Launch and Isolation
+## Takeover dispatch boundary
+
+Before creating an executor tab/pane, running an agent launcher, resuming an agent
+or sending a business prompt, check the [takeover boundary](../../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff);
+lb CLI hosts read `log execution context` for the bound coordination Logbook. Use
+guarded `lb agent send` where supported and never bypass a CLI refusal with direct
+Herdr calls. During takeover Captain works in the current main session: no
+separate executor tab for Captain, and no current or later task of the advancement
+goes to an existing or new agent, testers and reviewers included, until a
+human-authorized release. Read-only inspection, safe ownership recovery and plain
+non-agent tool terminals are not executor launches; never start an agent in a tab
+labeled as a monitor or tool terminal.
+
+## Runtime integration boundary
+
+lbkit owns its adapter and dispatch guards, not runtime provisioning; see the
+[CLI boundary](../../../docs/installable/domain-commands.md#runtime-and-skill-inputs).
+A request to test or fix lbkit does not cover hook installation, trust approval,
+launcher/config changes, upgrades or connectivity repair. Report the blocked
+operation and continue independent work. Never weaken identity checks.
+
+## Executor selection and isolation
 
 The control scope is the current workspace and authorized sessions. Business execution packages are operated by the owning agent in an independent Git worktree under the original repository; deleting a completed worktree follows the consuming repository's applicable cleanup authorization; the coordinator must not do cross-repo worktree setup or business environment provisioning on the agent's behalf. If no owning agent capable of that setup exists, report the prerequisite instead of bypassing the boundary.
 
-The executor agent uses a dedicated tab distinct from the coordinator's main tab and keeps its working directory. Create with `--no-focus`; background operations must explicitly target the agent, tab, or pane. Operations that cannot avoid stealing focus are left to the human.
+A delegated Sailor uses its own tab and working directory. Reuse that tab for an existing executor. When new creation is authorized, create with `--no-focus`; background operations must explicitly target the agent, tab, or pane. Operations that cannot avoid stealing focus are left to the human.
 
-Local sub-agents dispatched by the logbook must be created in the coordinator's current Herdr workspace. Before creating a tab, read `settings.runtime.herdr.workspace_id_env` from the host's `lbkit.yaml`, get the environment variable's actual value, and pass `--workspace <value>` explicitly; consult the human when it is missing and read-only verification cannot fill the gap — never rely on the TUI's current focus. One repository usually keeps one applicable agent session; consecutive work packages prefer resuming and reusing it; do not create a session per task. Create another only when independent checks require implementer isolation, the existing context or model/data boundary no longer fits, or a user-approved parallel batch genuinely needs an independent executor — and record the reason in the handoff. Even when reusing, verify the actual model, deployment, working directory, open responsibilities, and current-task compatibility.
+Select the actual recipient first under the [recipient selection rules](execution.md#runtime-adapter-contract): an existing suitable session must be reused, with a supported resume operation when paused/not ready. Do not run tab creation or an agent launcher for that session. Missing readiness, receipt or monitoring does not mean the executor is absent; reconcile the existing session within authorized runtime operations. External setup gaps follow the boundary below. Independent review does not require a new tab when a suitable independent reviewer already exists. Create only when reuse is unavailable and creation/replacement is authorized; record the reason and preserve model/data, cwd and ownership checks.
+
+Local sub-agents dispatched by the logbook must be created in the coordinator's current Herdr workspace. Before creating a tab, read `settings.runtime.herdr.workspace_id_env` from the host's `lbkit.yaml`, get the environment variable's actual value, and pass `--workspace <value>` explicitly; consult the human when it is missing and read-only verification cannot fill the gap — never rely on the TUI's current focus.
 
 Herdr tab labels and pane labels created by the logbook use `settings.runtime.herdr.label_prefix` from the host's `lbkit.yaml`; the template default is `^`, so humans can tell agent-created resources apart. This applies to execution, monitoring, and temporary gate panes alike. Named-session identifiers follow the actual CLI grammar; use a valid isolated identifier and keep human-visible labels instead of forcing an unsupported prefix. Immediately after creation, verify the actual label; if naming failed, fix the original resource rather than duplicating a same-purpose resource. Herdr agent identifiers are constrained by the tool's own format — do not force the label prefix onto them; still use a stable, unique, locatable agent name.
 
@@ -16,7 +39,7 @@ Agents the human needs to watch may keep status markers. Internal infrastructure
 
 Resolve settings and the selected agent with `lb config resolve --json`; inspect alternatives with `lb config agent list --status available --json`. Pin the selected agent digest in the work package. Launch selection comes from these approved agents; explicit user choices only take effect within the candidate range. Filter by sensitivity first, then choose a model per task needs; record the option and deployment rationale. Parse this round's runtime parameters per the [Configuration Contract](../../../docs/installable/configuration.md); configuration does not authorize other repositories, publishing, or modification. Never infer engine or permissions from a default wrapper command's name — inspect only necessary allowlisted process fields (model, permission mode, working directory). Redact before any output reaches the model or logs; never print full argv or environment and redact afterwards.
 
-Dispatch the executor agent with the full wrapper command and parameters declared in the host's `lbkit.yaml`; never substitute `herdr agent start --kind`'s generic engine. If the wrapper is a shell function, verify it exists in the target interactive shell per `settings.runtime.herdr.shell`, then launch per the current Herdr interface; report the gap if it cannot be found. After launch, verify the actual model and deployment ownership, then name, hand over the package, and monitor. When deleting a completed worktree, a declared no-worktree launch option may be used; that does not authorize branch deletion, fetch, or other Git management operations.
+For authorized new/replacement processes only, launch with the full wrapper command and parameters declared in the host's `lbkit.yaml`; never substitute `herdr agent start --kind`'s generic engine. If the wrapper is a shell function, verify it exists in the target interactive shell per `settings.runtime.herdr.shell`, then launch per the current Herdr interface; report the gap if it cannot be found. After launch, verify the actual model and deployment ownership, then name, hand over the package, and monitor. When deleting a completed worktree, a declared no-worktree launch option may be used; that does not authorize branch deletion, fetch, or other Git management operations.
 
 Actual launch sequence when the wrapper is a shell function (verified 2026-10-09): `herdr tab create --workspace <ws> --cwd <repo-root> --label '<prefix> <name>' --no-focus` creates a shell pane; `herdr pane run <pane> '<wrapper>'` starts the wrapper inside that interactive shell (`pane run` delivers verbatim, no expansion); then `herdr agent rename <pane-id> <name>` names it (rename accepts a pane id as target; any unoccupied name works); `herdr agent read --source visible` reads the TUI footer to verify the actual model; finally `herdr agent prompt` hands over the package. The coordinator handles two common codex-family launch dialogs: for the background daemon's feature-settings conflict choose 「Run without daemon this time」 (do not change shared settings); for the weekly-rate-limit model-switch suggestion choose 「Keep current model (never show again)」 — the weekly quota is an account-level shared pool, switching models saves nothing, and the option exists only to stop the interruptions.
 
@@ -43,9 +66,19 @@ When the target is in a side session, first verify the main session's status, un
 
 After submitting the full work package, confirm the actual task text is visible or an explicit confirmation arrived, then observe the agent's real status. Trust, authentication, or other launch gates are not business execution; report the concrete gate, and never imply work in progress with an empty tab.
 
-After the work package is received, confirm there is an independent, visible, read-only monitoring tab in the executor's workspace, using Herdr's status-wait mechanism to watch the designated agent for `idle`, `done`, or `blocked`. The model decides whether to create or reuse; reconfirm the association and monitoring readiness on resume and package change. Monitoring tab/pane labels also use the host-declared prefix. Monitoring must be tied to this dispatch — leftover idle from the previous round is not this round's completion.
+After receipt, verify two separate resources: the executor and its independent
+visible read-only monitoring tab. Reusing the executor does not reuse or establish
+monitoring automatically. If no suitable monitor exists, create a plain terminal
+tab with the host label prefix and `--no-focus`; run the supported `herdr agent wait`
+for that exact executor and read back the monitor pane's output. Record both
+resource IDs and the wait's state/result before claiming monitoring ready. Tie
+the observation to the new dispatch's receipt/activity, not a previous idle state.
+Reconfirm this association on resume and package change.
 
-Monitoring does not enter repositories, run business commands, replace acceptance, or answer approvals. It only lets the human see status changes and the report-back location, then hands off to the coordinator for verification. Occasional status queries are for diagnosis only and must never be claimed as started monitoring.
+`agent get/read` on the executor proves only a snapshot or receipt, even when it
+shows `working` or `done`; it cannot satisfy the independent-monitor step.
+The plain monitor runs no agent or business commands and answers no approvals.
+It exposes status/report-back for Captain verification, not task acceptance.
 
 Operations requiring the human's own terminal action (sudo, passwords, system authorization, etc.) never go into agent sessions: create a separate plain terminal tab as needed (no agent; label with the host prefix), use `pane run` only to echo static instructions (template commands, todo lists), and run no business commands; once the human is present, `pane send-text` may prefill the exact command into the input line (without a newline) so the human just presses Enter. When an executor agent's task involves such operations, stop and list the exact commands, then verify read-only afterwards.
 

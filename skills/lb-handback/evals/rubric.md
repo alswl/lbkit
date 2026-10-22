@@ -1,6 +1,8 @@
 # lb-handback behavior rubric
 
-Use the shared [evaluation method](../../../docs/dev/development.md#behavior-evaluation) and [cases](evals.json). All cases 1–9 are core; every assertion must pass.
+Use the shared [evaluation method](../../../docs/dev/development.md#behavior-evaluation) and [cases](evals.json). All cases 1–10 are core; every assertion must pass.
+
+Case 10 requires actual CLI JSON and prepared package records under an already-given bounded release; it does not certify runtime sending. Command count, token/path errors and elapsed time are diagnostic metrics, not added pass assertions.
 
 Cases 7–9 are decision-only role-continuity regressions: active coordination, return acceptance and receipt-only endpoint. Require explicit continuing Captain ownership and the correct next action; no live-runtime claim is certified.
 

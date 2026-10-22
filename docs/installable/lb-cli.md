@@ -172,3 +172,140 @@ See [lifecycle operations](lifecycle-operations.md) for state-set, workflow, run
 ## Concept-oriented routes
 
 Use the [domain commands](domain-commands.md) for task identity, separate submission and acceptance, dispatch attempts, runtime bindings, workflow lifecycle and skill usage. Old routes and option aliases are removed; use these command paths directly.
+
+## Execution state in project JSON
+
+`lb log execution context/record` reads and records attributed facts in
+`<project>/lb/<name>.json`. The project is the nearest ancestor containing
+`mind.yaml`, otherwise `--root`. Each record binds one Logbook and one Thinking by
+project-relative path. Only records bound to the current Logbook are validated:
+a malformed bound record, a missing bound document, two records binding the same
+Logbook, a symlink or unparseable JSON in `lb/` is refused with the file name.
+Records of other Logbooks and unrelated JSON are ignored. Dispatch, attempt and
+agent-binding records remain in Thinking.
+
+These commands record facts already established through the host. They do not
+pause, resume, launch or hand execution to an Agent, and they never require
+renewed human approval. Every fact is **caller-reported**: the CLI validates
+structure and references, not truth. `runtime_transfer_verified` is always false.
+
+### Target-file tokens and a minimal recording workflow
+
+Run from the coordination root and keep input files inside it; `/tmp` inputs are
+refused. Extract tokens from context JSON programmatically.
+
+| Write | Token source | Protected file |
+| --- | --- | --- |
+| `log execution record LOG` | `log execution context LOG --json`: `version_token` | Execution JSON |
+| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --json`: `version_token` | Thinking |
+| `agent send LOG --thinking THINKING` | Thinking token plus execution token as `--expect-execution-version` | Thinking precondition and execution journal |
+| `log sync LOG` / `task note LOG` | `log context LOG --json`: `version_token` | Logbook Markdown |
+
+Example: record an existing release instruction, then prepare the remaining
+package. Neither command sends a message:
+
+```sh
+(
+  set -eu
+  lb log execution context log.md --json > .execution-context.json
+  lb_json_token=$(python3 -c 'import json; print(json.load(open(".execution-context.json"))["version_token"])')
+  lb log execution record log.md --input-file facts.json --expect-version "$lb_json_token" --json
+
+  lb log context thinking.md --json > .thinking-context.json
+  lb_thinking_token=$(python3 -c 'import json; print(json.load(open(".thinking-context.json"))["version_token"])')
+  lb dispatch create log.md --thinking thinking.md --input-file dispatch.json --expect-version "$lb_thinking_token" --json
+)
+```
+
+A successful write returns the token for the next write to the **same** file;
+dry-run returns the unchanged token. On a conflict, reread the named context and
+review the changes; do not loop on refreshed tokens or use another file's token.
+
+The first record requires `thinking` and `facts`. `name` defaults to the Logbook
+file stem, `advancement` to `name` and `captain` to `captain`; repeated identity
+fields must match. Later inputs need only `facts`. An absent record has the token
+of empty bytes; `log context` also reports it under `execution`. Replaying an
+identical fact ID changes nothing; different content under an existing ID is
+refused.
+
+```json
+{
+  "thinking": "projects/example/thinking/delivery.md",
+  "facts": [
+    {
+      "id": "instruction-2", "kind": "takeover", "origin": "explicit",
+      "source": {"kind": "human_instruction", "ref": "conversation message 2"},
+      "release_condition": null
+    },
+    {
+      "id": "ownership-1", "kind": "ownership", "takeover_id": "instruction-2",
+      "source": {"kind": "runtime_observation", "ref": "current ownership inspection"},
+      "owner": "captain", "conflicts": false, "settled": true
+    }
+  ]
+}
+```
+
+Sources are `{kind, ref}`; `verified_result` also requires `verifier` and `subject`.
+
+| Fact kind | Other required fields | Meaning |
+| --- | --- | --- |
+| `takeover` | `source`, `origin: explicit/automatic`, `release_condition` | Restricts delegation for the whole advancement. Explicit origin requires `human_instruction`. |
+| `ownership` | `source`, `takeover_id`, `owner`, `conflicts`, `settled` | Only a runtime observation with no conflict and settled operations yields a reported owner. |
+| `condition-result` | `source`, `takeover_id`, `condition_id`, `satisfied` | Verified check of a previously authorized release condition, not a new grant. |
+| `delegation-release` | `source`, `takeover_id`, `dispatch_id`, `recipient`, `scope: dispatch/advancement`, `condition_result_id` | Human instruction (`condition_result_id: null`), or caller judgment citing a satisfied condition result. |
+| `handoff` | `release_id`, `receipt`, `execution_ready`, `monitor_ready`, `ownership` | Post-operation observations; never performs delivery. |
+| `transport-resolution` | `source`, `operation_id`, `outcome: submitted/not_submitted` | Resolves an unknown send; never retries it. |
+
+`release_condition` is null or `{id, source, dispatch_id, recipient, scope}`. For
+explicit takeover its source must be a human instruction; an automatic takeover's
+condition may release only its nominated dispatch. A release through a condition
+must match its recipient, dispatch and scope exactly. Automatic takeover cannot
+replace a retained explicit restriction.
+
+Each `handoff` observation is `{status, source}`: receipt `accepted/unknown/rejected`,
+readiness `ready/unknown/not_ready`, ownership `recipient/captain/unknown/conflict`.
+Accepted receipt, both readiness values and recipient ownership, all from runtime
+observations, produce `handoff_reported_complete`.
+
+Task completion, skill changes and recovery do not clear the restriction. A
+release opens only its nominated dispatch and recipient; an advancement release
+lifts the restriction once its handoff is reported complete. A later ownership
+fact clears that handoff report. Unknown send operations block all delegation.
+`dispatch create`, advancement transitions, attempt start and `agent send` check
+these constraints; inspection, cancellation and return are always allowed. A
+required independent review stays pending; Captain self-tests do not satisfy it.
+A legacy Captain marker without JSON blocks delegation until reconciled.
+
+### Runtime send and recovery
+
+`agent send` performs a real operation. It requires `--operation-id ID`,
+`--expect-execution-version JSON_TOKEN`, the Thinking token, session/observation
+and message-file inputs; there is no `--basis`. Without an execution record it
+creates one with default identity and empty facts, which asserts no takeover.
+
+After live preconditions and immediately before transport, send persists an
+unknown intent with recipient/session and message/package digests; if that fails,
+nothing is sent. Success persists the receipt, which proves submission only. A
+repeated successful ID returns the saved receipt without sending; a changed
+payload under that ID is refused, and another ID cannot resend a dispatch with a
+submitted or unknown operation. Dry-run inspects live state but writes and sends
+nothing.
+
+On timeout or interruption the outcome stays unknown. Inspect the runtime and
+record `transport-resolution` with delivery evidence; an idle recipient is not
+proof of non-delivery. Observed non-delivery permits a new operation ID under the
+existing permission; observed delivery never permits a resend. If transport
+succeeds but the receipt cannot be saved, send exits 4 with the actual receipt and
+`record_saved: false`. There is no automatic retry or exactly-once guarantee.
+
+### Records, presentation and limits
+
+Context derives `reported_owner`, delegation constraints, `reply_prefix` and
+`page_projection_matches`. JSON never edits Markdown: repair the page marker with
+fresh Markdown CAS and `log sync`, and task facts with protected task notes.
+
+Cooperating local writers share a nonblocking `lb/.lock` (macOS/Linux) plus file
+CAS. It is not a distributed lock or a transaction across runtime, JSON and
+Markdown; manual edits and direct host tools bypass it. The host still owns
+authorization, evidence truth, safe pause, monitoring and independent review.

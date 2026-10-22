@@ -61,6 +61,51 @@ def invoke(machine, *args, mutation=False, raw=False):
         ) from exc
 
 
+def session_identity(pane, agent):
+    """Read native Herdr session references, never infer identity from a pane/PID."""
+    identities = []
+    for record in (pane, agent):
+        reference = record.get("agent_session")
+        if reference is not None:
+            if (
+                not isinstance(reference, dict)
+                or not isinstance(reference.get("source"), str)
+                or not reference["source"].strip()
+                or not reference.get("agent")
+                or reference["agent"] != record.get("agent")
+                or reference["agent"] != agent.get("agent")
+            ):
+                return (
+                    None,
+                    "invalid session reference or session belongs to another agent",
+                )
+            if reference.get("kind") != "id":
+                return (
+                    None,
+                    "runtime session reference is not an ID; a path is not a session ID",
+                )
+            identities.append(reference.get("value"))
+        # Compatibility with adapters exposing the earlier flat representation.
+        identities.extend(
+            record[key]
+            for key in ("session_id", "agent_session_id")
+            if record.get(key) is not None
+        )
+    if not identities:
+        return None, (
+            "runtime session identity unavailable; inspect agent_session in `herdr agent get` "
+            "and the agent's integration status; pane IDs cannot replace session IDs"
+        )
+    if any(not isinstance(value, str) or not value.strip() for value in identities):
+        return None, "runtime session identity is empty or malformed"
+    if len(set(identities)) != 1:
+        return (
+            None,
+            "conflicting runtime session identities; inspect recipient before control",
+        )
+    return identities[0], None
+
+
 def inspect(binding):
     machine, pane_id = binding["machine"], binding["pane_id"]
     pane = invoke(machine, "pane", "get", pane_id).get("result", {}).get("pane", {})
@@ -85,11 +130,7 @@ def inspect(binding):
         "30",
         raw=True,
     )
-    session = (
-        agent.get("session_id")
-        or agent.get("agent_session_id")
-        or pane.get("agent_session_id")
-    )
+    session, session_gap = session_identity(pane, agent)
     actual_agent = agent.get("name") or agent.get("agent_name") or agent.get("agent")
     current = {
         "machine": machine,
@@ -120,19 +161,28 @@ def inspect(binding):
         "observation_token": digest,
         "pane_output": output,
         "mismatches": mismatches,
-        "live_verified": not mismatches,
-        "capability_gap": None
-        if session
-        else "runtime does not expose a verifiable agent session ID",
+        "live_verified": bool(session) and not mismatches and agent_error is None,
+        "capability_gap": session_gap,
         "agent_recognition": agent_error,
     }
 
 
-def control(binding, action, expected_session, expected_observation, message, dry_run):
+def control(
+    binding,
+    action,
+    expected_session,
+    expected_observation,
+    message,
+    dry_run,
+    before_mutation=None,
+):
     current = inspect(binding)
     if not current["live_verified"] or expected_session != binding["session_id"]:
+        detail = (
+            current.get("capability_gap") or "recipient/session differs from binding"
+        )
         raise LbError(
-            "recipient/session mismatch or missing live identity; control refused",
+            f"recipient/session mismatch or missing live identity; control refused: {detail}",
             EXIT_REFUSED,
         )
     if current["observation_token"] != expected_observation:
@@ -153,6 +203,8 @@ def control(binding, action, expected_session, expected_observation, message, dr
             "observation": current["observation"],
             "effect": "none",
         }
+    if before_mutation is not None:
+        before_mutation()
     receipt = invoke(binding["machine"], *command, mutation=True)
     return {
         "dry_run": False,

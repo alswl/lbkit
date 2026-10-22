@@ -1,10 +1,10 @@
 ---
 name: lb-push
 version: 0.5.0-dev
-description: "Advance continuously and serially along a confirmed logbook until the authorized endpoint, a human gate, or a severe blocker; automatically take over difficult scoped work and hand it back, or dispatch/resume Sailors through the host-declared runtime adapter, verifying receipt, monitoring, and report-back acceptance. push means project advancement, not Git push; use lb-status for queries."
+description: "Advance or resume a confirmed Logbook through its authorized endpoint. Preserve explicit Captain takeover across subsequent tasks; otherwise dispatch Sailors or select automatic problem-specific takeover. Stop at human gates or concrete blockers. push means project advancement, not Git push; use lb-status for queries."
 ---
 
-Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
+Captain coordinates the Logbook route and selects its executor under the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 
 # Advance Project Tasks
@@ -13,7 +13,10 @@ The mode is advance, resume, or cleanup (release approved resources). Advancemen
 
 ## Inputs and Preconditions
 
-On every invocation, first read the target logbook from disk and verify goals, non-goals, working directories, the complete ordered list, authorization, and existing report-backs; never substitute session memory or stale line numbers. Must read the [Configuration Contract](../../docs/installable/configuration.md) (including collaboration parameters), [Execution and Recovery](references/execution.md), and the [Coordination Contract](../../docs/installable/coordination.md). Consult the human when a parameter required by this step is missing and read-only verification cannot fill the gap.
+On every invocation with the lb CLI, read `log context` and its `execution` state;
+follow the [JSON execution contract](../../docs/installable/lb-cli.md#execution-state-in-project-json).
+A pending/released dispatch-only handback does not permit unrelated agents.
+Read the target logbook from disk and verify goals, non-goals, working directories, the complete ordered list, authorization, and existing report-backs; never substitute session memory or stale line numbers. Must read the [Configuration Contract](../../docs/installable/configuration.md) (including collaboration parameters), [Execution and Recovery](references/execution.md), and the [Coordination Contract](../../docs/installable/coordination.md). Consult the human when a parameter required by this step is missing and read-only verification cannot fill the gap.
 
 When creating or replacing a session, parse the full launcher; even when reusing, verify the actual model, deployment, and input boundaries. Runtime operations determine runtime.adapter and its actual capabilities; before controlling Herdr, read the [Herdr Adapter](references/herdr.md) and the environment's tool skill. When a capability is missing, stop the dependent step; do not bypass wrapper, monitoring, or isolation requirements.
 
@@ -29,29 +32,34 @@ The bounded POC exception requires an explicit todo, a reorganized route discuss
 
 For direct Admiral–Sailor discussion, Captain must permit and open a usable dialogue entry, then recover submitted content and decisions before affected execution resumes. Follow the [dialogue procedure](references/execution.md#direct-admiralsailor-dialogue); opening the window is not completion of the handoff or authorization for more work.
 
-## Automatic execution-mode selection
+## Execution-mode selection
 
-At route reading, a verified blocker/ineffective repair, each meaningful takeover
-result and resumption after interruption, apply the [mode contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff).
-Normal work uses Sailor dispatch. Direction-setting problems, coupled difficult
-investigations and repeated ineffective methods that need Captain's own reasoning
-enter [lb-takeover](../lb-takeover/SKILL.md) automatically within existing authority.
-Do not ask for a mode-only confirmation or substitute another stronger agent.
-A routine error, missing acceptance return or wait timeout alone is insufficient.
-If host rules prohibit direct execution, retain that boundary and report it.
+At entry, task completion and interruption recovery, read the human instructions
+and checkpoint before choosing an executor under the [mode contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff):
 
-During takeover Captain executes the scoped problem personally after verified
-safe ownership transfer; do not run the ordinary Sailor dispatch loop for that
-same scope. Unaffected authorized work may continue. Once the explicit exit
-condition is met, automatically run [lb-handback](../lb-handback/SKILL.md), verify
-actual receipt/readiness and resume this loop as Captain within the original endpoint.
-Only scoped execution changes hands; retain coordination, monitoring and acceptance.
-Retain incomplete handoff ownership if receipt fails. No remaining executable
-work means result alignment and return to coordination, not an empty dispatch.
-Status/update entry and cleanup do not trigger this selection. Persist/recover the
-minimal mode checkpoint in existing Thinking; preserve counters and human gates.
+- **Explicit takeover:** Captain personally executes the whole authorized
+  advancement unless the human narrowed it. Task completion, later lb-push items,
+  skill changes, stale checkpoints and earlier parallel approvals do not release
+  it. Continue ordinary tasks personally; leave required independent review
+  pending and report the conflict. Resume delegation only on explicit human
+  permission or a previously authorized release condition, through
+  [lb-handback](../lb-handback/SKILL.md); a general continue is not a release.
+- **No explicit takeover:** normally dispatch Sailor. A direction-setting problem,
+  coupled investigation or repeated ineffective repair can trigger bounded
+  [lb-takeover](../lb-takeover/SKILL.md) within existing authority, followed by
+  [lb-handback](../lb-handback/SKILL.md) at its scoped exit. A routine error,
+  missing return or timeout alone does not justify takeover.
+
+Respect host execution restrictions. Mode changes need no repeated approval and
+preserve counters, human gates and the authorized endpoint. With no remaining
+executable work, align results without an empty dispatch. Status/update and
+cleanup entries start no execution-mode change.
 
 ## Advancement Loop
+
+Before any executor launch, resume or prompt, recheck the takeover boundary above;
+it takes precedence over the parallel, review, context-rotation and dispatch
+procedures below.
 
 At initial route reading, after each applicable acceptance return, and when waiting/blocked, inspect parallel opportunities within the current authorized route. Compare actual input/output and human dependencies, owners, mutable files and shared resources. Different repositories/worktrees/titles alone do not prove independence. Describe a concrete batch with owners/results, input snapshots, isolation, convergence and authorization, or state the actual dependency. Proceed with approved batches without asking again; propose unapproved batches once while continuing unaffected approved work. Discovery alone does not authorize launch, reordering, scope expansion or crossing a human gate.
 
@@ -64,11 +72,28 @@ In normal mode, browser work goes to the Sailor using the host-declared browser 
 
 1. Reconcile lifecycle under [lifecycle operations](../../docs/installable/lifecycle-operations.md): paused/terminated/completed do not authorize dispatch; record active only on actual authorized start through `log state-set`, and route explicit pause/termination to lb-update. Following the [CLI Reading Process](../lb-update/references/document-adapters.md#cli-invocation-in-this-repository), run `log context --json` on the current logbook and verify the first item against the original text and authorization; never trust `next_task` alone. advance selects the first unfinished (`[ ]` or `[/]`) item in document order, skipping `[-]`, which is neither pending work nor a blocker; resume verifies the original package, current list, and authorization. Resume an existing Sailor of the same package instead of re-dispatching; a blocked first item is not skipped. The exception is a human item with a confirmed `状态：🔀 可越过：` sub-line: it stays an open human gate (checkbox and first line untouched, still reported as pending), and advancement continues with the following agent items, stopping before any item that needs that human result, before the next human item without the marker, and at stage close, which waits for the human item. `next_task` still returns the human item; the sub-line, not the parser, decides. When the plan is human-confirmed and inputs are ready, dispatch proactively — do not stall at "ready to start". New or restructured plans must satisfy the lb-plan exit criteria: human goals authored or transcribed verbatim, and working directories, Stages, and item-by-item todos confirmed, plus the design gate above.
 2. Verify the work package's result, scope, inputs, owner, dependencies, evidence gates, and any required finite review rounds. Missing facts within authorization are investigated by the owning agent; consult the human for out-of-scope information. When an evidence gate requires E2E, a real environment, quality reports, or key-step screenshots, never downgrade it to a static check; Sailor performs the actual agreed checks and returns applicable outcomes.
-3. Filter the declared launcher options by input sensitivity, then choose a model per the task's needs. Sensitive inputs, or inputs of unknown classification, go only to confirmed internal deployments; the same applies to reuse, sub-agents, and evaluations. Prefer the Captain’s machine for new work; remote exceptions retain directory/model permissions. For new dispatches, identify the task, create its dispatch record, and bind creation-returned machine/workspace/tab/pane/agent/session IDs with `agent bind` under the [domain command contract](../../docs/installable/domain-commands.md). Record sent/acknowledged only from actual transport and receipt evidence; keep attempts separate from task acceptance. Before control, verify the live recipient, input and ownership; saved resolve/check is offline evidence. Use full IDs or a verified unique agent name, never list indexes. Dispatch the full work package in the responsible repository through the selected runtime adapter; business execution uses an isolated worktree. Reuse sessions when model and context fit; split when independent checks or approved parallelism are needed. In normal mode the coordinator does not implement or set up environments on Sailor’s behalf; scoped direct work must first enter lb-takeover.
-4. Verify the full task was received and observe actual execution. After receipt, record `dispatch set-status --status acknowledged` and start its attempt; mark the identified task with `task start` (legacy unidentified tasks use `task update --status /`), use the returned version_token, then sync the stage status with `log sync` — preview the diff before writing and run `log check` after; a trust gate or an empty tab does not mean receipt. Confirm a visible read-only monitoring session tied to this dispatch exists; the model decides whether to create or reuse one. If monitoring fails, fix the original monitoring rather than re-dispatching. Workspace, naming, focus, and safe argument passing follow the Herdr adapter.
+3. Select the actual recipient under the [recipient selection rules](references/execution.md#runtime-adapter-contract) before choosing any launcher: resume an existing suitable executor when not ready, or send to it when ready. Only permitted creation/replacement selects a launcher; filter its declared options by input sensitivity and task needs. Sensitive inputs, or inputs of unknown classification, go only to confirmed internal deployments; the same applies to reuse, sub-agents, and evaluations. Prefer the Captain’s machine for new work; remote exceptions retain directory/model permissions. For new dispatches, identify the task, create its dispatch record, and bind creation-returned machine/workspace/tab/pane/agent/session IDs with `agent bind` under the [domain command contract](../../docs/installable/domain-commands.md). Record sent/acknowledged only from actual transport and receipt evidence; keep attempts separate from task acceptance. Before control, verify the live recipient, input and ownership; saved resolve/check is offline evidence. Use full IDs or a verified unique agent name, never list indexes. Dispatch the full work package in the responsible repository through the selected runtime adapter; business execution uses an isolated worktree. An existing independent reviewer already satisfies implementer isolation; review or parallelism requirements alone do not justify duplicating it. In normal mode the coordinator does not implement or set up environments on Sailor’s behalf; scoped direct work must first enter lb-takeover.
+4. Close dispatch in this order, for both new and reused executors:
+   - Read back the actual package receipt and execution state; trust gates and
+     empty tabs are not receipts.
+   - Establish and verify the adapter's independent visible read-only monitor
+     (for Herdr, a separate tab/pane with a status-wait bound to this dispatch;
+     `agent get/read` is not a monitor). Repair missing monitoring on the same
+     executor without resending.
+   - **Then** write the chosen executor, released scope, observed receipt and
+     monitor evidence, pending review and Captain duties into the existing
+     Thinking/host record and read it back. Replace plans such as “next: verify
+     receipt” with results or the specific remaining gap; runtime state or a
+     final reply is no substitute. This applies at a receipt-only endpoint too.
+   If readiness or ownership is pending, record the partial result and owner and
+   do not report transfer complete. For managed CLI records, mark dispatch
+   acknowledged, start its attempt and the identified task (`task start`, or
+   legacy `task update --status /`), then `log sync` and `log check` with current
+   version_token, previews and readback. A read-only Logbook does not forbid the
+   execution JSON. Workspace/focus/naming rules follow the runtime adapter.
 5. After waiting, read the latest status and output. `idle`, `done`, or `blocked` triggers report-back or blocker verification — never a direct checkbox tick; while still `working`, judge progress from new facts. A single wait is bounded by limits.wait_seconds; usually 10 consecutive minutes without effective progress triggers a stalled-method diagnosis — judge per the task's nature, and never drag on with repeated waits or session restarts. At the limit, verify the scene, stop repeating the failed method, and pursue evidence-based recovery within the original scope; escalate only a real remaining decision or unavailable prerequisite; never kill the process just because a wait expired.
 6. Execution deviating from the confirmed plan can be corrected within the original scope; when the confirmed plan itself is wrong in direction, on major decisions, on out-of-authorization key information, on login approvals, or on scope changes, stop and consult the human. Handle routine issues within the original task yourself; do not bounce work the owning agent could complete back to the user. When candidates, samples, tools, or environments are missing, do not substitute a report full of "unknowns" for the original deliverable; keep the received item at `[/]` and record the blocker per the facts.
-7. The current actual executor’s result/conditions/outcome/gaps must be aligned and written back via [lb-update](../lb-update/SKILL.md), preserving the review rounds already used. After acceptance passes, re-read the original text and `log context`, then continue to the next item within the existing advancement authorization; stop at an explicit single-item/batch endpoint, a human gate, a severe blocker, or full completion. New items, reorderings, and scope expansions still require human decision — continuous advancement is not a license to overstep.
+7. The current actual executor’s result/conditions/outcome/gaps must be aligned and written back via [lb-update](../lb-update/SKILL.md), preserving the review rounds already used. After acceptance passes, re-read the original text and `log context`, then continue to the next item within the existing advancement authorization and retained takeover restriction; stop at an explicit single-item/batch endpoint, a human gate, a severe blocker, or full completion. New items, reorderings, and scope expansions still require human decision — continuous advancement is not a license to overstep.
 
 Before the first external write, verify the authenticated identity belongs to the human owner, and write any body in their judgment and voice — never cast a coordinator or Sailor as the externally accountable party. Authenticated profile or a verified account mapping can establish ownership; key names or local authorship cannot. Pause the dependent write when identity or voice is unclear; a tooling capability gap does not authorize switching to a semantically different channel. When the write publishes a reviewed result, verify feedback clearance on each surface separately — thread comments, review threads and inline comments each state their own resolution; an empty surface clears only itself and never substitutes for the others.
 

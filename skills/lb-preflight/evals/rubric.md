@@ -19,6 +19,6 @@ Cases 7–8 cover unfinished design and spec changes independent of the Logbook 
 
 Cases 9–10 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
 
-Case 11 is core for applicability: task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates. A real failure finding can satisfy an investigation without accepting the failed business operation.
+Retired ID 11 duplicated the prompt, fixture and every assertion of [lb-plan case 47](../../lb-plan/evals/evals.json), which explicitly invokes both skills. Run that shared applicability case once for cross-skill coverage; do not reuse ID 11. Task-specific results, tool capabilities and explicitly counted independent submissions take precedence over unconditional failure/review gates.
 
 Case 12 is core scoped execution ownership coverage; status/update/preflight cannot trigger takeover or handoff dispatch.

@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, timezone
 
-from logbook_cli import records, task_identity
+from logbook_cli import execution, records, task_identity
 from logbook_cli.document import (
     EXIT_REFUSED,
     EXIT_USAGE,
@@ -28,7 +28,11 @@ TRANSITIONS = {
 
 def documents(root, log, thinking):
     doc = load(root, log)
-    return doc, load(root, thinking_path(doc, thinking))
+    target = load(root, thinking_path(doc, thinking))
+    _, _, state = execution.read(doc)
+    if state and target.path != execution.project(doc) / state["thinking"]:
+        raise LbError("dispatch Thinking differs from execution binding", EXIT_REFUSED)
+    return doc, target
 
 
 def read(doc, thinking, dispatch_id=None):
@@ -51,9 +55,11 @@ def read(doc, thinking, dispatch_id=None):
     return matches[0]
 
 
-def guard(doc, target, token, advancing):
+def guard(doc, target, token, advancing, dispatch_id=None, owner=None):
     require_token(target, token)
     require_preflight_clear(doc)
+    if advancing:
+        execution.require_delegation(doc, dispatch_id, owner)
     if advancing and get(doc)["value"] != "active":
         raise LbError("dispatch advancement requires an active logbook", EXIT_REFUSED)
 
@@ -65,9 +71,10 @@ def show(root, log, thinking, dispatch_id=None):
     )
 
 
+@execution.serialized
 def create(root, log, thinking, input_file, token, dry_run):
     doc, target = documents(root, log, thinking)
-    guard(doc, target, token, True)
+    guard(doc, target, token, False)
     try:
         data = json.loads(safe_path(doc.root, input_file).read_text())
         keys = {
@@ -86,6 +93,7 @@ def create(root, log, thinking, input_file, token, dry_run):
             records.single_line(data[key], key)
     except (ValueError, TypeError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
+    guard(doc, target, token, True, data["id"], data["owner"])
     task, _, item = task_identity.lookup(doc, data["task_id"])
     if (
         task.human
@@ -111,11 +119,19 @@ def create(root, log, thinking, input_file, token, dry_run):
     return save(target, records.put(target, "dispatch", value), dry_run, dispatch=value)
 
 
+@execution.serialized
 def transition(root, log, thinking, dispatch_id, status, basis, token, dry_run):
     doc, target = documents(root, log, thinking)
-    guard(doc, target, token, status in {"sent", "acknowledged"})
-    records.single_line(basis, "basis")
     old = read(doc, target, dispatch_id)
+    guard(
+        doc,
+        target,
+        token,
+        status in {"sent", "acknowledged"},
+        dispatch_id,
+        old["owner"],
+    )
+    records.single_line(basis, "basis")
     if status not in TRANSITIONS[old["status"]]:
         raise LbError("invalid dispatch transition", EXIT_REFUSED)
     attempts = old["attempts"]
@@ -144,14 +160,15 @@ def transition(root, log, thinking, dispatch_id, status, basis, token, dry_run):
     )
 
 
+@execution.serialized
 def attempt(
     root, log, thinking, dispatch_id, attempt_id, status, basis, token, dry_run
 ):
     doc, target = documents(root, log, thinking)
-    guard(doc, target, token, status == "started")
+    old = read(doc, target, dispatch_id)
+    guard(doc, target, token, status == "started", dispatch_id, old["owner"])
     for key, value in (("attempt_id", attempt_id), ("basis", basis)):
         records.single_line(value, key)
-    old = read(doc, target, dispatch_id)
     if old["status"] != "acknowledged":
         raise LbError("attempts require an acknowledged dispatch", EXIT_REFUSED)
     attempts = [dict(a) for a in old["attempts"]]

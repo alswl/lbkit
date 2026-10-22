@@ -85,8 +85,14 @@ def compact(doc: Document) -> str:
             # Only the current task's status/blocker annotation can qualify it.
             if any("🚨" in a.value for a in task.annotations):
                 line += " · " + ("Blocked" if english else "受阻")
+    from logbook_cli.execution import view as execution_view
+
+    execution = execution_view(doc)
     current = next_task(doc)
-    if current and any(a.kind is Field.STATUS and "👨‍✈️" in a.value for a in current.annotations):
+    legacy = current and any(
+        a.kind is Field.STATUS and "👨‍✈️" in a.value for a in current.annotations
+    )
+    if execution["reply_prefix"] or (execution["state"] is None and legacy):
         line += " · 👨‍✈️ Captain takeover"
     return line
 
@@ -109,7 +115,7 @@ def render(doc: Document) -> str:
         pattern = (
             r"> (?:状态：|Status: )(?:"
             + "|".join(re.escape(v) for v in labels)
-            + r")(?: · Stage\s+\d+[a-z]?)?(?: · (?:待人工|受阻|🔮|Awaiting human|Blocked|状态不一致|Inconsistent))?"
+            + r")(?: · Stage\s+\d+[a-z]?)?(?: · (?:待人工|受阻|🔮|Awaiting human|Blocked|状态不一致|Inconsistent))?(?: · 👨‍✈️ Captain takeover)?"
         )
         if not re.fullmatch(pattern, raw):
             raise LbError(

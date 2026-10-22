@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -91,9 +92,17 @@ def safe_path(root: Path, value: str) -> Path:
     candidate = raw if raw.is_absolute() else root / raw
     try:
         resolved = candidate.resolve(strict=True)
-        resolved.relative_to(root)
-    except (OSError, RuntimeError, ValueError) as exc:
-        raise LbError(f"path escapes --root or does not exist: {value}") from exc
+    except (OSError, RuntimeError) as exc:
+        raise LbError(
+            f"path does not exist or cannot be resolved: {value}; "
+            f"relative paths resolve from --root {root}"
+        ) from exc
+    if not resolved.is_relative_to(root):
+        raise LbError(
+            f"path escapes --root: {value}; root is {root}. "
+            "For input files, save the authorized input inside this root and pass "
+            "its relative path; do not widen --root to bypass the boundary."
+        )
     if not resolved.is_file():
         raise LbError(f"not a file: {value}")
     return resolved
@@ -812,14 +821,26 @@ def find_task(doc: Document, stage_name: str, task_text: str) -> Task:
     return matches[0]
 
 
+def context_command(doc: Document, *, execution: bool = False) -> str:
+    route = ["log", "execution", "context"] if execution else ["log", "context"]
+    return shlex.join(
+        ["lb", "--root", str(doc.root), *route, str(doc.path.relative_to(doc.root)), "--json"]
+    )
+
+
 def require_token(doc: Document, token: str | None) -> None:
     if not token:
         raise LbError(
-            "write commands require --expect-version from log context", EXIT_REFUSED
+            f"write commands require --expect-version for {doc.path.relative_to(doc.root)}; "
+            f"read `{context_command(doc)}` and extract version_token",
+            EXIT_REFUSED,
         )
     if token != doc.token:
         raise LbError(
-            "version token differs; reread context before writing", EXIT_REFUSED
+            f"version token differs for {doc.path.relative_to(doc.root)}; "
+            f"reread `{context_command(doc)}` and review changes before retrying. "
+            "Extract version_token programmatically; tokens from other files are not interchangeable.",
+            EXIT_REFUSED,
         )
 
 

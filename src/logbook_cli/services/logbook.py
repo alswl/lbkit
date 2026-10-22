@@ -29,7 +29,11 @@ def list_logs(root: str, projects_dir: str) -> Result:
 
 def inspect(root: str, log: str, view: str = "context") -> Result:
     doc = load(root, log)
-    return Result(state_snapshot(doc) if view == "state" else context(doc))
+    from logbook_cli.execution import view as execution_view
+
+    result = state_snapshot(doc) if view == "state" else context(doc)
+    result["execution"] = execution_view(doc)
+    return Result(result)
 
 
 def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result:

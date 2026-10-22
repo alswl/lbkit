@@ -4,17 +4,43 @@ Read before dispatching, resuming, or authorized cleanup. This file defines the 
 
 ## Runtime Adapter Contract
 
-Before execution, verify the selected adapter provides: explicit executor targeting, preserved human focus, an isolated execution space, task submission with receipt confirmation, independent visible read-only status waiting, and report-backs tied to this dispatch. Report the specific gap if any is missing; never fabricate capabilities or pass polling off as monitoring.
+Apply the [takeover dispatch boundary](../../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff)
+before launch, reuse, parallel review or session recovery, including after moving
+to the next task. Captain's own execution needs no executor or Sailor monitor tab.
+
+Before delegated execution, verify the selected adapter provides: explicit executor targeting, preserved human focus, an isolated execution space, task submission with receipt confirmation, independent visible read-only status waiting, and report-backs tied to this dispatch. Report the specific gap if any is missing; never fabricate capabilities or pass polling off as monitoring.
 
 The [Herdr Adapter](herdr.md) is currently provided and must be read and followed only when runtime.adapter=herdr. Other environments must supply reliable adapter documentation and capability evidence; no automatic switching. The visible monitoring requirement declared by the host repository cannot be configured away.
 
-Existing sessions that meet requirements may be reused; do not restart just to re-parameterize. Only new or replaced processes require parsing a launcher; choose from the declared candidates per need, replacing command and args atomically without mixing in old parameters. Reuse still requires verifying the actual model and data boundary before sending material; a failed launch does not authorize calling some other model directly.
+Select the recipient before selecting a launcher. Read actual identity, existence,
+model/data suitability and readiness as separate facts:
+- Existing and suitable: reuse that executor. Resume it if paused/not ready, or
+  send to it if already ready. Do not create another executor tab/process or run
+  its launcher. Reuse does not waive independent monitoring; create or repair a
+  plain read-only monitor when the adapter requires it.
+- Absent or unsuitable: create a new executor only within permission that allows
+  creation/replacement, recording why reuse is unavailable. An instruction to use
+  a particular existing executor does not authorize replacing it.
+- Unknown identity or existence: resolve read-only or report the gap; do not probe
+  with launch. Not ready, no receipt and missing monitoring do not mean absent.
+
+Use the adapter's actual resume/recovery operation; launch and resume are not
+interchangeable. Repair receipt/monitor gaps on the chosen executor. A reuse
+failure permits diagnosis, not automatic replacement. Only a permitted new or
+replacement process needs a declared launcher and arguments, selected atomically;
+a failed launch does not authorize another model.
 
 ## Dispatch Loop
 
 1. Locate the work package, executor, authorization, and isolated space; confirm inputs and dependencies are ready, and that prerequisites for the first external write, including authenticated identity when applicable, are satisfied before that write. Check that the executor's sandbox can reach what the package needs: a worktree's Git metadata lives in the main repository outside the worktree, so a workspace-write sandbox fails `git commit` on `index.lock`; Docker sockets and network access may be blocked the same way. These limits are fixed at launch, so choose a launch option that covers them before dispatch instead of discovering the failure mid-package.
-2. Hand the full task to the owning executor, obtain proof of receipt, and observe real status. Report the launch gate, task receipt, and business execution separately.
-3. After receipt, establish independent visible monitoring tied to this dispatch and verify monitoring readiness. A successful run with failed monitoring is a partial completion; fix the monitoring, and do not resubmit the business task.
+2. Hand the full task to the owning executor, obtain proof of receipt, and observe real status. Keep launch gates, task receipt and business execution distinct.
+3. After receipt, establish independent visible monitoring tied to this dispatch,
+   including when reusing an executor. Then update and read back existing
+   Thinking/host records with the actual recipient, package, receipt, monitor
+   evidence and pending duties. A pre-send plan or runtime state is not this
+   post-send checkpoint. If monitoring fails, record the partial result and fix
+   that step without resubmitting. Complete this writeback before returning even
+   at a receipt-only endpoint.
 4. Each status wait is at most limits.wait_seconds; this is not a task execution deadline, and one expired wait never justifies killing the executor. Immediately after each wait, read the latest status and output: if `idle`, `done`, or `blocked`, stop waiting and handle the report-back or blocker; if still `working`, report the new command, artifact, or evidence, or the concrete basis for calling it stalled. Never repeat waits without refreshing status and output, and never treat one `working` snapshot as continuous operation. Keep progress human-visible.
 5. Hand received report-backs to lb-update's applicable-return process. Tie gaps to the original package; after acceptance, re-read the logbook and move to the next item within the existing advancement authorization; stop at an explicit single-item or batch endpoint, a human gate, or a severe blocker — acceptance itself is not an authorization expansion.
 

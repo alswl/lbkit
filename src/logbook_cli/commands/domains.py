@@ -24,7 +24,13 @@ from logbook_cli.commands.common import (
     options,
     resolve_root,
 )
-from logbook_cli.services import agents, dispatches, skill_capabilities, task_lifecycle
+from logbook_cli.services import (
+    agents,
+    dispatches,
+    execution,
+    skill_capabilities,
+    task_lifecycle,
+)
 from logbook_cli.services import workflows as workflow_service
 from logbook_cli.services.common import Result
 
@@ -126,6 +132,16 @@ def skill(root):
     """Inspect definitions, conservative readiness, and attributed usage."""
 
 
+@click.group("execution")
+def execution_commands():
+    """Record attributed execution facts and inspect delegation constraints."""
+
+
+log.add_command(execution_commands)
+route(execution_commands, "context", execution.context, LOG)
+route(execution_commands, "record", execution.record, LOG, INPUT, TOKEN, DRY_RUN)
+
+
 def register(app):
     app.add_command(log)
     app.add_command(dispatch)
@@ -213,7 +229,13 @@ def register(app):
     )
     for action in ("send", "close"):
         extra = (
-            (click.option("--message-file", required=True, metavar="FILE"),)
+            (
+                click.option("--message-file", required=True, metavar="FILE"),
+                click.option("--operation-id", required=True),
+                click.option(
+                    "--expect-execution-version", "execution_token", required=True
+                ),
+            )
             if action == "send"
             else ()
         )
@@ -226,7 +248,7 @@ def register(app):
             ID,
             click.option("--expected-session", required=True),
             click.option("--expected-observation", required=True),
-            BASIS,
+            *((BASIS,) if action == "close" else ()),
             TOKEN,
             DRY_RUN,
             *extra,

@@ -1,5 +1,5 @@
 {
-  "purpose": "Stable acceptance inventory distilled from 22 feedback headings. Private identifiers are omitted. Review changes to this inventory against original requirements, independently of check mappings.",
+  "purpose": "Stable acceptance inventory distilled from source feedback. Private identifiers are omitted. Review changes to this inventory against original requirements, independently of check mappings.",
   "feedback": [
     {
       "id": "2610141649",
@@ -435,6 +435,78 @@
         {
           "id": "resume",
           "acceptance": "When remaining allowance suffices, resume already authorized work without another limit question."
+        }
+      ]
+    },
+    {
+      "id": "20261022-idempotent-takeover",
+      "title": "Idempotent takeover by the current main agent",
+      "source": "User report: main-agent takeover repeatedly blocked by model verification; repeated takeover must be idempotent.",
+      "todos": [],
+      "criteria": [
+        {
+          "id": "current_main_agent",
+          "acceptance": "The current main-session Captain can take over authorized work without model metadata alone forcing a transfer."
+        },
+        {
+          "id": "idempotent_reentry",
+          "acceptance": "Repeated takeover resumes the same owned scope without repeated transfer, status duplication, counter reset or model-only blocking."
+        }
+      ]
+    },
+    {
+      "id": "20261022-takeover-dispatch-boundary",
+      "title": "Explicit takeover must not launch other executor agents",
+      "source": "User report: after explicit lb takeover, the main agent still opens multiple Herdr tabs running other agents.",
+      "todos": [],
+      "criteria": [
+        {
+          "id": "sticky_scope",
+          "acceptance": "Explicit takeover overrides prior parallel/delegation approval across skill switches and resumption, covering all subtasks in its scope."
+        },
+        {
+          "id": "handback_permission",
+          "acceptance": "An agent-selected exit or review requirement cannot silently release explicit takeover for another agent."
+        },
+        {
+          "id": "authorized_release",
+          "acceptance": "Explicit human handback permits bounded delegation to the original suitable executor."
+        }
+      ]
+    },
+    {
+      "id": "20261022-takeover-advancement-scope",
+      "title": "Explicit takeover persists across authorized advancement",
+      "source": "Human clarification: takeover covers later lb-push tasks until explicit permission to dispatch or a previously authorized handback condition; next-task independent review stays pending.",
+      "todos": [],
+      "criteria": [
+        {
+          "id": "next_task_review",
+          "acceptance": "Explicit takeover covers the entire authorized advancement, including the next independent-review item, without dispatch or self-review substitution."
+        },
+        {
+          "id": "recovery_scope",
+          "acceptance": "Task-scoped agent checkpoints cannot narrow human advancement-wide takeover on recovery."
+        },
+        {
+          "id": "ordinary_continuation",
+          "acceptance": "Ordinary authorized next tasks continue personally."
+        },
+        {
+          "id": "human_release",
+          "acceptance": "Explicit human release permits only the authorized subsequent review dispatch."
+        },
+        {
+          "id": "existing_executor",
+          "acceptance": "A present suitable executor is resumed/reused, never recreated merely because it is not ready."
+        },
+        {
+          "id": "permitted_creation",
+          "acceptance": "An absent executor can be created when explicit permission covers creation."
+        },
+        {
+          "id": "handoff_record",
+          "acceptance": "Receipt-only handback retains a written host responsibility checkpoint before reporting completion."
         }
       ]
     }

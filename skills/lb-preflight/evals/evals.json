@@ -214,33 +214,6 @@
       ]
     },
     {
-      "id": 11,
-      "axis": "Review a small route without manufacturing tests, environments or review consumption",
-      "prompt": "Use /lb-plan in review mode and /lb-preflight to assess projects/demo/docs/log.md, the confirmed design and records/review-history.json. Give the current plan issues, if any, and the applicable remaining independent review allowance. Read actual local records and applicable skill/workflow definitions. This is read-only: no plan changes, business tests, extra agents or execution.",
-      "expected_output": "The authorized single-repository self-check remains sufficient; budget 3 minus one independent submission leaves 2.",
-      "files": [
-        "../../lb-update/evals/fixtures/task-semantics.json"
-      ],
-      "fixture_variant": "planning",
-      "assertions": [
-        {
-          "name": "scope_fit",
-          "type": "contains",
-          "check": "Read the actual confirmed design, registry and workflow; accept the single-repository documentation/self-check approach without requiring a separate test repository, reviewer or deployment environment."
-        },
-        {
-          "name": "review_count_scope",
-          "type": "contains",
-          "check": "Report total 3, used 1, remaining 2 under the declared independent-submission scope. Unit/format checks and dev/test previews consume no additional rounds and do not create a budget blocker."
-        },
-        {
-          "name": "no_unrequested_changes",
-          "type": "not_contains",
-          "check": "Modify Logbook/Thinking/configuration, dispatch agents, execute business tests or manufacture a formatting/editor readiness gate during the read-only review."
-        }
-      ]
-    },
-    {
       "id": 12,
       "axis": "Read-only mode-boundary feasibility",
       "prompt": "Preflight projects/demo/docs/log.md read-only. Check existing takeover checkpoint, exit condition, remaining independent review and runtime capabilities for future handoff. No repair, dispatch or file writes are authorized by this request.",

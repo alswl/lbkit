@@ -62,13 +62,19 @@ isolation, focus or visible monitoring obligations into configuration switches.
 
 ## Model Selection and Data Boundaries
 
-Every agent declares `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes); `provider` is optional and names the `settings.runtime.quota` entry that applies to the option. `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
+Each agent option in the registry declares `model` (non-empty actual model identifier), `deployment` (internal / external / unknown), and `suitable_for` (non-empty array of task-fit notes); `provider` is optional and names the `settings.runtime.quota` entry that applies to the option. `suitable_for` is a selection hint, not a measured capability ranking; internal-deployment judgments require trusted configuration, platform documentation, or human confirmation — never inference from a command name, a model name, or an internal proxy address. Options with unverified provenance are marked unknown.
 
 Before creating or reusing a session, determine data sensitivity from repository rules, user instructions, and actual inputs; filter candidates next; compare reasoning depth, context size, tool capability, latency, and cost last. Sensitive inputs go only to internal; when sensitivity is unknown, external and unknown are also off limits. Cross-repository tasks are chosen by the strictest input requirement. A local CLI or proxy never re-judges an external deployment as internal.
 
 Choosing a suitable candidate within existing task authorization needs no per-instance model consultation; record the option, the reason, the data classification, and the deployment basis. If no suitable candidate exists, provenance is unclear, or launch is unavailable, report the exact gap — never fall back to directly launching codex/claude, switching proxies, or altering the approved agent registry. Changing the approved agent registry is a configuration change, not something derived from ordinary task authorization.
 
 Model boundaries equally cover eval samples, subagents, retries, and recovery. Before reusing a session, verify the actual model and the applicability of its existing context before submitting material; repository content is never sent to a non-compliant model to satisfy a check. After launch and before dispatch, verify the actual model, deployment option, and permission parameters; stop dispatch on any mismatch.
+
+Scoped takeover by the current main-session Captain is not a session launch or
+redispatch. Continuing already-authorized work in that session does not require
+registry enrollment or renewed model verification solely to change execution
+mode; follow the [takeover contract](coordination.md#scoped-takeover-and-execution-handoff).
+Explicit host restrictions and checks for new data exposure still apply.
 
 ### Quota Watermarks
 

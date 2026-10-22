@@ -1,0 +1,18 @@
+{
+  "description": "Local CLI action fixture. Copy the candidate CLI/skills and supply its installed Python dependencies before applying common_files and the selected variant. Use an isolated root. No runtime adapter is provided; this fixture cannot certify actual handoff.",
+  "common_files": {
+    "AGENTS.md": "# Fictional CLI consumer\nUse ./bin/lb --root . for actual local record operations. Read skills/lb-takeover/SKILL.md, skills/lb-handback/SKILL.md, skills/lb-push/SKILL.md and applicable linked CLI rules. log.md and thinking.md are the bound coordination documents. No business edits are needed. Do not modify CLI or skills. No live runtime adapter is available: do not call real Herdr, network or other agents. Supplied runtime facts are fixture observations; do not invent new observations.\n",
+    "dispatch.json": "{\n  \"id\": \"d1\",\n  \"task_id\": \"build\",\n  \"owner\": \"tester\",\n  \"scope\": \"review\",\n  \"exclusions\": \"publication\",\n  \"inputs\": \"candidate-a\",\n  \"completion\": \"independent review\",\n  \"escalation\": \"blocked\"\n}\n"
+  },
+  "variants": {
+    "bounded_release": {
+      "log.md": "# Demo\n\n> 状态：🚧 进行中 · Stage 01\n\n目标：人类目标。\n\n## 🛫 Stage 01 Build\n\n- [ ] Build @core\n    <!-- lb-task {\"basis\": \"identity registration; historical evidence remains unknown\", \"id\": \"build\", \"status\": \"pending\"} -->\n- [ ] Review 👱\n\n<!-- lb-lifecycle {\"at\": \"2026-01-01T00:00:00+00:00\", \"basis\": \"Human decision reference\", \"previous\": \"unknown\", \"value\": \"active\"} -->\n",
+      "thinking.md": "# Thinking\n\nHuman notes stay.\n",
+      "lb/demo.json": "{\n  \"advancement\": \"authorized-round\",\n  \"captain\": \"captain\",\n  \"facts\": [\n    {\n      \"id\": \"takeover-1\",\n      \"kind\": \"takeover\",\n      \"origin\": \"explicit\",\n      \"release_condition\": null,\n      \"source\": {\n        \"kind\": \"human_instruction\",\n        \"ref\": \"existing user message 2\"\n      }\n    },\n    {\n      \"conflicts\": false,\n      \"id\": \"owner-1\",\n      \"kind\": \"ownership\",\n      \"owner\": \"captain\",\n      \"settled\": true,\n      \"source\": {\n        \"kind\": \"runtime_observation\",\n        \"ref\": \"runtime observation 1\"\n      },\n      \"takeover_id\": \"takeover-1\"\n    }\n  ],\n  \"log\": \"log.md\",\n  \"name\": \"demo\",\n  \"operations\": [],\n  \"thinking\": \"thinking.md\"\n}\n"
+    },
+    "pause_unknown": {
+      "log.md": "# Demo\n\n> 状态：🚧 进行中 · Stage 01\n\n目标：人类目标。\n\n## 🛫 Stage 01 Build\n\n- [ ] Build @core\n    <!-- lb-task {\"basis\": \"identity registration; historical evidence remains unknown\", \"id\": \"build\", \"status\": \"pending\"} -->\n- [ ] Review 👱\n\n<!-- lb-lifecycle {\"at\": \"2026-01-01T00:00:00+00:00\", \"basis\": \"Human decision reference\", \"previous\": \"unknown\", \"value\": \"active\"} -->\n",
+      "thinking.md": "# Thinking\n\nHuman notes stay.\n"
+    }
+  }
+}

@@ -14,6 +14,9 @@ FEEDBACK_IDS = {
     "20261013-analysis-parallel", "20261013-capability-gaps",
     "issue-12", "issue-13", "issue-14", "issue-15", "issue-16", "issue-17",
     "issue-18", "issue-19", "issue-20",
+    "20261022-idempotent-takeover",
+    "20261022-takeover-dispatch-boundary",
+    "20261022-takeover-advancement-scope",
 }
 
 
@@ -30,7 +33,7 @@ class FeedbackCoverageTest(unittest.TestCase):
         for row in rows:
             requirement = requirements[row["id"]]
             self.assertTrue(requirement["title"].strip())
-            self.assertTrue(requirement["todos"])
+            self.assertTrue(requirement["todos"] or requirement.get("source", "").strip())
             self.assertTrue(all(type(n) is int and 5 <= n <= 22 for n in requirement["todos"]))
             expected = requirement["criteria"]
             self.assertTrue(expected)

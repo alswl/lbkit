@@ -1017,8 +1017,8 @@
               "type": "contains"
             },
             {
-              "skill": "lb-preflight",
-              "case": 11,
+              "skill": "lb-plan",
+              "case": 47,
               "assertion": "review_count_scope",
               "type": "contains"
             }
@@ -1039,6 +1039,159 @@
           "id": "resume",
           "checks": [],
           "gap": "Preflight 9 checks shortage; sufficient-budget positive continuation is not covered."
+        }
+      ]
+    },
+    {
+      "id": "20261022-idempotent-takeover",
+      "criteria": [
+        {
+          "id": "current_main_agent",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 8,
+              "assertion": "enter_directly",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "idempotent_reentry",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 7,
+              "assertion": "no_reentry_gate",
+              "type": "not_contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20261022-takeover-dispatch-boundary",
+      "criteria": [
+        {
+          "id": "sticky_scope",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 9,
+              "assertion": "no_dispatch_loophole",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "handback_permission",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 10,
+              "assertion": "preserve_review",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "authorized_release",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 15,
+              "assertion": "authorized_next_review",
+              "type": "contains"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20261022-takeover-advancement-scope",
+      "criteria": [
+        {
+          "id": "next_task_review",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 12,
+              "assertion": "pending_conflict",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "recovery_scope",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 13,
+              "assertion": "recover_advancement",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "ordinary_continuation",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 14,
+              "assertion": "personal_next_task",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "human_release",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 15,
+              "assertion": "authorized_next_review",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "existing_executor",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 15,
+              "assertion": "release_is_bounded",
+              "type": "not_contains"
+            }
+          ]
+        },
+        {
+          "id": "permitted_creation",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 16,
+              "assertion": "authorized_creation",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "handoff_record",
+          "checks": [
+            {
+              "skill": "lb-takeover",
+              "case": 15,
+              "assertion": "handoff_responsibility_record",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-takeover",
+              "case": 16,
+              "assertion": "handoff_responsibility_record",
+              "type": "contains"
+            }
+          ]
         }
       ]
     }

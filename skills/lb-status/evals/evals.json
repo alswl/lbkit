@@ -97,7 +97,8 @@
         "Use 🚧 when started but not fully complete",
         "Do not keep a blocker heading as the stage status",
         "Do not check or uncheck any boxes"
-      ]
+      ],
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
     },
     {
       "id": 8,
@@ -111,7 +112,8 @@
         "Do not modify the explanatory H2s",
         "Do not stretch stage-marker syncing into checkbox acceptance",
         "Do not launch agents or live queries"
-      ]
+      ],
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
     },
     {
       "id": 9,
@@ -124,7 +126,8 @@
         "Use 🚧 for the H2 when it has [/]",
         "The explanatory H2 is not renamed",
         "Do not touch [x]/[ ]/[/] checkboxes"
-      ]
+      ],
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
     },
     {
       "id": 10,
@@ -137,7 +140,8 @@
         "With 5 [x] + 1 [/] + 1 [ ], the H2 uses 🚧, not ✅",
         "Do not check or uncheck any boxes",
         "Do not treat a majority of [x] as fully complete"
-      ]
+      ],
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
     },
     {
       "id": 11,
@@ -162,7 +166,8 @@
         "Unmerged PRs are not an implicit stage blocker",
         "The Stage 04 merge todo stays incomplete",
         "Do not change heading text or goals"
-      ]
+      ],
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
     },
     {
       "id": 13,

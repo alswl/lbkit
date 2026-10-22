@@ -196,6 +196,33 @@
           "check": "Resigns or transfers Captain role, closes/replaces Captain session, starts further business execution/dispatch or claims review passed."
         }
       ]
+    },
+    {
+      "id": 10,
+      "axis": "限定交回",
+      "prompt": "用户已明确允许仅将 d1 的 candidate-a 独立评审交给 tester，其他任务仍由 Captain 亲自执行。请把这项现有授权实际记录到 CLI，准备交回；现场无可用发送适配器，tester 尚未确认就绪。不要询问同一授权。",
+      "expected_output": "Execute the available protected CLI record operations and report the remaining runtime boundary; a proposal alone fails.",
+      "files": [
+        "../../lb-takeover/evals/fixtures/execution-records.json"
+      ],
+      "fixture_variant": "bounded_release",
+      "assertions": [
+        {
+          "name": "bounded_release_saved",
+          "type": "contains",
+          "check": "Actual execution JSON records one release for tester/d1 with scope=dispatch under the existing human instruction; actual CLI dispatch show reads a prepared d1 package for candidate-a from Thinking. An input dispatch.json or prose claiming an existing dispatch is insufficient."
+        },
+        {
+          "name": "handoff_not_claimed",
+          "type": "contains",
+          "check": "No handoff completion is claimed or recorded. Unconfirmed readiness remains unknown or unrecorded, not a fabricated ready/not_ready runtime observation; the final response identifies the unavailable runtime and unsent package."
+        },
+        {
+          "name": "other_dispatches_restricted",
+          "type": "contains",
+          "check": "Execution context keeps delegation_restricted=true for other work; no unrelated dispatch or repeat authorization request occurs."
+        }
+      ]
     }
   ]
 }

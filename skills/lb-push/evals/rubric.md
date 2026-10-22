@@ -20,3 +20,7 @@ Cases 88–89 are core controlled-adapter companions to 86–87. Grade the actua
 Cases 90–91 are core paired cleanup scenarios: retain resources under a host retention decision and actually remove only the clean worktree covered by existing authorization. Grade real directory/Git state and tool actions; a refusal-only implementation cannot pass the positive case. The controlled owner adapter does not certify live Herdr operation.
 
 Cases 92–94 are core mode-selection coverage: actual automatic scoped repair/handoff, ordinary Sailor correction, and automatic handoff on a reached exit condition. Cases 92 and 94 use the controlled scoped-execution fixture and require actual actions/receipts, not prose. Their endpoint is receipt/readiness, not live independent acceptance.
+
+Cases 95–96 are core scope-decision checks: distinguish external capability gaps from
+lbkit adapter defects without weakening identity guards or expanding repair authority.
+Grade decisions in the response; these cases do not certify actual runtime operations.
