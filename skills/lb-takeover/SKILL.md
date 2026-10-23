@@ -4,6 +4,11 @@ version: 0.5.0-dev
 description: "Use when asked to take over or do the work yourself: the current main Agent personally executes the whole authorized advancement, including later tasks, until human-authorized release. Also used by lb-push for automatic, problem-specific takeover. Recover ownership safely; repeated entry is idempotent."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+
+
 # Captain takes over execution
 
 Read the [coordination contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),

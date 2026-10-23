@@ -123,3 +123,10 @@ Source/来源 and Acceptance/验收 are task details writable through protected 
 ## Current lifecycle and close-out operations
 
 The [operations contract](lifecycle-operations.md) defines the compact CLI-generated status, lifecycle transitions in existing skills, accessible-delivery responsibility, run event/closeout CLI, workflow provenance and main-branch lb-retro. It supersedes older statements that page status is never created or that lifecycle has no persisted state. Existing human text and gates remain protected; legacy migration is explicit. A lifecycle is not runtime state or execution authorization.
+
+## Machine metadata
+
+Keep only a short stable task ID as an indented `<!-- lb-task task-example -->`
+line. Store machine records in the consumer-owned `lb/<name>.md.json` under
+[document state](document-state.md). Keep human criteria and decisions readable;
+never place JSON task, dispatch or agent dumps in Markdown.

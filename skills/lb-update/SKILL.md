@@ -4,6 +4,16 @@ version: 0.5.0-dev
 description: "Use when the user asks to fetch current progress and update the logbook, or says they edited the logbook and asks the agent to reread it. Rereading aligns understanding without writing by default; progress updates align applicable Sailor returns before writing. Does not dispatch tasks, and never checks a box on a verbal completion claim alone; human goals may be transcribed verbatim, and scope or acceptance-design changes go to lb-plan. Managed logbooks use mind-forge."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+For an authorized refresh with no safe writer, the final reply must include the
+contract's concrete pending change (task ID, current/proposed state, candidate,
+evidence and applicable guarded operations), marked **not applied**. A fault
+summary alone does not finish the refresh. Verify any cited source lines with a
+numbered read; otherwise report the task without an unverified line number.
+
+
 Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 

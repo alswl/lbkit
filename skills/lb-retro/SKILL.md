@@ -4,6 +4,11 @@ version: 0.5.0-dev
 description: "Consolidate cross-logbook lessons and skill adoption on the host main branch, using a fixed Git snapshot and a stable feedback ledger; does not dispatch project work, change goals, commit, push or publish."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+
+
 # Cross-logbook retrospective
 
 Use this entry when the human requests a cross-project retrospective, skill feedback consolidation or adoption review. Project close-out remains lb-update; routine execution remains lb-push. Read the host root AGENTS.md and the [operations contract](../../docs/installable/lifecycle-operations.md), [configuration](../../docs/installable/configuration.md) and [document adapters](../lb-update/references/document-adapters.md).

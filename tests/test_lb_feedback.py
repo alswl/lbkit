@@ -1,6 +1,5 @@
 """Regression scenarios from consumer feedback; exercise observable CLI behavior."""
 
-import hashlib
 import json
 import subprocess
 import sys
@@ -81,7 +80,7 @@ class FeedbackTest(unittest.TestCase):
         self.assertEqual(preview["version_token"], first)
         result = self.write("update", status="/", token=first)
         token = result["version_token"]
-        self.assertEqual(token, hashlib.sha256(self.log.read_bytes()).hexdigest())
+        self.assertEqual(token, self.context()["version_token"])
         self.assertNotEqual(token, first)
         synced = self.cli('log', 'sync', "log.md", '--expect-version', token)
         self.assertEqual(synced["version_token"], self.context()["version_token"])

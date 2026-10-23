@@ -21,6 +21,9 @@ available; reread after writes before reporting final positions. Cite the task's
 first line for task-level discussion, or the exact heading/annotation line when
 that is what needs review. Lines are navigation hints, not durable task identity
 or write authorization: retain task text/stage matching and CAS protections.
+When context is unavailable, obtain line numbers with `nl -ba`, `rg -n` or an
+equivalent numbered source read. Blank lines and hidden comments count; do not
+derive physical positions from rendered text or an unnumbered excerpt.
 When a file has not been saved or a position cannot be verified, give the known
 path/heading/task and state that the line is unavailable; never invent one.
 General capability/configuration answers need no Logbook locator, and adding a
@@ -239,7 +242,7 @@ Resolve host tools/skills actually available for runtime, review, document bindi
 
 ### Storage and helper
 
-Use the current logbook's uniquely bound Thinking via the host document adapter. A compact fenced section labelled `lb-run-events` holds one JSON object per line, optionally across multiple event sections. This is part of existing Thinking, not a new file/source index/metrics backend. Record only needed events; do not archive original observations to substantiate every event.
+Use the current logbook's uniquely bound Thinking via the host document adapter. Its section of the mind's `lb/<name>.md.json` stores run events under `run-event`; keep Thinking prose readable. Follow the [document state contract](document-state.md). Record only needed events; do not archive original observations to substantiate every event.
 
 Read-only helper:
 
@@ -247,7 +250,7 @@ Read-only helper:
 python3 .lbkit/skills/lb-push/scripts/run-metrics.py   --root HOST_ROOT --thinking THINKING_RELATIVE_PATH   --run-id RUN_ID --scope logbook
 ```
 
-For a Stage, --scope carries the exact Stage title. The helper resolves the Thinking path within approved --root, reads only that file and emits JSON to stdout. It does not infer bindings, scan transcripts, install tools, fetch networks, write/correct events or create any files. No usable event history returns unknown values with explicit coverage instead of fabricated totals. Bad arguments/events fail with exit 2; path/read failure with exit 3; valid complete/partial/unknown metrics return exit 0.
+For a Stage, --scope carries the exact Stage title. The helper resolves the Thinking path within approved --root, reads that document and its `lb/` state section and emits JSON to stdout. It does not infer bindings, scan transcripts, install tools, fetch networks, write/correct events or create any files. No usable event history returns unknown values with explicit coverage instead of fabricated totals. Bad arguments/events fail with exit 2; path/read failure with exit 3; valid complete/partial/unknown metrics return exit 0.
 
 ### Event fields
 

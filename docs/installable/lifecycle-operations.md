@@ -32,12 +32,12 @@ Audit probes existence only within the host root. Existing local bytes do not pr
 
 Captain records coordination events during lb-push; Sailor returns actual first acceptance/correction and execution facts. `lb-update` records reconciled outcomes and performs Stage/logbook close-out. Use the adapter to resolve the unique Thinking, then supply its path explicitly; the CLI never guesses binding by filename and cannot authenticate that caller-supplied adapter result.
 
-- `lb log context THINKING --json` gives the target file's content token; structural check of a Thinking is not required.
+- `lb log context THINKING --json` gives the document/state pair's token; structural check of a Thinking is not required.
 - `lb log events record LOG --thinking PATH --input-file FILE --expect-version TOKEN --dry-run --json` appends a validated event. Repeat without dry-run only after reviewing the diff. Unclosed fences/comments refuse append without mutation; the final candidate must expose the recorded event. Inputs stay inside the approved root; scratch files are not deliverables.
 - `lb log report --view metrics LOG --thinking PATH --run-id ID --scope logbook|EXACT_STAGE --json` computes the shared event model. The old run-metrics.py entry delegates to this same calculation.
 - `lb log report --view closeout LOG --thinking PATH --run-id ID --scope logbook|EXACT_STAGE --json` returns state, checklist counts/open responsibility, link inventory and statistics. Missing Thinking/events gives explicit unknown coverage.
 
-Thinking retains lb-run-events fences. Same run/event IDs are idempotent; conflicts fail. Wait/interruption intervals use unions, not duration sums. A recovery or skill switch does not reset run/package identity. Later defects correct an erroneous first-pass pass. Unknown interactions, partial timing and absent denominators remain unknown. Remaining wall time is not net execution time. The report does not run cleanup, complete human tasks, accept deliverables or create new obligations.
+Thinking’s `lb/` state section retains run-event records; never add JSON fences to its body. Same run/event IDs are idempotent; conflicts fail. Wait/interruption intervals use unions, not duration sums. A recovery or skill switch does not reset run/package identity. Later defects correct an erroneous first-pass pass. Unknown interactions, partial timing and absent denominators remain unknown. Remaining wall time is not net execution time. The report does not run cleanup, complete human tasks, accept deliverables or create new obligations.
 
 At Stage/project close, update reports elapsed/wait/interruption coverage, human interaction count and first-pass numerator/denominator with scope. Unknown metrics are not an extra Stage gate. Keep the compact summary in Thinking, not a growing block at the top of the Logbook.
 
@@ -49,7 +49,7 @@ At Stage/project close, update reports elapsed/wait/interruption coverage, human
 {"date":"2026-01-01","working_directories":"- local\n  - `/approved/example`","rulings":{"SUBJECT":"Example"}}
 ```
 
-Rulings map exact placeholder names (without brackets) to values. Date and directories are the other two slots. Render preserves declared fenced YAML front matter; supply its placeholders, including prev-run where present, through rulings. It replaces only a standalone `<WORKDIRS>` or a contiguous directory list, preserving following prose/rulings. Ambiguous directory layouts are refused for explicit template maintenance. Substitution is one pass. Render refuses remaining placeholders or legacy ambiguous template layout. Log create checks deterministic candidate errors at the actual output path and publishes a complete create-only file under an existing approved parent: `log create PATH --from-workflow NAME --input-file FILE --expect-version TOKEN --dry-run`, then write. It reports bindings pending and never claims managed setup complete; scaffold must create/check the uniquely bound Prompt/Thinking and index via the existing adapter. Retry inspects a partial file before choosing recovery, never overwrites it.
+Rulings map exact placeholder names (without brackets) to values. Date and directories are the other two slots. Render preserves declared fenced YAML front matter; supply its placeholders, including prev-run where present, through rulings. It replaces only a standalone `<WORKDIRS>` or a contiguous directory list, preserving following prose/rulings. Ambiguous directory layouts are refused for explicit template maintenance. Substitution is one pass. Render refuses remaining placeholders or legacy ambiguous template layout. Log create checks deterministic candidate errors at the actual output path and publishes a create-only document and its `lb/` state under an existing approved parent: `log create PATH --from-workflow NAME --input-file FILE --expect-version TOKEN --dry-run`, then write. It reports bindings pending and never claims managed setup complete; scaffold must create/check the uniquely bound Prompt/Thinking and index via the existing adapter. Retry inspects a partial file before choosing recovery, never overwrites it.
 
 Provenance pins the template digest and inputs. Diff reports template drift and never updates an existing route. Catalog and structural checks are derived views, not another editable template store. Contract-valid does not mean real-instance-validated. Installer name conflicts preserve host copies instead of replacing them.
 
@@ -74,3 +74,7 @@ model, caller-supplied observation checker or alias command family.
 ## Atomic operations and skill orchestration
 
 Do not replace lb-workflow or lb-scaffold with a workflow executor CLI. The skill authorizes and reviews semantic changes, chooses inputs/output, orders commands, verifies companions and handles partial completion. Each write command reports only its file effect. Closeout aggregates recorded evidence, not live session cleanup; lb-update aligns returns and the authorized execution flow checks/releases actual Herdr resources. No new session inventory or cross-branch scheduler is introduced.
+
+Machine records and recovery follow [document state](document-state.md). Skills
+notify users when lb fails and continue safe authorized work under its fallback;
+missing tooling never turns an unrecorded outcome into accepted state.

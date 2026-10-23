@@ -4,6 +4,11 @@ version: 0.5.0-dev
 description: "Install or refresh lbkit, or migrate and maintain lbkit.yaml settings and agents and lbkit-skills.yaml recipes. Configuration-only work uses the registry CLI without installation or runtime execution. Creating a workflow instance belongs to lb-scaffold."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+
+
 # Connect lbkit to a Logbook repository
 
 The consuming repository owns project logs, its `AGENTS.md`, `lbkit.yaml` (settings and agents) and `lbkit-skills.yaml` (skill recipes). lbkit owns the shared skill implementations, contracts, templates, and CLI. Read the consuming repository's instructions and Git state before changing it. Preserve existing project content and local configuration.

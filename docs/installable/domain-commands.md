@@ -114,3 +114,11 @@ required delivery entries. Neither performs remote authentication. `log report -
 closeout|metrics` composes recorded facts without accepting, cleaning up, or publishing.
 Toolkit config checks cover YAML structure and core declarations, not full policy,
 authentication, provenance or permission validation. No diagnostic performs repair.
+
+## Record storage
+
+All machine records use [document state](document-state.md), including task,
+dispatch and agent records, stored in the mind's `lb/<name>.md.json`. Thinking
+and Logbook tokens each cover their own Markdown and state section. Only stable task IDs remain as
+comments. Skill fallback on CLI failure preserves the same identity, human-gate
+and concurrency rules while continuing safe authorized work and notifying users.

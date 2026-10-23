@@ -29,9 +29,13 @@ TRANSITIONS = {
 def documents(root, log, thinking):
     doc = load(root, log)
     target = load(root, thinking_path(doc, thinking))
-    _, _, state = execution.read(doc)
+    execution_path, execution_data, state = execution.read(doc)
     if state and target.path != execution.project(doc) / state["thinking"]:
         raise LbError("dispatch Thinking differs from execution binding", EXIT_REFUSED)
+    target.dependencies = [(doc.path, doc.data)]
+    target.state_dependencies = [(doc.path, doc.state_data)]
+    if execution_path:
+        target.dependencies.append((execution_path, execution_data))
     return doc, target
 
 
@@ -39,7 +43,8 @@ def read(doc, thinking, dispatch_id=None):
     rows = [
         r
         for _, r in records.read(thinking, "dispatch")
-        if r.get("log") == str(doc.path.relative_to(doc.root))
+        if r.get("log_id") == records.document_id(doc)
+        and records.document_id(doc) is not None
     ]
     ids = [r.get("id") for r in rows]
     if len(ids) != len(set(ids)) or any(
@@ -112,6 +117,7 @@ def create(root, log, thinking, input_file, token, dry_run):
     value = {
         **data,
         "log": str(doc.path.relative_to(doc.root)),
+        "log_id": records.document_id(doc),
         "status": "prepared",
         "attempts": [],
         "history": [],

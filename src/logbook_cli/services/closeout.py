@@ -88,6 +88,19 @@ def thinking_path(doc, value):
     return str(path.relative_to(doc.root))
 
 
+def state_events(doc):
+    rows = [row for _, row in records.read(doc, "run-event")]
+    return (
+        events(
+            "\n```lb-run-events\n"
+            + "\n".join(json.dumps(row) for row in rows)
+            + "\n```\n"
+        )
+        if rows
+        else []
+    )
+
+
 def metrics(root, log, thinking, run_id, scope):
     doc = load(root, log)
     if not thinking:
@@ -97,7 +110,7 @@ def metrics(root, log, thinking, run_id, scope):
         }
     record = load(root, thinking_path(doc, thinking))
     try:
-        items = events(record.text)
+        items = state_events(record)
         ids = sorted({e["run_id"] for e in items})
         if run_id is None:
             if len(ids) != 1:
@@ -125,7 +138,7 @@ def record_event(root, log, thinking, event_file, token, dry_run):
         body = "\n```lb-run-events\n" + json.dumps(item, ensure_ascii=False) + "\n```\n"
         # Parse the input alone to reject wrong shapes even for an idempotent retry.
         events(body)
-        old = events(record.text)
+        old = state_events(record)
         matches = [
             e
             for e in old
@@ -133,15 +146,10 @@ def record_event(root, log, thinking, event_file, token, dry_run):
         ]
         if matches and matches[0] != item:
             raise ValueError("conflicting event identity")
-        changed = (
-            record.text
-            if matches
-            else record.text
-            + body.replace("\n", "\r\n" if b"\r\n" in record.data else "\n")
-        )
-        all_events = events(changed)
-        if item not in all_events:
-            raise ValueError("appended event is not readable")
+        if not matches:
+            records.put(record, "run-event", item)
+        changed = record.text
+        all_events = state_events(record)
         for run in {e["run_id"] for e in all_events}:
             for scope in {"logbook"} | {
                 e["scope"] for e in all_events if e["run_id"] == run

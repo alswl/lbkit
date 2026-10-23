@@ -1,0 +1,19 @@
+{
+  "description": "Fictional local host with a real CLI import failure and a readable candidate return. No business service, managed article adapter or alternate writer is required.",
+  "setup": [
+    "Create a disposable subject directory. Copy candidate skills and installable contracts under .lbkit, excluding every evals directory. Keep case instructions, assertions, grading and trace output outside the subject directory.",
+    "Materialize files below. Before injecting the fault, use the candidate CLI from outside the subject to identify task Export: verify candidate-a output @demo in Stage 01 Export as export, then start it with a fresh token. This produces the genuine short ID and sidecar; preserve resulting bytes as the baseline.",
+    "Create executable bin/lb from failing_entry only after successful preparation. Verify that invoking log context fails with the specified missing module; there is no installed alternate runtime in the subject.",
+    "Verify host bindings and local result/return identities before launch. Use the same prompt, model and runtime for any baseline/candidate comparison. Do not provide expected line numbers or grading criteria to the subject.",
+    "Record command trace, final response, file hashes before/after, model configuration and usage outside the subject. Judge pending changes from the actual response and source locations from current physical lines, never fixed fixture line numbers."
+  ],
+  "files": {
+    "AGENTS.md": "# Disposable host\nOnly this workspace is authorized. Do not access other repositories, install software, commit, push, launch agents or contact business services.\nUse the requested lb-update skill in .lbkit/skills/lb-update/SKILL.md and its referenced contracts.\nThis small host uses plain local documents, not managed mind-forge articles. The explicit canonical bindings are in docs/bindings.md; no mind-forge setup is required or authorized.\nProgress refresh is authorized. Existing protected fields use the paired-file guarded lb writer; there is no alternate host writer. Human review remains the human's decision.\n",
+    "log.md": "# Demo\n\n## 🚧 Stage 01 Export\n\n- [ ] Export: verify candidate-a output @demo\n    - Acceptance: result contains exactly alpha and beta, one per line\n- [ ] Human review 👱\n    - Note: leave my decision pending\n",
+    "thinking.md": "# Thinking\n\nHuman decision: refresh the existing result only; preserve human review.\n",
+    "docs/bindings.md": "# Host bindings\n\nCanonical Logbook: log.md\nThinking: thinking.md\nCurrent task: export\nCurrent candidate: candidate-a\nExecutor return: records/return.md\nResult: records/result.txt\n",
+    "records/result.txt": "alpha\nbeta\n",
+    "records/return.md": "# Executor return\n\nTask: export\nCandidate: candidate-a\nOwner: sailor-demo\nResult: records/result.txt\nVerification: candidate-a contains exactly alpha and beta, one per line; passed.\nNo publication, independent review or further business execution is required for this task. Human review remains separate.\n"
+  },
+  "failing_entry": "#!/usr/bin/env python3\nimport unavailable_lbkit_runtime\n"
+}

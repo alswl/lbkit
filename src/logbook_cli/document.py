@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
 import shlex
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -69,6 +68,11 @@ class Document:
     preflight: list[dict]
     status_lines: list[dict]
 
+    state_data: bytes | None = None
+    metadata: dict = field(default_factory=dict)
+    dependencies: list[tuple[Path, bytes | None]] = field(default_factory=list)
+    state_dependencies: list[tuple[Path, bytes | None]] = field(default_factory=list)
+
     @property
     def locale(self) -> str:
         return language(
@@ -77,7 +81,9 @@ class Document:
 
     @property
     def token(self) -> str:
-        return hashlib.sha256(self.data).hexdigest()
+        from logbook_cli.state import token
+
+        return token(self.data, self.state_data)
 
 
 def root_path(value: str) -> Path:
@@ -147,10 +153,27 @@ def visible_lines(lines: list[str]):
 
 
 def parse(path: Path, root: Path) -> Document:
-    return parse_text(path.read_bytes(), path, root)
+    import fcntl
+
+    from logbook_cli.state import load
+
+    directory = os.open(root, os.O_RDONLY)
+    try:
+        try:
+            fcntl.flock(directory, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise LbError("another document writer is active", EXIT_REFUSED) from exc
+        state_data, metadata = load(path, root)
+        doc = parse_text(path.read_bytes(), path, root)
+        doc.state_data, doc.metadata = state_data, metadata
+        return doc
+    finally:
+        os.close(directory)
 
 
-def parse_text(data: bytes, path: Path, root: Path) -> Document:
+def parse_text(
+    data: bytes, path: Path, root: Path, source: Document | None = None
+) -> Document:
     """Parse an in-memory candidate with the same rules as a file on disk."""
     try:
         text = data.decode("utf-8")
@@ -280,6 +303,8 @@ def parse_text(data: bytes, path: Path, root: Path) -> Document:
         comment_tail_lines,
         preflight,
         status_lines,
+        source.state_data if source else None,
+        source.metadata if source else {},
     )
 
 
@@ -436,8 +461,18 @@ def links_for(doc: Document, stage: Stage | None = None) -> list[dict]:
 
 def context(doc: Document) -> dict:
     from logbook_cli.link_records import observations
+    from logbook_cli.state import path_for as state_path_for
+    from logbook_cli.task_identity import bindings, snapshot
 
     verification_records, verification_errors = observations(doc, links_for(doc))
+    identity_errors = []
+    try:
+        managed = {
+            task.line: snapshot(task, item) for task, _, item in bindings(doc).values()
+        }
+    except LbError as exc:
+        managed = {}
+        identity_errors.append(exc.message)
     incomplete = next_task(doc)
     records = [
         link
@@ -447,6 +482,9 @@ def context(doc: Document) -> dict:
     return {
         "path": str(doc.path.relative_to(doc.root)),
         "version_token": doc.token,
+        "state_path": str(state_path_for(doc.path, doc.root).relative_to(doc.root)),
+        "metadata": doc.metadata,
+        "task_identity_errors": identity_errors,
         "stages": [
             {
                 "title": s.title,
@@ -457,6 +495,8 @@ def context(doc: Document) -> dict:
                 "tasks": [
                     {
                         "text": task.text,
+                        "id": managed.get(task.line, {}).get("id"),
+                        "lifecycle": managed.get(task.line),
                         "state": task.state,
                         "line": task.line,
                         "repositories": task.repositories,
@@ -708,13 +748,29 @@ def check(doc: Document) -> list[dict]:
                 f"{PREFLIGHT_MARKER} preflight discussion item halts the whole logbook; resolve by human decision before advancing",
             )
         )
+    from logbook_cli.task_identity import acceptance_issues
+
+    try:
+        issues.extend(
+            issue(doc, 1, "TASK_STATE_INVALID", message)
+            for message in acceptance_issues(doc)
+        )
+    except LbError as exc:
+        issues.append(issue(doc, 1, "TASK_STATE_INVALID", exc.message))
     from logbook_cli.link_records import observations, verified_lines
 
     all_links = links_for(doc)
     verified_links = verified_lines(doc, all_links)
     _, metadata_errors = observations(doc, all_links)
+    # Observations live in the sidecar, so locate their errors there.
+    from logbook_cli.state import path_for as state_path_for
+
+    state_path = str(state_path_for(doc.path, doc.root).relative_to(doc.root))
     issues.extend(
-        issue(doc, error["line"], "LINK_VERIFICATION_INVALID", error["reason"])
+        {
+            **issue(doc, 1, "LINK_VERIFICATION_INVALID", error["reason"]),
+            "path": state_path,
+        }
         for error in metadata_errors
     )
     for link in links_for(doc):
@@ -824,7 +880,14 @@ def find_task(doc: Document, stage_name: str, task_text: str) -> Task:
 def context_command(doc: Document, *, execution: bool = False) -> str:
     route = ["log", "execution", "context"] if execution else ["log", "context"]
     return shlex.join(
-        ["lb", "--root", str(doc.root), *route, str(doc.path.relative_to(doc.root)), "--json"]
+        [
+            "lb",
+            "--root",
+            str(doc.root),
+            *route,
+            str(doc.path.relative_to(doc.root)),
+            "--json",
+        ]
     )
 
 

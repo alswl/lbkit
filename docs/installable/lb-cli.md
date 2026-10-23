@@ -125,9 +125,16 @@ The implementation lives in `src/logbook_cli/`: `commands/` handles Click parame
 
 Reproducible fixture preparation, non-clobbering prechecks, and event collection are described in the consuming repository's behavior-eval process.
 
+## Document metadata
+
+Follow [document state](document-state.md) for the `lb/` state layout, task identity,
+rename/move/delete/merge rules, paired-file CAS, recovery and skill fallback.
+Machine JSON is not stored in Markdown. Old inline records are unsupported;
+there is no migration workflow. The only active reserved comment is a short task ID.
+
 ## Feedback-era Write Extensions (0.2)
 
-Successful logbook writes return `version_token` for the exact resulting bytes, including no-op writes. Dry-run returns the original current token, not a token for the uncommitted preview. This removes token-only reads between already-understood sequential writes; it does not make the sequence transactional or replace semantic rereading after conflicts or changed acceptance criteria.
+Successful logbook writes return `version_token` for the resulting Markdown and its state section, including no-op writes. Dry-run returns the original current token, not a token for the uncommitted preview. This removes token-only reads between already-understood sequential writes; it does not make the sequence transactional or replace semantic rereading after conflicts or changed acceptance criteria.
 
 `task rewrite LOG --stage STAGE --task OLD --text NEW --decision SOURCE --expect-version TOKEN` changes only an unfinished agent task's first-line text, preserving its checkbox, position, children and repository ownership, and records the supplied decision in a status child. Human items, completed/skipped items, changed ownership, duplicate text and stale tokens are refused. The caller must verify authorization and evidence applicability; the CLI cannot authenticate the supplied decision.
 
@@ -157,17 +164,17 @@ bin/lb log links record-check log.md --line 18 --target 'https://sources.example
 
 `log links record-check` registers an offline observation of one visible HTTP(S) link selected by current line, target and label. Overview, Source, Stage and protected human links are eligible; no task, Artifact or sidecar is required. Optional --bind-stage/--bind-task are paired for an outside-task result link; --result-identity records a supplied revision. Task-contained links bind automatically and cannot redirect to another task. Use --outcome verified/unavailable/revoked. The CLI records supplied facts; Sailor performs actual observations and Captain aligns the return. It never fetches, authenticates or certifies permanent availability.
 
-Metadata is a compact reserved document-level `lb-link-verification` HTML comment, outside fences/task bodies/other comments. The semantic occurrence excludes checkbox state and physical line number; Source/Acceptance/Artifact snapshots bind task applicability. Changed target/label/context or bound values invalidate old observations without deleting history. Latest failure/revocation or equal-time conflicting observations remain unverified. Check suppresses only the eligible occurrence's LINK_UNVERIFIED; other occurrences and structural/local-link checks are preserved. Malformed records yield LINK_VERIFICATION_INVALID; context exposes observations/applicability. Arguments/time use exit 2, path errors 3 and stale/ambiguous/unsafe writes 4. Writes carry CAS and dry-run writes zero bytes.
+Metadata lives in the document's `lb/` state section under `link-verification`. The semantic occurrence excludes checkbox state and physical line number; Source/Acceptance/Artifact snapshots bind task applicability. Changed target/label/context or bound values invalidate old observations without deleting history. Latest failure/revocation or equal-time conflicting observations remain unverified. Check suppresses only the eligible occurrence's LINK_UNVERIFIED; other occurrences and structural/local-link checks are preserved. Malformed records yield LINK_VERIFICATION_INVALID; context exposes observations/applicability. Arguments/time use exit 2, path errors 3 and stale/ambiguous/unsafe writes 4. Writes carry CAS and dry-run writes zero bytes.
 
 ## Lifecycle and maintenance command groups
 
-See [lifecycle operations](lifecycle-operations.md) for state-set, workflow, run, closeout, retro and runtime command ownership, input schemas and limitations. All existing-file writes use the target file token and support dry-run; run/runtime writes require the Thinking token. Workflow instantiate is create-only with exclusive file creation and a pinned template token; adapter binding remains pending. CLI commands do not execute skills automatically.
+See [lifecycle operations](lifecycle-operations.md) for state-set, workflow, run, closeout, retro and runtime command ownership, input schemas and limitations. All existing-document writes use the document/state token and support dry-run; run/runtime writes require the Thinking token. Workflow instantiate is create-only with exclusive file creation and a pinned template token; adapter binding remains pending. CLI commands do not execute skills automatically.
 
 ### Atomic workflow operations
 
 `workflow update NAME --content-file FILE --expect-version TOKEN [--dry-run]` replaces one existing template after structural checks and CAS; preview includes the exact diff. It never changes companions or instances. `render` preserves declared YAML front matter and fills only explicit slots. `instantiate` checks the complete candidate at its output path, then publishes a complete new file without overwrite; bindings remain pending. Skill decisions, semantic review, source records and adapter bindings are separate steps. `workflow check` reports its structural-marker coverage, not semantic validity or real-use evidence.
 
-`workflow create NAME --content-file FILE [--dry-run]` publishes one canonical `workflows/NAME/docs/NAME.md` in an existing approved directory. It previews the content, validates structural markers and refuses an existing template/output; absence is its create precondition, so no existing-file token is needed. It creates no directories or companions.
+`workflow create NAME --content-file FILE [--dry-run]` publishes one canonical `workflows/NAME/docs/NAME.md` in an existing approved directory. It previews the content, validates structural markers and refuses an existing template/output; absence is its create precondition, so no existing-file token is needed. It creates `lb/<name>.md.json` state, but no other directories or host document bindings.
 
 ## Concept-oriented routes
 
@@ -182,7 +189,7 @@ project-relative path. Only records bound to the current Logbook are validated:
 a malformed bound record, a missing bound document, two records binding the same
 Logbook, a symlink or unparseable JSON in `lb/` is refused with the file name.
 Records of other Logbooks and unrelated JSON are ignored. Dispatch, attempt and
-agent-binding records remain in Thinking.
+agent-binding records live in Thinking’s `lb/` state section.
 
 These commands record facts already established through the host. They do not
 pause, resume, launch or hand execution to an Agent, and they never require
@@ -197,9 +204,9 @@ refused. Extract tokens from context JSON programmatically.
 | Write | Token source | Protected file |
 | --- | --- | --- |
 | `log execution record LOG` | `log execution context LOG --json`: `version_token` | Execution JSON |
-| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --json`: `version_token` | Thinking |
+| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --json`: `version_token` | Thinking and its `lb/` state section |
 | `agent send LOG --thinking THINKING` | Thinking token plus execution token as `--expect-execution-version` | Thinking precondition and execution journal |
-| `log sync LOG` / `task note LOG` | `log context LOG --json`: `version_token` | Logbook Markdown |
+| `log sync LOG` / `task note LOG` | `log context LOG --json`: `version_token` | Logbook Markdown and its `lb/` state section |
 
 Example: record an existing release instruction, then prepare the remaining
 package. Neither command sends a message:
@@ -217,7 +224,7 @@ package. Neither command sends a message:
 )
 ```
 
-A successful write returns the token for the next write to the **same** file;
+A successful write returns the token for the next write to the **same** document/state pair (or execution JSON);
 dry-run returns the unchanged token. On a conflict, reread the named context and
 review the changes; do not loop on refreshed tokens or use another file's token.
 

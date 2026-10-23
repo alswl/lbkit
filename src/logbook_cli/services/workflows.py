@@ -19,7 +19,10 @@ from logbook_cli.document import (
 )
 from logbook_cli.edit import ADVISORY_ISSUES
 from logbook_cli.services.common import Result, load
-from logbook_cli.storage import create_bytes, write_bytes
+from logbook_cli.state import encode
+from logbook_cli.state import path_for as state_path_for
+from logbook_cli.state import token as state_token
+from logbook_cli.storage import write_bytes
 
 
 def template(root, name):
@@ -184,7 +187,6 @@ def render(root, name, inputs_file, token):
         "template_digest": doc.token,
         "inputs": inputs,
     }
-    content += "\n" + records.encode("workflow", provenance) + "\n"
     candidate = parse_text(content.encode(), doc.path, doc.root)
     actual = [
         (s.is_delivery, [(t.state, t.human) for t in s.tasks]) for s in candidate.stages
@@ -232,13 +234,18 @@ def instantiate(root, name, inputs_file, token, output, dry_run):
             + ", ".join(sorted({i["code"] for i in issues})),
             EXIT_REFUSED,
         )
-    create_bytes(destination, content.encode("utf-8"), dry_run)
+    records.put(candidate, "workflow", rendered.value["provenance"])
+    write_bytes(candidate, content.encode("utf-8"), dry_run, create=True)
     return Result(
         {
             "path": str(destination.relative_to(base)),
             "dry_run": dry_run,
-            "version_token": rendered.value["content_token"],
+            "version_token": state_token(candidate.data, encode(candidate.metadata)),
             "content": content if dry_run else None,
+            "state_content": json.loads(encode(candidate.metadata))
+            if dry_run
+            else None,
+            "state_path": str(state_path_for(destination, base).relative_to(base)),
             "bindings": "pending",
             "managed_workflow_complete": False,
             "next": rendered.value["next"],
@@ -270,15 +277,9 @@ def replace_template(root, name, content_file, token, dry_run):
     doc = template(root, name)
     require_token(doc, token)
     content = safe_path(doc.root, content_file).read_bytes()
-    candidate = parse_text(content, doc.path, doc.root)
-    if records.read(candidate, "workflow-status") != records.read(
-        doc, "workflow-status"
-    ):
-        # Record positions may change, but lifecycle changes have their own command.
-        if [r for _, r in records.read(candidate, "workflow-status")] != [
-            r for _, r in records.read(doc, "workflow-status")
-        ]:
-            raise LbError("use workflow set-status for lifecycle changes", EXIT_REFUSED)
+    candidate = parse_text(content, doc.path, doc.root, source=doc)
+    # Lifecycle stays in the sidecar; replacement content cannot carry it inline.
+    records.anchors(candidate, require_closed=True)
     info = inspect_document(candidate, name)
     if info["issues"]:
         raise LbError("invalid template: " + "; ".join(info["issues"]), EXIT_REFUSED)
@@ -295,7 +296,9 @@ def replace_template(root, name, content_file, token, dry_run):
         {
             "path": str(doc.path.relative_to(doc.root)),
             "dry_run": dry_run,
-            "version_token": doc.token if dry_run else candidate.token,
+            "version_token": doc.token
+            if dry_run
+            else state_token(content, encode(doc.metadata)),
             "diff": diff,
             "coverage": info["coverage"],
             "instances_modified": False,
@@ -332,16 +335,17 @@ def create_template(root, name, content_file, dry_run):
         "workflow-status",
         {"id": "workflow", "status": "draft", "basis": "new template"},
     ).encode()
-    doc = parse_text(content, path, base)
-    create_bytes(path, content, dry_run)
+    doc = parse_text(content, path, base, source=doc)
+    write_bytes(doc, content, dry_run, create=True)
     return Result(
         {
             "path": str(path.relative_to(base)),
             "dry_run": dry_run,
-            "version_token": doc.token,
+            "version_token": state_token(doc.data, encode(doc.metadata)),
             "content": doc.text,
+            "state_content": json.loads(encode(doc.metadata)),
             "coverage": info["coverage"],
-            "companions_created": False,
+            "companions_created": not dry_run,
         }
     )
 

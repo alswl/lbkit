@@ -4,6 +4,11 @@ version: 0.5.0-dev
 description: "Create or refine reusable run-instance workflow templates and validate them through the lb workflow CLI; preserve human goals and gates, record provenance, and never dispatch execution or rewrite existing instances."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+
+
 # Maintain workflow templates
 
 Use this skill to create/refine templates, not to dispatch work or rewrite instances. Read the host AGENTS.md, [planning](../lb-plan/references/planning.md), [format](../../docs/installable/logbook-format.md) and [atomic operations](../../docs/installable/lifecycle-operations.md#workflow-cli). Read [document adapters](../lb-update/references/document-adapters.md) when maintaining companion records. Host-owned workflow documents are ordinary Markdown, not mind-forge projects or index entries.

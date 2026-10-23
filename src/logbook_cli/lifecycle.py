@@ -158,17 +158,6 @@ def set_state(
         "at": datetime.now(timezone.utc).isoformat(),
         "previous": old["value"],
     }
-    existing = records.read(doc, "lifecycle")
-    if existing:
-        index = existing[0][0]
-        nl = "\r\n" if b"\r\n" in doc.data else "\n"
-        changed = (
-            doc.text[: doc.offsets[index]]
-            + records.encode("lifecycle", item)
-            + nl
-            + doc.text[doc.offsets[index] + len(doc.lines[index]) :]
-        )
-    else:
-        changed = records.append(doc, "lifecycle", item)
-    candidate = parse_text(changed.encode(), doc.path, doc.root)
+    changed = records.put(doc, "lifecycle", item)
+    candidate = parse_text(changed.encode(), doc.path, doc.root, source=doc)
     return save(doc, render(candidate), dry_run, lifecycle=item)

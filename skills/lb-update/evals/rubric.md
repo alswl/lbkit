@@ -22,3 +22,12 @@ Cases 54–55 are core paired environment-return scenarios. A current dev pass c
 Case 56 is core for a CLI-only host: report the missing status-replacement capability without bypassing the host writer or appending a contradictory summary. This capability gap does not invalidate independent supported operations.
 
 Case 57 is core scoped execution ownership coverage; status/update/preflight cannot trigger takeover or handoff dispatch.
+
+Cases 58–59 are core for CLI fallback. Case 58 requires a concrete unapplied
+change, not only an outage explanation: current/proposed task state, candidate,
+evidence and applicable guarded operation inputs must be recoverable from the
+reply or authorized record. A successful process exit or a read-only file diff
+does not satisfy that assertion. Source locators must match a numbered physical
+read, including blank lines and hidden task IDs. Case 59 distinguishes a working
+CLI's CAS refusal from an outage and preserves changed human criteria. Neither
+case permits bypass writes, new business execution or fabricated acceptance.

@@ -9,6 +9,15 @@ lb-plan, lb-push, lb-update, lb-status, and lb-preflight read this workflow befo
 3. Change only evidence-backed differences, using stable identities and links. Reuse existing locations for additional records; never auto-create a second task queue. The placement and wording of small fact fragments is left to the model, without per-fragment confirmation; preserve human prose and section structure. Large prose is written by the human and must not be split into multiple local rewrites.
 4. Run the chosen adapter's checks proportional to the change's impact, checking that only authorized target fields changed and unrelated text, headings and numbering are preserved, and state clearly what failed, was skipped, or did not apply. When check tooling is unavailable, keep a reviewable diff and report the verification gap; never auto-install tools or claim verification passed.
 
+## CLI failure and machine state
+
+Follow [document state and CLI failure recovery](../../../docs/installable/document-state.md).
+Read the Markdown and its `lb/<name>.md.json` section together; never append machine JSON comments.
+A failed CLI does not end the skill: notify the user, inspect directly, continue
+safe authorized work and name any pending registration or unverified checks.
+The fallback contract governs unavailable tooling; normal CAS refusals still
+require rereading and reconciliation.
+
 ## CLI invocation in this repository
 
 Use the known root-local `bin/lb` entry directly; symlink entries may be absent

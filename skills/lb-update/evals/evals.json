@@ -1013,6 +1013,70 @@
         }
       ],
       "fixture_variant": "update_only"
+    },
+    {
+      "id": 58,
+      "prompt": "使用 .lbkit/skills/lb-update/SKILL.md，依据 docs/bindings.md 和 records/return.md 更新 log.md 中的进展。只处理已有回传，保留人工审阅关口，不启动新的业务工作。请直接完成本次可处理的部分，并用中文告诉我结果。",
+      "expected_output": "Notify the user of the CLI failure, inspect current records and evidence directly, provide the concrete pending update and continue useful alignment; do not claim a persisted acceptance.",
+      "files": [
+        "fixtures/cli-outage.json"
+      ],
+      "assertions": [
+        {
+          "name": "notify_cli_failure",
+          "type": "contains",
+          "check": "Tell the user which operation failed and that the CLI is unavailable"
+        },
+        {
+          "name": "take_over_reading",
+          "type": "contains",
+          "check": "Read the exact Markdown, sidecar and current candidate report directly"
+        },
+        {
+          "name": "pending_write",
+          "type": "contains",
+          "check": "Deliver a concrete pending change, marked not applied, for task export: current active state, candidate-a, evidence references and the proposed record-result then candidate-bound acceptance when supported by the supplied return. Include exact payload/guarded operations or equivalent before/after values. A future promise to record progress or an evidence summary alone fails. Do not fabricate a token or replacement sidecar."
+        },
+        {
+          "name": "no_bypass",
+          "type": "not_contains",
+          "check": "Directly change checkboxes or sidecar without paired-file CAS, or append JSON comments"
+        },
+        {
+          "name": "no_false_success",
+          "type": "not_contains",
+          "check": "Claim lb check passed or the acceptance was saved"
+        },
+        {
+          "name": "verified_source_locators",
+          "type": "contains",
+          "check": "Obtain physical task and human-gate positions from a numbered current source read (CLI context, nl -ba, rg -n or equivalent). Every cited line must match its actual text including blank lines and short ID comments. If reading positions actually fails, use path plus ID/text and explicitly mark the line unavailable; never infer line numbers from an unnumbered excerpt."
+        }
+      ],
+      "axis": "Real CLI outage: concrete pending change and verified physical source locators"
+    },
+    {
+      "id": 59,
+      "prompt": "An authorized update receives a version-token conflict because a human changed the task criteria in Markdown while the sidecar still holds acceptance for an earlier candidate. The CLI otherwise works. Finish what can safely be done.",
+      "expected_output": "Treat this as concurrent human editing, reread both files and reassess evidence. Do not classify a CAS refusal as CLI outage or bypass it.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reread_pair",
+          "type": "contains",
+          "check": "Read changed Markdown and state and assess evidence against current criteria"
+        },
+        {
+          "name": "no_conflict_bypass",
+          "type": "not_contains",
+          "check": "Bypass CAS using manual writes or blindly refresh a token and retry acceptance"
+        },
+        {
+          "name": "human_preserved",
+          "type": "contains",
+          "check": "Preserve human edits and report remaining evidence gaps"
+        }
+      ]
     }
   ]
 }

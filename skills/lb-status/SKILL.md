@@ -4,6 +4,11 @@ version: 0.5.0-dev
 description: "Inspect a dispatch recipient, current session identity and control readiness, or check project progress, executor status, blockers, and the next item, maintaining emoji and a few fact fragments; when context usage is found above 80%, hand off to lb-push for automatic GC. When the user explicitly asks read-only, report only — no checkbox or acceptance changes; deep plan review belongs to lb-plan."
 ---
 
+Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
+If lb is unavailable or crashes, notify the user and take over safe authorized work;
+report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+
+
 Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
 
 

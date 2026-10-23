@@ -14,7 +14,6 @@ from logbook_cli.models import Field
 if TYPE_CHECKING:
     from logbook_cli.document import Document
 
-MARKER = "<!-- lb-link-verification "
 OUTCOMES = {"verified", "unavailable", "revoked"}
 
 
@@ -111,95 +110,76 @@ def comment_open(line: str, opened: bool = False) -> bool:
 
 
 def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
-    """Decode reserved whole-line comments only outside other comments/fences."""
-    from logbook_cli.document import FENCE_RE
+    """Validate link observations stored in the document sidecar."""
+    from logbook_cli import records as store
+    from logbook_cli.document import LbError
 
-    records, errors = [], []
-    fence: tuple[str, int] | None = None
-    comment = False
-    for index, line in enumerate(doc.lines):
-        if fence:
-            if re.match(
-                rf"^[ \t]*{re.escape(fence[0])}{{{fence[1]},}}[ \t]*(?:\r?\n)?$", line
+    rows, errors = [], []
+    safe_end = True
+    try:
+        store.anchors(doc, require_closed=True)
+    except LbError as exc:
+        if not exc.message.startswith("unclosed fence/comment"):
+            raise
+        safe_end = False
+    for _, record in store.read(doc, "link-verification"):
+        try:
+            required = {
+                "record_id",
+                "target",
+                "label",
+                "anchor",
+                "binding",
+                "bound_task",
+                "observed_at",
+                "observer",
+                "basis",
+                "outcome",
+                "result_identity",
+            }
+            if (
+                not isinstance(record, dict)
+                or not required.issubset(record)
+                or set(record) - required - {"local_digest"}
             ):
-                fence = None
-            continue
-        if comment:
-            comment = comment_open(line, True)
-            continue
-        start = FENCE_RE.match(line)
-        if start:
-            fence = (start[1], len(start[0].lstrip()))
-            continue
-        if line.startswith(MARKER):
-            try:
-                if not line.rstrip().endswith(" -->"):
-                    raise ValueError("unterminated observation")
-                payload = line.rstrip()[len(MARKER) : -4]
-                if "<" in payload or ">" in payload:
-                    raise ValueError("observation HTML delimiters must be escaped")
-                record = json.loads(payload)
-                required = {
-                    "record_id",
+                raise ValueError("invalid observation fields")
+            if record["outcome"] not in OUTCOMES:
+                raise ValueError("invalid observation outcome")
+            if any(
+                not isinstance(record[k], str) or not record[k].strip()
+                for k in (
                     "target",
                     "label",
                     "anchor",
-                    "binding",
-                    "bound_task",
                     "observed_at",
                     "observer",
                     "basis",
-                    "outcome",
-                    "result_identity",
-                }
-                if (
-                    not isinstance(record, dict)
-                    or not required.issubset(record)
-                    or set(record) - required - {"local_digest"}
-                ):
-                    raise ValueError("invalid observation fields")
-                if record["outcome"] not in OUTCOMES:
-                    raise ValueError("invalid observation outcome")
-                if any(
-                    not isinstance(record[k], str) or not record[k].strip()
-                    for k in (
-                        "target",
-                        "label",
-                        "anchor",
-                        "observed_at",
-                        "observer",
-                        "basis",
-                    )
-                ):
-                    raise ValueError("invalid observation value")
-                timestamp(record["observed_at"])
-                if record["bound_task"] is not None and (
-                    not isinstance(record["bound_task"], dict)
-                    or set(record["bound_task"]) != {"stage", "text"}
-                    or not all(
-                        isinstance(v, str) and v for v in record["bound_task"].values()
-                    )
-                ):
-                    raise ValueError("invalid observation binding")
-                if record["binding"] is not None and not isinstance(
-                    record["binding"], str
-                ):
-                    raise ValueError("invalid binding digest")
-                if record["result_identity"] is not None and not isinstance(
-                    record["result_identity"], str
-                ):
-                    raise ValueError("invalid result identity")
-                if record["record_id"] != digest(
-                    {k: v for k, v in record.items() if k != "record_id"}
-                ):
-                    raise ValueError("observation digest mismatch")
-                records.append({**record, "metadata_line": index + 1})
-            except (ValueError, TypeError, KeyError) as exc:
-                errors.append({"line": index + 1, "reason": str(exc)})
-                comment = comment_open(line)
-            continue
-        comment = comment_open(line)
-    return records, errors, not (fence or comment)
+                )
+            ):
+                raise ValueError("invalid observation value")
+            timestamp(record["observed_at"])
+            if record["bound_task"] is not None and (
+                not isinstance(record["bound_task"], dict)
+                or set(record["bound_task"]) != {"stage", "text"}
+                or not all(
+                    isinstance(v, str) and v for v in record["bound_task"].values()
+                )
+            ):
+                raise ValueError("invalid observation binding")
+            if record["binding"] is not None and not isinstance(record["binding"], str):
+                raise ValueError("invalid binding digest")
+            if record["result_identity"] is not None and not isinstance(
+                record["result_identity"], str
+            ):
+                raise ValueError("invalid result identity")
+            if record["record_id"] != digest(
+                {k: v for k, v in record.items() if k != "record_id"}
+            ):
+                raise ValueError("observation digest mismatch")
+            rows.append({**record, "metadata_line": None})
+        except (ValueError, TypeError, KeyError) as exc:
+            errors.append({"line": None, "reason": str(exc)})
+    return rows, errors, safe_end
 
 
 def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -257,15 +237,6 @@ def verified_lines(doc: Document, links: list[dict]) -> set[tuple[int, str, str]
         ):
             verified.add(key)
     return verified
-
-
-def encode(record: dict) -> str:
-    value = (
-        json.dumps(record, sort_keys=True, ensure_ascii=False)
-        .replace("<", "\\u003c")
-        .replace(">", "\\u003e")
-    )
-    return MARKER + value + " -->"
 
 
 def local_digest(doc: Document, target: str) -> str | None:

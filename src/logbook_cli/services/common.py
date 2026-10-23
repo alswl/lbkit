@@ -1,7 +1,6 @@
 """Common read and write boundaries for logbook use cases."""
 
 import difflib
-import hashlib
 from dataclasses import dataclass
 
 from logbook_cli.document import (
@@ -44,6 +43,8 @@ def writable(root: str, log: str, token: str) -> Document:
 
 
 def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Result:
+    from logbook_cli.state import encode, path_for, section, token
+
     require_valid_candidate(doc, changed)
     write_bytes(doc, changed.encode("utf-8"), dry_run)
     path = str(doc.path.relative_to(doc.root))
@@ -53,7 +54,7 @@ def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Resul
         "issues_introduced": [],
         "version_token": doc.token
         if dry_run
-        else hashlib.sha256(changed.encode("utf-8")).hexdigest(),
+        else token(changed.encode("utf-8"), encode(doc.metadata)),
         **details,
     }
     diff = None
@@ -66,5 +67,18 @@ def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Resul
                 tofile=path,
             )
         )
+        state_label = "{}#{}".format(
+            path_for(doc.path, doc.root).relative_to(doc.root),
+            section(doc.path, doc.root),
+        )
+        state_diff = "".join(
+            difflib.unified_diff(
+                (doc.state_data or b"").decode().splitlines(keepends=True),
+                (encode(doc.metadata) or b"").decode().splitlines(keepends=True),
+                fromfile=state_label,
+                tofile=state_label,
+            )
+        )
+        diff += state_diff
         value["diff"] = diff
     return Result(value, text=diff)

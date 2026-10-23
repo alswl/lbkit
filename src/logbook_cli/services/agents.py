@@ -14,8 +14,7 @@ def binding(doc, target, dispatch_id):
     rows = [
         r
         for _, r in records.read(target, "agent")
-        if r.get("id") == dispatch_id
-        and r.get("log") == str(doc.path.relative_to(doc.root))
+        if r.get("id") == dispatch_id and r.get("log_id") == records.document_id(doc)
     ]
     if len(rows) != 1:
         raise LbError("missing or ambiguous agent binding", EXIT_REFUSED)
@@ -50,6 +49,7 @@ def bind(root, log, thinking, dispatch_id, input_file, token, dry_run):
         **item,
         "id": dispatch_id,
         "log": str(doc.path.relative_to(doc.root)),
+        "log_id": records.document_id(doc),
         "task_id": dispatch["task_id"],
     }
     return save(

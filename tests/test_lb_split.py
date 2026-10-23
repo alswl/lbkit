@@ -67,7 +67,7 @@ class TaskSplitTest(unittest.TestCase):
         self.assertEqual(preview["version_token"], token)
         self.assertIn(f"+- [-] {ORIGINAL}", preview["diff"])
         result = self.split(token=token)
-        self.assertEqual(result["version_token"], hashlib.sha256(self.log.read_bytes()).hexdigest())
+        self.assertEqual(result["version_token"], self.context()["version_token"])
         self.assertNotEqual(result["version_token"], token)
         current = self.context()
         tasks = current["stages"][0]["tasks"]

@@ -45,11 +45,12 @@ def identify(root, log, stage, task, task_id, token, dry_run):
     }
     nl = "\r\n" if b"\r\n" in doc.data else "\n"
     prefix = "" if doc.text[: target.end].endswith("\n") else nl
+    records.put(doc, "task", item)
     changed = (
         doc.text[: target.end]
         + prefix
         + "    "
-        + records.encode("task", item)
+        + f"<!-- lb-task {task_id} -->"
         + nl
         + doc.text[target.end :]
     )
@@ -92,6 +93,10 @@ def transition(
         "status": status,
         "basis": basis,
         "at": datetime.now(timezone.utc).isoformat(),
+        "history": [
+            *old.get("history", []),
+            {k: v for k, v in old.items() if k != "history"},
+        ],
     }
     if action == "record-result":
         try:
@@ -124,7 +129,7 @@ def transition(
     changed = identity.replace(doc, index, item)
     if action == "cancel":
         changed = changed[: task.state_at] + "-" + changed[task.state_at + 1 :]
-        revised = parse_text(changed.encode(), doc.path, doc.root)
+        revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
         target, _, _ = identity.lookup(revised, task_id)
         changed = resolve_task(
             revised, target, "human-cancelled", basis, "Cancelled by explicit decision."
@@ -136,7 +141,7 @@ def transition(
             + changed[task.state_at + 1 :]
         )
     if action == "reopen" and task.resolution:
-        revised = parse_text(changed.encode(), doc.path, doc.root)
+        revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
         target, _, _ = identity.lookup(revised, task_id)
         from logbook_cli.models import Field
 

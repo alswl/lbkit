@@ -283,7 +283,7 @@ this clarifies the existing role boundary and adds no consumer configuration.
 
 The current CLI introduces opt-in lifecycle metadata and generated short page status, template contract/render/provenance operations, guarded Thinking event writes, delivery-link audit, a host feedback ledger and offline dispatch bindings. Consumers adopting these commands must review the installable lifecycle-operations contract and integrate the updated skill steps. Old human-authored page status is preserved and may need explicit migration. No historical project/template/feedback conversion is automatic. The new shared lb-workflow name may collide with a host-owned skill; the existing installer preserves it and reports the conflict. No force overwrite is added. The installer manifest discovers both new skills and the new installable contract dynamically. Package/config/skill release versions are not bumped.
 
-Atomic workflow maintenance adds single-file `workflow update` with candidate preview/CAS, and destination-aware create-only instance validation. Skills continue to own semantic edits, bindings and recovery; no multi-file transaction or new host configuration is added. Directory substitution preserves following rulings; declared YAML front matter is retained. Unclosed Thinking syntax refuses event append. Retro explicitly limits coverage to its fixed snapshot rather than discovering other branches; session cleanup remains an execution-skill responsibility. No existing templates or logs are migrated automatically.
+Atomic workflow maintenance adds `workflow update` for one document/state pair with candidate preview/CAS, and destination-aware create-only instance validation. Skills continue to own semantic edits, bindings and recovery; adapter bindings remain separate and no new host configuration is added. Directory substitution preserves following rulings; declared YAML front matter is retained. Unclosed Thinking syntax refuses event append. Retro explicitly limits coverage to its fixed snapshot rather than discovering other branches; session cleanup remains an execution-skill responsibility. No existing templates or logs are migrated automatically.
 
 ## Instruction language and maintenance
 
@@ -335,3 +335,35 @@ none exists. A local advisory `lb/.lock` serializes cooperating writers. Herdr
 controls read native `agent_session` IDs and keep flat-ID compatibility. Runtime
 provisioning stays host-owned. No package, skill or configuration version is
 bumped without human instruction.
+
+## External document state
+
+Consumer Markdown machine records now live in the project's `lb/` directory, one
+`lb/<name>.md.json` per mind (mf keys each type directory by mind name), with a
+section per document. Consumers must retain and review these files with their
+documents and ignore `lb/*.transaction` and `lb/.lock`.
+Only short task IDs remain in Markdown; inline JSON and event blocks have no
+compatibility reader or migration. Document CAS includes the Markdown and its own state section;
+execution/configuration JSON retains its separate token semantics. Root-directory
+locks and recoverable journals coordinate local writes; they cannot make runtime
+transport or arbitrary editor writes transactional. See the installed
+[document state contract](../installable/document-state.md) for identity, human
+edits, merge and recovery rules. Installer manifest discovery already includes
+new contract Markdown files; consumer state is not installed by lbkit.
+
+This is a storage and token compatibility change. No project, skill or existing
+configuration version is advanced without explicit human instruction. Skills
+must notify users of CLI failure and continue useful authorized work through the
+shared fallback; unsafe dependent writes remain explicitly pending. A CLI
+outage adds no approval requirement or alternate execution role. Behavior cases
+must distinguish tool outage, business failure and CAS refusal, and verify that
+fallback never invents success or reintroduces inline metadata.
+
+An authorized update blocked by the writer still produces a concrete pending
+change with identity, current/proposed values and evidence, using guarded command
+inputs where appropriate. This clarifies the existing fallback handoff; it adds
+no consumer file, approval gate or permission to apply a raw sidecar patch.
+Source locators require numbered physical reads when CLI context is unavailable.
+Read-only requests remain observations, not pending write proposals. Keep eval
+cases, rubrics and grading files outside the subject workspace when preparing
+real skill trials; install only the runtime skill content and its references.

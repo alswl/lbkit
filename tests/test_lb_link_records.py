@@ -28,7 +28,7 @@ class LinkObservationTest(unittest.TestCase):
         return self.cli('log', 'context', "log.md")
 
     def verify(self, line, **kwargs):
-        args = ['log', 'links', 'record-check', "log.md", "--line", str(line), "--target", URL, "--label", "Reference", "--observed-at", kwargs.pop("at", "2026-10-14T08:00:00+08:00"), "--observer", "sailor-a", "--basis", "host tool observation", '--expect-version', kwargs.pop("token", self.context()["version_token"])]
+        args = ['log', 'links', 'record-check', "log.md", "--line", str(line), "--target", URL, "--label", "Reference", "--observed-at", kwargs.pop("at", "2026-10-14T08:00:00+08:00"), "--observer", "sailor-a", "--basis", "host tool observation", '--expect-version', kwargs.pop("token") if "token" in kwargs else self.context()["version_token"]]
         code = kwargs.pop("code", 0)
         for key, value in kwargs.items():
             args.append("--" + key.replace("_", "-"))
@@ -51,7 +51,7 @@ class LinkObservationTest(unittest.TestCase):
         self.assertEqual(self.unchecked(), [8])
         self.assertTrue(self.log.read_bytes().startswith(original))
         self.assertFalse((self.root / "TODO.md").exists())
-        self.assertEqual(sorted(p.name for p in self.root.iterdir()), ["log.md"])
+        self.assertEqual(sorted(p.name for p in self.root.iterdir()), ["lb", "log.md"])
         self.verify(8, token=token, code=4)
 
     def test_task_condition_changes_invalidate_but_state_and_line_moves_do_not(self):
@@ -99,14 +99,16 @@ class LinkObservationTest(unittest.TestCase):
             with self.subTest(suffix=suffix):
                 self.log.write_text(original + "\n" + suffix)
                 before = self.log.read_bytes()
-                self.verify(4, code=4)
+                if suffix.startswith("<!-- lb-"):
+                    self.cli('log', 'context', "log.md", code=4)
+                else:
+                    self.verify(4, code=4)
+                    self.assertFalse(self.context()["link_verifications"])
                 self.assertEqual(self.log.read_bytes(), before)
-                self.assertFalse(self.context()["link_verifications"])
 
     def test_malformed_hidden_record_and_unrelated_local_link_checks(self):
         self.log.write_text(self.log.read_text() + '\n<!-- lb-link-verification {} -->\n[Missing](missing.md)\n')
-        codes = {i["code"] for i in self.cli('log', 'check', "log.md", code=1)}
-        self.assertTrue({"LINK_VERIFICATION_INVALID", "LOCAL_LINK_MISSING", "LINK_UNVERIFIED"} <= codes)
+        self.cli('log', 'check', "log.md", code=4)
         self.log.write_text(self.log.read_text().replace('<!-- lb-link-verification {} -->', '```\n<!-- lb-link-verification {} -->\n```'))
         self.assertNotIn("LINK_VERIFICATION_INVALID", {i["code"] for i in self.cli('log', 'check', "log.md", code=1)})
 

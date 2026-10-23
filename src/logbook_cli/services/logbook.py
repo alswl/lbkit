@@ -44,7 +44,25 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
     assert all or log is not None
     base = root_path(root)
     paths = discover(base, projects_dir) if all else [safe_path(base, log or "")]
-    problems = [issue for path in paths for issue in check(parse(path, base))]
+    from logbook_cli.document import issue
+    from logbook_cli.records import document_id
+
+    docs = [parse(path, base) for path in paths]
+    problems = [problem for doc in docs for problem in check(doc)]
+    identities: dict[str, str] = {}
+    for doc in docs:
+        identity = document_id(doc)
+        if identity and identity in identities:
+            problems.append(
+                issue(
+                    doc,
+                    1,
+                    "DUPLICATE_DOCUMENT_ID",
+                    "copied document identity also used by " + identities[identity],
+                )
+            )
+        if identity:
+            identities[identity] = str(doc.path.relative_to(base))
     return Result(
         problems,
         EXIT_ISSUES if any(p["code"] != "LINK_UNVERIFIED" for p in problems) else 0,
@@ -100,7 +118,7 @@ def sync(root: str, log: str, token: str, dry_run: bool) -> Result:
             for r in doc.status_lines
         )
     ):
-        changed = render(parse_text(changed.encode(), doc.path, doc.root))
+        changed = render(parse_text(changed.encode(), doc.path, doc.root, source=doc))
     return save(
         doc,
         changed,

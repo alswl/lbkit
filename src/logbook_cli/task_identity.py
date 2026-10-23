@@ -82,14 +82,8 @@ def snapshot(task, item):
 
 
 def replace(doc, index, item):
-    nl = "\r\n" if b"\r\n" in doc.data else "\n"
-    return (
-        doc.text[: doc.offsets[index]]
-        + "    "
-        + records.encode("task", item)
-        + nl
-        + doc.text[doc.offsets[index] + len(doc.lines[index]) :]
-    )
+    records.put(doc, "task", item)
+    return doc.text
 
 
 def acceptance_issues(doc):
@@ -102,7 +96,11 @@ def acceptance_issues(doc):
         elif (
             item["status"] == "accepted"
             and item.get("submission")
-            and not view["evidence_applicable"]
+            and (
+                not view["evidence_applicable"]
+                or item.get("acceptance", {}).get("candidate")
+                != item["submission"].get("candidate")
+            )
         ):
             issues.append(identity + ": accepted evidence no longer applies")
     return issues

@@ -42,7 +42,7 @@ ADVISORY_ISSUES = {
 
 def introduced_issues(doc: Document, changed: str) -> list[dict]:
     """Find deterministic new problems without re-reporting historical ones."""
-    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
 
     def identity(item: dict) -> tuple[str, str]:
         message = item["message"]
@@ -258,7 +258,7 @@ def rewrite_task(
         raise LbError("--text is task text only, without a checkbox", EXIT_USAGE)
     start = task.state_at + 3
     changed = doc.text[:start] + text + doc.text[start + len(task.text) :]
-    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     updated = find_task(candidate, task.stage, text)
     if assign_repo is not None:
         single_line(assign_repo, "repository")
@@ -331,7 +331,7 @@ def split_task(doc: Document, task: Task, texts: tuple[str, ...], decision: str)
         raise LbError("replacement task text must be new and unique", EXIT_REFUSED)
 
     changed = doc.text[: task.state_at] + "-" + doc.text[task.state_at + 1 :]
-    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     original = find_task(retired, task.stage, task.text)
     changed = resolve_task(
         retired,
@@ -340,7 +340,7 @@ def split_task(doc: Document, task: Task, texts: tuple[str, ...], decision: str)
         decision,
         "Original package replaced by: " + json.dumps(texts, ensure_ascii=False),
     )
-    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     original = find_task(retired, task.stage, task.text)
     last = task_content_end(retired, original)
     at = retired.offsets[last] + len(retired.lines[last])
@@ -352,7 +352,7 @@ def split_task(doc: Document, task: Task, texts: tuple[str, ...], decision: str)
         f"- [ ] {text}{newline}    - {source}{newline}" for text in texts
     )
     changed = retired.text[:at] + additions + retired.text[at:]
-    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root)
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     replacements = [find_task(candidate, task.stage, text) for text in texts]
     if any(t.human or t.preflight_blocker for t in replacements):
         raise LbError(

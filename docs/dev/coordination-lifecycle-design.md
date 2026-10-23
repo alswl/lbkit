@@ -5,13 +5,13 @@ Status: implementation design. The atomic-operation boundary below supersedes br
 
 ## Atomic CLI boundary
 
-Skills own decisions and sequences; the CLI owns deterministic observations and single-file mutations. A command succeeding proves only its declared effect, not completion of a workflow or human approval. Do not implement a multi-file scaffold, retrospective or session-cleanup transaction.
+Skills own decisions and sequences; the CLI owns deterministic observations and guarded document/state-pair mutations. A command succeeding proves only its declared effect, not completion of a workflow or human approval. The document and its state sidecar share recoverable writes; this does not make adapter bindings, retrospective workflows or session cleanup transactional.
 
 | Operation | CLI | Skill responsibility |
 |---|---|---|
 | Maintain a template | show/check; create or replace one complete candidate with token, preview and CAS | lb-workflow establishes semantics, protects goals/gates, reviews the diff and separately records its source |
-| Generate an instance | render fills slots without writing; instantiate validates at the destination and creates only that file | lb-scaffold confirms inputs, selects the output, creates/verifies adapter bindings separately and reports partial setup honestly |
-| Record lifecycle/events | state-set updates one log; run record appends one readable, idempotent event to Thinking | plan/push/update determine authorization, facts, event attribution and recovery |
+| Generate an instance | render fills slots without writing; instantiate validates at the destination and creates that document and its state sidecar | lb-scaffold confirms inputs, selects the output, creates/verifies adapter bindings separately and reports partial setup honestly |
+| Record lifecycle/events | state-set updates one log; events record stores one idempotent event in Thinking’s state sidecar | plan/push/update determine authorization, facts, event attribution and recovery |
 | Close out | audit/metrics/closeout report saved evidence | lb-update aligns actual returns; authorized push performs live checks and cleanup |
 | Retrospective | scan one fixed ref; record/update one ledger | lb-retro selects scope, groups sources and judges adoption |
 
@@ -58,13 +58,13 @@ Examples:
 
 The line contains lifecycle, the current Stage identifier when applicable, and at most one progress qualifier. No full task text, URLs, runtime IDs, counters, timestamps or narrative history. Details remain available from `lb log state --json` and the owning task. Long stage titles are not copied into the line; where no short identifier exists, omit it rather than inventing a new stage name.
 
-Extend existing `lb log sync LOG --expect-version TOKEN --dry-run` to create or replace this single owned line. All lifecycle transitions call the same renderer and update metadata plus the line in one file mutation. Ordinary status observation only writes when permitted. Existing free-text status and human commentary are preserved; migration previews identify them and must not silently erase or reinterpret them. Duplicate owned lines are an error.
+Extend existing `lb log sync LOG --expect-version TOKEN --dry-run` to create or replace this single owned line. All lifecycle transitions call the same renderer and update sidecar metadata plus the line in a recoverable paired-file write. Ordinary status observation only writes when permitted. Existing free-text status and human commentary are preserved; migration previews identify them and must not silently erase or reinterpret them. Duplicate owned lines are an error.
 
 ### State model
 
 Persist only lifecycle facts: `draft`, `ready`, `active`, `paused`, `completed`, `terminated`. `ready` means the route is confirmed, not that execution is authorized. Waiting for a person, a preflight gate, and a blocker are progress conditions, not separate project lifecycles.
 
-Store current lifecycle in a reserved document-level metadata comment, with decision/reference, observation time, run identity and applicable document/candidate references. Do not create a second project database. Transition history belongs in the bound Thinking event stream, with stable event IDs. A missing history write is a recoverable partial operation, not a reason to apply the transition twice.
+Store current lifecycle in the adjacent document state JSON, with decision/reference, observation time, run identity and applicable document/candidate references. Do not create a second project database. Transition history belongs in the bound Thinking event stream, with stable event IDs. A missing history write is a recoverable partial operation, not a reason to apply the transition twice.
 
 Proposed CLI: `lb log state set LOG --lifecycle VALUE --basis REFERENCE --expect-version TOKEN [--dry-run]`. Keep existing `lb log state LOG --json` compatible, adding subcommand dispatch without removing the old form. If that grammar cannot be made unambiguous, select a distinct mutation command during implementation and document it before migration.
 

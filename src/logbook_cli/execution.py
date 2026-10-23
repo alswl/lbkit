@@ -7,27 +7,18 @@ import re
 from contextlib import contextmanager
 from pathlib import Path
 
+from logbook_cli import state
 from logbook_cli.document import EXIT_REFUSED, LbError, context_command, parse_text
 from logbook_cli.models import Field
 from logbook_cli.storage import create_bytes, write_bytes
 
 
 def project(doc):
-    for parent in doc.path.parents:
-        if not parent.is_relative_to(doc.root):
-            break
-        if (parent / "mind.yaml").is_file():
-            return parent
-    return doc.root
+    return state.project(doc.path, doc.root)
 
 
 def directory(doc):
-    path = project(doc) / "lb"
-    if path.is_symlink() or (path.exists() and not path.is_dir()):
-        raise LbError(
-            "execution directory must be a real project-local directory", EXIT_REFUSED
-        )
-    return path
+    return state.directory(doc.path, doc.root)
 
 
 def validate(value, path):
@@ -234,9 +225,14 @@ def require_token(doc, path, data, token):
 def write(doc, name, value, token, dry_run):
     path, data, old = read(doc)
     require_token(doc, path, data, token)
-    if not re.fullmatch(r"[\w][\w.-]*", name) or name in {".", ".."}:
+    # `<name>.md.json` belongs to document state of the same mind.
+    if (
+        not re.fullmatch(r"[\w][\w.-]*", name)
+        or name in {".", ".."}
+        or name.endswith(".md")
+    ):
         raise LbError(
-            "execution name must be one stable filename component", EXIT_REFUSED
+            "execution name must be one stable filename component not ending in .md", EXIT_REFUSED
         )
     target = directory(doc) / f"{name}.json"
     if path and path != target:

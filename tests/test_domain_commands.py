@@ -153,6 +153,9 @@ class DomainTest(unittest.TestCase):
             "set-status", "d1", "--status", "closed", "--basis", "observed"
         )
         self.assertEqual(self.task_view()["status"], "pending")
+        self.assertEqual(self.thinking.read_text(), "# Thinking\n\nHuman notes stay.\n")
+        from logbook_cli.state import path_for
+        self.assertTrue(path_for(self.thinking, self.root).exists())
 
     def test_only_canonical_routes_are_exposed(self):
         self.assertEqual(

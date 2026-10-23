@@ -41,7 +41,6 @@ def verify(
         OUTCOMES,
         comment_records,
         digest,
-        encode,
         local_digest,
         occurrence,
         task_binding,
@@ -111,13 +110,9 @@ def verify(
     if fingerprint:
         record["local_digest"] = fingerprint
     record["record_id"] = digest(record)
-    newline = "\r\n" if b"\r\n" in doc.data else "\n"
+    from logbook_cli import records
+
     changed = doc.text
     if not any(r["record_id"] == record["record_id"] for r in old_records):
-        changed += (
-            ("" if changed.endswith(("\n", "\r")) else newline)
-            + newline
-            + encode(record)
-            + newline
-        )
+        changed = records.put(doc, "link-verification", record)
     return save(doc, changed, dry_run, record_id=record["record_id"])

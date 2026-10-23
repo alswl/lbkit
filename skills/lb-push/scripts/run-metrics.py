@@ -6,7 +6,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
-from logbook_cli.run_metrics import calculate, events
+from logbook_cli.document import LbError, parse
+from logbook_cli.run_metrics import calculate, events  # noqa: F401 (tests)
+from logbook_cli.services.closeout import state_events
 
 
 def main():
@@ -24,13 +26,13 @@ def main():
         path = (root / relative).resolve(strict=True)
         if not path.is_relative_to(root) or not path.is_file():
             raise OSError("Thinking must be a file inside root")
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
+        doc = parse(path, root)
+    except (OSError, UnicodeError, LbError) as exc:
         print(str(exc), file=sys.stderr)
         return 3
     try:
-        print(json.dumps(calculate(events(text), args.run_id, args.scope), ensure_ascii=False))
-    except (ValueError, TypeError, KeyError) as exc:
+        print(json.dumps(calculate(state_events(doc), args.run_id, args.scope), ensure_ascii=False))
+    except (ValueError, TypeError, KeyError, LbError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     return 0

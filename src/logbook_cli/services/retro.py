@@ -177,20 +177,12 @@ def record(root, ledger, input_file, token, dry_run, update=False):
     if len(matches) > 1 or (update and not matches):
         raise LbError("missing or duplicate retro ID", EXIT_REFUSED)
     if matches:
-        index, previous = matches[0]
+        _, previous = matches[0]
         if not update and previous != item:
             raise LbError("ID exists; use retro update", EXIT_REFUSED)
         if not set(previous["source_ids"]).issubset(item["source_ids"]):
             raise LbError("update cannot discard source identity", EXIT_REFUSED)
-        nl = "\r\n" if b"\r\n" in doc.data else "\n"
-        changed = (
-            doc.text[: doc.offsets[index]]
-            + records.encode("retro", item)
-            + nl
-            + doc.text[doc.offsets[index] + len(doc.lines[index]) :]
-        )
-    else:
-        changed = records.append(doc, "retro", item)
+    changed = records.put(doc, "retro", item)
 
     def display(value):
         return f"- **{value['id']}** {value['summary']} · {value['disposition']} · {value['implementation']}"
