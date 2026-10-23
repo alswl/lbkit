@@ -26,6 +26,16 @@ uv run --locked mypy src/logbook_cli
 uv build
 ```
 
+## Dependency Index
+
+The project uses official PyPI (`https://pypi.org/simple`) for dependency
+resolution and the committed lockfile. Regenerate it with `uv lock` without
+`--upgrade` when changing dependency metadata, then verify `uv lock --check`.
+Do not commit a lockfile generated against a personal mirror. Explicit uv index
+environment variables and command-line options override project configuration;
+unset mirror overrides when installing or checking the lockfile. Installation
+continues to use `--locked` so it cannot silently change dependency resolution.
+
 ## Local Git Hooks
 
 The repository provides optional Lefthook checks that mirror CI. Install
