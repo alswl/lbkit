@@ -105,7 +105,12 @@ def record_usage(root, log, thinking, input_file, token, dry_run):
         data = json.loads(safe_path(doc.root, input_file).read_text())
         keys = {"id", "task_id", "skill", "state", "outcome", "basis", "at"}
         if not isinstance(data, dict) or set(data) != keys:
-            raise ValueError("usage input requires: " + ", ".join(sorted(keys)))
+            raise ValueError(
+                "usage input requires one JSON object with exactly: "
+                + ", ".join(sorted(keys))
+                + "; arrays/wrappers are not accepted. Record each return separately "
+                "with the current Thinking token, then read back skill usage."
+            )
         for key in keys:
             records.single_line(data[key], key)
         records.observed(data["at"])

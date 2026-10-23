@@ -367,3 +367,14 @@ Source locators require numbered physical reads when CLI context is unavailable.
 Read-only requests remain observations, not pending write proposals. Keep eval
 cases, rubrics and grading files outside the subject workspace when preparing
 real skill trials; install only the runtime skill content and its references.
+
+## Supplied returns and recoverable write errors
+
+Progress/closeout input discovery includes supplied structured returns within the
+authorized task directory, not only saved state. A local input/token mistake may
+be corrected after rereading and reassessing the missing authorized change; this
+does not permit blind CAS retries, stale acceptance or uncertain runtime resends.
+Usage recording is independent of unknown timing and remote observations. Reports
+name the existing owner and evidence needed, or Captain’s owner-resolution action.
+These clarify existing coordination duties; they add no consumer files, external
+execution permissions, configuration or version changes.

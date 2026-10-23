@@ -263,6 +263,54 @@ class DomainTest(unittest.TestCase):
         data.update(state="declared", outcome="unknown")
         record(code=4)
 
+    def test_usage_input_recovery_preserves_records_and_cas(self):
+        self.identify()
+        path = self.root / "skills/example/SKILL.md"
+        path.parent.mkdir(parents=True)
+        path.write_text("---\nversion: 1.0\n---\nExample")
+        rows = [
+            dict(
+                id=identity, task_id="build", skill="example", state=state,
+                outcome="unknown", basis="executor return",
+                at="2026-01-01T00:00:00Z",
+            )
+            for identity, state in (("u1", "declared"), ("u2", "invoked"))
+        ]
+        token = self.token("thinking.md")
+        original_log = self.log.read_bytes()
+        original_thinking = self.thinking.read_bytes()
+
+        def record(data, expected, code=0, preview=False):
+            self.json_file("usage.json", data)
+            result = self.call(
+                "skill", "record-usage", "log.md", "--thinking", "thinking.md",
+                "--input-file", "usage.json", "--expect-version", expected,
+                *(("--dry-run",) if preview else ()), code=code,
+            )
+            if code:
+                self.assertIsInstance(result.exception, LbError)
+                self.assertEqual(result.exception.code, code)
+            return result
+
+        error = record(rows, token, code=2)
+        self.assertIsInstance(error.exception, LbError)
+        self.assertIn("one JSON object", str(error.exception))
+        self.assertEqual(token, self.token("thinking.md"))
+        record(rows[0], "copied-token-error", code=4)
+        self.assertEqual(token, self.token("thinking.md"))
+        self.assertEqual(record(rows[0], token, preview=True)["version_token"], token)
+        next_token = record(rows[0], token)["version_token"]
+        record(rows[1], token, code=4)
+        self.assertEqual(next_token, self.token("thinking.md"))
+        record(rows[1], next_token)
+        saved = self.call("skill", "usage", "log.md", "--thinking", "thinking.md")["usage"]
+        self.assertEqual(
+            [(r["id"], r["state"], r["outcome"]) for r in saved],
+            [("u1", "declared", "unknown"), ("u2", "invoked", "unknown")],
+        )
+        self.assertEqual(original_log, self.log.read_bytes())
+        self.assertEqual(original_thinking, self.thinking.read_bytes())
+
     def test_workflow_availability_and_retirement(self):
         fixtures.OperationsTest.make_workflow(self)
         self.workflow_input = lambda: fixtures.OperationsTest.workflow_input(self)

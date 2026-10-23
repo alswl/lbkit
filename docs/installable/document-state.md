@@ -72,6 +72,15 @@ replacing files, and keep other documents' sections. A record edit in the sectio
 invalidates an old token; JSON whitespace does not. This is local coordination, not a
 distributed Git lock; editors that bypass the protocol can still race with writes.
 
+For a refused local record write, reread the named context and compare the current
+records and criteria with the attempted change. If the cause was a malformed
+input or copied token and the same change remains authorized and missing, correct
+the invocation, extract the token programmatically, preview and finish the write.
+A refusal alone is not a reason to stop after rereading. If criteria changed,
+reassess the evidence first; do not merely refresh the token and replay acceptance.
+Stop retries when the cause remains unresolved or another conflict occurs, and
+report the remaining change. This procedure never retries an uncertain runtime send.
+
 Two files cannot be atomically replaced together. The writer durably records
 before/after images in `lb/<name>.md.transaction`, then publishes each file.
 Readers of every document of that mind refuse unfinished transactions. Keep this

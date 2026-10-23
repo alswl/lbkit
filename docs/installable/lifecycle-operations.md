@@ -39,6 +39,19 @@ Captain records coordination events during lb-push; Sailor returns actual first 
 
 Thinking’s `lb/` state section retains run-event records; never add JSON fences to its body. Same run/event IDs are idempotent; conflicts fail. Wait/interruption intervals use unions, not duration sums. A recovery or skill switch does not reset run/package identity. Later defects correct an erroneous first-pass pass. Unknown interactions, partial timing and absent denominators remain unknown. Remaining wall time is not net execution time. The report does not run cleanup, complete human tasks, accept deliverables or create new obligations.
 
+Before reporting missing returns, inspect the supplied input files in the authorized
+task directory, including JSON. Reconcile them with saved `skill usage`: an empty
+store is not evidence that the supplied returns are absent. Record each applicable
+usage object using the [usage contract](domain-commands.md), then read back the
+saved records. Unknown timing or remote accessibility does not block independent
+usage recording. If a run ID is unavailable, report that metrics gap without
+inventing an ID or withholding the other authorized updates.
+
+For every required missing observation, report the existing responsible role or
+repository, the evidence needed and the action that resolves the gap. When no
+owner is recorded, mark ownership unknown and assign Captain the coordination
+action of resolving it; do not invent an assignee or dispatch new work.
+
 At Stage/project close, update reports elapsed/wait/interruption coverage, human interaction count and first-pass numerator/denominator with scope. Unknown metrics are not an extra Stage gate. Keep the compact summary in Thinking, not a growing block at the top of the Logbook.
 
 ## Workflow CLI

@@ -270,7 +270,16 @@ def register(app):
         skill_capabilities.record_usage,
         LOG,
         THINKING,
-        INPUT,
+        click.option(
+            "--input-file",
+            required=True,
+            metavar="FILE",
+            help=(
+                "One usage JSON object inside root: id, task_id, skill, state, "
+                "outcome, basis, at. For several returns, record each separately "
+                "using the returned Thinking token; arrays are not accepted."
+            ),
+        ),
         TOKEN,
         DRY_RUN,
     )

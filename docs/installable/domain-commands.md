@@ -94,7 +94,11 @@ Definitions come only from the selected repository. Usage JSON requires `id`, `t
 `skill`, `state`, `outcome`, `basis`, `at` (ISO timestamp). States are declared, invoked,
 observed; only observed permits effective/ineffective/failed, otherwise use unknown.
 `skill record-usage LOG --thinking THINKING --input-file FILE --expect-version TOKEN`
-pins the definition digest at the first record. Later definition edits do not rewrite
+takes one object with exactly those fields, not an array or wrapper. For multiple
+supplied returns, prepare one input per record inside the approved root, preview
+and save each with the Thinking token, then read back `skill usage`. Extract tokens
+from JSON programmatically; use the successful write token for the next record.
+The command pins the definition digest at the first record. Later definition edits do not rewrite
 past adoption evidence. Captain aligns returned usage in lb-update; lb-retro consolidates
 it on the host main branch without manufacturing project tasks.
 

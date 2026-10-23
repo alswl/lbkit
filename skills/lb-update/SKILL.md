@@ -48,6 +48,8 @@ Resolve linked rules relative to the real path of the document containing the li
 
 Input is the logbook location and the requested intent. Refresh progress additionally uses available candidates, original evidence or an explicit human decision; a reread does not require a completion evidence package. Before starting you must read the [configuration contract](../../docs/installable/configuration.md) and resolve documents; before writing you must read the [logbook format](../../docs/installable/logbook-format.md) and the [document adapter workflow](references/document-adapters.md).
 
+Before declaring supplied returns missing, inspect the explicitly bound inputs and list files in the authorized task directory without limiting discovery to Markdown or state files. Read relevant return files, including JSON; an empty saved usage store does not mean no executor returns were supplied. Do not widen the search to other repositories.
+
 progress/close must also read the [acceptance and wrap-up workflow](references/verification.md). Without the required rules or evidence, do not change completion conclusions; missing content cannot be replaced by defaults.
 
 Apply the [format](../../docs/installable/logbook-format.md) ownership rules: explicit human decisions may locally rewrite unfinished agent tasks; human first lines remain protected, with only actual review-start progress writable. Keep process details in Thinking and source pointers in the corresponding existing host records, not main-logbook artifact inventories.
