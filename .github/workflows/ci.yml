@@ -1,8 +1,8 @@
 name: CI
 
-# Actions 预算有限（2026-10-28 负责人）：只保留 vease-app 自动 CI，这里改为手动触发
 on:
-  workflow_dispatch:
+  push:
+  pull_request:
 
 permissions:
   contents: read
