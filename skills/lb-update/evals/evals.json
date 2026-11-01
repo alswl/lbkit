@@ -292,13 +292,13 @@
     {
       "id": 29,
       "prompt": "The user asks to organize lbkit-skills.yaml recipes. bin/lb skill extract --json shows the writing logbook's 「开发：8 张未入正文的配图…」 todo recorded `mf-cli` and `excalidraw-diagram` (redraw only), back-referencing wp-03; wp-03 and its thinking show d2 was actually used for the redraws. bin/lb skill history also shows d2's SKILL.md was read inside the minds worktree.",
-      "expected_output": "Actual usage wins: the entry's skill chain is d2 → mf-cli, with a description noting the plan named excalidraw-diagram while d2 was actually used; present the organized result as a table for human confirmation before running bin/lb config recipe create entry by entry.",
+      "expected_output": "Route recipe-definition maintenance to lb-init. Preserve the current Logbook route and recipe registry under lb-update; actual usage may be reported with attribution, without silently replacing the planned skill chain.",
       "files": [],
       "expectations": [
-        "Use both the extract and bin/lb skill history sources",
-        "Record d2 per actual usage; do not record excalidraw-diagram",
-        "The description covers prerequisites, how to run, limits, and sources",
-        "Show the table and get human confirmation before writing"
+        "Identify lb-init as the configuration-maintenance entry for the requested recipe work",
+        "Distinguish observed d2 usage from the originally planned excalidraw-diagram chain",
+        "Do not write recipes or rewrite task skill annotations through lb-update",
+        "Reuse explicit scope when composing lb-init; no new business execution"
       ]
     },
     {
@@ -326,12 +326,12 @@
     {
       "id": 32,
       "prompt": "Verify the return for Stage 04 「部署：导出终稿到博客仓；本地 Hugo 预览通过。」: the evidence is sufficient, and execution used mf-cli for the export and agent-browser for preview verification; lbkit-skills.yaml recipes has no entry covering this usage yet.",
-      "expected_output": "Complete the acceptance update per the evidence; propose in the report adding this usage via bin/lb config recipe create (with scope and description drafts), writing only after human confirmation.",
+      "expected_output": "Complete the evidence-backed progress update and record actual mf-cli/agent-browser usage. Report the optional recipe gap and route definition maintenance to lb-init without changing the planned route.",
       "files": [],
       "expectations": [
-        "The acceptance update proceeds as usual",
-        "Propose the new entry in the report with a draft",
-        "Do not call config recipe create before confirmation"
+        "The acceptance update proceeds against existing criteria",
+        "Actual usage retains its attribution; planned skill annotations remain unchanged",
+        "Report recipe maintenance through lb-init without an implicit configuration write"
       ]
     },
     {
@@ -1162,6 +1162,101 @@
           "name": "no_silent_consent",
           "type": "not_contains",
           "check": "Changes task state, selects a task by guesswork or treats lack of an answer as permission."
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "axis": "Update-only failure cannot redesign the route",
+      "coordination_seeds": [
+        "dialogue-update"
+      ],
+      "prompt": "Use /lb-update to refresh projects/demo/docs/log.md from records/return.json. Record the current situation and the missing result. No route change or new business execution is authorized.",
+      "expected_output": "Record the incomplete comparison and actionable gap while preserving all route-defining fields; a return recommendation does not authorize replanning.",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/route-boundary.json"
+      ],
+      "assertions": [
+        {
+          "name": "record_actual_gap",
+          "type": "contains",
+          "check": "Actual saved comparison remains incomplete and records that one approach is unavailable; the report task and human gate remain unfinished. Uses current context, preview and CAS for supported writes."
+        },
+        {
+          "name": "preserve_route",
+          "type": "contains",
+          "check": "Before/after Task membership, first-line results, order, goal, acceptance criteria, planned responsibility/repository and skill annotations are identical. Preserve human content and original evidence."
+        },
+        {
+          "name": "no_reroute_or_execution",
+          "type": "not_contains",
+          "check": "Removes or bypasses comparison, weakens criteria, changes the goal/owner/skill chain, marks a Task done or dispatches new work."
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "axis": "Mixed request composes planning before progress",
+      "coordination_seeds": [
+        "dialogue-update"
+      ],
+      "prompt": "Use /lb-update for projects/demo/docs/log.md. I approve changing the Overview goal to exactly \"Deliver a readable example report.\" and changing the report task Acceptance to exactly \"Report contains two readable sections.\" Save these changes and pause Compare approaches. Keep all Tasks in their current order and preserve the human gate. Do not execute business work.",
+      "expected_output": "Compose lb-plan for the explicitly authorized goal/criteria changes, read back the saved route, then lb-update to pause comparison without another approval or business execution.",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/route-boundary.json"
+      ],
+      "assertions": [
+        {
+          "name": "planning_owns_route",
+          "type": "contains",
+          "check": "Trace reads and applies lb-plan for the requested goal and Acceptance edits before lb-update writes the pause. Acknowledging a plan boundary only in the final reply is insufficient."
+        },
+        {
+          "name": "saved_route_and_state",
+          "type": "contains",
+          "check": "Saved Overview goal and report Acceptance match the supplied wording. Comparison is canonically paused with its previous active state retained; all Task first lines/order, other criteria/skills and human text/state are preserved."
+        },
+        {
+          "name": "fresh_progress_context",
+          "type": "contains",
+          "check": "After the planning write, trace reads back the saved route/current context and uses the resulting token for pause preview and write; final readback confirms both changes."
+        },
+        {
+          "name": "no_extra_gate_or_execution",
+          "type": "not_contains",
+          "check": "Requests approval again for the explicit change, changes unrelated route fields, treats a pause note as actual pause, claims the worker stopped or executes business work."
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "axis": "Pure state update preserves route without a planning ceremony",
+      "coordination_seeds": [
+        "dialogue-update"
+      ],
+      "prompt": "Use /lb-update for projects/demo/docs/log.md. Pause Compare approaches and leave the report check available. Change only the comparison state; do not change the route or start business work.",
+      "expected_output": "Apply the explicit pause directly with current CAS and readback; preserve all route fields and avoid an unnecessary planning or approval round.",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/route-boundary.json"
+      ],
+      "assertions": [
+        {
+          "name": "pause_with_current_cas",
+          "type": "contains",
+          "check": "Actual comparison state is pause through task pause with current context, matching preview/token and readback. Register an ID first if needed; the prior active state is retained."
+        },
+        {
+          "name": "route_unchanged",
+          "type": "contains",
+          "check": "Before/after goals, Task membership/first lines/order, acceptance/skill annotations, human gate and unrelated Task states remain unchanged."
+        },
+        {
+          "name": "no_unnecessary_planning_or_execution",
+          "type": "not_contains",
+          "check": "Requires lb-plan or another human approval solely to record the explicit pause, changes the route, dispatches work or claims the worker stopped."
         }
       ]
     }

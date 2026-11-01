@@ -1,6 +1,6 @@
 ---
 name: lb-handback
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 

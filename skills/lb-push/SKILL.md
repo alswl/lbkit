@@ -1,6 +1,6 @@
 ---
 name: lb-push
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Advance or resume a confirmed Logbook through its authorized endpoint. Preserve explicit Captain takeover across subsequent tasks; otherwise dispatch Sailors or select automatic problem-specific takeover. Stop at human gates or concrete blockers. push means project advancement, not Git push; use lb-status for queries."
 ---
 

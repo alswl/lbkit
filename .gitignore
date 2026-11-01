@@ -16,7 +16,7 @@ id_ed25519
 *.p12
 *.pfx
 
-# Private planning and agent instructions live in ../my-specs.
+# Local planning and agent instruction directories are not published.
 /specs
 /.specify
 /.claude/settings.local.json

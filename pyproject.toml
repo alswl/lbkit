@@ -1,6 +1,6 @@
 [project]
 name = "lbkit"
-version = "0.5.0.dev0"
+version = "0.6.0.dev0"
 description = "Read and safely update cross-repository collaboration logbooks"
 requires-python = ">=3.11"
 dependencies = [

@@ -1,6 +1,6 @@
 ---
 name: lb-workflow
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Create or refine reusable run-instance workflow templates and validate them through the lb workflow CLI; preserve human goals and gates, record provenance, and never dispatch execution or rewrite existing instances."
 ---
 

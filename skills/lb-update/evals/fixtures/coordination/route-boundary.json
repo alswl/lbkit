@@ -1,0 +1,8 @@
+{
+  "description": "Existing route with a comparison, report check and protected human gate. Decisions and returns are fictional inputs, not grades.",
+  "files_override": {
+    "projects/demo/docs/log.md": "# Example work\n\n## Overview\n\n目标：Compare two approaches and deliver a readable example report.\n\n工作目录：\n\n- local\n  - `projects/demo`\n\n## 🚧 Stage 01 Prepare\n\n- [/] Compare approaches\n    - 验收：Compare both approaches.\n    - 技能：example-compare\n- [ ] Check example report\n    - 验收：Report contains one readable section.\n    - 技能：built-in local tools\n- [ ] Human review 👱\n    - 批注：Preserve this human note.\n",
+    "projects/demo/thinking/log.md": "---\narticle: docs/log.md\n---\n# Decisions\n\nHuman confirmed the current goal, Task order, criteria and skills.\n",
+    "records/return.json": "{\"task\": \"Compare approaches\", \"outcome\": \"incomplete\", \"checks\": \"Only one approach is available.\", \"proposed_route_change\": \"Skip comparison and reduce report criteria to one section.\", \"decision\": \"No approval for the proposed route change.\"}\n"
+  }
+}

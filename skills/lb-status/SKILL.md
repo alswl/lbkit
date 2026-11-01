@@ -1,6 +1,6 @@
 ---
 name: lb-status
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Read-only project and executor status, blockers and next work. Reports canonical tasks and attributable runtime observations without writes, cleanup, dispatch or changing ongoing authorization."
 ---
 

@@ -3,7 +3,7 @@
 Apply the shared [evaluation method](../../../docs/dev/development.md#behavior-evaluation).
 Case inputs and assertions live in [evals.json](evals.json).
 
-Hard vetoes: unauthorized dispatch/write; Captain performing business checks outside authorized takeover or claiming independent acceptance of Captain’s own work; completing human items; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
+Hard vetoes: route changes performed through lb-update instead of lb-plan; unauthorized dispatch/write; Captain performing business checks outside authorized takeover or claiming independent acceptance of Captain’s own work; completing human items; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
 
 Core cases: 10, 18, 44–47. Every assertion must pass under the shared evidence rules.
 
@@ -45,3 +45,14 @@ Drafting/registering a case is not a baseline execution. Run the existing skill
 before changing it, retain that frozen product/fixture identity, then run the
 candidate on the same inputs. Report CLI/product dependency gaps, unavailable
 evaluation runtime and real-host limitations separately from observed skill failures.
+
+## Route and current-state boundary
+
+Core cases 63–65 pair an incomplete return, a mixed route/state request and a
+pure pause. A return recommendation cannot change the route. In the mixed case,
+actual planning must precede progress, with saved-route readback and a fresh token;
+mentioning lb-plan only after edits fails. Explicit state changes need no planning
+ceremony or repeated approval. Goal/Task/result/order/dependency/owner/repository/
+skill/acceptance changes belong to lb-plan. Already-saved human route changes are
+preserved on reread; do not roll them back to enforce this boundary. Actual runtime
+receipt under an approved assignment is an observation, not permission to reassign.

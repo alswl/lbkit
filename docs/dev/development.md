@@ -124,6 +124,18 @@ against the edited criteria. The existing format/progress/close modes apply only
 after an authorized write is selected. This adds no consumer configuration or
 new approval requirement; project and skill versions remain unchanged.
 
+Only `lb-plan` changes the route: Task membership/results, order, dependencies,
+planned responsibility/repositories, skill chains, goals, design and acceptance
+criteria. `lb-update` records current facts, applicable results and existing Task
+state. Pause/resume, blockers and explicit cancellation/reopening preserve identity,
+intended result and route position; they do not authorize rerouting. Mixed requests
+compose `lb-plan` then `lb-update`, reusing explicit authorization and reassessing
+affected evidence after reading the saved route. Shared writer capabilities do not
+expand either skill's responsibility. Consumers adopting this revision should route
+human-supplied task/goal rewrites through planning rather than progress maintenance;
+already-saved human edits remain authoritative. This introduces no configuration,
+version change or additional approval gate.
+
 ## Logbook coordination migration
 
 The coordination revision uses three roles: Admiral supplies goals and authorization, Captain maintains the route and coordinates assignments, and Sailor accepts a self-contained instruction and performs assigned business work including testing and review. Captain checks completion and is the sole Agent writer of the Logbook; Sailor needs no Logbook access. Independent checks, when needed, are Sailor tasks. A current result and applicable acceptance return support progress; a runtime exit or a bare completion claim does not. Status-only requests authorize no new business execution.
