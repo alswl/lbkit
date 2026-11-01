@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "projects/demo/docs/log.md": "# Example work\n\n## Stage 01 Prepare\n\n- [ ] Compare approaches\n- [ ] Check example report\n- [ ] Human review \ud83d\udc71\n    - \u6279\u6ce8\uff1aPreserve this human note.\n"
+  }
+}

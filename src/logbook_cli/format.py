@@ -11,6 +11,7 @@ CHECKBOX = {
     "/": TaskState.IN_PROGRESS,
     "x": TaskState.DONE,
     "-": TaskState.SKIPPED,
+    "!": TaskState.PAUSE,
 }
 STAGE_MARKERS = {
     "emoji": {
@@ -38,6 +39,8 @@ LABELS = {
         Field.STATUS: "状态",
         Field.ARTIFACT: "产物",
         Field.BLOCKER: "阻塞",
+        Field.RESUME: "恢复",
+        Field.DEPENDS: "依赖",
         Field.HANDOFF: "交接",
         Field.DIRECTORIES: "工作目录",
         Field.TODO: "待办",
@@ -51,6 +54,8 @@ LABELS = {
         Field.STATUS: "Status",
         Field.ARTIFACT: "Artifact",
         Field.BLOCKER: "Blocker",
+        Field.RESUME: "Resume",
+        Field.DEPENDS: "Depends",
         Field.HANDOFF: "Handoff",
         Field.DIRECTORIES: "Working directories",
         Field.TODO: "Todo",
@@ -146,7 +151,7 @@ def split_marker(title: str) -> tuple[str, str | None, str]:
 
 
 def task_metadata(task: Task) -> None:
-    task.status = CHECKBOX[task.state]
+    task.status = CHECKBOX.get(task.state, TaskState.UNKNOWN)
     task.owner = (
         Owner.HUMAN
         if HUMAN_MARKER in task.text or task.text.startswith(HUMAN_PREFIXES)

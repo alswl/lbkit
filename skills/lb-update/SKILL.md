@@ -67,7 +67,7 @@ For a reread, follow step 1 and report the aligned understanding and affected as
 Todo format constraints: keep a linear execution path; do not split an operation where one owner delivers one result — split into sequential tasks when the owner or the acceptance gate changes. Splitting an existing manifest requires a confirmed basis; never reshuffle under cover of a result update. A task is owned either by a human or by an agent, never both roles at once. Mark the responsible repository with `@REPO` at the end of the task text, before the responsibility-role emoji; preserve that order when writing back.
 
 Handoff entries serve the human: link current usable results and necessary limitations. Intermediate reports, work packages and raw records do not automatically become artifact lines. Align the current Sailor return and host-owned delivery entry; keep human-owned items free of agent artifacts.
-1. After applicable executor-result alignment passes, including any required independent Sailor review, for identified tasks use `task record-result` then `task accept --candidate ID` under the [domain command contract](../../docs/installable/domain-commands.md); only legacy unidentified tasks use `task update --status x`; use `task artifact` for agent artifacts and `task note` for necessary brief facts under a task. Preview the diff at every step, use returned version_token for the next already-understood write; re-read on conflicts or semantic changes, and finish with `log sync` and `log check`. Replace stale current status instead of appending routine history. Keep actual artifact entries in the Logbook and significant decisions/evidence in Thinking; do not add a body-level audit section. Do not add agent artifacts to human-owned items; format-only fixes do not change completion state. Handle local edits the script does not support via the document adapter workflow. Managed logbooks require mind-forge and its Prompt/Thinking bindings and any existing host source bindings. Missing mf blocks dependent writes, not authorized maintenance of skills or ordinary repository docs. Protect private feedback, and report check failures or unverified items. When the repository root has `lbkit-skills.yaml` and an accepted task this round used a work-type skill combination absent from available recipes, you may propose adding it in the report; after human confirmation, create a draft with `bin/lb config recipe create ID --input-file FILE --expect-version TOKEN --dry-run`, inspect and apply it, then use `recipe set-status` only when approval covers availability.
+1. After applicable executor-result alignment passes, including any required independent Sailor review, for identified simple tasks use `task complete` with a current token and basis; use `task record-result` then `task accept --candidate ID` only when the actual contract requires candidate-specific recorded acceptance under the [domain command contract](../../docs/installable/domain-commands.md); only legacy unidentified tasks use `task update --status x`; use `task artifact` for agent artifacts and `task note` for necessary brief facts under a task. Preview the diff at every step, use returned version_token for the next already-understood write; re-read on conflicts or semantic changes, and finish with `log check`. Run `log sync` only when the request also authorizes derived-summary/stage maintenance; a targeted Task change does not authorize creating or refreshing unrelated summary content. Replace stale current status instead of appending routine history. Keep actual artifact entries in the Logbook and significant decisions/evidence in Thinking; do not add a body-level audit section. Do not add agent artifacts to human-owned items; format-only fixes do not change completion state. Handle local edits the script does not support via the document adapter workflow. Managed logbooks require mind-forge and its Prompt/Thinking bindings and any existing host source bindings. Missing mf blocks dependent writes, not authorized maintenance of skills or ordinary repository docs. Protect private feedback, and report check failures or unverified items. When the repository root has `lbkit-skills.yaml` and an accepted task this round used a work-type skill combination absent from available recipes, you may propose adding it in the report; after human confirmation, create a draft with `bin/lb config recipe create ID --input-file FILE --expect-version TOKEN --dry-run`, inspect and apply it, then use `recipe set-status` only when approval covers availability.
 
 Organizing recipes (only when requested): compare `bin/lb skill extract` with
 attributed `skill usage` records. Keep actual usage in Thinking; a recipe is a
@@ -87,3 +87,24 @@ Apply the [locator guidance](../../docs/installable/coordination.md#human-facing
 For a reread, summarize the current understanding, verified differences (if a reliable baseline exists), and affected plans or evidence; state that no files were changed. For a refresh, summarize actual writes, their evidence, incomplete items and who owns the next one. Read available records within the authorized scope; when new execution or out-of-scope evidence gathering is needed, report the precise gap without dispatching it.
 
 This entry point does not call lb-push in reverse, nor does it close agents or services. If it was invoked from an already-authorized execution flow, return the verification result and let that flow judge whether it is still within its authorization.
+
+
+## Dialogue-driven Task changes
+
+An explicit instruction to defer, resume or otherwise refine an identified Task
+is authority for that scoped change. Resolve the target from current facts; ask
+one focused question only if the task or a material decision is ambiguous. Use
+available structured questions with concise choices; silence is never consent.
+
+Pause through `task pause`, then read back canonical state and scheduling. A
+Status/Deferred note alone does not pause a Task. Resume through `task resume`,
+preserving any underlying blocker; use an explicit destination only when prior
+state is unknown. Use `task block/unblock` for actual obstacles, not ordinary
+asynchronous waiting. These actions describe Task state, never proof a worker
+stopped. Captain separately handles in-flight work and late replies within scope.
+
+If the supported writer is unavailable, report the exact unapplied change without
+claiming success. Do not substitute notes or duplicate sidecar state. Reassignment
+requires an actual correlated acceptance, not delivery/idle. Route replacement
+uses atomic split and explicit reference mappings; scope/design changes compose
+lb-plan. Captain owns all Logbook writes; Sailor returns observations only.

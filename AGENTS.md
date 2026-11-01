@@ -39,5 +39,6 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
 
 <!-- SPECKIT START -->
-Active implementation plan: [Logbook Coordination and Sailor Execution](specs/003-captain-executor-boundary/plan.md).
+Active work item: [Simplify Agent Coordination](specs/004-simplify-agent-coordination/tasks.md).
+The local specs directory is maintained separately and is not distributed.
 <!-- SPECKIT END -->

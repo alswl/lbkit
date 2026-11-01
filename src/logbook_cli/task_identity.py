@@ -16,6 +16,7 @@ TASK_STATES = {
     "accepted": "x",
     "cancelled": "-",
 }
+LEGACY_REFERENCES = {"depends_on", "owner", "parent", "parent_id"}
 
 
 def criteria(task):
@@ -52,7 +53,7 @@ def bindings(doc):
             v[0].line == owners[0].line for v in result.values()
         ):
             raise LbError("duplicate task identity", EXIT_REFUSED)
-        if item.get("status") not in TASK_STATES:
+        if "status" in item and item["status"] not in TASK_STATES:
             raise LbError("invalid task lifecycle", EXIT_REFUSED)
         result[item["id"]] = (owners[0], index, item)
     return result
@@ -69,12 +70,16 @@ def snapshot(task, item):
     submission = item.get("submission")
     return {
         **item,
+        "status": task.effective_state
+        if task.effective_state in {"blocked", "pause"}
+        else item.get("status", task.effective_state),
+        "depends_on": dependencies(task, item),
         "line": task.line,
         "stage": task.stage,
         "text": task.text,
         "human": task.human,
         "blocked": any(a.kind is Field.BLOCKER for a in task.annotations),
-        "consistent": TASK_STATES[item["status"]] == task.state,
+        "consistent": "status" not in item or TASK_STATES[item["status"]] == task.state,
         "evidence_applicable": bool(
             submission and submission.get("criteria_digest") == criteria(task)
         ),
@@ -94,7 +99,10 @@ def acceptance_issues(doc):
         if not view["consistent"]:
             issues.append(identity + ": checkbox and lifecycle disagree")
         elif (
-            item["status"] == "accepted"
+            (
+                item.get("status") == "accepted"
+                or (task.effective_state == "done" and item.get("acceptance"))
+            )
             and item.get("submission")
             and (
                 not view["evidence_applicable"]
@@ -104,3 +112,31 @@ def acceptance_issues(doc):
         ):
             issues.append(identity + ": accepted evidence no longer applies")
     return issues
+
+
+def dependencies(task, item=None):
+    current = [
+        value.strip()
+        for a in task.annotations
+        if a.kind is Field.DEPENDS
+        for value in a.value.split(",")
+        if value.strip()
+    ]
+    if item is None or "depends_on" not in item:
+        return current
+    legacy = item["depends_on"]
+    if not isinstance(legacy, list) or any(
+        not isinstance(value, str) or not value.strip() for value in legacy
+    ):
+        raise LbError("invalid legacy dependencies", EXIT_REFUSED)
+    if current and current != legacy:
+        raise LbError("conflicting legacy dependencies", EXIT_REFUSED)
+    return current or legacy
+
+
+def require_migrated_references(item):
+    if LEGACY_REFERENCES.intersection(item):
+        raise LbError(
+            "legacy task references require explicit task migrate before this write",
+            EXIT_REFUSED,
+        )

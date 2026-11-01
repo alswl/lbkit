@@ -19,3 +19,10 @@ Fill an existing confirmed template; do not design a new route or dispatch execu
 4. Preview `lb log create PATH --from-workflow NAME --input-file FILE --expect-version TOKEN --dry-run --json`, then apply without `--dry-run`. It validates at the output path and creates the main file and its `lb/<name>.md.json` state, preserving template provenance. Run `lb log check LOG --json`; external-link verification notices are not structural errors. Under [lifecycle operations](../../docs/installable/lifecycle-operations.md), record draft and then ready only from actual confirmation via `log state-set`; its one-line status is CLI-owned.
 5. Complete the selected adapter's companion bindings and index separately; for mind-forge, resolve and verify bound Prompt/Thinking and record source workflow/previous run, slot values and ruling sources. If the invocation explicitly covers only the main file, report bindings/index pending. Never call a partial scaffold complete or retry by overwriting it. Skills appear only on applicable task annotations, not front matter or a top-level list.
 6. Report actual file effects, verification gaps and remaining responsibility. Show a compact slot summary with current line locators under the [locator contract](../../docs/installable/coordination.md#human-facing-logbook-locators). Obtain missing confirmation of directories, stages and tasks in one round; reuse existing explicit confirmation. A confirmed template supplies its human-authored goal, but does not authorize execution. Hand advancement to lb-push only within its separate authorization.
+
+
+Work initialization ends with one selected/created Logbook, the human goal,
+known constraints and an identifiable next planning/preparation step. Toolkit
+installation (`lb-init`) and template rendering alone do not prove that outcome.
+Reuse an existing appropriate Logbook; compose lb-plan for route decisions rather
+than creating a second work queue or a mandatory new initialization skill.

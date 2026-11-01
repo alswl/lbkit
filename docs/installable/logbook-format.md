@@ -60,7 +60,7 @@ Items not started are `[ ]`; items an executor agent has taken but that have not
 
 ## Status and Links
 
-Stage headings use `🛫` not started, `🚧` in progress, and `✅` closed. All `[x]` means accepted completion. A stage containing `[-]` may close only when every such item has a valid, task-bound human disposition and every other item is `[x]`; display “closed with cancelled/not-applicable items” rather than claiming all criteria passed. Unresolved `[-]` never implies a pass, and it is not a pending human job either: when finding the next item, skip it and continue in document order; it does not block advancement. Unstarted items remain 🛫; active or partially completed work remains 🚧. Unknown states are not inferred.
+Stage headings use `🛫` not started, `🚧` in progress, and `✅` closed. All `[x]` means accepted completion. A stage containing `[-]` may close only when every such item has a valid, task-bound disposition with actor/source attribution and every other item is `[x]`; display “closed with cancelled/not-applicable items” rather than claiming all criteria passed. Unresolved `[-]` never implies a pass, and it is not a pending human job either: when finding the next item, skip it and continue in document order; it does not block advancement. Unstarted items remain 🛫; active or partially completed work remains 🚧. Unknown states are not inferred.
 
 Use `task resolve --as human-cancelled|not-applicable --decision <source> --note <reason>` for an existing `[-]` after an explicit applicable human ruling. The CLI stores a `处置：` JSON sub-line with the task-text digest and decision. This records a ruling, not authenticated human identity; the calling skill must verify the ruling. Changing the task text invalidates the disposition. The CLI has no force-close flag. Stage status is based on explicit todos, not incidental links to other unfinished work.
 
@@ -130,3 +130,22 @@ Keep only a short stable task ID as an indented `<!-- lb-task task-example -->`
 line. Store machine records in the consumer-owned `lb/<name>.md.json` under
 [document state](document-state.md). Keep human criteria and decisions readable;
 never place JSON task, dispatch or agent dumps in Markdown.
+
+
+## Canonical Task state
+
+`[!]` means pause and stays visible but unscheduled. A four-space-indented
+`- Resume: pending|active` records the prior state and is consumed by resume;
+without it the caller must explicitly choose a destination. A nonempty
+`- Blocker: reason` on `[ ]` or `[/]` means blocked without losing that underlying
+marker. Pause retains the blocker; resume does not resolve it. Unknown checkbox
+markers stay visible with diagnostics and are never selected as next work.
+
+`- Depends: ID, ID` names hard dependencies; only done satisfies them. Cancellation
+uses `[-]` plus a task-bound Resolution with `as: cancelled`, decision, note,
+actor and source. Existing `human-cancelled` provenance remains valid; legacy
+not-applicable or unexplained skips are not silently reclassified.
+
+Explicit Task completion may go directly from pending/active to `[x]` after the
+Captain checks the actual result. Notes and result references are optional and
+proportionate. Runtime exit, message delivery and silence never complete Tasks.

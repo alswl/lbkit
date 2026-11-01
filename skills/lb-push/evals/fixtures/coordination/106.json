@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "records/report.txt": "The example report has a typoo.\n",
+    "projects/demo/docs/log.md": "# Example work\n\n## Stage 01 Prepare\n\n- [ ] Correct typo in records/report.txt\n    - Status: Captain takeover active for this correction only; close this responsibility after verification.\n- [ ] Remaining analysis\n    - Status: Captain takeover remains active for remaining analysis; Captain owns the unresolved review handoff and any late reply.\n- [ ] Human review 👱\n    - 批注：Preserve this human note.\n"
+  }
+}

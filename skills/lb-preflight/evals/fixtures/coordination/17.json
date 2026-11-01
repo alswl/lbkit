@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/setup.json": "{\"fixture\": \"controlled observations, not live integration evidence\", \"bundled_guidance_retrieved\": true, \"controller_runtime\": \"codex\", \"controller_skill\": \"stale\", \"integration\": \"ready\", \"host_return\": \"pending tool completion available\"}\n"
+  }
+}

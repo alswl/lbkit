@@ -8,7 +8,7 @@ the next task, or equates runtime success with acceptance.
 | --- | --- | --- |
 | Logbook | `log list/context/check/state/state-set/sync/create/report` | draft → ready → active; pause/resume, completion or termination are explicit decisions |
 | Stage | `log state/sync` | derived from its checklist; no independent writable lifecycle |
-| Task | `task identify/show/start/record-result/accept/cancel/reopen` | pending → active → submitted → accepted; cancellation and reopening retain identity |
+| Task | `task identify/show/start/complete/pause/resume/block/unblock/cancel/reopen/migrate` | pending/active → done; pause and blockers exclude scheduling; cancellation does not satisfy dependencies |
 | Dispatch | `dispatch create/list/show/set-status/attempt` | prepared → sent → acknowledged → returned → closed; cancellation requires no running attempt |
 | Attempt | `dispatch attempt` | started → finished, failed or interrupted; a retry gets a new ID |
 | Execution facts | `log execution context/record` | caller-attributed instructions/observations; derived delegation policy, not runtime orchestration |
@@ -24,8 +24,9 @@ the next task, or equates runtime success with acceptance.
 Use `--expect-version TOKEN` for the file being changed. Task mutations use the
 Logbook token. Dispatch, agent binding and usage mutations use the explicitly resolved
 `--thinking FILE` token. Preview with `--dry-run --json`, inspect the diff, then write.
-CAS protects that one target file, not a multi-file transaction. Skills reconcile the
-current logbook before acting on Thinking records.
+CAS covers the document and its sidecar state. The recovery journal protects paired
+Markdown/state writes; separate commands and runtime effects are not transactional.
+Skills reread the current Logbook before acting on Thinking records.
 
 The public root has exactly eight groups: log, task, dispatch, agent, workflow, skill,
 feedback, config. Old command paths and option aliases are removed, not forwarded or hidden.
@@ -45,11 +46,11 @@ bytes is independent of command compatibility.
 ```sh
 lb task identify LOG --stage 'Stage 01 Build' --task 'Build @core' --task-id build --expect-version TOKEN
 lb task start LOG build --basis 'Receipt observed' --expect-version TOKEN
-lb task record-result LOG build --input-file result.json --basis 'Executor return' --expect-version TOKEN
-lb task accept LOG build --candidate candidate-a --basis 'Applicable review passed' --expect-version TOKEN
+lb task complete LOG build --basis 'Captain checked the agreed result' --expect-version TOKEN
 ```
 
-`result.json` is `{"candidate":"candidate-a","evidence":["report reference"]}`.
+Optional candidate-specific `record-result` and `accept` routes remain compatible;
+they are not prerequisites for ordinary completion. Their `result.json` is `{"candidate":"candidate-a","evidence":["report reference"]}`.
 The submission pins task text and acceptance/source/skill annotations. Changed criteria
 invalidate it; acceptance requires the exact submitted candidate. Evidence references
 are attributed input, not automatically verified reports. Human-owned tasks permit only

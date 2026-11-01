@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/setup.json": "{\"controller\":{\"runtime\":\"codex\",\"herdr_skill_current\":true,\"catalog_contains_herdr\":true,\"integration\":\"ready\"},\"sailor\":{\"runtime\":\"claude\",\"integration\":\"ready\",\"controls_herdr\":false,\"has_herdr_skill\":false,\"input\":\"self-contained instruction\"}}\n"
+  }
+}

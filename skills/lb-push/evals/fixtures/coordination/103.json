@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "records/wait-return.json": "{\"reason\": \"change\", \"events\": [{\"event_id\": \"b-1\", \"kind\": \"needs_input\", \"binding\": {\"agent_id\": \"sailor-b\"}, \"correlation\": \"observed\"}], \"pending\": [{\"agent_id\": \"sailor-a\"}], \"next_input\": {\"note\": \"This fixture starts after the one-shot return; no live wait is claimed.\"}}\n",
+    "records/sailor-b.txt": "I need the two sample rows to compare. No comparison was performed.\n"
+  }
+}

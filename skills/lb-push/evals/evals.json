@@ -66,20 +66,20 @@
     },
     {
       "id": 12,
-      "prompt": "This round's package P1 is authorized and was received by agent A, and working has been observed; the independent state-wait monitoring tab failed to create. Handle P1 now.",
-      "expected_output": "Keep the fact that P1 launched, fix the monitoring, and do not resubmit the work package.",
+      "prompt": "P1 is authorized, explicitly accepted by Sailor A, and observed working. An obsolete monitoring-tab attempt failed. Verify the available one-shot Herdr wait and Captain host completion path; handle P1 without resending.",
+      "expected_output": "Keep P1 running, use one-shot wait if supported, otherwise report the precise host/readiness gap. No extra monitor pane or duplicate dispatch.",
       "files": [],
       "expectations": [
-        "Report partial completion rather than full success or never-started",
-        "Do not re-dispatch",
-        "Do not steal focus",
-        "Do not substitute temporary polling for the established monitoring"
+        "Preserve the actual acceptance and working observations",
+        "Do not re-dispatch or steal focus",
+        "Use bounded wait and complete continuation rather than a polling script or monitor Agent",
+        "Do not claim unattended continuation without demonstrated host completion delivery"
       ]
     },
     {
       "id": 13,
       "prompt": "The user has explicitly approved running tasks A and B in the same batch in parallel; their inputs are fixed, worktrees independent, with no shared writes; task C is not approved. Both work packages are complete. Advance the batch.",
-      "expected_output": "Dispatch A and B within the batch boundary, verify receipt and monitoring for each, do not ask again whether to start, and do not launch C.",
+      "expected_output": "Dispatch A and B within the batch boundary, verify explicit acceptance for each and any-target wait, do not ask again whether to start, and do not launch C.",
       "files": [],
       "assertions": [
         {
@@ -95,7 +95,7 @@
         {
           "name": "receipt_and_monitoring",
           "type": "contains",
-          "check": "Confirm each actual recipient and independent visible monitoring without stealing focus"
+          "check": "Confirm each recipient accepts its own instruction; use bounded any-target wait with host completion delivery and preserve focus"
         },
         {
           "name": "forbid_unapproved_c",
@@ -140,13 +140,13 @@
     },
     {
       "id": 17,
-      "prompt": "The user asks to advance the current item with runtime.adapter=other, claiming that adapter can only provide hidden subprocesses and polling with no visible monitoring.",
-      "expected_output": "Point out the incompatibility with current repository requirements, stop the dispatch, and do not silently switch to another tool.",
+      "prompt": "Advance an authorized item with runtime.adapter=other. Only a detached PID is returned, with no tool-completion delivery to Captain.",
+      "expected_output": "Report unsupported adapter/host continuation; do not silently switch or claim unattended progress.",
       "files": [],
       "expectations": [
-        "Configuration cannot turn off visible monitoring or focus boundaries",
-        "Do not call polling a status-wait monitoring",
-        "Do not claim an unimplemented adapter is already supported"
+        "Herdr is the supported collaboration adapter",
+        "A detached PID does not prove completion delivery",
+        "No automatic adapter switch, polling script or wake injection"
       ]
     },
     {
@@ -299,13 +299,13 @@
     },
     {
       "id": 31,
-      "prompt": "While dispatching an executor agent, the TUI's currently focused workspace belongs to someone else's project; the coordinator's workspace is different. Create the execution/monitoring tabs with Herdr.",
-      "expected_output": "Explicitly run `herdr tab create --workspace <coordinator workspace>` (the variable named by the host's settings.runtime.herdr.workspace_id_env) to create the execution/monitoring tabs; do not enter the TUI-focused other person's workspace; still --no-focus and do not enter the coordinator's main tab.",
+      "prompt": "An authorized new Herdr executor is needed. The TUI is focused on another project; use the explicitly selected coordinator workspace and parent pane without stealing focus.",
+      "expected_output": "Verify explicit workspace/parent identity; open only the authorized execution surface with no-focus. Waiting uses a bounded one-shot request, not another tab.",
       "files": [],
       "expectations": [
-        "Execution/monitoring tabs are created in the coordinator's workspace, not the TUI-focused other project's workspace",
-        "Use --no-focus and do not enter the coordinator's main tab",
-        "Do not steal human focus"
+        "Use explicit actual target IDs, not TUI focus or list position",
+        "Preserve human focus and the coordinator's main pane",
+        "Create no dedicated monitoring tab"
       ]
     },
     {
@@ -371,14 +371,14 @@
     {
       "id": 37,
       "prompt": "The project plan is user-confirmed and `$lb-push` is approved to advance the current item. The first unchecked item is an `@sample-engine` agent task whose dependencies and inputs are ready and whose repository is registered, but no executor has received the work package. Advance.",
-      "expected_output": "The coordinator stops waiting for extra prodding and, per configuration, launches a new owning agent in the registered sample-engine repository via Herdr, executing the full work package in that repository's isolated worktree; after verifying receipt, establish independent visible monitoring and update the in-progress status per the rules; do not implement it yourself or skip past the current item.",
+      "expected_output": "The coordinator stops waiting for extra prodding and, per configuration, launches a new owning agent in the registered sample-engine repository via Herdr, executing the full work package in that repository's isolated worktree; after verifying instruction acceptance, use one-shot waiting and update the in-progress status per the rules; do not implement it yourself or skip past the current item.",
       "files": [],
       "expectations": [
         "With the plan user-confirmed and `$lb-push` authorized, do not re-request task-level confirmation",
         "The ready first item should be proactively dispatched this round, not just reported as a suggestion awaiting another nudge",
         "Use Herdr to launch the owning agent in the responsible repository instead of the coordinator executing across repositories itself",
         "Execution uses an isolated Git worktree inside that repository",
-        "After receipt, establish independent visible monitoring without stealing focus or entering the coordinator's main tab",
+        "After explicit instruction acceptance, use bounded one-shot waiting without stealing focus or entering the coordinator's main tab",
         "Advance only the currently authorized item, marking in progress only after the task is received"
       ]
     },
@@ -407,8 +407,8 @@
     },
     {
       "id": 40,
-      "prompt": "`$lb-push` will dispatch two sample-engine work packages consecutively on the local machine; the coordinator's workspace is w1K; the host lbkit.yaml sets settings.runtime.herdr.label_prefix to ^; that repository already has an agent session fitting both model and context; the TUI is currently focused on a different workspace. Arrange the execution and monitoring resources and explain the naming.",
-      "expected_output": "Reuse sample-engine's existing agent session; all local sub-agents and execution/monitoring tab/panes go explicitly in the coordinator's workspace w1K, with new tabs using the host-declared ^ prefix; keep no-focus. Agent identifiers follow Herdr's own format.",
+      "prompt": "`$lb-push` will dispatch two sample-engine work packages consecutively on the local machine; the coordinator's workspace is w1K; the host lbkit.yaml sets settings.runtime.herdr.label_prefix to ^; that repository already has an agent session fitting both model and context; the TUI is currently focused on a different workspace. Arrange the execution surface and one-shot waiting and explain the naming.",
+      "expected_output": "Reuse sample-engine's existing agent session; all local sub-agents and execution tab/panes go explicitly in the coordinator's workspace w1K, with new tabs using the host-declared ^ prefix; keep no-focus. Agent identifiers follow Herdr's own format.",
       "files": [],
       "expectations": [
         "Reuse the existing fitting session instead of creating one per work package",
@@ -551,14 +551,14 @@
     },
     {
       "id": 51,
-      "prompt": "A Codex coordinator resumes the same agent work package; the original visible read-only monitoring page is still reusable, has been re-bound to this dispatch, and actually returned status and new output.",
-      "expected_output": "After verifying receipt and monitoring validity, use the existing monitoring results; the model judges resource reuse — never force a new monitoring page or another client-specific wait scheme.",
+      "prompt": "Captain resumes the same authorized package. Existing verified bindings and complete next_input from the prior one-shot wait are available; an old idle snapshot is also present. Continue waiting for useful change through a host that supports tool completion.",
+      "expected_output": "Reuse the exact continuation and current binding; do not count old idle as a new completion or create a monitoring resource.",
       "files": [],
       "expectations": [
-        "Monitoring is tied to the current dispatch",
-        "Residual idle never counts as the new package's completion",
-        "No mechanical repetition of waits needed",
-        "Run results still require acceptance"
+        "Use the existing next_input instead of resetting the baseline",
+        "Old idle never completes this work",
+        "Read useful returned targets and continue within scope",
+        "Captain checks actual results before completing a task"
       ]
     },
     {
@@ -567,11 +567,11 @@
       "expected_output": "Pass the literal task text safely, preview and run task update --status /; re-fetch context/token, then preview and run sync, and check after writing.",
       "files": [],
       "expectations": [
-        "Receipt is the precondition for the status change",
+        "Explicit instruction acceptance, not transport receipt alone, is the precondition for the status change",
         "The task string must not be shell-expanded",
         "Do not reuse the stale pre-write token",
         "A successful stage sync does not mean acceptance is complete",
-        "Keep the visible monitoring requirement"
+        "Preserve the existing binding and one-shot wait continuation; create no monitoring tab"
       ]
     },
     {
@@ -935,8 +935,8 @@
     },
     {
       "id": 74,
-      "prompt": "The approved remote package was actually received by Sailor on machine-b. Captain and Logbook remain on machine-a. Monitoring failed, and the destination workspace has the same name but a different actual ID. Repair only authorized coordination readiness.",
-      "expected_output": "Keep remote execution separate from Captain handoff, repair monitoring without resending.",
+      "prompt": "The approved remote package was actually received by Sailor on machine-b. Captain and Logbook remain on machine-a. The wait observation path failed, and the destination workspace has the same name but a different actual ID. Repair only authorized coordination readiness.",
+      "expected_output": "Keep remote execution separate from Captain handoff, repair the observation path without resending.",
       "files": [],
       "assertions": [
         {
@@ -952,17 +952,17 @@
         {
           "name": "repair_monitor_only",
           "type": "contains",
-          "check": "Repair dispatch-associated visible monitoring"
+          "check": "Verify the original binding and repair bounded wait/host completion support, or report the exact unavailable path"
         },
         {
           "name": "no_duplicate_dispatch",
           "type": "not_contains",
-          "check": "Resend the received business package or claim readiness before actual monitor"
+          "check": "Resend the received business package or claim readiness before actual observation-path verification"
         },
         {
           "name": "no_business_takeover",
           "type": "not_contains",
-          "check": "Captain performs business implementation or concrete acceptance"
+          "check": "Captain performs out-of-scope business implementation"
         }
       ]
     },
@@ -1068,14 +1068,14 @@
     {
       "id": 79,
       "axis": "Advance an already approved independent batch",
-      "prompt": "After the current task acceptance, Admiral has explicitly approved batch A+B with owners sailor-a and sailor-b, immutable inputs a1/b1, separate worktrees and outputs, no shared resources, and a convergence check before the human review. Both configured sessions and monitoring adapters are available. Continue the batch.",
+      "prompt": "After the current task acceptance, Admiral has explicitly approved batch A+B with owners sailor-a and sailor-b, immutable inputs a1/b1, separate worktrees and outputs, no shared resources, and a convergence check before the human review. Both configured sessions and wait/host completion paths are available. Continue the batch.",
       "expected_output": "Advance an already approved independent batch",
       "files": [],
       "assertions": [
         {
           "name": "actual_dispatch",
           "type": "contains",
-          "check": "Tool trace shows both full packages received by the designated compatible sessions and dispatch-associated visible monitoring."
+          "check": "Tool trace shows both full packages received by the designated compatible sessions and verified bounded any-target wait with host completion delivery."
         },
         {
           "name": "convergence",
@@ -1534,6 +1534,301 @@
           "name": "bounded_acceptance",
           "type": "not_contains",
           "check": "Does not require hook/TOML changes, software upgrade or SSH testing for acceptance of this local adapter fix; does not claim proposed tests have actually passed."
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "axis": "Self-contained delegation does not expose Logbook to Sailor",
+      "coordination_seeds": [
+        "handoff-accept"
+      ],
+      "prompt": "Use /lb-push to prepare the next instruction for the already selected Sailor from this approved route. Save the instruction in records/instruction.txt for the local controlled transport. Do not send it or create a session in this run.",
+      "expected_output": "Self-contained delegation does not expose Logbook to Sailor",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "instruction_is_self_contained",
+          "type": "contains",
+          "check": "Saved instruction includes the actual work, inputs, expected outcome and stop/escalation conditions, without requiring access to the coordination ledger."
+        },
+        {
+          "name": "no_sailor_logbook_access",
+          "type": "not_contains",
+          "check": "Tells Sailor to read/write the Logbook, run lb task mutations, locate work in the Logbook or mark its own acceptance in the ledger."
+        },
+        {
+          "name": "no_fake_receipt",
+          "type": "not_contains",
+          "check": "Claims a send, acceptance or completion that did not occur."
+        }
+      ]
+    },
+    {
+      "id": 98,
+      "axis": "Explicit acceptance differs from delivered idle",
+      "coordination_seeds": [
+        "handoff-accept"
+      ],
+      "prompt": "Use /lb-push to reconcile the selected Sailor report in records/runtime.json and identify the next authorized action. This run permits reconciliation only, without sending further work.",
+      "expected_output": "Explicit acceptance differs from delivered idle",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/98.json"
+      ],
+      "assertions": [
+        {
+          "name": "correct_acceptance",
+          "type": "contains",
+          "check": "Distinguishes delivered/idle from acceptance and reports the missing recipient reply without transferring responsibility."
+        },
+        {
+          "name": "no_fabricated_work_result",
+          "type": "not_contains",
+          "check": "Treats acceptance, delivery or idle as proof that the report task is completed or fabricates a result."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "axis": "Explicit acceptance differs from delivered idle",
+      "coordination_seeds": [
+        "handoff-accept"
+      ],
+      "prompt": "Use /lb-push to reconcile the selected Sailor report in records/runtime.json and identify the next authorized action. This run permits reconciliation only, without sending further work.",
+      "expected_output": "Explicit acceptance differs from delivered idle",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/99.json"
+      ],
+      "assertions": [
+        {
+          "name": "correct_acceptance",
+          "type": "contains",
+          "check": "Attributes acceptance to the actual sailor-a reply for instruction i1 and does not request a second acceptance round."
+        },
+        {
+          "name": "no_fabricated_work_result",
+          "type": "not_contains",
+          "check": "Treats acceptance, delivery or idle as proof that the report task is completed or fabricates a result."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 100,
+      "axis": "Status interruption preserves existing authority; explicit pause stops advancement",
+      "coordination_seeds": [
+        "status-continue"
+      ],
+      "prompt": "Use /lb-push. You are continuing the authorized report convergence described in the bound Thinking. What is the current status?",
+      "expected_output": "Status interruption preserves existing authority; explicit pause stops advancement",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/100.json"
+      ],
+      "assertions": [
+        {
+          "name": "continuation_or_pause",
+          "type": "contains",
+          "check": "Answers status, then actually reads the supplied return and updates the authorized convergence record in bound Thinking during the same run; promising to continue is insufficient."
+        },
+        {
+          "name": "no_new_scope",
+          "type": "not_contains",
+          "check": "Creates agents, performs business execution, changes human items or requests another approval for already-authorized record convergence."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "axis": "Status interruption preserves existing authority; explicit pause stops advancement",
+      "coordination_seeds": [
+        "status-continue"
+      ],
+      "prompt": "Use /lb-push. You are continuing the authorized report convergence described in the bound Thinking. Pause the work now and tell me the status.",
+      "expected_output": "Status interruption preserves existing authority; explicit pause stops advancement",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/101.json"
+      ],
+      "assertions": [
+        {
+          "name": "continuation_or_pause",
+          "type": "contains",
+          "check": "Answers status and performs no new convergence write or dispatch after the explicit pause."
+        },
+        {
+          "name": "no_new_scope",
+          "type": "not_contains",
+          "check": "Creates agents, performs business execution, changes human items or requests another approval for already-authorized record convergence."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "axis": "Task pause does not prove the Sailor stopped",
+      "coordination_seeds": [
+        "pause-in-flight"
+      ],
+      "prompt": "Use /lb-push to reconcile the paused comparison task and the supplied running-worker observation. Do not send new work or stop a process in this run.",
+      "expected_output": "Task pause does not prove the Sailor stopped",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/102.json"
+      ],
+      "assertions": [
+        {
+          "name": "inflight_distinction",
+          "type": "contains",
+          "check": "Reports the task is deferred while the worker observation remains running; Captain owns the unresolved in-flight handling and any late reply."
+        },
+        {
+          "name": "no_inferred_shutdown",
+          "type": "not_contains",
+          "check": "Claims pause stopped the worker, marks the task complete or closes a session without authorization."
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "axis": "Wait results require reading and judgment, not automatic completion",
+      "coordination_seeds": [
+        "idle-and-duplicate",
+        "multiple-any"
+      ],
+      "prompt": "Use /lb-push to continue from the supplied wait return in records/wait-return.json. Read the attention target through the provided local observation records and decide the next step. Keep the other worker pending; no new dispatch or business execution is authorized.",
+      "expected_output": "Wait results require reading and judgment, not automatic completion",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/103.json"
+      ],
+      "assertions": [
+        {
+          "name": "reads_attention_target",
+          "type": "contains",
+          "check": "Actually reads records/sailor-b.txt after the wait return; reports the missing sample data and asks only the relevant focused question."
+        },
+        {
+          "name": "pending_stays_pending",
+          "type": "contains",
+          "check": "Preserves sailor-a as pending/running and treats needs_input as an observation, not Task acceptance/completion."
+        },
+        {
+          "name": "no_duplicate_monitoring",
+          "type": "not_contains",
+          "check": "Creates a polling script, monitor Agent/tab or daemon, automatically approves input, resends instructions or marks the task done from the wait event."
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "axis": "Simple authorized work needs no Run, Result form or invented start",
+      "coordination_seeds": [
+        "simple-complete"
+      ],
+      "prompt": "Use /lb-push to correct typoo to typo in records/report.txt and close the simple correction task. Captain direct execution is explicitly authorized for this small local change; no independent review, deployment or new agent is required. Preserve the human review item.",
+      "expected_output": "Simple authorized work needs no Run, Result form or invented start",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/104.json"
+      ],
+      "assertions": [
+        {
+          "name": "actual_simple_change",
+          "type": "contains",
+          "check": "records/report.txt contains the corrected word, and the agent reads back or checks the actual change."
+        },
+        {
+          "name": "proportional_completion",
+          "type": "contains",
+          "check": "Closes the simple task using supported guarded CLI, or explicitly reports an unavailable completion write without pretending it succeeded; no fabricated result or start event."
+        },
+        {
+          "name": "no_compulsory_ceremony",
+          "type": "not_contains",
+          "check": "Creates/requires a Run, Result object, new agent or independent reviewer, or another approval for the already-authorized correction."
+        },
+        {
+          "name": "completed_takeover_closed",
+          "type": "contains",
+          "check": "The completed correction task has no misleading active takeover/handoff status; any retained note describes completed responsibility. Preserve broader authorized takeover scope and actual pending handoffs if present."
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "axis": "Late acceptance cannot apply to a replacement instruction",
+      "coordination_seeds": [
+        "handoff-accept"
+      ],
+      "prompt": "Use /lb-push to reconcile the recorded recipient reply. The Captain superseded instruction i1 with i2 before that reply arrived. Explain current ownership and the next action without sending more work.",
+      "expected_output": "Late acceptance cannot apply to a replacement instruction",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/105.json"
+      ],
+      "assertions": [
+        {
+          "name": "late_reply_correlated",
+          "type": "contains",
+          "check": "Reads records/runtime.json and attributes the acceptance to superseded i1; current i2 remains unaccepted and the old reply is retained as historical observation."
+        },
+        {
+          "name": "no_stale_transfer",
+          "type": "not_contains",
+          "check": "Uses the i1 reply to accept i2, transfers current ownership from that reply, fabricates a new reply or marks the replacement task done."
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "axis": "Close an existing Task-specific takeover without clearing remaining responsibility",
+      "coordination_seeds": [
+        "simple-complete"
+      ],
+      "prompt": "Use /lb-push to correct typoo to typo in records/report.txt and complete only the correction task. Captain direct execution is authorized for this correction. Reconcile its existing active takeover note on completion. The separate remaining-analysis takeover and unresolved review handoff stay active: preserve that task and its status exactly, and do not execute or dispatch it. Preserve the human review item. No independent review, deployment or new agent is required.",
+      "expected_output": "The correction is verified and closed without a stale active takeover note; the other task and its real pending responsibility remain unchanged.",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/106.json"
+      ],
+      "assertions": [
+        {
+          "name": "verified_guarded_completion",
+          "type": "contains",
+          "check": "Corrects records/report.txt, verifies actual bytes and completes only the correction task using supported current-token guarded CLI."
+        },
+        {
+          "name": "existing_takeover_closed",
+          "type": "contains",
+          "check": "Reconciles the pre-existing active takeover status on the completed correction task so it describes finished responsibility or is removed; does not leave it claiming active takeover."
+        },
+        {
+          "name": "remaining_responsibility_preserved",
+          "type": "contains",
+          "check": "Preserves the remaining-analysis task and its entire active takeover/unresolved-review status exactly, leaves human review and its note unchanged, and performs no dispatch or work on that remaining task."
         }
       ]
     }

@@ -1,125 +1,59 @@
-# Herdr Operating Conventions
+# Herdr collaboration
 
-This file applies only to runtime.adapter=herdr. Before performing Herdr operations, read this file and the environment's Herdr tool skill, and verify available parameters against the current interface; do not load its CLI details when this adapter is not selected. Authorization and execution isolation follow the consuming repository's root `AGENTS.md` and current task authorization.
+Read `herdr --skill` from the installed binary and relevant command help. Runtime
+syntax belongs there; this reference defines lb coordination boundaries.
 
-## Takeover dispatch boundary
+## Prepare
 
-Before creating an executor tab/pane, running an agent launcher, resuming an agent
-or sending a business prompt, check the [takeover boundary](../../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff);
-lb CLI hosts read `log execution context` for the bound coordination Logbook. Use
-guarded `lb agent send` where supported and never bypass a CLI refusal with direct
-Herdr calls. During takeover Captain works in the current main session: no
-separate executor tab for Captain, and no current or later task of the advancement
-goes to an existing or new agent, testers and reviewers included, until a
-human-authorized release. Read-only inspection, safe ownership recovery and plain
-non-agent tool terminals are not executor launches; never start an agent in a tab
-labeled as a monitor or tool terminal.
+Verify HERDR_ENV=1, binary/server compatibility, controlling runtime skill
+installation/discovery and currency, selected runtime integration and actual
+session identity separately. Retrieving bundled guidance is not installation.
+Use the runtime's real configured skill paths/catalog; do not guess personal paths
+or overwrite customization. Existing authorization governs setup, not automatic
+hook refresh. A noncontrolling Sailor needs its instruction, not control skills.
 
-## Runtime integration boundary
+Use host-approved runtime/model/wrapper, workspace and cwd. Preserve explicit
+wrapper requirements: the native `agent open` convenience route supports selected
+native runtimes only; it is not permission to substitute a generic executable for
+a required wrapper. Consult current Herdr guidance for authorized wrappers.
 
-lbkit owns its adapter and dispatch guards, not runtime provisioning; see the
-[CLI boundary](../../../docs/installable/domain-commands.md#runtime-and-skill-inputs).
-A request to test or fix lbkit does not cover hook installation, trust approval,
-launcher/config changes, upgrades or connectivity repair. Report the blocked
-operation and continue independent work. Never weaken identity checks.
+## Open, close and correlate
 
-## Executor selection and isolation
+`lb agent open --input-file FILE --json` creates a no-focus sibling of the explicit
+parent pane and starts the selected runtime. Input fields are machine, server,
+parent_pane, absolute cwd, runtime and name. Verify returned identity/readiness.
+Partial failure returns created pane IDs; inspect them instead of blindly opening
+another session. Server scope must match the selected server; no local fallback.
 
-The control scope is the current workspace and authorized sessions. Business execution packages are operated by the owning agent in an independent Git worktree under the original repository; deleting a completed worktree follows the consuming repository's applicable cleanup authorization; the coordinator must not do cross-repo worktree setup or business environment provisioning on the agent's behalf. If no owning agent capable of that setup exists, report the prerequisite instead of bypassing the boundary.
+`lb agent close-session --input-file FILE --json` takes the returned binding and
+explicit owned_panes. It verifies native identity, closes only the selected owned
+pane and checks inventory. Pane disappearance alone does not prove all descendant
+processes stopped. Existing dispatch-bound close/send routes remain compatible.
+Neither convenience route changes a Task or authenticates human consent.
 
-A delegated Sailor uses its own tab and working directory. Reuse that tab for an existing executor. When new creation is authorized, create with `--no-focus`; background operations must explicitly target the agent, tab, or pane. Operations that cannot avoid stealing focus are left to the human.
+Use Herdr's existing input/read operations. Preserve existing guarded-send
+journaling and uncertain-delivery protections when those routes apply. Captain
+correlates explicit receiver acceptance to the actual instruction; delivery and
+idle are not acceptance. Sailor neither reads Logbook nor writes Task state.
 
-Select the actual recipient first under the [recipient selection rules](execution.md#runtime-adapter-contract): an existing suitable session must be reused, with a supported resume operation when paused/not ready. Do not run tab creation or an agent launcher for that session. Missing readiness, receipt or monitoring does not mean the executor is absent; reconcile the existing session within authorized runtime operations. External setup gaps follow the boundary below. Independent review does not require a new tab when a suitable independent reviewer already exists. Create only when reuse is unavailable and creation/replacement is authorized; record the reason and preserve model/data, cwd and ownership checks.
+## Wait and continue
 
-Local sub-agents dispatched by the logbook must be created in the coordinator's current Herdr workspace. Before creating a tab, read `settings.runtime.herdr.workspace_id_env` from the host's `lbkit.yaml`, get the environment variable's actual value, and pass `--workspace <value>` explicitly; consult the human when it is missing and read-only verification cannot fill the gap — never rely on the TUI's current focus.
+Save a bounded request with verified machine/server/workspace/tab/pane/agent/native
+session bindings and optional baseline, then call
+`lb agent wait --input-file FILE --timeout SECONDS --json`.
+The command is read-only, returns on useful change and reaps only its own waiting
+children. Reuse complete next_input unchanged; a missing token means observation
+gaps, not lossless replay. Return reasons include change, timeout, interrupted and
+unavailable; observations never establish acceptance or business completion.
 
-Herdr tab labels and pane labels created by the logbook use `settings.runtime.herdr.label_prefix` from the host's `lbkit.yaml`; the template default is `^`, so humans can tell agent-created resources apart. This applies to execution, monitoring, and temporary gate panes alike. Named-session identifiers follow the actual CLI grammar; use a valid isolated identifier and keep human-visible labels instead of forcing an unsupported prefix. Immediately after creation, verify the actual label; if naming failed, fix the original resource rather than duplicating a same-purpose resource. Herdr agent identifiers are constrained by the tool's own format — do not force the label prefix onto them; still use a stable, unique, locatable agent name.
+Read attention targets, decide the appropriate next action, and retain other
+workers. For needs-input, recover available authorized inputs or ask the responsible
+person a focused question for the missing input. Preserve Captain's responsibility
+and binding for paused in-flight work and late replies. Timeout does not justify
+resend or killing Sailors. Use one bounded wait
+rather than monitoring tabs, polling scripts or repeated model turns. Verify the
+Captain host actually delivers tool completion; PID-only background execution
+cannot certify unattended continuation. Report unsupported paths explicitly.
 
-Agents the human needs to watch may keep status markers. Internal infrastructure needing isolated visibility should run in an authorized separate workspace or named session; do not assume hidden status just because the name is cleared. Report a blocker when the required layout is missing — never cram it into the main pane. Visible monitoring for every execution package must still satisfy the root rules.
-
-Resolve settings and the selected agent with `lb config resolve --json`; inspect alternatives with `lb config agent list --status available --json`. Pin the selected agent digest in the work package. Launch selection comes from these approved agents; explicit user choices only take effect within the candidate range. Filter by sensitivity first, then choose a model per task needs; record the option and deployment rationale. Parse this round's runtime parameters per the [Configuration Contract](../../../docs/installable/configuration.md); configuration does not authorize other repositories, publishing, or modification. Never infer engine or permissions from a default wrapper command's name — inspect only necessary allowlisted process fields (model, permission mode, working directory). Redact before any output reaches the model or logs; never print full argv or environment and redact afterwards.
-
-For authorized new/replacement processes only, launch with the full wrapper command and parameters declared in the host's `lbkit.yaml`; never substitute `herdr agent start --kind`'s generic engine. If the wrapper is a shell function, verify it exists in the target interactive shell per `settings.runtime.herdr.shell`, then launch per the current Herdr interface; report the gap if it cannot be found. After launch, verify the actual model and deployment ownership, then name, hand over the package, and monitor. When deleting a completed worktree, a declared no-worktree launch option may be used; that does not authorize branch deletion, fetch, or other Git management operations.
-
-Actual launch sequence when the wrapper is a shell function (verified 2026-10-09): `herdr tab create --workspace <ws> --cwd <repo-root> --label '<prefix> <name>' --no-focus` creates a shell pane; `herdr pane run <pane> '<wrapper>'` starts the wrapper inside that interactive shell (`pane run` delivers verbatim, no expansion); then `herdr agent rename <pane-id> <name>` names it (rename accepts a pane id as target; any unoccupied name works); `herdr agent read --source visible` reads the TUI footer to verify the actual model; finally `herdr agent prompt` hands over the package. The coordinator handles two common codex-family launch dialogs: for the background daemon's feature-settings conflict choose 「Run without daemon this time」 (do not change shared settings); for the weekly-rate-limit model-switch suggestion choose 「Keep current model (never show again)」 — the weekly quota is an account-level shared pool, switching models saves nothing, and the option exists only to stop the interruptions.
-
-The coordinator handles repository trust gates per the root rules: after confirming the dialog's path is a logbook-registered repository authorized for the current task, or a legitimate worktree of one, accept workspace trust by default and retry the original wrapper launch; never auto-accept unregistered or unknown paths. Passing trust only clears the launch gate — it does not mean the business package was received, nor does it expand login or approval permissions.
-
-## Permission Modes
-
-Whether auto-approve is used is governed by host rules and `settings.runtime.herdr.permission_mode`; consult the human when authorization or parameters are missing — do not pick an approval mode yourself. This never permits leaking secrets, destructive data operations, cross-scope access, or unauthorized commits, pushes, merges, or publications; switching agents must not be used to dodge upstream restrictions or real-identity approval.
-
-- On resume, still use the selected wrapper option and verify session identity; never bypass model selection with a bare engine command; new sessions must not unconditionally restore old context.
-- A tool supporting some kind does not put it in the repository's candidate range. Never treat a generic-engine example as a launch option or replace the selected wrapper command with an engine command; never change model, agent, or deployment ownership via extra parameters.
-- Before dispatch, check the actual model matches the selected deployment option and inspect allowlisted, pre-redacted process parameters; an approved permission mode also needs actual status evidence. Merely toggling the UI mode is not evidence. When the actual parameters of the wrapper launcher lack evidence, report unverified — never assume the requirements are met.
-- If only the launch parameters do not match the authorized mode, save the handoff, fix it in the same dedicated tab, and resume; do not repeatedly click single approvals. On a real login, approval, or upstream rejection, hand it straight to the human.
-
-Record durable permission agreements once in thinking when necessary; never copy transient approval prompts into the main logbook.
-
-## Dispatch and Monitoring
-
-When submitting a work package via `herdr agent prompt`, pass the full task text as a single literal argv parameter. Never insert text containing Markdown backticks, `$()`, or other shell-active content into an unquoted or double-quoted shell command string; prefer the direct interface or single-quote/argv passing that preserves literal content. When shell rewriting is a risk, read back the actual prompt after submission and verify verbatim that nothing was executed, expanded, or truncated.
-
-Before sending, verify the target workspace, tab/pane, actual session, and input line; one pane may have switched between main and side sessions, so the name and pane ID do not prove the recipient's identity. Notifying a Captain must be confirmed by its actual main session; side-session receipt or a tool-reported agent_prompted only proves local delivery. Classify visible input as a client suggestion, verified human draft, or unknown. Suggestions are not authorization or evidence of an action; do not follow them in a polling loop. Preserve human or unknown input, and do not dispatch over it. For verified disposable residue only, `herdr agent prompt` replaces the residue without concatenating; `agent send-keys`' enter/esc/ctrl+u/backspace do not work on some agent runtimes' main input line, so never submit or clear via keystrokes (verified 2026-10-01).
-
-When the target is in a side session, first verify the main session's status, unsent input, and the switch method the current UI supports; switch back only within the authorized control scope and only when it will not interrupt a run, overwrite input, or steal focus, then read back the identity and send. Never hardcode shortcuts, and never guess delivery by repeatedly messaging. A side session's tool limits must not be generalized into the whole project having no execution ability, nor bypassed by switching sessions; when it cannot be done safely, clearly report that the main session has not yet acknowledged. Logbook migration notices must include old/new entry points, the report-back location, unchanged responsibilities, and the re-read-before-write requirement; record the handoff after the main session confirms. When unsent input exists, the main session's state is unknown, or the control plane explicitly forbids it, only read-only verification is allowed; never probe limits by trial-switching or trial-sending — tool interception is no substitute for pre-send judgment.
-
-After submitting the full work package, confirm the actual task text is visible or an explicit confirmation arrived, then observe the agent's real status. Trust, authentication, or other launch gates are not business execution; report the concrete gate, and never imply work in progress with an empty tab.
-
-After receipt, verify two separate resources: the executor and its independent
-visible read-only monitoring tab. Reusing the executor does not reuse or establish
-monitoring automatically. If no suitable monitor exists, create a plain terminal
-tab with the host label prefix and `--no-focus`; run the supported `herdr agent wait`
-for that exact executor and read back the monitor pane's output. Record both
-resource IDs and the wait's state/result before claiming monitoring ready. Tie
-the observation to the new dispatch's receipt/activity, not a previous idle state.
-Reconfirm this association on resume and package change.
-
-`agent get/read` on the executor proves only a snapshot or receipt, even when it
-shows `working` or `done`; it cannot satisfy the independent-monitor step.
-The plain monitor runs no agent or business commands and answers no approvals.
-It exposes status/report-back for Captain verification, not task acceptance.
-
-Operations requiring the human's own terminal action (sudo, passwords, system authorization, etc.) never go into agent sessions: create a separate plain terminal tab as needed (no agent; label with the host prefix), use `pane run` only to echo static instructions (template commands, todo lists), and run no business commands; once the human is present, `pane send-text` may prefill the exact command into the input line (without a newline) so the human just presses Enter. When an executor agent's task involves such operations, stop and list the exact commands, then verify read-only afterwards.
-
-The coordinator must verify monitoring is actually running and read this round's status and new output — never just create an empty tab. Use the tool's currently supported status wait, e.g. `herdr agent wait <agent-name> --until idle --until done --until blocked --timeout <milliseconds>`, with each wait at most `limits.wait_seconds × 1000`. Existing visible monitoring results are available for the coordinator to use; do not force repeated waits over Codex vs Claude Code client differences. Two field-tested traps: when an executor has a background task running (polling/long command), its status shows idle between turns — one `agent wait` return only proves the turn ended, not completion; the completion criterion is new execution output or an explicit report-back. Conditional monitoring via grep text matching on pane content will hit the prompt's echoed original text — condition on incremental signatures such as "newly appeared output lines", or switch to status waiting and direct reads. Once confirmed the executor advances via background tasks, abandon pure idle polling (every between-turn gap hits immediately, wasting waits); instead re-read pane output on a schedule and spot-check on-site side effects (artifact files, download rate, CPU) to judge progress. Wait expiry only refreshes the observation; task stalling and timeouts are judged per [Execution and Recovery](execution.md).
-
-When dispatch succeeded but monitoring failed, accurately report partial completion, keep the task and agent identifiers, fix the authorized monitoring step, and do not re-dispatch. After a one-shot monitoring ends, reconfirm monitoring readiness when resuming the same package. Waits use limits.wait_seconds; stalling is handled per [Execution and Recovery](execution.md); never fabricate unverified monitoring commands.
-
-## Retention, Recovery, and Closure
-
-Release conditions after normal completion: deliverables accessible, key conclusions saved and evidence references retained or explicitly dispositioned, required checks passed or explicitly unnecessary, remaining gaps reported back, no open responsibilities, and the session context no longer worth retaining.
-
-Completing a work package does not force closing the session. Retain when the context, ongoing investigation, or follow-up work still has value, recording the reason and recovery triggers; use status values the tool actually supports. Do not retain without reason, and do not silently expand a completed work package. When the previous skill (e.g. lb-preflight) just did read-only analysis in the same repository and its session is still idle, prefer reusing that session as the executor: it already carries the repository and skill-chain context, so dispatch continues seamlessly without a new session or re-briefing (verify model, deployment, and data boundary as usual before reuse).
-
-When the user requests termination, cleanup, or resource constraints force an abnormal shutdown, first preserve the handoff, open responsibilities, and recovery conditions, then close within authorization; never record an abnormal closure as accepted completion. Managing a group of agents is not managing every service; confirm ownership and operation permissions for old services.
-
-When ending an execution session, first save the handoff, candidates, uncommitted-change locations and recovery conditions without inventing commit/push permission. Prefer a verified runtime-supported exit path that preserves the worktree without a dialog; never invent a flag. If only an interactive exit exists, read back the actual Keep/Remove dialog and verify both selection and meaning immediately before confirming Keep. Unknown selection, unsupported rendering or Remove means cancel if supported and retain the session, reporting the precise missing capability. Never blindly send Enter or delete a worktree as GC. Record the recovery entry after exit; keep resource deletion separate from session rotation.
-
-## Direct Dialogue Window
-
-When Captain permits direct Admiral–Sailor dialogue, inspect the owning Sailor's actual workspace/tab/pane and current package before opening a supported interaction entry. Reuse its existing execution tab when that is the appropriate window; identify the entry to Admiral without stealing focus. Any new surface uses the configured labels and explicit workspace targeting, and must reach the same Sailor rather than a duplicate executor. Read the current tool skill before choosing commands; if no safe supported entry exists, report that gap.
-
-Protect unsent human input and do not submit competing commands while the human is conversing. Recover attributable submitted messages and conclusions under the [dialogue procedure](execution.md#direct-admiralsailor-dialogue) before closing, rotating or resuming affected work. A tab existing or an idle status proves neither dialogue completion nor consent.
-
-## Shell Input and Human Review
-
-Prefer supported noninteractive execution outside the pane's interactive shell history. When shell input is necessary, verify the target shell first: zsh requires HIST_IGNORE_SPACE, bash requires HISTCONTROL containing ignorespace (or ignoreboth), and the dispatched command requires a leading space. Configure only the authorized agent shell and verify behavior; a space alone is insufficient. Do not place secrets in pane commands or treat history suppression as secret protection. Report an unsupported history-safe route rather than fabricate a --no-history option.
-
-Only actually submitted, attributable human instructions may authorize actions. Client suggestions and unknown unsent text do not. Verify an uncertain claimed fact at most as needed within existing authorization; do not loop on suggested text or erase unsaved human drafts.
-
-When preparing a human review surface, use the applicable review skill and actual terminal/window width. Read the actual terminal or window column count before laying out the table. Verify rendered display width, stable identifiers and preserved feedback; do not assume HTML breaks or editor wrapping repair an overwide table. Protect unsaved edits, retain already answered feedback, and keep one pending-question list; do not force a refresh or create a second one. lbkit prepares the review material and verifies rendered width; the rendering itself belongs to the host terminal review tool. Confidence helps focus attention, not approve results.
-
-## Named machines, remote execution and coordination handoff
-
-A remote Sailor package keeps the original Captain and Logbook, with the original task/package and return entry. Select the named target machine, registered cwd and its actual workspace/session/tab/pane IDs; display names and identical path strings do not identify the same working copy. Recheck model/deployment/context and open responsibilities before compatible session reuse. Verify actual receipt and dispatch-associated visible monitoring separately. A received package with failed monitoring remains partial; repair only the monitor, never resend business work. Missing adapter capabilities remain explicit gaps.
-
-Captain directly manages an authorized coordination handoff: compare both ends' refs, dirty changes, reliable human rulings and open work; synchronize/retrieve only permitted branches/state/results; preserve uncommitted work and rulings; prepare the same workspace name using the destination's own IDs; confirm the receiving Captain's actual main-session acknowledgement and current gate. Sailor assesses business-result applicability after changed inputs. No main push, publication, extra directory or environment upgrade follows from transfer authorization.
-
-Remote workspace creation may inherit the prior cwd in its root tab. Leave an unrelated root unused; execution and monitor tabs explicitly use registered cwd. Close the root only after checking safe non-use, no activity and no unsent input. Use actual supported tool interfaces, not inferred flags.
-
-## Human review preparation
-
-Before a terminal review gate, use the host review skill to open the intended first view and read it back without stealing focus. Sailor queries the actual pane, editor window and Markview enabled/mixed mode, border and padding configuration before layout. Deduct sidebars, number/sign/fold columns; measure rendered CJK/emoji, the longest cell, full headers and right border in an identically configured safe preview. Pane width or source-character count is not rendered width.
-
-Split tables into semantic or continuous-numbered ranges sized for the actual rendered window height, counting continuation lines; repeat full headers and preserve candidate text, order, quotations, meaning and existing answers exactly. Each table and correction section gets nearby feedback with its range, plus blank lines separating table, feedback and next heading. Preserve existing responses and total feedback. Repair current-package defects and verify the revised view before reporting readiness. Protect unsaved human buffers/input; use safe read-only queries or an independent preview and disclose what cannot be observed. Layout approval does not complete content or human acceptance.
+See [CLI contract](../../../docs/installable/lb-cli.md) and
+[coordination contract](../../../docs/installable/coordination.md) for shared rules.

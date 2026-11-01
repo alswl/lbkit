@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "projects/demo/thinking/log.md": "# Ongoing authorized work\nCaptain is already authorized to reconcile the current report return and save its conclusion in this Thinking. No business execution remains. The supplied report is records/result.md. Current request is an interruption of this work, not a new session-only status task.\n",
+    "records/result.md": "# Sailor return\nactor: sailor-a\ninstruction: i1\nCandidate example-a contains the two requested entries. Both entry identifiers were read back. No publication performed.\n"
+  }
+}

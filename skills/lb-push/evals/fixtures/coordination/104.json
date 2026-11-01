@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "records/report.txt": "The example report has a typoo.\n",
+    "projects/demo/docs/log.md": "# Example work\n\n## Stage 01 Prepare\n\n- [ ] Correct typo in records/report.txt\n- [ ] Human review \ud83d\udc71\n    - \u6279\u6ce8\uff1aPreserve this human note.\n"
+  }
+}

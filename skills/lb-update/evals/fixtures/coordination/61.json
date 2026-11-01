@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/runtime.json": "{\"current_owner\": \"sailor-a\", \"proposed_owner\": \"sailor-b\", \"instruction_id\": \"i1\", \"delivery\": \"delivered\", \"state\": \"idle\", \"acceptance\": null}\n"
+  }
+}

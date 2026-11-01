@@ -26,6 +26,12 @@ uv run --locked mypy src/logbook_cli
 uv build
 ```
 
+Real Herdr/runtime acceptance lives in [tests/e2e/herdr](../../tests/e2e/herdr/README.md).
+It requires explicit opt-in and local runtime configuration; ordinary unittest
+discovery never launches agents. Keep raw trials and machine-specific configuration
+in temporary directories. A blocked Captain host remains a separate limitation
+even when CLI tests and live Sailor lifecycle assertions pass.
+
 ## Dependency Index
 
 The project uses official PyPI (`https://pypi.org/simple`) for dependency
@@ -120,7 +126,7 @@ new approval requirement; project and skill versions remain unchanged.
 
 ## Logbook coordination migration
 
-The coordination revision uses three roles: Admiral supplies goals and authorization, Captain maintains the route and coordinates assignments, and Sailor performs business work including testing, review and acceptance. Independent checks, when needed, are Sailor tasks. A current result and applicable acceptance return support progress; a runtime exit or a bare completion claim does not. Status-only requests authorize no new business execution.
+The coordination revision uses three roles: Admiral supplies goals and authorization, Captain maintains the route and coordinates assignments, and Sailor accepts a self-contained instruction and performs assigned business work including testing and review. Captain checks completion and is the sole Agent writer of the Logbook; Sailor needs no Logbook access. Independent checks, when needed, are Sailor tasks. A current result and applicable acceptance return support progress; a runtime exit or a bare completion claim does not. Status-only requests authorize no new business execution.
 
 The revision intentionally removes the `lb todo` companion-view command and automatic TODO.md refresh, and retires the shared evidence.md/source-index rule model. It does not delete consumer-owned TODO files, business sources, human instructions or historical records. Installer migration must remove only exactly recognized installer-owned retired symlinks; copied files and unrelated links remain owned by consumers. Consumers decide their submodule revision and local instruction changes. No automatic version or config upgrade accompanies this work.
 
@@ -132,7 +138,7 @@ Delivery scope is defined in the [coordination contract](../installable/coordina
 
 ## Design and direct dialogue migration
 
-Consumers adopting this revision gain a design-readiness obligation before ordinary lb-push: Captain personally develops specs with Admiral in authorized project repositories and links the current design and confirmation to the route. Reuse existing applicable specs and confirmations; no required Spec Kit installation, fixed spec path, additional CLI state, config field or automatic version bump is introduced. Host design workflows and write permissions still apply. Captain's spec authorship is an explicit planning responsibility; implementation, POCs and acceptance remain Sailor work. Requests to create or draft the supplied Logbook route authorize saving proposed result-oriented unfinished agent-task wording within that scope, including in an existing draft, before final design confirmation. Spec/Thinking-only proposals leave the Logbook unchanged and authorize no task writes or previews. Older narrow editing limits do not override a newer planning request; confirmed scope/order, human tasks and execution gates remain protected. This clarifies planning authorization rather than adding a new approval or CLI write bypass. Existing annotation refinements use the matching `task note --replace-line` operation and current token; first-line task rewrites and direct body edits are not substitutes. Bound Thinking body edits are distinct: resolve/check identity with mind-forge and use the host writer or authorized local Markdown edit, while preserving bindings and content. The missing dedicated Thinking-write subcommand alone creates no new adapter prerequisite.
+Consumers adopting this revision gain a design-readiness obligation before ordinary lb-push: Captain personally develops specs with Admiral in authorized project repositories and links the current design and confirmation to the route. Reuse existing applicable specs and confirmations; no required Spec Kit installation, fixed spec path, additional CLI state, config field or automatic version bump is introduced. Host design workflows and write permissions still apply. Captain's spec authorship is an explicit planning responsibility; implementation and POCs remain scoped executor work; Captain checks whether the returned result satisfies the task. Requests to create or draft the supplied Logbook route authorize saving proposed result-oriented unfinished agent-task wording within that scope, including in an existing draft, before final design confirmation. Spec/Thinking-only proposals leave the Logbook unchanged and authorize no task writes or previews. Older narrow editing limits do not override a newer planning request; confirmed scope/order, human tasks and execution gates remain protected. This clarifies planning authorization rather than adding a new approval or CLI write bypass. Existing annotation refinements use the matching `task note --replace-line` operation and current token; first-line task rewrites and direct body edits are not substitutes. Bound Thinking body edits are distinct: resolve/check identity with mind-forge and use the host writer or authorized local Markdown edit, while preserving bindings and content. The missing dedicated Thinking-write subcommand alone creates no new adapter prerequisite.
 
 Preflight may inspect unfinished design. A real POC requires an explicit todo, affected-route reorganization and renewed Admiral discussion, then bounded execution authorization; completion cannot silently release ordinary implementation. Design reading, spec writing and execution permissions remain distinct across repositories. Specs own design prose; Logbook owns scheduling; Thinking/Sources retain decisions or references under host rules.
 
@@ -141,9 +147,8 @@ Direct Admiral–Sailor dialogue requires Captain's permission and a verified in
 ## Behavior evaluation
 
 The optional `task split` command adds atomic replacement of an explicitly
-authorized unfinished agent package. It retains the original identity and
-evidence using the existing skipped/not-applicable disposition, and creates
-ordered not-started tasks with source provenance. It adds no document schema,
+authorized unfinished agent package. It archives the original identity/content outside the current task list and creates
+ordered not-started replacements with source provenance. It adds no document schema,
 configuration or consumer adoption requirement. Repository coverage and human
 protections are enforced by the CLI; authorization and evidence applicability
 remain the caller's responsibility. Existing task commands keep their behavior.
@@ -388,3 +393,47 @@ Usage recording is independent of unknown timing and remote observations. Report
 name the existing owner and evidence needed, or Captain’s owner-resolution action.
 These clarify existing coordination duties; they add no consumer files, external
 execution permissions, configuration or version changes.
+
+
+## Canonical Task adoption
+
+The coordination feature changes split from a retained skipped parent to removal
+from the current list plus a complete historical archive. Consumers adopting this
+revision must review changed task identities and provide explicit dependency
+mappings for identified replacements. Canonical actions add visible pause,
+obstacle-preserving resume and direct completion without compulsory Run/Result.
+Legacy task records remain readable; migration must be previewed and applied with
+context CAS. Unknown or conflicting legacy meaning is not guessed. A canonical
+cancellation attributes its actor rather than claiming a human decision.
+These are compatibility changes requiring a human release decision; no version
+or consumer configuration is automatically upgraded.
+
+Canonical writes refuse remaining sidecar dependency/ownership/parent fields
+instead of partially converting a legacy record. Dependency reads and legacy start
+checks retain sidecar meaning until explicit CAS-protected migration; migration
+also recovers records with canonical status and unmigrated dependencies. Consumers
+must identify referencing tasks before replacement so reference changes can be
+mapped. Both split forms retain prerequisites, and archived IDs remain reserved
+for their historical work. These tighten the existing migration and historical
+identity guarantees without changing configuration or schema versions.
+
+The installed coordination, lifecycle and domain-command contracts distinguish
+Sailor acceptance of an instruction from Captain checking completion. Consumers
+should remove old requirements that Sailors read/write the Logbook or that every
+Task has a Run, submission or independent reviewer. Task-specific evidence and
+human gates still apply. Status is pure read-only; an authorized caller continues
+after answering an ordinary progress question. Summary maintenance is explicit,
+never a hidden status effect.
+
+Herdr uses bounded one-shot waiting and caller-held continuation, not a compulsory
+monitoring pane. Consumers must verify host tool-completion delivery before claiming
+unattended progress. No hook refresh, installation, consumer configuration change
+or native-subagent backend is implicit. Open/close report owned resources and
+partial outcomes; they do not certify descendant cleanup or change Task state.
+Legacy dispatch sends retain uncertain-delivery guards.
+
+Paused in-flight work retains Captain's binding and responsibility for handling
+late replies. Needs-input observations require recovery of available authorized
+inputs or a focused request to their owner. Completed Task-specific takeover notes
+describe finished work while broader takeover and unresolved handoffs stay visible.
+These clarify existing coordination duties without adding consumer configuration.

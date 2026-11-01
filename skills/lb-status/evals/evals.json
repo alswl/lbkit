@@ -316,6 +316,64 @@
         }
       ],
       "fixture_variant": "receipt_missing"
+    },
+    {
+      "id": 25,
+      "axis": "Standalone status is pure, including an ordinary query",
+      "coordination_seeds": [
+        "status-continue"
+      ],
+      "prompt": "Use /lb-status. What is the status of projects/demo/docs/log.md and what remains next?",
+      "expected_output": "Standalone status is pure, including an ordinary query",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "status_based_on_source",
+          "type": "contains",
+          "check": "Reads the supplied Logbook and reports its actual pending report check and separate human review; does not infer completion from the stale heading emoji."
+        },
+        {
+          "name": "status_has_no_writes",
+          "type": "not_contains",
+          "check": "Changes any consumer document or state, invokes write/GC/session reset, or dispatches work. Ordinary status is read-only even without the user saying so."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "axis": "Standalone status is pure, including an ordinary query",
+      "coordination_seeds": [
+        "status-continue"
+      ],
+      "prompt": "Use /lb-status. What is the status of projects/demo/docs/log.md and what remains next? This is read-only: do not change files.",
+      "expected_output": "Standalone status is pure, including an ordinary query",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "status_based_on_source",
+          "type": "contains",
+          "check": "Reads the supplied Logbook and reports its actual pending report check and separate human review; does not infer completion from the stale heading emoji."
+        },
+        {
+          "name": "status_has_no_writes",
+          "type": "not_contains",
+          "check": "Changes any consumer document or state, invokes write/GC/session reset, or dispatches work. Ordinary status is read-only even without the user saying so."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
     }
   ]
 }

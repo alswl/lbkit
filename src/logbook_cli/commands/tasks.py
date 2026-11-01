@@ -230,12 +230,22 @@ def rewrite(
 
 
 @task.command("split")
-@options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, DECISION)
+@options(
+    ROOT,
+    LOG,
+    click.option("--stage"),
+    click.option("--task"),
+    TOKEN,
+    DRY_RUN,
+    JSON,
+    DECISION,
+)
+@click.option("--input-file")
 @click.option(
     "--into",
     "texts",
     multiple=True,
-    required=True,
+    required=False,
     help="Replacement task text, in approved order; repeat at least twice.",
 )
 def split(
@@ -248,7 +258,22 @@ def split(
     json: bool,
     decision: str,
     texts: tuple[str, ...],
+    input_file: str | None,
 ) -> None:
+    if input_file:
+        if stage or task or texts:
+            raise click.UsageError(
+                "--input-file cannot be combined with --stage/--task/--into"
+            )
+        finish(
+            tasks.replace_bound(
+                resolve_root(root), log, input_file, decision, token, dry_run
+            ),
+            json,
+        )
+        return
+    if not stage or not task or not texts:
+        raise click.UsageError("provide --input-file or --stage/--task/--into")
     finish(
         tasks.split(
             resolve_root(root), log, stage, task, texts, decision, token, dry_run

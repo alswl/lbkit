@@ -146,3 +146,68 @@ def record_usage(root, log, thinking, input_file, token, dry_run):
         "definition_digest": digest,
     }
     return save(target, records.put(target, "skill-usage", value), dry_run, usage=value)
+
+
+def herdr_readiness(root, runtime, discovery):
+    """Assess independently supplied discovery and current bundled guidance."""
+    from pathlib import Path
+
+    from logbook_cli.adapters import herdr
+
+    result = {
+        "skill": {"status": "unknown"},
+        "integration": {"status": "unknown"},
+        "session": {"status": "unknown"},
+        "server": {"status": "unknown"},
+    }
+    try:
+        bundled = herdr.invoke("local", "--skill", raw=True)
+    except LbError:
+        result["skill"]["reason"] = "bundled guidance unavailable"
+        return result
+    if discovery.get("verified") is not True:
+        result["skill"]["reason"] = "runtime discovery unverified"
+    elif "herdr" not in discovery.get("names", []):
+        result["skill"]["status"] = "undiscoverable"
+    else:
+        statuses = []
+        for entry in discovery.get("paths", []):
+            path = Path(entry)
+            try:
+                if not path.exists():
+                    statuses.append("missing")
+                elif not path.is_file():
+                    statuses.append("unreadable")
+                else:
+                    text = path.read_text()
+                    statuses.append("current" if text == bundled else "stale")
+            except (OSError, UnicodeError):
+                statuses.append("unreadable")
+        result["skill"]["status"] = statuses[0] if len(statuses) == 1 else "unknown"
+    try:
+        raw = herdr.invoke("local", "integration", "status", raw=True)
+        try:
+            result["integration"]["status"] = (
+                json.loads(raw).get("result", {}).get(runtime, "unknown")
+            )
+        except ValueError:
+            match = re.search(
+                r"(?m)^" + re.escape(runtime) + r": (current|outdated|not installed)\b",
+                raw,
+            )
+            if match:
+                result["integration"]["status"] = {
+                    "current": "ready",
+                    "outdated": "outdated",
+                    "not installed": "missing",
+                }[match[1]]
+        status = herdr.invoke("local", "status", "--json")
+        server = status.get("server", {})
+        result["server"]["status"] = (
+            "ready"
+            if server.get("running") and server.get("compatible") is True
+            else "unknown"
+        )
+    except LbError:
+        pass
+    return result
