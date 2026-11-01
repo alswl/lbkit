@@ -279,6 +279,18 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
         raise LbError("managed caller and unexpired deadline required", EXIT_REFUSED)
     command = ["herdr"] + (["--machine", machine] if machine != "local" else [])
 
+    async def finish_owned(task):
+        cancelled = False
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                cancelled = True
+        result = task.result()
+        if cancelled:
+            raise asyncio.CancelledError
+        return result
+
     async def cleanup(process):
         if process.returncode is not None:
             return
@@ -325,8 +337,11 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
     try:
         process = await asyncio.shield(spawn)
     except asyncio.CancelledError:
-        process = await spawn
-        await cleanup(process)
+        async def cleanup_spawn():
+            process = await spawn
+            await cleanup(process)
+
+        await finish_owned(asyncio.create_task(cleanup_spawn()))
         raise
     except OSError as exc:
         raise LbError("Herdr read unavailable", EXIT_REFUSED) from exc
@@ -370,8 +385,13 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
     except TimeoutError as exc:
         raise LbError("Herdr read deadline expired", EXIT_REFUSED) from exc
     finally:
-        for reader in readers:
-            if not reader.done():
-                reader.cancel()
-        await asyncio.gather(*readers, return_exceptions=True)
-        await cleanup(process)
+        async def finish_call():
+            for reader in readers:
+                if not reader.done():
+                    reader.cancel()
+            await asyncio.gather(*readers, return_exceptions=True)
+            await cleanup(process)
+
+        # A shared deadline and caller cancellation can arrive together. Defer
+        # further cancellation until this call's readers and child are reaped.
+        await finish_owned(asyncio.create_task(finish_call()))

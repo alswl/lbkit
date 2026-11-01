@@ -121,3 +121,51 @@ class HerdrWaitAdapterTest(CoordinationTest):
                 for c in self.calls()
             )
         )
+
+    def test_repeated_cancellation_cannot_interrupt_child_cleanup(self):
+        self.script(
+            [
+                {
+                    "argv": ["agent", "wait"],
+                    "responses": [
+                        {"delay": 20, "ignore_term": True, "record_ready": True}
+                    ],
+                }
+            ]
+        )
+
+        async def wait_for(kind):
+            async with asyncio.timeout(2):
+                while not any(row["kind"] == kind for row in self.calls()):
+                    await asyncio.sleep(0.01)
+
+        async def run():
+            task = asyncio.create_task(
+                herdr.invoke_bounded(
+                    "local",
+                    "agent",
+                    "wait",
+                    "w1:p1",
+                    deadline=time.monotonic() + 10,
+                    output_limit=256 * 1024,
+                )
+            )
+            try:
+                await wait_for("ready")
+                task.cancel()
+                await wait_for("signal")
+                task.cancel()
+                with self.assertRaises(asyncio.CancelledError):
+                    await task
+                self.assert_children_reaped()
+            finally:
+                # A failing regression must still reclaim its own fixture.
+                for row in self.calls():
+                    if row["kind"] == "start":
+                        try:
+                            os.kill(row["pid"], 9)
+                        except ProcessLookupError:
+                            pass
+
+        with patch.dict(os.environ, self.env):
+            asyncio.run(run())

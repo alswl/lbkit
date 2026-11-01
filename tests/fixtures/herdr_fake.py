@@ -59,6 +59,8 @@ def main():
             raise SystemExit(128 + signum)
 
     signal.signal(signal.SIGTERM, terminate)
+    if response.get("record_ready"):
+        record("ready")
     try:
         time.sleep(response.get("delay", 0))
         for stream in ("stdout", "stderr"):
