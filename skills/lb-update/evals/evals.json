@@ -1077,6 +1077,93 @@
           "check": "Preserve human edits and report remaining evidence gaps"
         }
       ]
+    },
+    {
+      "id": 60,
+      "axis": "Dialogue defers exactly one task without inventing a stopped process",
+      "coordination_seeds": [
+        "dialogue-update",
+        "pause-visible"
+      ],
+      "prompt": "Use /lb-update. Put the comparison aside until later; leave the report check available. Update only the affected work and tell me what changed.",
+      "expected_output": "Dialogue defers exactly one task without inventing a stopped process",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/60.json"
+      ],
+      "assertions": [
+        {
+          "name": "targeted_pause_or_honest_gap",
+          "type": "contains",
+          "check": "Finds the comparison task. If supported, applies pause through current-token CLI and reads it back; if the CLI lacks pause, reports the precise pending change and unsupported write without claiming success."
+        },
+        {
+          "name": "no_false_stop_or_extra_approval",
+          "type": "not_contains",
+          "check": "Claims a Sailor stopped solely from Task pause, alters the report check, blindly bypasses CAS or requests approval again for this already-explicit deferral."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "axis": "Reassignment requires actual recipient acceptance",
+      "coordination_seeds": [
+        "handoff-accept",
+        "dialogue-update"
+      ],
+      "prompt": "Use /lb-update to reconcile the supplied transfer observation for the report task. The proposed new owner is sailor-b. Update only justified facts.",
+      "expected_output": "Reassignment requires actual recipient acceptance",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/61.json"
+      ],
+      "assertions": [
+        {
+          "name": "delivery_not_acceptance",
+          "type": "contains",
+          "check": "Reads records/runtime.json and reports that delivery is confirmed but recipient acceptance is missing; current owner remains sailor-a."
+        },
+        {
+          "name": "no_invented_owner_transfer",
+          "type": "not_contains",
+          "check": "Changes owner to sailor-b, treats idle/delivery/silence as acceptance or claims an acceptance reply that does not exist."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "axis": "Ambiguous dialogue asks a focused question and preserves state",
+      "coordination_seeds": [
+        "dialogue-update"
+      ],
+      "prompt": "Use /lb-update. Put that one aside until later.",
+      "expected_output": "Ambiguous dialogue asks a focused question and preserves state",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/62.json"
+      ],
+      "assertions": [
+        {
+          "name": "focused_question",
+          "type": "contains",
+          "check": "Recognizes that no unique task is designated and asks which of the two pending agent tasks should be deferred, without inventing the selection."
+        },
+        {
+          "name": "no_silent_consent",
+          "type": "not_contains",
+          "check": "Changes task state, selects a task by guesswork or treats lack of an answer as permission."
+        }
+      ]
     }
   ]
 }

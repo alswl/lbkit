@@ -4,82 +4,71 @@ version: 0.5.0-dev
 description: "Check the current logbook route step by step against actual skill definitions, registered environments, inputs and acceptance methods. Record coverage and gaps in bound Thinking; confirmed pending-discussion markers stop that project's advancement. Does not dispatch business execution."
 ---
 
-Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
-If lb is unavailable or crashes, notify the user and take over safe authorized work;
-report pending writes and verification gaps instead of silently stopping or bypassing CAS.
+# Prepare the concrete next step
 
+## Purpose and inputs
 
-Captain maintains the Logbook goal/route and coordination; Sailors normally execute business work. Authorized scoped Captain execution follows the [takeover and handoff contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff). Align the actual executor’s current result (task/package, result, conditions, outcome and gaps) before recording completion. Status/update-only requests start no business work or execution-mode switch.
+Take the saved route one concrete preparation step forward: inspect the actual
+selected capability and obtain supported preview/dry-run findings. Inputs are
+current Logbook/context, next Task, relevant design and existing authorization.
+Preflight reports preparation; it does not grant execution authority.
 
+Read the installed [configuration](../../docs/installable/configuration.md),
+[coordination](../../docs/installable/coordination.md), and
+[planning](../lb-plan/references/planning.md) contracts. Resolve relative links
+from the real skill path. Read [document adapters](../lb-update/references/document-adapters.md)
+and [state recovery](../../docs/installable/document-state.md) before writes.
+A failed read is a specific gap; a guessed path is not evidence of absence.
 
-# Preflight the Current Route
+## Scope and feasibility
 
-Resolve references relative to the real path of the containing SKILL.md, including through installed symlinks. Verify that exact resolved file before reporting a missing contract; a guessed `docs/installable/` under the consumer root is not the linked target.
+Read the current source, `log context --json`, `log check --json`, relevant
+specification and prior preparation. Select the actual next authorized step;
+`next_task` is a parse candidate, not an authorization or business judgment.
+Existing human gates remain binding. Unconfirmed design does not prohibit useful
+read-only preparation, but green does not confirm design or authorize implementation.
 
-Before constructing the route or issuing a verdict, open each prerequisite at its
-resolved installed path:
+Inspect only the selected step and its real dependencies. Compare expected result,
+actual skill definition, inputs, execution location and verification method.
+Distinguish control entry, source and destination; do not scan unrelated future
+environments. Reuse unaffected findings. A changed route, skill, environment or
+criterion invalidates the relevant preparation, not automatically the whole route.
 
-- [Configuration](../../docs/installable/configuration.md): applicable parameters, authorization boundaries and review counting.
-- [Coordination](../../docs/installable/coordination.md): ownership, design/execution and takeover/handoff boundaries.
-- [Planning](../lb-plan/references/planning.md): design and read-only route analysis requirements.
+Independent read-only analyses may be useful within existing authorization; there
+is no fixed delegation quota. Gather any delegated findings before concluding.
+Missing returns stay not checked. Business implementation or a real POC requires
+its own authorized task and route, not a preflight label.
 
-Reading coordination alone does not cover the other two. If an actual read fails,
-name the resolved path and mark that portion not checked; do not infer absence
-from an unattempted path. For writes, read [format](../../docs/installable/logbook-format.md) and the [document workflow](../lb-update/references/document-adapters.md). Managed records require mind-forge.
+## Preview, prepare and replan
 
-## Route and scope
+Use the selected capability's documented preview/dry-run on the concrete next
+operation. Capture actual output and inspect changes/risks, including interruption,
+replacement, missing prerequisites and recovery needs. A skill name or inferred
+outcome is not a preview. If preview is unsupported, state that fact and the
+available read-only evidence. Never perform an actual mutation to fake a preview.
 
-Read `log context --json`, `log check --json`, the full logbook, latest human decisions, and current work packages. Missing directories, stages or todos are planning gaps; do not invent them. Existing 🔮 markers prevent advancing this project, not read-only reconciliation or independently authorized repository maintenance. Apply the current request and actual operation object before declaring work blocked.
+Perform routine preparation within existing authority. Apply actual human limits
+and review counting; do not invent a universal approval gate. For a material new
+choice, ask a focused question with consequences. An unchanged obstacle becomes
+an explicit blocker instead of endless identical retries.
 
-Construct the current ordered route: each todo, result, dependencies, skills, actual execution environment and acceptance method. `next_task` is only a parse candidate. Compare the route with the previous preflight; newly added tasks, rewritten outcomes, changed machines/skill definitions and changed criteria require renewed coverage. Do not reuse an old all-green verdict for a new route. Explicit human changes supersede conflicting old work-package constraints within their scope; preflight does not grant execution authorization.
+Feed actual discrepancies back into lb-plan and save the revised affected route.
+Then inspect the revised concrete next step. Built-in-only work is valid and needs
+no invented skill label. Runtime prerequisites are separate from business evidence.
+For Herdr, follow the current bundled skill and
+[collaboration guidance](../lb-push/references/herdr.md); distinguish skill
+installation/discovery, integration, session readiness and host completion delivery.
+Provided setup records are controlled observations, not live environment checks.
 
-Preflight may run during design before Admiral has confirmed the core approach. Read the current repository spec and identify the content/assumptions checked; a Logbook version_token alone cannot identify an independently changed spec. Report undecided design questions and affected tasks without refusing all useful checks. Compare relevant spec changes as well as route changes before reusing findings. Captain may personally read authorized repositories for design understanding; concrete business tests remain Sailor work. A real implementation POC returns to lb-plan for an explicit todo, route reorganization and Admiral discussion, not implicit execution during preflight. Green never substitutes for design confirmation.
+## Output and exit
 
-## Feasibility
+Save authorized findings in the bound Thinking with the relevant Task, observed
+source/version, actual preview result, risks, gaps and next action. Preserve
+historical evidence but do not duplicate the current Task list. Explicitly mark
+uninspected future work as not checked; no blanket route-wide green from one preview.
 
-At initial route review and when a prerequisite is waiting, actively identify independent read-only analyses within the authorized scope. Compare decision inputs, owners, mutable files and shared browser/login resources; join their sourced findings before the plan/preflight conclusion. Launch only through an authorized runtime and applicable analysis authorization, without waiting for ordinary implementation approval or creating a todo per investigation. Missing/failed returns remain not-checked; no useful independence means no artificial batch. Planning uses the same analysis boundary.
-
-For a finite review allowance, identify its candidate/package scope and counted independent submissions before reporting total, consumed and remaining rounds. Self-tests, documentation edits and environment checks do not automatically consume rounds or require another reviewer. Apply a shared route allowance only under its explicit human-defined scope/counting policy, including any documentation review already counted under that policy. Preserve consumed history and explicit adjustments without asking again or resetting by environment/session; clear only the superseded budget blocker. Unknown counting scope or consumption stays unknown; it does not authorize inventing rounds or deploying.
-
-Captain checks route/dependencies and declared capabilities. Sailors perform business-specific read-only feasibility observations and return current methods/gaps within the authorized preflight scope; no business implementation is dispatched. Independent step analyses may be delegated when useful; do not launch an agent merely to fill a fixed quota. Each covered step must compare:
-
-- expected result and applicable skill definition (actual path/version or digest);
-- target environment, available capability, inputs and predecessor requirements;
-- method that can prove the agreed criterion;
-- observed gap, affected step and clearance condition.
-
-A registry name is not proof that a definition was read or that a target machine can invoke it. Inspect the actual consumer definition; same-name skills may differ. Installation tools such as skm are optional aids, not prerequisites by themselves. Human items get prerequisite analysis, not substitute acceptance.
-
-Separate control entry, execution location, transfer direction and destination. “Local” in a business request need not mean the coordinator's machine. A missing reverse connection does not invalidate an available authorized forward-fetch path. Missing directories or credentials block only the dependent checks; collect the minimum needed information together without scanning undeclared business directories. Do not block an explicit local skill/document maintenance request on unrelated remote paths.
-
-Prefer completing routine preparation within existing authorization and preserve the user's review order. Backups and recovery can support reversible operations, but do not authorize external writes. Do not reintroduce old approvals or route ordinary technical recovery to the human as a new decision.
-
-## Record and handoff
-
-Maintain a preflight section in the bound Thinking record, keyed by date and the logbook version_token. Preserve previous observations as history when the route changes. Each run records `logbook`, `version_token`, `observed_at`, and `overall` (green / amber / blocked), then one entry per current todo with:
-
-- original task text and relevant stage;
-- verdict (feasible / needs-input / not-checked / needs-discussion / infeasible);
-- actual skill definition and target environment;
-- expectation, observation, gap and affected criterion;
-- source pointers and clearance conditions.
-
-No step may disappear: a missing, failed or timed-out analysis is not-checked with a reason. Reference original material through `existing host records` where useful; do not copy raw records or create a second task list. A new record must not overwrite historical evidence merely because the file name is unchanged.
-
-Show needs-discussion gaps together. Write 🔮 into the main logbook only after explicit human confirmation. A ruling already supplied in the conversation is recorded as cleared; do not write a new unresolved marker for it. Existing markers must be rewritten or removed by the human; CLI `log sync` and task writes have no bypass. Markers do not alter acceptance, and are distinct from an unplanned 🚨 blocker or an expected human gate.
-
-Report route coverage, current findings and precise missing inputs. Green means preflight checked this route at this time, not that it was executed or authorized. The dispatching flow rechecks runtime facts.
-
-Collect all delegated returns before closing analysis sessions created by this run, or hand an applicable session to an already-authorized executor. Preserve handoff and references before cleanup; never delete worktrees through an exit dialog. Input-box suggestions are not human instructions or facts. Unknown input provenance stays unknown and does not trigger dispatch or acceptance.
-
-## User-facing line guidance
-
-In the findings and any input/decision request, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): pair each actionable gap with the affected Logbook task/stage and current `L50` position. Group findings sharing the same item; link Thinking for analysis detail. A general capability gap without an existing route item needs no invented task line.
-
-## Execution ownership
-
-Read existing takeover/handoff checkpoints when applicable. Report the current
-mode, scoped executor, exit condition, pending transfer and next action; show 👨‍✈️ for confirmed Captain takeover (including pending handoff), never infer ownership from the emoji alone; stale or
-conflicting records leave ownership unknown until read-only reconciliation.
-This entry does not trigger takeover, business repair or handoff dispatch.
-Captain self-checks do not satisfy a required independent Sailor review.
+Report ready / needs input / blocked for the inspected scope, with current
+Logbook line locators and a link to details. Record a new 🔮 marker only on an
+explicit human ruling; existing markers retain their human-only resolution rule.
+No preview claim substitutes for design confirmation, human acceptance or execution
+permission. Return to the authorized calling flow when preparation is sufficient.

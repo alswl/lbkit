@@ -140,7 +140,7 @@ Successful logbook writes return `version_token` for the resulting Markdown and 
 
 For an explicitly authorized initial assignment, add `--assign-repo NAME` (without `@`) and include exactly `@NAME` in the new text. This permits assigning one repository only when the original unfinished agent task has none; it never transfers existing ownership or splits the task. Preview first with the same decision and token. The caller verifies the named repository is in the approved working directories and that the human decision authorizes this assignment; the flag and decision string cannot authenticate consent. All other rewrite protections remain in force.
 
-`task split LOG --stage STAGE --task ORIGINAL --into FIRST --into SECOND --decision SOURCE --expect-version TOKEN` replaces one unfinished agent package with at least two new, ordered, not-started tasks in the same stage, in one guarded write. Preview the entire transformation with `--dry-run`, inspect it, then write with that same token. The original task text, position and child content stay intact; its checkbox becomes `[-]` with a `not-applicable` resolution naming the decision and replacements. This retires the aggregate package from scheduling without claiming acceptance or cancellation of the underlying work. Each replacement gets a Source pointing to the original task's identity; it inherits no accepted state or artifact. Set any new criteria separately within the authorized scope.
+`task split LOG --stage STAGE --task ORIGINAL --into FIRST --into SECOND --decision SOURCE --expect-version TOKEN` replaces one unfinished agent package with at least two new, ordered, not-started tasks in the same stage, in one guarded write. Preview the entire transformation with `--dry-run`, inspect it, then write with that same token. The original task is removed from the current list and its complete content is retained in the sidecar `task-archive`. Replacements remain unfinished and inherit no accepted state or artifact. This changes the earlier split behavior that retained a skipped parent. For identified tasks, use `--input-file` with `task_id`, replacement `{id,text}` entries, and `reference_changes` mapping each dependent task to its new dependency IDs. Missing maps, cycles and unresolved live bindings refuse the whole operation.
 
 Duplicate or existing replacement text, human/completed/skipped originals, human replacements and preflight gates are refused. If the original has repositories, replacements must collectively cover exactly those repositories and each must retain at least one; new repositories and loss of an existing repository are refused. An unassigned original may give each replacement at most one explicitly named repository. The caller verifies the human-approved scope, order, repositories and evidence applicability; `--decision` cannot authenticate consent. All candidate validation and CAS checks finish before any byte is written. Failed validation or stale tokens leave the original and replacements unchanged. Repeating a completed split is refused. Stage marker synchronization remains a separate current-token operation, as with `task add`.
 
@@ -178,7 +178,7 @@ See [lifecycle operations](lifecycle-operations.md) for state-set, workflow, run
 
 ## Concept-oriented routes
 
-Use the [domain commands](domain-commands.md) for task identity, separate submission and acceptance, dispatch attempts, runtime bindings, workflow lifecycle and skill usage. Old routes and option aliases are removed; use these command paths directly.
+Use the [domain commands](domain-commands.md) for canonical task actions, optional candidate evidence, compatible dispatch attempts, runtime bindings, workflow lifecycle and skill usage. Old routes and option aliases are removed; use these command paths directly.
 
 ## Execution state in project JSON
 
@@ -316,3 +316,32 @@ Cooperating local writers share a nonblocking `lb/.lock` (macOS/Linux) plus file
 CAS. It is not a distributed lock or a transaction across runtime, JSON and
 Markdown; manual edits and direct host tools bypass it. The host still owns
 authorization, evidence truth, safe pause, monitoring and independent review.
+
+
+## Canonical Task actions
+
+`task complete|pause|resume|block|unblock LOG TASK_ID` uses `--basis`,
+`--expect-version`, `--dry-run` and `--json`. Block also requires `--reason`;
+resume without a recorded prior state requires `--to pending|active`.
+Completion requires no Run, submission or fabricated start event. Human tasks
+remain protected. These actions preserve history and derive current state from
+Markdown rather than writing a second current status in the sidecar.
+
+`task migrate LOG --expect-version TOKEN --dry-run --json` previews supported
+legacy mappings; omit `--dry-run` to apply with the same token. Consistent
+accepted/submitted become Markdown-derived done/active, with prior evidence
+retained. Conflicts, ambiguous skipped states and unsupported ownership/parent
+mappings refuse apply; resolve those explicitly before retrying. Reads do not
+silently migrate legacy records. Existing legacy submission/acceptance routes
+remain available and retain candidate checks.
+
+Legacy sidecar dependencies remain visible and constrain legacy start actions.
+Before canonical actions or replacement, explicitly migrate remaining sidecar
+dependencies and resolve unsupported ownership/parent mappings. Migration also
+handles records whose status is already canonical but whose dependencies remain
+in the sidecar. Conflicting dependency sources refuse writes.
+
+Replacement requires every referencing task to have an identity so its dependency
+mapping can be explicit; use `task identify` on an unidentified dependent first.
+Both split forms preserve the original prerequisites in each replacement. Archived
+task IDs cannot be assigned to new work.

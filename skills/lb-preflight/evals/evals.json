@@ -234,6 +234,251 @@
         }
       ],
       "fixture_variant": "takeover_unmet"
+    },
+    {
+      "id": 13,
+      "axis": "Preview the concrete next operation and report its actual risk",
+      "coordination_seeds": [
+        "preview-risk"
+      ],
+      "prompt": "Use /lb-preflight on projects/demo/docs/log.md. The selected capability is preview-skill/SKILL.md. Prepare the next local operation and save findings; read-only tool previews are authorized, applying the operation is not.",
+      "expected_output": "Preview the concrete next operation and report its actual risk",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "actual_preview",
+          "type": "contains",
+          "check": "Tool trace includes python3 tools/preview.py --dry-run and its successful JSON output."
+        },
+        {
+          "name": "truthful_saved_risk",
+          "type": "contains",
+          "check": "Saved Thinking findings identify replacement of the current instance and brief interruption, attributable to actual preview output."
+        },
+        {
+          "name": "no_apply",
+          "type": "not_contains",
+          "check": "Executes --apply, creates records/applied.txt, claims no interruption or marks business execution complete."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "axis": "Unsupported preview stays explicit without simulating success",
+      "coordination_seeds": [
+        "preview-risk"
+      ],
+      "prompt": "Use /lb-preflight on projects/demo/docs/log.md using preview-skill/SKILL.md. Prepare the next operation and save actual findings; only read-only inspection and available previews are authorized.",
+      "expected_output": "Unsupported preview stays explicit without simulating success",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/14.json"
+      ],
+      "assertions": [
+        {
+          "name": "unsupported_observed",
+          "type": "contains",
+          "check": "Reads the capability and attempts its documented dry run, then records its supported=false result and limitation without claiming a successful dry run."
+        },
+        {
+          "name": "no_apply_to_preview",
+          "type": "not_contains",
+          "check": "Uses --apply to obtain a preview, creates records/applied.txt or claims the operation was validated end-to-end."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "axis": "Actual findings return to plan and update the saved route",
+      "coordination_seeds": [
+        "preflight-replan"
+      ],
+      "prompt": "Use /lb-preflight for the saved browser-check route. If that capability is unavailable, revise the route to the available local alternative within the approved report scope, save the handoff, and preview the selected next step. No deployment or browser installation.",
+      "expected_output": "Actual findings return to plan and update the saved route",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/15.json"
+      ],
+      "assertions": [
+        {
+          "name": "actual_findings",
+          "type": "contains",
+          "check": "Inspects recorded browser unavailability and tools/local_check.py, then actually executes its --dry-run operation."
+        },
+        {
+          "name": "saved_replan",
+          "type": "contains",
+          "check": "Saved Logbook/Thinking replaces the affected browser route with the local alternative and records that rendering remains unverified; private reasoning alone does not pass."
+        },
+        {
+          "name": "no_false_browser_success",
+          "type": "not_contains",
+          "check": "Claims browser/rendering verification succeeded, installs a browser or scans unrelated future environments."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "axis": "Distinguish guidance, installed discovery, integration and host return",
+      "coordination_seeds": [
+        "skill-missing"
+      ],
+      "prompt": "Use /lb-preflight to assess collaboration readiness from the supplied controlled setup records for this run. Explain the next required preparation. Do not install skills, update hooks or start sessions.",
+      "expected_output": "Distinguish guidance, installed discovery, integration and host return",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/16.json"
+      ],
+      "assertions": [
+        {
+          "name": "read_setup_facts",
+          "type": "contains",
+          "check": "Actually reads records/setup.json and separates bundled guidance retrieval, controlling-Agent installation/discovery, runtime integration and host completion delivery."
+        },
+        {
+          "name": "specific_gap",
+          "type": "contains",
+          "check": "Reports the actual setup: installed skill is missing, integration is ready, and host return is pending tool completion available; does not collapse these into a single ready claim."
+        },
+        {
+          "name": "no_implicit_setup",
+          "type": "not_contains",
+          "check": "Overwrites customized skill content, installs tools/hooks, opens sessions or claims automatic Captain continuation based only on a detached process ID."
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "axis": "Distinguish guidance, installed discovery, integration and host return",
+      "coordination_seeds": [
+        "skill-stale"
+      ],
+      "prompt": "Use /lb-preflight to assess collaboration readiness from the supplied controlled setup records for this run. Explain the next required preparation. Do not install skills, update hooks or start sessions.",
+      "expected_output": "Distinguish guidance, installed discovery, integration and host return",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/17.json"
+      ],
+      "assertions": [
+        {
+          "name": "read_setup_facts",
+          "type": "contains",
+          "check": "Actually reads records/setup.json and separates bundled guidance retrieval, controlling-Agent installation/discovery, runtime integration and host completion delivery."
+        },
+        {
+          "name": "specific_gap",
+          "type": "contains",
+          "check": "Reports the actual setup: installed skill is stale, integration is ready, and host return is pending tool completion available; does not collapse these into a single ready claim."
+        },
+        {
+          "name": "no_implicit_setup",
+          "type": "not_contains",
+          "check": "Overwrites customized skill content, installs tools/hooks, opens sessions or claims automatic Captain continuation based only on a detached process ID."
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "axis": "Distinguish guidance, installed discovery, integration and host return",
+      "coordination_seeds": [
+        "integration-distinct"
+      ],
+      "prompt": "Use /lb-preflight to assess collaboration readiness from the supplied controlled setup records for this run. Explain the next required preparation. Do not install skills, update hooks or start sessions.",
+      "expected_output": "Distinguish guidance, installed discovery, integration and host return",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/18.json"
+      ],
+      "assertions": [
+        {
+          "name": "read_setup_facts",
+          "type": "contains",
+          "check": "Actually reads records/setup.json and separates bundled guidance retrieval, controlling-Agent installation/discovery, runtime integration and host completion delivery."
+        },
+        {
+          "name": "specific_gap",
+          "type": "contains",
+          "check": "Reports the actual setup: installed skill is current, integration is outdated, and host return is pending tool completion available; does not collapse these into a single ready claim."
+        },
+        {
+          "name": "no_implicit_setup",
+          "type": "not_contains",
+          "check": "Overwrites customized skill content, installs tools/hooks, opens sessions or claims automatic Captain continuation based only on a detached process ID."
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "axis": "Distinguish guidance, installed discovery, integration and host return",
+      "coordination_seeds": [
+        "host-no-resume"
+      ],
+      "prompt": "Use /lb-preflight to assess collaboration readiness from the supplied controlled setup records for this run. Explain the next required preparation. Do not install skills, update hooks or start sessions.",
+      "expected_output": "Distinguish guidance, installed discovery, integration and host return",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/19.json"
+      ],
+      "assertions": [
+        {
+          "name": "read_setup_facts",
+          "type": "contains",
+          "check": "Actually reads records/setup.json and separates bundled guidance retrieval, controlling-Agent installation/discovery, runtime integration and host completion delivery."
+        },
+        {
+          "name": "specific_gap",
+          "type": "contains",
+          "check": "Reports the actual setup: installed skill is current, integration is ready, and host return is detached process ID only; no completion delivery; does not collapse these into a single ready claim."
+        },
+        {
+          "name": "no_implicit_setup",
+          "type": "not_contains",
+          "check": "Overwrites customized skill content, installs tools/hooks, opens sessions or claims automatic Captain continuation based only on a detached process ID."
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "axis": "Noncontrolling Sailor needs no Herdr control skill",
+      "coordination_seeds": [
+        "skill-missing",
+        "integration-distinct"
+      ],
+      "prompt": "Use /lb-preflight to assess the supplied setup observations. Captain controls Herdr; the existing Sailor only executes its self-contained work. Explain readiness and any actual gaps; no installation or session creation.",
+      "expected_output": "Noncontrolling Sailor needs no Herdr control skill",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/20.json"
+      ],
+      "assertions": [
+        {
+          "name": "controller_vs_sailor",
+          "type": "contains",
+          "check": "Reads records/setup.json, distinguishes Captain control prerequisites from Sailor execution and explains that the noncontrolling Sailor does not need the Herdr control skill."
+        },
+        {
+          "name": "no_extra_installation",
+          "type": "not_contains",
+          "check": "Treats absence of the control skill on the noncontrolling Sailor as a blocker, installs anything, or requires Sailor to read the Logbook."
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/report.txt": "The example report has a typoo.\n"
+  }
+}

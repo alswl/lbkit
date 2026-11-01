@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "records/browser.json": "{\"available\":false,\"reason\":\"No browser in this controlled environment\"}\n",
+    "projects/demo/thinking/log.md": "# Saved route\nBrowser rendering check is planned. See records/browser.json for actual availability. Local alternative: python3 tools/local_check.py --dry-run. Human authorizes route revision within the report scope.\n"
+  }
+}

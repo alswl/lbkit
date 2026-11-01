@@ -100,6 +100,7 @@ def task_rows(
             "stage": section.title,
             "line": task.line,
             "state": task.state,
+            "status": task.effective_state,
             "text": task.text,
             "human": task.human,
             "settled": task.settled,

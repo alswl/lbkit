@@ -1,0 +1,37 @@
+{
+  "format": "lb-document-state",
+  "documents": {
+    "log.md": {
+      "document": {
+        "identity": {
+          "id": "identity",
+          "uuid": "00000000000000000000000000000000"
+        }
+      },
+      "task": {
+        "T1": {
+          "id": "T1",
+          "status": "pending",
+          "acceptance": {
+            "candidate": "example-a"
+          }
+        },
+        "T2": {
+          "id": "T2",
+          "status": "submitted",
+          "submission": {
+            "candidate": "example-b",
+            "evidence": [
+              "example report"
+            ]
+          }
+        },
+        "T3": {
+          "id": "T3",
+          "status": "cancelled",
+          "basis": "unknown legacy meaning"
+        }
+      }
+    }
+  }
+}

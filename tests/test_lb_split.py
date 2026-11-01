@@ -65,23 +65,23 @@ class TaskSplitTest(unittest.TestCase):
         preview = self.split(token=token, dry_run=True)
         self.assertEqual(self.log.read_bytes(), before)
         self.assertEqual(preview["version_token"], token)
-        self.assertIn(f"+- [-] {ORIGINAL}", preview["diff"])
+        self.assertIn(f"-- [/] {ORIGINAL}", preview["diff"])
         result = self.split(token=token)
         self.assertEqual(result["version_token"], self.context()["version_token"])
         self.assertNotEqual(result["version_token"], token)
         current = self.context()
         tasks = current["stages"][0]["tasks"]
-        self.assertEqual([t["text"] for t in tasks], [ORIGINAL, *CHILDREN, HUMAN])
-        self.assertEqual([t["state"] for t in tasks], ["-", " ", " ", " "])
+        self.assertEqual([t["text"] for t in tasks], [*CHILDREN, HUMAN])
+        self.assertEqual([t["state"] for t in tasks], [" ", " ", " "])
         identity = hashlib.sha256(ORIGINAL.encode()).hexdigest()
-        self.assertEqual(tasks[0]["resolution"]["task"], identity)
-        self.assertEqual(tasks[0]["resolution"]["as"], "not-applicable")
         self.assertEqual(result["original_task"], identity)
         self.assertEqual(current["next_task"]["text"], CHILDREN[0])
-        self.assertIn(BODY, self.log.read_text())
+        from logbook_cli.document import parse
+        archive = parse(self.log, self.root).metadata["task-archive"]
+        self.assertIn(BODY, next(iter(archive.values()))["content"])
         human = before.decode().split(f"- [ ] {HUMAN}")[1]
         self.assertTrue(self.log.read_text().endswith(f"- [ ] {HUMAN}" + human))
-        for child in tasks[1:3]:
+        for child in tasks[:2]:
             self.assertEqual([a["kind"] for a in child["annotations"]], ["source"])
             self.assertIn(identity, child["annotations"][0]["value"])
         self.assertEqual(
@@ -145,7 +145,7 @@ class TaskSplitTest(unittest.TestCase):
         children = (CHILDREN[0], "验证：交付复核结果。 @sample-tests")
         self.split(children, task=original)
         tasks = self.context()["stages"][0]["tasks"]
-        self.assertEqual([t["repositories"] for t in tasks[1:3]], [["sample-app"], ["sample-tests"]])
+        self.assertEqual([t["repositories"] for t in tasks[:2]], [["sample-app"], ["sample-tests"]])
 
     def test_repository_partition_cannot_drop_an_original_owner(self):
         original = ORIGINAL + " @sample-tests"
@@ -167,5 +167,7 @@ class TaskSplitTest(unittest.TestCase):
         self.split(("Develop: first result @sample-app", "Verify: second result @sample-app"), task=original)
         current = self.log.read_bytes()
         self.assertNotIn(b"\n", current.replace(b"\r\n", b""))
-        self.assertIn(b"    - Artifact: C1\r\n    - Resolution:", current)
+        from logbook_cli.document import parse
+        archive = parse(self.log, self.root).metadata["task-archive"]
+        self.assertIn("    - Artifact: C1", next(iter(archive.values()))["content"])
         self.assertEqual(self.cli('log', 'check', "log.md", code=1)[0]["code"], "STAGE_EMOJI")

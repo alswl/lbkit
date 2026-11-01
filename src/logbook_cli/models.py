@@ -12,6 +12,8 @@ class TaskState(Enum):
     IN_PROGRESS = "in-progress"
     DONE = "done"
     SKIPPED = "skipped"
+    PAUSE = "pause"
+    UNKNOWN = "unknown"
 
 
 class StageStatus(Enum):
@@ -33,6 +35,8 @@ class Field(Enum):
     STATUS = "status"
     ARTIFACT = "artifact"
     BLOCKER = "blocker"
+    RESUME = "resume"
+    DEPENDS = "depends"
     HANDOFF = "handoff"
     DIRECTORIES = "directories"
     TODO = "todo"
@@ -86,6 +90,23 @@ class Task:
     @property
     def human(self) -> bool:
         return self.owner is Owner.HUMAN
+
+    @property
+    def effective_state(self) -> str:
+        if self.state in (" ", "/"):
+            if any(
+                a.kind is Field.BLOCKER and a.value.strip() for a in self.annotations
+            ):
+                return "blocked"
+            return "pending" if self.state == " " else "active"
+        if self.state == "!":
+            return "pause"
+        if self.state == "x":
+            return "done"
+        if self.state == "-" and self.resolution:
+            if self.resolution["as"] in {"human-cancelled", "cancelled"}:
+                return "cancelled"
+        return "unknown"
 
 
 @dataclass

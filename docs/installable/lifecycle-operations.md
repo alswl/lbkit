@@ -3,7 +3,7 @@
 The [domain command contract](domain-commands.md) defines the canonical object routes, task/dispatch lifecycles and workflow availability. All commands below use the public concept-oriented routes; new templates start in draft.
 
 
-These operations extend the existing lb skills; the host root AGENTS.md and current authorization govern access and writes. No command proves human authorization or business success. The CLI performs deterministic work; Captain aligns evidence and decisions; Sailor performs business observations. Commands never commit, push, publish, control browsers or switch branches.
+These operations extend the existing lb skills; the host root AGENTS.md and current authorization govern access and writes. No command proves human authorization or business success. The CLI performs deterministic work; Captain checks completion and owns Agent-side Logbook writes; Sailor reports assigned work without Logbook access. Commands never commit, push, publish, control browsers or switch branches.
 
 ## Current facts and one page status
 
@@ -12,7 +12,7 @@ The only new skill is [lb-retro](../../skills/lb-retro/SKILL.md). Lifecycle mana
 - plan/scaffold record draft, then ready after route confirmation. Ready does not authorize execution.
 - push records active on actual authorized start, and resumes only with the applicable explicit resume instruction.
 - update applies explicit pause/termination, reconciles reopening, and records completion after applicable returns and human decisions. A terminated logbook keeps unfinished history without scheduling it.
-- status reads these facts and may sync only when writing is authorized. Observation does not resume work.
+- status only reads these facts: no sync, GC or Task transition. An ongoing caller continues already-authorized execution after answering; a standalone query grants no execution authority.
 
 `lb log state-set LOG --lifecycle draft|ready|active|paused|completed|terminated --basis REFERENCE --expect-version TOKEN` previews with `--dry-run`, then writes lifecycle metadata and one short page status together. It never changes a task checkbox, heading text or goal. Completed requires a nonempty settled checklist; the caller still verifies results and human decisions. Completed with new unfinished tasks is reported inconsistent by state. Normal task writes stop under paused/completed/terminated until an applicable transition; no status query reopens a project.
 

@@ -3,9 +3,10 @@
 ## Responsibility and alternatives
 
 The execution CLI records attributed facts and computes delegation constraints.
-It does not orchestrate pause, resume, recipient launch, monitoring, or an entire
-handoff. The existing Herdr adapter can inspect identities and perform a guarded
-send/close. It cannot establish exclusive execution ownership or independent
+Those record commands do not orchestrate runtime pause/resume or an entire
+handoff. Separate Herdr operations open scoped sessions, close owned resources
+and perform one-shot read-only waiting. Compatible dispatch-bound input retains
+guarded-send journaling. It cannot establish exclusive execution ownership or independent
 review completion. A successful file write must not claim those capabilities.
 
 Three interface designs were considered:
@@ -13,7 +14,7 @@ Three interface designs were considered:
 | Interface | Benefit | Problem / decision |
 | --- | --- | --- |
 | Public state transitions (`confirm`, `authorize-handback`) | Small implementation | Requires callers to drive internal phases; a basis string appears to certify ownership/permission. Remove. |
-| End-to-end `takeover` / `handback` orchestration | Could own runtime recovery | Requires pause/resume/monitor capabilities and verifiable ownership the adapter does not have. Defer, rather than disguise missing operations. |
+| End-to-end `takeover` / `handback` orchestration | Could own runtime recovery | Requires verifiable exclusive ownership and runtime pause/resume beyond open/close and observation. Defer, rather than disguise missing operations. |
 | `log execution context/record` plus explicit `agent send` | Separates record writes from runtime effects; batches facts already available | Requires typed provenance and conservative projections. Selected. |
 
 This choice is about effects and evidence, not command depth or command count.

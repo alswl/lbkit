@@ -1,0 +1,307 @@
+{
+  "purpose": "Proposed scenario data for CLI unit/E2E tests and skill evals; no runner or passing result is implied.",
+  "cases": [
+    {
+      "id": "simple-complete",
+      "layers": [
+        "cli-unit",
+        "cli-e2e",
+        "skill-eval"
+      ],
+      "tasks": [
+        {
+          "id": "T1",
+          "state": "pending",
+          "text": "Correct a typo"
+        }
+      ],
+      "action": {
+        "name": "complete",
+        "task": "T1"
+      },
+      "expect": {
+        "state": "done",
+        "run_required": false,
+        "result_required": false,
+        "start_time_invented": false
+      }
+    },
+    {
+      "id": "pause-visible",
+      "layers": [
+        "cli-unit",
+        "cli-e2e",
+        "skill-eval"
+      ],
+      "markdown": "- [!] Compare two approaches\n- [ ] Correct a typo\n",
+      "action": {
+        "name": "context"
+      },
+      "expect": {
+        "visible_tasks": 2,
+        "paused_tasks": 1,
+        "paused_task_scheduled": false,
+        "writes": false
+      }
+    },
+    {
+      "id": "replace-linked",
+      "layers": [
+        "cli-unit",
+        "cli-e2e"
+      ],
+      "tasks": [
+        {
+          "id": "T1",
+          "state": "active",
+          "text": "Implement search"
+        },
+        {
+          "id": "T2",
+          "state": "pending",
+          "text": "Verify search",
+          "depends_on": [
+            "T1"
+          ]
+        }
+      ],
+      "action": {
+        "name": "split",
+        "task": "T1",
+        "replacements": [
+          {
+            "id": "T3",
+            "text": "Implement indexing"
+          },
+          {
+            "id": "T4",
+            "text": "Implement search UI"
+          }
+        ],
+        "dependency_changes": {
+          "T2": [
+            "T3",
+            "T4"
+          ]
+        }
+      },
+      "expect": {
+        "current_ids": [
+          "T2",
+          "T3",
+          "T4"
+        ],
+        "historical_ids": [
+          "T1"
+        ],
+        "parent_created": false
+      },
+      "variants": [
+        {
+          "change": "omit dependency_changes",
+          "expect": "refuse without writes"
+        },
+        {
+          "change": "use stale version_token",
+          "expect": "refuse without writes"
+        }
+      ]
+    },
+    {
+      "id": "handoff-accept",
+      "layers": [
+        "cli-unit",
+        "cli-e2e",
+        "skill-eval"
+      ],
+      "tasks": [
+        {
+          "id": "T1",
+          "state": "active",
+          "owner": "agent-a",
+          "pending_recipient": "agent-b"
+        }
+      ],
+      "events": [
+        {
+          "type": "message_delivered",
+          "expect_owner": "agent-a"
+        },
+        {
+          "type": "receiver_accepts",
+          "actor": "agent-b",
+          "revision": "r1",
+          "expect_owner": "agent-b"
+        }
+      ],
+      "variants": [
+        {
+          "change": "Captain supersedes instruction r1 with r2 before the r1 reply arrives",
+          "expect": "Captain does not apply old acceptance to new work"
+        },
+        {
+          "change": "repeat accepted receipt",
+          "expect": "no duplicate transfer"
+        }
+      ],
+      "boundary": {
+        "logbook_access": [
+          "captain"
+        ],
+        "sailor_input": "self-contained work instruction",
+        "acceptance_path": "sailor reply -> captain records acceptance"
+      },
+      "instruction": {
+        "id": "message-1",
+        "revision": "r1",
+        "sender": "captain",
+        "recipient": "agent-b"
+      }
+    },
+    {
+      "id": "preflight-replan",
+      "layers": [
+        "skill-eval"
+      ],
+      "task": {
+        "id": "T1",
+        "text": "Check a local page",
+        "planned_method": "browser skill"
+      },
+      "environment": {
+        "browser_available": false,
+        "local_alternative_available": true
+      },
+      "expect_actions": [
+        "inspect actual environment",
+        "return findings to plan",
+        "save revised route",
+        "preview concrete next work with selected method and obtain available dry-run output",
+        "check affected preparation",
+        "execute authorized route"
+      ],
+      "forbidden": [
+        "claim browser check succeeded",
+        "change route only in private reasoning",
+        "claim unsupported dry run succeeded",
+        "inspect unrelated future environments"
+      ]
+    },
+    {
+      "id": "status-continue",
+      "layers": [
+        "skill-eval"
+      ],
+      "context": {
+        "execution_authorized": true,
+        "assignment_accepted": true,
+        "sailor_report_received": true,
+        "convergence_pending": true
+      },
+      "user_message": "What is the current status?",
+      "expect": [
+        "answer status",
+        "perform next authorized convergence action"
+      ],
+      "variants": [
+        {
+          "user_message": "Pause the work now.",
+          "expect": "no new dispatch"
+        },
+        {
+          "change": "standalone status request without execution authorization",
+          "expect": "report only"
+        }
+      ]
+    },
+    {
+      "id": "pause-in-flight",
+      "layers": [
+        "cli-unit",
+        "cli-e2e",
+        "skill-eval"
+      ],
+      "task": {
+        "id": "T1",
+        "state": "active"
+      },
+      "runtime": {
+        "worker": "running"
+      },
+      "input": "Pause T1 for later",
+      "expect": [
+        "Captain records pause",
+        "no new dispatch for T1",
+        "Captain handles in-flight execution",
+        "runtime observation remains running until a stop is observed"
+      ],
+      "forbidden": [
+        "claim worker stopped based only on task pause"
+      ]
+    },
+    {
+      "id": "canonical-state",
+      "layers": [
+        "cli-unit",
+        "cli-e2e"
+      ],
+      "markdown_before": "- [ ] Compare approaches\n",
+      "markdown_after_user_edit": "- [!] Compare approaches\n",
+      "expect": [
+        "context derives pause from canonical Markdown",
+        "no duplicate current task state is written",
+        "read-only context does not modify files"
+      ]
+    },
+    {
+      "id": "idle-and-duplicate",
+      "layers": [
+        "cli-unit",
+        "cli-e2e",
+        "adapter-contract"
+      ],
+      "events": [
+        "unchanged",
+        "unchanged",
+        "reply-1",
+        "reply-1"
+      ],
+      "expect": {
+        "wakes_for_unchanged": 0,
+        "business_actions_for_reply_1_max": 1,
+        "writes_for_unchanged_update": 0
+      }
+    },
+    {
+      "id": "preview-risk",
+      "layers": [
+        "skill-eval"
+      ],
+      "next_work": {
+        "skill": "deployment-skill",
+        "operation": "update example service"
+      },
+      "preview": {
+        "supported": true,
+        "changes": [
+          "replace current instance"
+        ],
+        "risk": "brief interruption"
+      },
+      "expect": [
+        "report actual preview changes and interruption risk",
+        "judge next action within existing authority"
+      ],
+      "forbidden": [
+        "claim no interruption",
+        "perform deployment merely to obtain preview"
+      ],
+      "variants": [
+        {
+          "change": "preview unsupported",
+          "expect": "report unsupported dry run and limits of available read-only inspection"
+        }
+      ]
+    }
+  ]
+}

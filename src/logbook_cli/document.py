@@ -38,7 +38,7 @@ from logbook_cli.models import (
 
 EXIT_ISSUES, EXIT_USAGE, EXIT_PATH, EXIT_REFUSED = 1, 2, 3, 4
 TASK_RE = re.compile(
-    r"^(?P<indent>[ \t]*)[-*+] \[(?P<state> |/|x|X|-)\] (?P<text>.*?)(?:\r?\n)?$"
+    r"^(?P<indent>[ \t]*)[-*+] \[(?P<state>[^\]\r\n]+)\] (?P<text>.*?)(?:\r?\n)?$"
 )
 H2_RE = re.compile(r"^##\s+(?P<title>.*?)(?:\r?\n)?$")
 H1_RE = re.compile(r"^#(?!#)\s+")
@@ -234,6 +234,8 @@ def parse_text(
                 }
             )
         if task and current and task.group("indent") == "":
+            if task.group("state").lower() not in {" ", "/", "x", "-", "!"}:
+                current.unknown_task_lines.append(index + 1)
             state_at = offsets[index] + line.index("[") + 1
             current.tasks.append(
                 Task(
@@ -276,13 +278,25 @@ def parse_text(
                 valid = (
                     len(records) == 1
                     and isinstance(record, dict)
-                    and set(record) == {"task", "as", "decision", "note"}
+                    and set(record)
+                    in (
+                        {"task", "as", "decision", "note"},
+                        {"task", "as", "decision", "note", "actor", "source"},
+                    )
                     and record["task"] == item.identity
                     and item.state == "-"
-                    and record["as"] in ("human-cancelled", "not-applicable")
+                    and record["as"]
+                    in ("human-cancelled", "not-applicable", "cancelled")
                     and all(
                         isinstance(record[k], str) and record[k].strip()
                         for k in ("decision", "note")
+                    )
+                    and (
+                        record["as"] != "cancelled"
+                        or all(
+                            isinstance(record.get(k), str) and record[k].strip()
+                            for k in ("actor", "source")
+                        )
                     )
                 )
             except (ValueError, TypeError):
@@ -325,7 +339,7 @@ def next_task(doc: Document) -> Task | None:
             for stage in doc.stages
             if stage.is_delivery
             for task in stage.tasks
-            if task.state in (" ", "/")
+            if task.effective_state in ("pending", "active")
         ),
         None,
     )
@@ -413,6 +427,8 @@ def workdirs(doc: Document) -> list[dict]:
             result.append(group)
         elif child and group:
             group["paths"].append({"path": child.group(1), "line": index + 1})
+        elif line.startswith("- "):
+            group = None
     return result
 
 
@@ -843,6 +859,8 @@ def directory_issues(doc: Document) -> list[dict]:
                     )
                 )
         else:
+            if line.startswith("- "):
+                group_seen = False
             issues.append(
                 issue(
                     doc,

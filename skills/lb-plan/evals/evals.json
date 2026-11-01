@@ -740,12 +740,12 @@
       "id": 49,
       "axis": "Atomic authorized task splitting preserves provenance and replaces scheduling",
       "prompt": "Use /lb-plan to implement this confirmed planning decision in projects/demo/docs/log.md: split only \"开发：交付并核验样例成果。\" into \"开发：交付包含两条记录的样例结果。 @sample-app\" followed by \"验证：提供逐项检查两条记录的结论。 @sample-tests\". These results, order and repositories are already approved. Keep the original task identity, evidence and human content; the original aggregate must stop scheduling, and replacements must start unaccepted. Do not persist a partial split with a retired original but missing replacements, or with both original and replacements executable. Make and verify the planning change only; no execution or companion edits.",
-      "expected_output": "One current-token previewed atomic replacement, protected history and human records intact, ordered not-started children linked to the original identity, truthful readback and no dispatch.",
+      "expected_output": "One current-token previewed atomic replacement, original content and provenance retained in task-archive, protected human records intact, ordered not-started replacements with preserved prerequisites, truthful readback and no dispatch.",
       "assertions": [
         {
           "name": "atomic_scheduling_replacement",
           "type": "contains",
-          "check": "Actual CLI audit has one byte-changing split transformation from the original runnable package directly to its resolved retired record and all ordered not-started replacements. The saved original text/identity remains and no persisted audit snapshot has duplicate executable parent/children or a retired parent without all replacements."
+          "check": "Actual CLI audit has one byte-changing split transformation that removes the original from the current list, archives its complete content and creates all ordered not-started replacements. No persisted audit snapshot has duplicate executable parent/children or an archived parent without all replacements."
         },
         {
           "name": "current_preview_and_readback",
@@ -755,7 +755,7 @@
         {
           "name": "provenance_and_protected_content",
           "type": "contains",
-          "check": "Original goals, full task text, child evidence/comments and human gate survive. New tasks appear once in approved order with the named repositories and a source referencing the original task identity, without inherited accepted state or C1 artifact acceptance. Prompt/Thinking, result, recovery and root rules remain byte-identical."
+          "check": "Original goals and human gate survive; task-archive preserves the original full task text and child evidence/comments with replacement IDs. New tasks appear once in approved order with the named repositories and original prerequisites, without inherited accepted state or C1 artifact acceptance. Prompt/Thinking, result, recovery and root rules remain byte-identical."
         },
         {
           "name": "no_split_scope_expansion",
@@ -787,6 +787,95 @@
           "name": "no_proposal_write_or_dispatch",
           "type": "not_contains",
           "check": "Invokes any task write or write preview, marker sync, direct document edit, proposal file creation, cleanup, new executor or business execution."
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "axis": "Initialize work using existing installed toolkit",
+      "coordination_seeds": [
+        "work-initialization"
+      ],
+      "prompt": "Use /lb-plan to prepare a reviewable route for the approved example report in this repository. Reuse the existing Logbook if appropriate. Save the proposed route; do not execute it.",
+      "expected_output": "Initialize work using existing installed toolkit",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "saved_route",
+          "type": "contains",
+          "check": "Saved Logbook/Thinking bytes identify the selected Logbook and concrete next work, dependencies and capability choice. Merely proposing to save does not pass."
+        },
+        {
+          "name": "no_toolkit_reinstall",
+          "type": "not_contains",
+          "check": "Reinstalls or reinitializes the existing toolkit, creates a second work queue, or claims the saved draft authorizes execution."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "axis": "Built-in-only work avoids compulsory skill and Run ceremony",
+      "coordination_seeds": [
+        "skill-size",
+        "simple-complete"
+      ],
+      "prompt": "Use /lb-plan to revise the existing route to correcting the one typo in records/report.txt and then human review. This change of route is authorized; save it without executing the correction.",
+      "expected_output": "Built-in-only work avoids compulsory skill and Run ceremony",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json",
+        "fixtures/coordination/52.json"
+      ],
+      "assertions": [
+        {
+          "name": "builtin_route_saved",
+          "type": "contains",
+          "check": "Saved current work names the typo correction and built-in editing/checking as sufficient; human review remains separate."
+        },
+        {
+          "name": "no_extra_ceremony",
+          "type": "not_contains",
+          "check": "Requires a new skill, Run, Result form, external environment inspection or another approval merely to save the authorized route."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "axis": "Select an applicable available skill and save the handoff",
+      "coordination_seeds": [
+        "preflight-replan"
+      ],
+      "prompt": "Use /lb-plan to revise and save the route for the local preview described in preview-skill/SKILL.md. Keep human review as the later step. Do not run the preview yet.",
+      "expected_output": "Select an applicable available skill and save the handoff",
+      "files": [
+        "../../lb-plan/evals/fixtures/coordination/workspace.json"
+      ],
+      "assertions": [
+        {
+          "name": "read_and_save_skill_choice",
+          "type": "contains",
+          "check": "Actually reads preview-skill/SKILL.md and saves the selected capability, concrete preview operation and dependency on human review in the appropriate work records."
+        },
+        {
+          "name": "no_execution_during_plan",
+          "type": "not_contains",
+          "check": "Runs preview/apply or marks the preview completed during planning."
+        },
+        {
+          "name": "preserve_human_input",
+          "type": "contains",
+          "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
         }
       ]
     }

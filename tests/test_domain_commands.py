@@ -59,7 +59,7 @@ class DomainTest(unittest.TestCase):
         self.assertIn("- [/]", self.log.read_text())
         self.transition("accept", "--candidate", "b", code=4)
         self.transition("accept", "--candidate", "a")
-        self.assertEqual(self.task_view()["status"], "accepted")
+        self.assertEqual(self.task_view()["status"], "done")
         self.transition("reopen")
         self.transition("cancel")
         self.assertEqual(self.task_view()["status"], "cancelled")

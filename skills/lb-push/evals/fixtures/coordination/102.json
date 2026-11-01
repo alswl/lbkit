@@ -1,0 +1,6 @@
+{
+  "files_override": {
+    "projects/demo/docs/log.md": "# Example work\n\n## Stage 01 Prepare\n\n- [!] Compare approaches\n",
+    "records/runtime.json": "{\"state\":\"working\",\"task\":\"Compare approaches\",\"stop_observed\":false}\n"
+  }
+}

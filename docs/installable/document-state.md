@@ -127,9 +127,9 @@ All lb-* skills follow this procedure when the CLI cannot start or crashes:
    current state, proposed state or exact replacement text, candidate and evidence
    references, and the human gates that stay open. A summary of the evidence or
    “record this after recovery” alone is not a pending change. For identified
-   tasks, a concrete `record-result` input payload plus the applicable guarded
-   transitions (including the acceptance candidate and basis, when justified)
-   is a reviewable semantic patch. Do not fabricate tokens, timestamps or a full
+   tasks, specify the applicable semantic action (such as `complete` or `pause`)
+   and basis. Use a `record-result` payload and candidate check only when the
+   actual work contract calls for recorded candidate acceptance. Do not fabricate tokens, timestamps or a full
    replacement state file. A failed, stale or incomplete return must retain its gap;
    tool failure alone neither accepts nor rejects a candidate. State which facts
    are **not yet recorded**, what was inspected directly, and which checks could
@@ -149,3 +149,15 @@ unavailable. Proposed future positions are not current source locations.
 
 This fallback preserves the host's explicit writer restrictions and existing
 execution roles. It does not require fresh approval for already-authorized work.
+
+
+## Canonical Task migration
+
+New semantic Task writes derive current state from the Markdown marker and
+Blocker/Resume/Resolution annotations. Migrated task records retain identity and
+historical evidence, without a duplicate current `status`. `task-archive` stores
+removed tasks separately from active anchor validation. Historical submissions
+and acceptance remain readable. Legacy records are not silently converted by a
+read: preview `task migrate` with the current context token before applying it.
+Unresolved legacy conflicts refuse migration. Markdown and sidecar changes retain
+the shared CAS/transaction-recovery boundary; state-only changes use atomic replace.

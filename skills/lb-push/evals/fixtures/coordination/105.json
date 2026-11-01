@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/runtime.json": "{\"current_instruction\":\"i2\",\"superseded_instruction\":\"i1\",\"current_owner\":\"captain\",\"recipient\":\"sailor-b\",\"reply\":{\"actor\":\"sailor-b\",\"instruction\":\"i1\",\"text\":\"I accept i1\"}}\n"
+  }
+}

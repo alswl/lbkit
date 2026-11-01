@@ -25,6 +25,7 @@ from logbook_cli.commands.common import (
     resolve_root,
 )
 from logbook_cli.services import (
+    agent_wait,
     agents,
     dispatches,
     execution,
@@ -163,6 +164,21 @@ def register(app):
         DRY_RUN,
     )
     route(tasks.task, "show", task_lifecycle.show, LOG, click.argument("task_id"))
+    route(tasks.task, "migrate", task_lifecycle.migrate, LOG, TOKEN, DRY_RUN)
+    for action in ("complete", "pause", "resume", "block", "unblock"):
+        route(
+            tasks.task,
+            action,
+            task_lifecycle.semantic_transition,
+            LOG,
+            click.argument("task_id"),
+            BASIS,
+            TOKEN,
+            DRY_RUN,
+            click.option("--reason"),
+            click.option("--to", type=click.Choice(["pending", "active"])),
+            action=action,
+        )
     for action in ("start", "record-result", "accept", "cancel", "reopen"):
         extra = (
             (INPUT,)
@@ -183,6 +199,13 @@ def register(app):
             *extra,
             action=action,
         )
+    route(
+        agent,
+        "wait",
+        agent_wait.wait,
+        INPUT,
+        click.option("--timeout", type=float, required=True),
+    )
     route(dispatch, "list", dispatches.show, LOG, THINKING)
     route(dispatch, "show", dispatches.show, LOG, THINKING, ID)
     route(dispatch, "create", dispatches.create, LOG, THINKING, INPUT, TOKEN, DRY_RUN)
@@ -217,6 +240,8 @@ def register(app):
         TOKEN,
         DRY_RUN,
     )
+    route(agent, "open", agents.session_operation, INPUT, action="open")
+    route(agent, "close-session", agents.session_operation, INPUT, action="close")
     route(agent, "bind", agents.bind, LOG, THINKING, ID, INPUT, TOKEN, DRY_RUN)
     route(
         agent,

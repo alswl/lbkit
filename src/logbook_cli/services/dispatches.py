@@ -102,7 +102,7 @@ def create(root, log, thinking, input_file, token, dry_run):
     task, _, item = task_identity.lookup(doc, data["task_id"])
     if (
         task.human
-        or item["status"] not in {"pending", "active"}
+        or task_identity.snapshot(task, item)["status"] not in {"pending", "active"}
         or not task_identity.snapshot(task, item)["consistent"]
     ):
         raise LbError("dispatch requires a pending/active agent task", EXIT_REFUSED)

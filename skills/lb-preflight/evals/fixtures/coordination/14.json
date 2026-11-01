@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "records/preview.json": "{\"supported\": false, \"reason\": \"This example backend cannot preview\", \"read_only_facts\": [\"report input exists\"]}\n"
+  }
+}

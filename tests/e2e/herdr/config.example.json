@@ -1,0 +1,8 @@
+{
+  "runtimes": {
+    "codex": {"kind": "codex", "args": []},
+    "claude": {"kind": "claude", "args": []}
+  },
+  "startup_timeout": 45,
+  "turn_timeout": 120
+}

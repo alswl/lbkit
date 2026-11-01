@@ -53,7 +53,10 @@ def invoke(machine, *args, mutation=False, raw=False):
     if raw:
         return result.stdout
     try:
-        return json.loads(result.stdout)
+        value = json.loads(result.stdout)
+        if not isinstance(value, dict):
+            raise ValueError("object required")
+        return value
     except ValueError as exc:
         raise LbError(
             "Herdr did not return structured output; reconcile before retry",
@@ -228,3 +231,147 @@ def validate_binding(item):
             )
     records.observed(item["observed_at"])
     return item
+
+
+def binding_observation(binding, pane, agent):
+    """Project observed native identity without filling gaps from the request."""
+    from datetime import datetime, timezone
+
+    session, gap = session_identity(pane, agent)
+    if gap:
+        raise LbError(gap, EXIT_REFUSED)
+    observed = {
+        "machine": binding["machine"],
+        "server": binding["server"],
+        "workspace_id": pane.get("workspace_id"),
+        "tab_id": pane.get("tab_id"),
+        "pane_id": pane.get("pane_id"),
+        "agent_id": agent.get("name") or agent.get("agent_name") or agent.get("agent"),
+        "session_id": session,
+    }
+    if any(not isinstance(v, str) or not v for v in observed.values()):
+        raise LbError("incomplete observed binding", EXIT_REFUSED)
+    return {
+        "binding": observed,
+        "state": agent.get("agent_status", "unknown"),
+        "observed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def validate_session_binding(binding):
+    keys = {"machine", "server", "workspace_id", "tab_id", "pane_id", "agent_id", "session_id"}
+    if not isinstance(binding, dict) or set(binding) != keys:
+        raise LbError("binding requires complete machine/server/native identity", EXIT_USAGE)
+    for key, value in binding.items():
+        records.single_line(value, key)
+        if len(value) > 512:
+            raise LbError("binding field exceeds limit", EXIT_USAGE)
+    validate_binding({**binding, "observed_at": "2000-01-01T00:00:00Z"})
+    return binding
+
+
+async def invoke_bounded(machine, *args, deadline, output_limit):
+    """Bound both pipe buffers and child lifetime, including cancellation cleanup."""
+    import asyncio
+    import time
+
+    if os.environ.get("HERDR_ENV") != "1" or deadline <= time.monotonic():
+        raise LbError("managed caller and unexpired deadline required", EXIT_REFUSED)
+    command = ["herdr"] + (["--machine", machine] if machine != "local" else [])
+
+    async def cleanup(process):
+        if process.returncode is not None:
+            return
+
+        async def discard(stream):
+            while await stream.read(16384):
+                pass
+
+        drains = [
+            asyncio.create_task(discard(process.stdout)),
+            asyncio.create_task(discard(process.stderr)),
+        ]
+        try:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                pass
+            try:
+                await asyncio.wait_for(process.wait(), 1)
+            except TimeoutError:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
+                try:
+                    await asyncio.wait_for(process.wait(), 1)
+                except TimeoutError as exc:
+                    raise LbError(
+                        "owned Herdr child cleanup unconfirmed", EXIT_REFUSED
+                    ) from exc
+        finally:
+            for drain in drains:
+                drain.cancel()
+            await asyncio.gather(*drains, return_exceptions=True)
+
+    spawn = asyncio.create_task(
+        asyncio.create_subprocess_exec(
+            *command,
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    )
+    try:
+        process = await asyncio.shield(spawn)
+    except asyncio.CancelledError:
+        process = await spawn
+        await cleanup(process)
+        raise
+    except OSError as exc:
+        raise LbError("Herdr read unavailable", EXIT_REFUSED) from exc
+
+    async def read(stream):
+        chunks, size = [], 0
+        while True:
+            chunk = await stream.read(16384)
+            if not chunk:
+                return b"".join(chunks)
+            size += len(chunk)
+            if size > output_limit:
+                raise LbError("Herdr output exceeds limit", EXIT_REFUSED)
+            chunks.append(chunk)
+
+    readers = [
+        asyncio.create_task(read(process.stdout)),
+        asyncio.create_task(read(process.stderr)),
+    ]
+    try:
+        async with asyncio.timeout(max(0, deadline - time.monotonic())):
+            stdout, stderr = await asyncio.gather(*readers)
+            code = await process.wait()
+        if code:
+            try:
+                if (
+                    args[:2] == ("agent", "wait")
+                    and json.loads(stderr).get("error", {}).get("code") == "timeout"
+                ):
+                    return {"wait_timeout": True}
+            except (ValueError, AttributeError):
+                pass
+            raise LbError("Herdr read unavailable", EXIT_REFUSED)
+        try:
+            value = json.loads(stdout)
+            if not isinstance(value, dict):
+                raise ValueError("object required")
+            return value
+        except (ValueError, UnicodeError) as exc:
+            raise LbError("Herdr returned invalid JSON", EXIT_REFUSED) from exc
+    except TimeoutError as exc:
+        raise LbError("Herdr read deadline expired", EXIT_REFUSED) from exc
+    finally:
+        for reader in readers:
+            if not reader.done():
+                reader.cancel()
+        await asyncio.gather(*readers, return_exceptions=True)
+        await cleanup(process)
