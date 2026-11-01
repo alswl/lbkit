@@ -1,6 +1,6 @@
 ---
 name: lb-init
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Install or refresh lbkit, or migrate and maintain lbkit.yaml settings and agents and lbkit-skills.yaml recipes. Configuration-only work uses the registry CLI without installation or runtime execution. Creating a workflow instance belongs to lb-scaffold."
 ---
 

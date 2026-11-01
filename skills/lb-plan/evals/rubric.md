@@ -60,3 +60,10 @@ Drafting/registering a case is not a baseline execution. Run the existing skill
 before changing it, retain that frozen product/fixture identity, then run the
 candidate on the same inputs. Report CLI/product dependency gaps, unavailable
 evaluation runtime and real-host limitations separately from observed skill failures.
+
+## Planning responsibility
+
+Only lb-plan changes the route, including explicit human-supplied task/goal wording
+and Acceptance/Skills annotations. Mixed-request coverage is lb-update cases 64–65:
+apply planning before the requested progress update, preserve unrelated facts and
+reuse authorization; pure pause/resume requires no planning ceremony.

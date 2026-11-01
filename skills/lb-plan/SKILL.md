@@ -1,7 +1,7 @@
 ---
 name: lb-plan
-version: 0.5.0-dev
-description: "Create a reviewable logbook draft, revise an authorized plan, or review an existing plan. Personally develop repository specs with Admiral, recover human goals, size stages to the work, match skills to individual results, and define evidence and handoffs; does not dispatch execution."
+version: 0.6.0-dev
+description: "Create, revise or review a Logbook route. Use for adding/removing/splitting Tasks, changing outcomes, order, dependencies, planned responsibility, skill chains, goals, design or acceptance criteria, including route changes requested through lb-update. Personally develop repository specs with Admiral; does not dispatch execution."
 ---
 
 Read the [document state contract](../../docs/installable/document-state.md),
@@ -17,6 +17,13 @@ Turn the human goal, current Logbook and applicable decisions into a saved,
 reviewable route. Captain owns planning and Logbook changes. Choose create,
 revise or read-only review from the current request. Existing file presence is
 not confirmation, and a context token is not authorization.
+
+Only lb-plan changes the route. lb-update records facts, applicable results and
+the state of existing Tasks, including pause/resume and actual blockers, while
+preserving that route. For a mixed request, apply the authorized planning changes
+first, read back the saved route, then compose lb-update for the requested progress.
+Reuse explicit decisions; a skill boundary adds no confirmation round. Rereading
+human changes alone acknowledges the saved route without creating a planning write.
 
 Read the host AGENTS.md, current source and `log context --json`. Recover the
 human goal and current constraints; preserve human-authored wording and decisions.

@@ -1,6 +1,6 @@
 ---
 name: lb-retro
-version: 0.5.0-dev
+version: 0.6.0-dev
 description: "Consolidate cross-logbook lessons and skill adoption on the host main branch, using a fixed Git snapshot and a stable feedback ledger; does not dispatch project work, change goals, commit, push or publish."
 ---
 

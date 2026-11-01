@@ -37,8 +37,3 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 
 - [docs/dev/development.md](docs/dev/development.md) — required reading before changing contracts, skills, or the installer: link rules, install manifest, version evolution.
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
-
-<!-- SPECKIT START -->
-Active work item: [Simplify Agent Coordination](specs/004-simplify-agent-coordination/tasks.md).
-The local specs directory is maintained separately and is not distributed.
-<!-- SPECKIT END -->
