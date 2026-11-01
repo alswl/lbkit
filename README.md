@@ -36,6 +36,17 @@ Follow the [installation and upgrade guide](docs/guide/install.md). mind-forge i
 
 Only `lb-plan` changes the route. Pause/resume and actual blockers are state updates handled by `lb-update`; they do not authorize bypassing dependencies or reassigning work. A mixed request applies its authorized planning changes first, reads back the saved route, then updates progress against the current conditions. Existing explicit decisions need no repeated confirmation.
 
+```mermaid
+flowchart LR
+    Route["Route + progress request"] --> Plan["lb-plan"]
+    Plan --> Read["Read saved route<br/>and current token"]
+    Read --> Update["lb-update"]
+    Facts["Current facts or Task state"] --> Update
+    Update --> Log["Logbook + document state"]
+```
+
+The planning branch applies when a request changes the route and updates progress together. A request only to reread human edits defaults to read-only alignment.
+
 Status questions during authorized execution do not revoke that authorization: the caller answers read-only and continues. Explicit pause, blockers and human gates still govern advancement.
 
 ### Configuration and recipes
@@ -85,9 +96,41 @@ bin/lb agent wait --input-file wait.json --timeout 45 --json
 
 Use complete verified bindings in `wait.json`; follow the [Herdr workflow](skills/lb-push/references/herdr.md) for the input and continuation contract. One bounded call waits for any target needing attention and returns events, pending targets and reusable `next_input`. It is read-only and does not resend instructions, complete Tasks or stop Sailors. The Captain host must demonstrably deliver tool completion before unattended continuation can be claimed.
 
+```mermaid
+sequenceDiagram
+    participant C as Captain
+    participant W as lb agent wait
+    participant H as Herdr
+    C->>W: Verified bindings + timeout
+    loop Within the shared deadline
+        W->>H: Read state / bounded native wait
+        H-->>W: State + session identity
+    end
+    W-->>C: Events + pending targets + next_input
+    opt An event needs attention
+        C->>H: Read the relevant executor reply
+        Note over C: Check the Task result before updating progress
+    end
+```
+
+The process waits between observations; the model handles the returned events. An observation may indicate a blocker or an identity gap, rather than a completed business result. See the [wait service](src/logbook_cli/services/agent_wait.py) and [observation reducer](src/logbook_cli/wait_state.py).
+
 ### Upgrading consumers
 
-Consumers choose an exact submodule revision and rerun the installer when upgrading. Review the [Task migration contract](docs/installable/document-state.md#canonical-task-migration) before converting legacy records: current Task state comes from Markdown, and split originals move to a historical sidecar archive. Migration is explicit and CAS-protected; ambiguous legacy facts are refused. Keep consumer documents and their state files together when reviewing or rolling back a migration.
+Consumers choose an exact submodule revision, then rerun the installer. From the consuming repository root:
+
+```sh
+git -C .lbkit status --short
+git -C .lbkit fetch origin
+git -C .lbkit switch --detach TARGET_REV
+./.lbkit/bin/lbkit install --dry-run
+./.lbkit/bin/lbkit install
+./bin/lb --version
+```
+
+Resolve any local changes before switching; replace `TARGET_REV` with the chosen fetched commit or tag. Review and commit the `.lbkit` pointer change in the consuming repository to pin the upgrade. The [installer](bin/lbkit) refreshes locked dependencies, shared links and missing templates; it does not fetch newer code or overwrite existing host configuration.
+
+Review the [Task migration contract](docs/installable/document-state.md#canonical-task-migration) before converting legacy records: current Task state comes from Markdown, and split originals move to a historical sidecar archive. Migration is explicit and CAS-protected; ambiguous legacy facts are refused. Keep consumer documents and their state files together when reviewing or rolling back a migration.
 
 ## Shared contracts (installed into consuming repositories)
 
