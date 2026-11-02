@@ -19,11 +19,18 @@ a required wrapper. Consult current Herdr guidance for authorized wrappers.
 
 ## Open, close and correlate
 
+Reuse a suitable existing Sailor session first. When lb-push or lb-handback needs
+a new execution surface, prefer a Herdr tab in the selected workspace. Use the
+installed Herdr guidance for tab creation and verify its returned tab/pane/session
+identities without stealing focus. Use a split pane only when explicitly requested
+or when tab creation is unavailable or unsuitable; report the concrete reason.
+
 `lb agent open --input-file FILE --json` creates a no-focus sibling of the explicit
 parent pane and starts the selected runtime. Input fields are machine, server,
 parent_pane, absolute cwd, runtime and name. Verify returned identity/readiness.
 Partial failure returns created pane IDs; inspect them instead of blindly opening
 another session. Server scope must match the selected server; no local fallback.
+This pane convenience route is the split-pane fallback, not the default tab path.
 
 `lb agent close-session --input-file FILE --json` takes the returned binding and
 explicit owned_panes. It verifies native identity, closes only the selected owned

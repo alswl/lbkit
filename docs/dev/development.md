@@ -444,6 +444,12 @@ or native-subagent backend is implicit. Open/close report owned resources and
 partial outcomes; they do not certify descendant cleanup or change Task state.
 Legacy dispatch sends retain uncertain-delivery guards.
 
+For lb-push and lb-handback, reuse suitable Sailor sessions first and prefer Herdr
+tabs when a new execution surface is needed. Split panes remain an explicit or
+reasoned fallback; the pane-only CLI convenience route does not override that
+preference. This changes surface selection guidance without adding configuration,
+execution authorization or a version change.
+
 Paused in-flight work retains Captain's binding and responsibility for handling
 late replies. Needs-input observations require recovery of available authorized
 inputs or a focused request to their owner. Completed Task-specific takeover notes

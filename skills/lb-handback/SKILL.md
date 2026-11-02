@@ -64,7 +64,10 @@ Preserve running work outside the authorized handoff.
 5. Resolve the requested/original Sailor with the
    [recipient selection rules](../lb-push/references/execution.md#runtime-adapter-contract):
    reuse it when present and suitable, resume it when paused or not ready, and
-   create/replace only with permission and a concrete reason. Under
+   create/replace only with permission and a concrete reason. When a new Herdr
+   execution surface is needed, prefer a tab under the shared
+   [Herdr collaboration rules](../lb-push/references/herdr.md#open-close-and-correlate).
+   Under
    [lifecycle operations](../../docs/installable/lifecycle-operations.md), keep
    dispatch/run/counter identities, reconcile saved bindings with the live
    recipient, and use full Herdr IDs or a verified unique name, never list indexes.
