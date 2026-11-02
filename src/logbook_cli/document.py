@@ -166,6 +166,9 @@ def parse(path: Path, root: Path) -> Document:
         state_data, metadata = load(path, root)
         doc = parse_text(path.read_bytes(), path, root)
         doc.state_data, doc.metadata = state_data, metadata
+        from logbook_cli.task_records import hydrate
+
+        hydrate(doc)
         return doc
     finally:
         os.close(directory)
@@ -274,38 +277,18 @@ def parse_text(
             if not records:
                 continue
             try:
-                record = json.loads(records[0])
-                valid = (
-                    len(records) == 1
-                    and isinstance(record, dict)
-                    and set(record)
-                    in (
-                        {"task", "as", "decision", "note"},
-                        {"task", "as", "decision", "note", "actor", "source"},
-                    )
-                    and record["task"] == item.identity
-                    and item.state == "-"
-                    and record["as"]
-                    in ("human-cancelled", "not-applicable", "cancelled")
-                    and all(
-                        isinstance(record[k], str) and record[k].strip()
-                        for k in ("decision", "note")
-                    )
-                    and (
-                        record["as"] != "cancelled"
-                        or all(
-                            isinstance(record.get(k), str) and record[k].strip()
-                            for k in ("actor", "source")
-                        )
-                    )
-                )
+                from logbook_cli.state import unique_object
+                from logbook_cli.task_records import valid_resolution
+
+                record = json.loads(records[0], object_pairs_hook=unique_object)
+                valid = len(records) == 1 and valid_resolution(record, item)
             except (ValueError, TypeError):
                 valid = False
             if valid:
                 item.resolution = record
             else:
                 item.resolution_error = True
-    return Document(
+    doc = Document(
         path,
         root,
         data,
@@ -320,6 +303,11 @@ def parse_text(
         source.state_data if source else None,
         source.metadata if source else {},
     )
+    if source is not None:
+        from logbook_cli.task_records import hydrate
+
+        hydrate(doc)
+    return doc
 
 
 def stage_state(stage: Stage) -> str | None:

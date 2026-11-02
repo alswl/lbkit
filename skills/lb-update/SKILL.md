@@ -99,6 +99,14 @@ is authority for that scoped change. Resolve the target from current facts; ask
 one focused question only if the task or a material decision is ambiguous. Use
 available structured questions with concise choices; silence is never consent.
 
+For legacy inline Resolution/Resume, preview and apply `task migrate` with the
+current paired token before the authorized transition; stop on conflicting or
+stale evidence. Keep short task IDs. Let the guarded writer store machine facts
+in the owning mind’s `lb/` state, while decisions, reasons, dependencies, blockers
+and evidence links remain readable. Never paste JSON into a task note. Cancellation
+and reopen must retain historical reasons and evidence; read back both current
+state and retained history.
+
 Pause through `task pause`, then read back canonical state and scheduling. A
 Status/Deferred note alone does not pause a Task. Resume through `task resume`,
 preserving any underlying blocker; use an explicit destination only when prior

@@ -62,7 +62,7 @@ Items not started are `[ ]`; items an executor agent has taken but that have not
 
 Stage headings use `🛫` not started, `🚧` in progress, and `✅` closed. All `[x]` means accepted completion. A stage containing `[-]` may close only when every such item has a valid, task-bound disposition with actor/source attribution and every other item is `[x]`; display “closed with cancelled/not-applicable items” rather than claiming all criteria passed. Unresolved `[-]` never implies a pass, and it is not a pending human job either: when finding the next item, skip it and continue in document order; it does not block advancement. Unstarted items remain 🛫; active or partially completed work remains 🚧. Unknown states are not inferred.
 
-Use `task resolve --as human-cancelled|not-applicable --decision <source> --note <reason>` for an existing `[-]` after an explicit applicable human ruling. The CLI stores a `处置：` JSON sub-line with the task-text digest and decision. This records a ruling, not authenticated human identity; the calling skill must verify the ruling. Changing the task text invalidates the disposition. The CLI has no force-close flag. Stage status is based on explicit todos, not incidental links to other unfinished work.
+Use `task resolve --as human-cancelled|not-applicable --decision <source> --note <reason>` for an existing `[-]` after an explicit applicable human ruling. The CLI stores a readable `处置：` sub-line and a task-bound structured disposition in the owning mind’s `lb/` document state, adding a short task ID if needed. This records a ruling, not authenticated human identity; the calling skill must verify the ruling. Changing the task text invalidates the disposition. The CLI has no force-close flag. Stage status is based on explicit todos, not incidental links to other unfinished work.
 
 If the logbook already has a derived status summary at the top (e.g. `> 状态：…`), use `bin/lb log sync LOG --expect-version TOKEN` with the current context token, previewing with `--dry-run` before writing, to update it when the current stage or a stage status changes; do not hand-edit the machine-readable segment, and do not auto-create the summary for logbooks without one. The status line splits at the first `——`: the first half is the script-maintained machine-readable segment (`状态：<emoji> <首个未验收交付阶段>[ · 🔮 待讨论 N 项 · 下一项：<待办原文>]`), and a narrative line not starting with an emoji is treated as human prose and left untouched; the second half is human commentary. The summary only mirrors the ordered checklist and stage statuses — it is not a second task queue or an independent completion basis.
 
@@ -134,16 +134,16 @@ never place JSON task, dispatch or agent dumps in Markdown.
 
 ## Canonical Task state
 
-`[!]` means pause and stays visible but unscheduled. A four-space-indented
-`- Resume: pending|active` records the prior state and is consumed by resume;
-without it the caller must explicitly choose a destination. A nonempty
+`[!]` means pause and stays visible but unscheduled. The task record in `lb/` stores the prior state consumed by resume;
+without it the caller must explicitly choose a destination. Legacy
+`- Resume: pending|active` requires explicit `task migrate` before transition. A nonempty
 `- Blocker: reason` on `[ ]` or `[/]` means blocked without losing that underlying
 marker. Pause retains the blocker; resume does not resolve it. Unknown checkbox
 markers stay visible with diagnostics and are never selected as next work.
 
 `- Depends: ID, ID` names hard dependencies; only done satisfies them. Cancellation
-uses `[-]` plus a task-bound Resolution with `as: cancelled`, decision, note,
-actor and source. Existing `human-cancelled` provenance remains valid; legacy
+uses `[-]` plus readable Resolution prose; the task record in `lb/` holds
+`as: cancelled`, task digest, decision, note, actor and source. Existing `human-cancelled` provenance remains valid; legacy
 not-applicable or unexplained skips are not silently reclassified.
 
 Explicit Task completion may go directly from pending/active to `[x]` after the

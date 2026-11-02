@@ -67,6 +67,9 @@ def lookup(doc, identity):
 
 
 def snapshot(task, item):
+    from logbook_cli.task_records import require_current
+
+    require_current(task, item)
     submission = item.get("submission")
     return {
         **item,
@@ -93,8 +96,15 @@ def replace(doc, index, item):
 
 def acceptance_issues(doc):
     """Detect stale recorded acceptance without rewriting human task content."""
+    from logbook_cli.task_records import require_current
+
     issues = []
-    for identity, (task, _, item) in bindings(doc).items():
+    known = bindings(doc)
+    by_line = {task.line: item for task, _, item in known.values()}
+    for stage in doc.stages:
+        for task in stage.tasks:
+            require_current(task, by_line.get(task.line, {}))
+    for identity, (task, _, item) in known.items():
         view = snapshot(task, item)
         if not view["consistent"]:
             issues.append(identity + ": checkbox and lifecycle disagree")

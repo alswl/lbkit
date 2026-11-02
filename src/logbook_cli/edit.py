@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 import re
 from collections import Counter
@@ -66,6 +65,23 @@ def introduced_issues(doc: Document, changed: str) -> list[dict]:
 
 
 def require_valid_candidate(doc: Document, changed: str) -> None:
+    candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
+
+    def inline_records(document):
+        return Counter(
+            (a.kind, a.value)
+            for stage in document.stages
+            for task in stage.tasks
+            for a in task.annotations
+            if a.kind is Field.RESUME
+            or (a.kind is Field.RESOLUTION and a.value.startswith(("{", "[")))
+        )
+
+    if inline_records(candidate) - inline_records(doc):
+        raise LbError(
+            "new inline machine records are forbidden; use task actions and lb/ state",
+            EXIT_REFUSED,
+        )
     issues = introduced_issues(doc, changed)
     if issues:
         codes = ", ".join(sorted({item["code"] for item in issues}))
@@ -296,10 +312,19 @@ def resolve_task(
             "resolve requires an unresolved [-] task without an existing disposition record",
             EXIT_REFUSED,
         )
-    record = json.dumps(
-        {"task": task.identity, "as": disposition, "decision": decision, "note": note},
-        ensure_ascii=False,
-    ).replace("<", "\\u003c")
+    import uuid
+
+    from logbook_cli import records
+    from logbook_cli.task_records import resolution_text
+
+    task_id = "task-" + uuid.uuid4().hex[:12]
+    record = {
+        "task": task.identity,
+        "as": disposition,
+        "decision": decision,
+        "note": note,
+    }
+    records.put(doc, "task", {"id": task_id, "resolution": record})
     last = task_content_end(doc, task)
     at = doc.offsets[last] + len(doc.lines[last])
     newline = "\r\n" if b"\r\n" in doc.data else "\n"
@@ -309,7 +334,9 @@ def resolve_task(
         + separator
         + "    - "
         + prefix(Field.RESOLUTION, doc.locale)
-        + record
+        + resolution_text(record)
+        + newline
+        + f"    <!-- lb-task {task_id} -->"
         + newline
         + doc.text[at:]
     )
@@ -333,25 +360,17 @@ def split_task(doc: Document, task: Task, texts: tuple[str, ...], decision: str)
     changed = doc.text[: task.state_at] + "-" + doc.text[task.state_at + 1 :]
     retired = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     original = find_task(retired, task.stage, task.text)
-    changed = resolve_task(
-        retired,
-        original,
-        "not-applicable",
-        decision,
-        "Original package replaced by: " + json.dumps(texts, ensure_ascii=False),
-    )
-    retired = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
-    original = find_task(retired, task.stage, task.text)
     last = task_content_end(retired, original)
     at = retired.offsets[last] + len(retired.lines[last])
     newline = "\r\n" if b"\r\n" in doc.data else "\n"
     source = prefix(Field.SOURCE, doc.locale) + (
-        f"Split from original task {task.identity}; verify acceptance separately."
+        f"Split from: {task.text}; decision: {decision}; verify acceptance separately."
     )
     additions = "".join(
         f"- [ ] {text}{newline}    - {source}{newline}" for text in texts
     )
-    changed = retired.text[:at] + additions + retired.text[at:]
+    separator = "" if retired.text[:at].endswith("\n") else newline
+    changed = retired.text[:at] + separator + additions + retired.text[at:]
     candidate = parse_text(changed.encode("utf-8"), doc.path, doc.root, source=doc)
     replacements = [find_task(candidate, task.stage, text) for text in texts]
     if any(t.human or t.preflight_blocker for t in replacements):

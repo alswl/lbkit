@@ -369,8 +369,9 @@ Consumer Markdown machine records now live in the project's `lb/` directory, one
 `lb/<name>.md.json` per mind (mf keys each type directory by mind name), with a
 section per document. Consumers must retain and review these files with their
 documents and ignore `lb/*.transaction` and `lb/.lock`.
-Only short task IDs remain in Markdown; inline JSON and event blocks have no
-compatibility reader or migration. Document CAS includes the Markdown and its own state section;
+Only short task IDs remain as machine comments in Markdown. Legacy task
+Resolution/Resume annotations have explicit migration; other retired inline JSON
+and event blocks have no compatibility reader. Document CAS includes the Markdown and its own state section;
 execution/configuration JSON retains its separate token semantics. Root-directory
 locks and recoverable journals coordinate local writes; they cannot make runtime
 transport or arbitrary editor writes transactional. See the installed
@@ -455,3 +456,32 @@ late replies. Needs-input observations require recovery of available authorized
 inputs or a focused request to their owner. Completed Task-specific takeover notes
 describe finished work while broader takeover and unresolved handoffs stay visible.
 These clarify existing coordination duties without adding consumer configuration.
+
+
+## Task record boundary maintenance
+
+Task dispositions and prior resume state use the existing per-mind document state,
+not a new store. `task_records.py` validates disposition payloads and their readable
+projection for both disk reads and candidate parses. `document.py` retains the
+bounded inline Resolution compatibility parser; duplicate JSON keys are refused.
+Task lifecycle, resolve and migration write state through `records.put` and the
+existing paired CAS writer. Split archives the original without generating an
+intermediate inline disposition. Identity, record shape, digest and projection
+checks must remain aligned across context, task queries, check and transitions.
+
+Consumers adopting this revision gain explicit task inline migration. Resolution
+becomes readable prose; Resume moves to the task record. Depends and Blocker stay
+shared human/machine facts; the short ID comment is the indispensable join, not
+removable decoration. Migration retains original inline annotation bytes, task
+identity and evidence history; reopen retains readable historical reasons too.
+Legacy reads do not convert files, ordinary transitions require migration first,
+and ambiguous or conflicting records refuse. Existing lock, composite token,
+dual-file journal and recovery semantics are unchanged. No real consumer records,
+configuration format or versions are upgraded automatically. Selecting a release
+version and consumer migration schedule remains a human decision.
+
+Regression coverage must exercise cancellation/reopen, legacy and unidentified
+migration, stale/duplicate/missing state, dry-run, concurrent state edits and
+interrupted paired writes in disposable repositories. Preserve multilingual text,
+HTML-like reasons, evidence links and LF/CRLF; machine history is not permission
+to discard the reader's explanation. This adds no execution or approval gate.

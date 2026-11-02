@@ -83,7 +83,11 @@ class TaskSplitTest(unittest.TestCase):
         self.assertTrue(self.log.read_text().endswith(f"- [ ] {HUMAN}" + human))
         for child in tasks[:2]:
             self.assertEqual([a["kind"] for a in child["annotations"]], ["source"])
-            self.assertIn(identity, child["annotations"][0]["value"])
+            self.assertIn(ORIGINAL, child["annotations"][0]["value"])
+            self.assertNotIn(identity, self.log.read_text())
+            state = json.loads((self.root / "lb/log.md.json").read_text())
+            archive = state["documents"]["log.md"]["task-archive"]
+            self.assertEqual(next(iter(archive.values()))["previous_task_digest"], identity)
         self.assertEqual(
             [i["code"] for i in self.cli('log', 'check', "log.md", code=1)],
             ["STAGE_EMOJI"],

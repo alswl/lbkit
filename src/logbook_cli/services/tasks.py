@@ -193,6 +193,7 @@ def split(
         {
             "id": "task-" + uuid.uuid4().hex[:12],
             "previous_text": item.text,
+            "previous_task_digest": item.identity,
             "content": "".join(doc.lines[item.line - 1 : original_end + 1]),
             "replacement_texts": list(texts),
             "replacement_ids": replacement_ids,
@@ -333,6 +334,10 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
     additions = ""
     for r in replacements:
         additions += f"- [ ] {r['text']}{nl}    <!-- lb-task {r['id']} -->{nl}"
+        additions += (
+            f"    - Source: Split from {record['id']}: {old.text}; "
+            f"decision: {decision}; verify acceptance separately.{nl}"
+        )
         if graph[r["id"]]:
             additions += "    - Depends: " + ", ".join(graph[r["id"]]) + nl
     edits.append((old.start, stop, additions))

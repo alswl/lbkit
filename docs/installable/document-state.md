@@ -7,7 +7,8 @@ state file named after its Markdown file: `docs/delivery.md` and
 `thinking/delivery.md` share `lb/delivery.md.json`, beside the execution JSON
 `lb/delivery.json`. Track Markdown and `lb/` state together in Git. These are
 consumer-owned files; installation does not create or replace consumer records.
-There is no old-format reader or migration command.
+Legacy task Resolution/Resume annotations have a bounded compatibility reader and
+explicit `task migrate`; other retired inline machine blocks remain unsupported.
 
 A task may carry one indented `<!-- lb-task task-example -->` line. This is a
 stable ID, never JSON. Keep goals, task wording, order, checkboxes, human gates,
@@ -154,10 +155,56 @@ execution roles. It does not require fresh approval for already-authorized work.
 ## Canonical Task migration
 
 New semantic Task writes derive current state from the Markdown marker and
-Blocker/Resume/Resolution annotations. Migrated task records retain identity and
+Blocker annotations plus the validated task disposition in `lb/`. Migrated task records retain identity and
 historical evidence, without a duplicate current `status`. `task-archive` stores
 removed tasks separately from active anchor validation. Historical submissions
 and acceptance remain readable. Legacy records are not silently converted by a
 read: preview `task migrate` with the current context token before applying it.
 Unresolved legacy conflicts refuse migration. Markdown and sidecar changes retain
 the shared CAS/transaction-recovery boundary; state-only changes use atomic replace.
+
+
+## Task data ownership and inline compatibility
+
+| Content | Owner and meaning |
+| --- | --- |
+| Task text, checkbox, criteria, evidence links | Human-readable Markdown; criteria changes invalidate applicable evidence. |
+| `Depends: ID, ID` | Human/machine shared route constraints in Markdown. IDs refer to task anchors; only done satisfies a dependency. |
+| `Blocker: reason` | Human/machine shared obstacle in Markdown. Pause/resume preserves it until explicitly cleared. |
+| Prior state used by resume | Task record `resume: pending/active` in this document's `lb/` section; no new `Resume:` annotation. Missing prior state requires `--to`; invalid/conflicting/stale state refuses. |
+| `Resolution:` / `处置：` | Readable disposition, decision/source and reason in Markdown; the structured `resolution` object lives in the task record. The exact readable projection and task-text digest must agree. |
+| `<!-- lb-task ID -->` | The minimal join between the human task and its record. It is not an audit log. Keep it with the task when moving it. |
+| Digests, actor/source attribution, submission/acceptance, historical snapshots | Task record in the existing state section. No parallel file or inline JSON. |
+
+Cancellation writes a readable disposition and its structured record together.
+`task resolve` also registers a short ID for a previously unidentified skipped
+item, including an explicitly dispositioned human item. It does not change the
+checkbox or authenticate the caller's decision. Reopen moves current disposition
+and prior evidence into history, retains a readable historical disposition in the
+body, and clears current cancellation/submission/acceptance. Repeated cancellations
+never erase earlier evidence. Both split forms archive complete original content
+and identity in `task-archive`; replacements retain readable origin and decision
+notes, while original text digests stay in the archive. Archived evidence is
+historical, not active state.
+
+Reads accept exactly one valid legacy JSON Resolution, bound to the exact task
+text and skipped checkbox. Reads never migrate. Duplicate JSON keys, multiple
+annotations, invalid shapes, stale digests or a mixture of inline and stored
+records are errors, even if a caller believes one copy is newer. The same applies
+to conflicting Resume sources. Ordinary semantic actions refuse inline machine
+records with an instruction to migrate first.
+
+Preview `task migrate LOG --expect-version TOKEN --dry-run --json` and inspect
+both diffs. Apply using that same token. Migration replaces inline Resolution
+with readable text, removes inline Resume, and saves the original annotation
+bytes and structured evidence in task history. Unidentified legacy tasks receive
+a short ID in the same transaction. Existing IDs and historical human attribution
+are preserved. Unsupported or ambiguous legacy states still refuse the whole
+migration; no writes occur on dry-run or validation failure. Interruption uses
+`log recover`, not manual JSON repair or a second storage layout.
+
+Consumers must upgrade the CLI with these contracts before making new writes.
+Older CLI revisions cannot read the new prose Resolution or stored resume state.
+Choose the pinned revision and migration timing explicitly; no version bump or
+consumer conversion is automatic. Keep both files when reverting or reviewing;
+do not revert only one half of a migrated task.

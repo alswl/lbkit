@@ -15,7 +15,6 @@ from logbook_cli.document import (
     parse_text,
     safe_path,
 )
-from logbook_cli.edit import resolve_task
 from logbook_cli.services.common import Result, load, save, writable
 
 
@@ -139,6 +138,10 @@ def migrate(root, log, token, dry_run):
     changed = doc.text
     for at, addition in sorted(edits, reverse=True):
         changed = changed[:at] + addition + changed[at:]
+    from logbook_cli.task_records import migrate_inline
+
+    revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
+    changed = migrate_inline(revised, mappings)
     try:
         return save(doc, changed, dry_run, mappings=mappings)
     except OSError as exc:
@@ -177,6 +180,15 @@ def semantic_transition(
         )
     if task.human and not (action == "start" and task.effective_state == "pending"):
         raise LbError("human-owned task transitions are protected", EXIT_REFUSED)
+    from logbook_cli.task_records import require_current, resolution_text
+
+    require_current(task, old)
+    if any(a.kind in {Field.RESUME, Field.RESOLUTION} for a in task.annotations) and (
+        any(a.kind is Field.RESUME for a in task.annotations)
+        or (task.resolution and "resolution" not in old)
+    ):
+        raise LbError("inline task records require explicit task migrate", EXIT_REFUSED)
+    item = canonical_record(old)
     state = task.effective_state
     allowed = {
         "complete": {"pending", "active"},
@@ -186,7 +198,8 @@ def semantic_transition(
         "unblock": {"blocked"},
         "start": {"pending"},
         "cancel": {"pending", "active", "blocked", "pause"},
-        "reopen": {"done", "cancelled"},
+        "reopen": {"done", "cancelled"}
+        | ({"active"} if old.get("status") == "submitted" else set()),
     }
     if state not in allowed[action]:
         raise LbError(f"cannot {action} a {state} task", EXIT_REFUSED)
@@ -212,34 +225,31 @@ def semantic_transition(
     elif action == "pause":
         marker = "!"
         remove.add(Field.RESUME)
-        notes.append("Resume: " + ("pending" if task.state == " " else "active"))
+        item["resume"] = "pending" if task.state == " " else "active"
     elif action == "resume":
-        previous = [a.value for a in task.annotations if a.kind is Field.RESUME]
-        if len(previous) > 1 or (previous and previous[0] not in {"pending", "active"}):
-            raise LbError("invalid Resume annotation", EXIT_REFUSED)
-        destination = previous[0] if previous else to
+        if to is not None and "resume" in item and to != item["resume"]:
+            raise LbError("--to conflicts with recorded prior state", EXIT_REFUSED)
+        destination = item.get("resume", to)
         if destination not in {"pending", "active"}:
             raise LbError(
                 "resume needs known prior state or --to pending|active", EXIT_REFUSED
             )
         marker = " " if destination == "pending" else "/"
         remove.add(Field.RESUME)
+        item.pop("resume", None)
     elif action == "cancel":
         marker = "-"
         remove.add(Field.RESOLUTION)
-        notes.append(
-            "Resolution: "
-            + json.dumps(
-                {
-                    "task": task.identity,
-                    "as": "cancelled",
-                    "decision": basis,
-                    "note": "Cancelled by Captain",
-                    "actor": "captain",
-                    "source": basis,
-                }
-            )
-        )
+        item.pop("resume", None)
+        item["resolution"] = {
+            "task": task.identity,
+            "as": "cancelled",
+            "decision": basis,
+            "note": "Cancelled by Captain",
+            "actor": "captain",
+            "source": basis,
+        }
+        notes.append("Resolution: " + resolution_text(item["resolution"]))
     lines = list(doc.lines)
     nl = "\r\n" if b"\r\n" in doc.data else "\n"
     at = task.state_at - doc.offsets[task.line - 1]
@@ -251,11 +261,14 @@ def semantic_transition(
     end = task_content_end(doc, task)
     for a in task.annotations:
         if a.kind in remove:
-            lines[a.line - 1] = ""
+            lines[a.line - 1] = (
+                "    - Historical disposition: " + a.value + nl
+                if a.kind is Field.RESOLUTION and action == "reopen"
+                else ""
+            )
     lines[end] = (
         lines[end].rstrip("\r\n") + nl + "".join("    - " + note + nl for note in notes)
     )
-    item = canonical_record(old)
     item["history"] = [
         *item.get("history", []),
         {
@@ -263,14 +276,17 @@ def semantic_transition(
             "previous": state,
             "basis": basis,
             "at": datetime.now(timezone.utc).isoformat(),
+            "previous_record": {k: v for k, v in old.items() if k != "history"},
+            "previous_annotations": [
+                a.value for a in task.annotations if a.kind in remove
+            ],
         },
     ]
     if action == "reopen":
-        item["history"].append(
-            {"previous_record": {k: v for k, v in old.items() if k != "history"}}
-        )
         item.pop("acceptance", None)
         item.pop("submission", None)
+        item.pop("resolution", None)
+        item.pop("resume", None)
     records.put(doc, "task", item)
     changed = "".join(lines)
     revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
@@ -286,9 +302,11 @@ def transition(
     doc = writable(root, log, token)
     records.read(doc, "task", require_closed=True)
     task, index, old = identity.lookup(doc, task_id)
+    if action in {"cancel", "reopen"}:
+        return semantic_transition(root, log, task_id, action, basis, token, dry_run)
     canonical = "status" not in old
     if canonical:
-        if action in {"start", "cancel", "reopen"}:
+        if action == "start":
             return semantic_transition(
                 root, log, task_id, action, basis, token, dry_run
             )
@@ -318,8 +336,6 @@ def transition(
         "start": ({"pending"}, "active"),
         "record-result": ({"active", "submitted"}, "submitted"),
         "accept": ({"submitted"}, "accepted"),
-        "cancel": ({"pending", "active", "submitted"}, "cancelled"),
-        "reopen": ({"submitted", "accepted", "cancelled"}, "active"),
     }
     allowed, status = transitions[action]
     if old["status"] not in allowed:
@@ -358,35 +374,14 @@ def transition(
                 EXIT_REFUSED,
             )
         item["acceptance"] = {"candidate": candidate, "basis": basis}
-    if action == "reopen":
-        item.pop("acceptance", None)
-        if task.resolution:
-            item["previous_resolution"] = task.resolution
     changed = identity.replace(
         doc, index, canonical_record(item) if canonical else item
     )
-    if action == "cancel":
-        changed = changed[: task.state_at] + "-" + changed[task.state_at + 1 :]
-        revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
-        target, _, _ = identity.lookup(revised, task_id)
-        changed = resolve_task(
-            revised, target, "human-cancelled", basis, "Cancelled by explicit decision."
-        )
-    else:
-        changed = (
-            changed[: task.state_at]
-            + identity.TASK_STATES[status]
-            + changed[task.state_at + 1 :]
-        )
-    if action == "reopen" and task.resolution:
-        revised = parse_text(changed.encode(), doc.path, doc.root, source=doc)
-        target, _, _ = identity.lookup(revised, task_id)
-        from logbook_cli.models import Field
-
-        for a in reversed(target.annotations):
-            if a.kind is Field.RESOLUTION:
-                at = revised.offsets[a.line - 1]
-                changed = changed[:at] + changed[at + len(revised.lines[a.line - 1]) :]
+    changed = (
+        changed[: task.state_at]
+        + identity.TASK_STATES[status]
+        + changed[task.state_at + 1 :]
+    )
     return save(
         doc,
         changed,

@@ -144,7 +144,7 @@ For an explicitly authorized initial assignment, add `--assign-repo NAME` (witho
 
 Duplicate or existing replacement text, human/completed/skipped originals, human replacements and preflight gates are refused. If the original has repositories, replacements must collectively cover exactly those repositories and each must retain at least one; new repositories and loss of an existing repository are refused. An unassigned original may give each replacement at most one explicitly named repository. The caller verifies the human-approved scope, order, repositories and evidence applicability; `--decision` cannot authenticate consent. All candidate validation and CAS checks finish before any byte is written. Failed validation or stale tokens leave the original and replacements unchanged. Repeating a completed split is refused. Stage marker synchronization remains a separate current-token operation, as with `task add`.
 
-`task resolve LOG --stage STAGE --task TEXT --as human-cancelled|not-applicable --decision SOURCE --note REASON --expect-version TOKEN` adds a task-bound disposition to an already `[-]` item, including a human-owned item. It never changes the checkbox. The visible `处置：` JSON child includes `task` (SHA-256 of exact task text), `as`, `decision`, and `note`. Missing, conflicting, malformed or stale records do not close the task (`INVALID_RESOLUTION`). A changed task text invalidates the record; a mere `--as` option does not prove a human decision occurred.
+`task resolve LOG --stage STAGE --task TEXT --as human-cancelled|not-applicable --decision SOURCE --note REASON --expect-version TOKEN` adds a task-bound disposition to an already `[-]` item, including a human-owned item. It never changes the checkbox. The visible `处置：` child contains readable disposition, decision and reason. The existing `lb/<name>.md.json` task record holds `task` (SHA-256 of exact task text), `as`, `decision`, and `note`; an unidentified item gains a short ID in the same transaction. Missing, conflicting, malformed or stale records do not close the task (`INVALID_RESOLUTION`). A changed task text invalidates the record; a mere `--as` option does not prove a human decision occurred.
 
 Stages whose items are all accepted or explicitly dispositioned derive ✅. Context exposes each task's resolution; task queries retain the distinction between unresolved skips and dispositioned items. Summaries say “已收口（含取消/不适用项）” rather than claiming successful acceptance. All-skipped stages can close only with valid dispositions for every item. Existing unresolved skips retain their old non-pass behavior.
 
@@ -325,10 +325,13 @@ authorization, evidence truth, safe pause, monitoring and independent review.
 resume without a recorded prior state requires `--to pending|active`.
 Completion requires no Run, submission or fabricated start event. Human tasks
 remain protected. These actions preserve history and derive current state from
-Markdown rather than writing a second current status in the sidecar.
+Markdown plus validated disposition records, without a duplicate current status.
+Resume reads the prior state from the task record in `lb/`; Blocker and Depends
+remain readable Markdown. Cancellation and reopen preserve readable reasons and
+structured historical evidence. See [task data ownership](document-state.md#task-data-ownership-and-inline-compatibility).
 
 `task migrate LOG --expect-version TOKEN --dry-run --json` previews supported
-legacy mappings; omit `--dry-run` to apply with the same token. Consistent
+legacy mappings and inline Resolution/Resume conversion; omit `--dry-run` to apply with the same token. Consistent
 accepted/submitted become Markdown-derived done/active, with prior evidence
 retained. Conflicts, ambiguous skipped states and unsupported ownership/parent
 mappings refuse apply; resolve those explicitly before retrying. Reads do not
