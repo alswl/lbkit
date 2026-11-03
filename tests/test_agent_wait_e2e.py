@@ -173,6 +173,160 @@ class AgentWaitE2ETest(CoordinationTest):
         self.assertFalse(any(e["kind"] == "needs_input" for e in second["events"]))
         self.assert_no_runtime_mutations_or_leaks()
 
+    def test_reported_attention_drains_without_runtime_calls(self):
+        for state in ("idle", "blocked"):
+            with self.subTest(state=state):
+                self.runtime([target()], [state])
+                self.request()
+                first = self.wait("1")
+                self.assertEqual(first["pending"], [])
+                (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
+                before = self.calls()
+                result = self.wait("30")
+                self.assertEqual(result["reason"], "drained")
+                self.assertEqual(result["next_action"], "stop_waiting")
+                self.assertEqual(result["events"], [])
+                self.assertEqual(result["pending"], [])
+                self.assertEqual(before, self.calls())
+
+    def test_mixed_continuation_only_observes_unreported_targets(self):
+        targets = [target(1), target(2)]
+        self.runtime(targets, ["idle", "working"])
+        self.request(targets)
+        first = self.wait("1")
+        (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
+        before = len(self.calls())
+        result = self.wait()
+        self.assertEqual(result["pending"], [targets[1]["binding"]])
+        for call in self.calls()[before:]:
+            self.assertNotIn("w1:p1", call["argv"])
+
+    def test_new_assignment_explicitly_rearms_without_reusing_event_id(self):
+        self.runtime([target()], ["idle"])
+        self.request()
+        first = self.wait("1")
+        request = first["next_input"]
+        request["targets"][0]["rearm"] = True
+        (self.root / "wait.json").write_text(json.dumps(request))
+        self.runtime([target()], ["working"])
+        running = self.wait()
+        self.assertEqual(running["reason"], "timeout")
+        self.assertNotIn("rearm", running["next_input"]["targets"][0])
+        (self.root / "wait.json").write_text(json.dumps(running["next_input"]))
+        self.runtime([target()], ["idle"])
+        second = self.wait("1")
+        self.assertEqual([e["kind"] for e in second["events"]], ["settled"])
+        self.assertNotEqual(
+            first["events"][0]["event_id"], second["events"][0]["event_id"]
+        )
+
+    def test_rearm_idle_does_not_manufacture_completion(self):
+        self.runtime([target()], ["idle"])
+        self.request()
+        first = self.wait("1")
+        request = first["next_input"]
+        request["targets"][0]["rearm"] = True
+        (self.root / "wait.json").write_text(json.dumps(request))
+        result = self.wait("1")
+        self.assertEqual([e["kind"] for e in result["events"]], ["observation_gap"])
+        self.assertEqual(result["events"][0]["correlation"], "uncorrelated")
+
+    def retained_request(self, count):
+        import base64
+
+        from logbook_cli import wait_state
+
+        targets = [target(n) for n in range(1, count + 1)]
+        contexts, events = [], []
+        for item in targets:
+            context, emitted = wait_state.observe(
+                wait_state.initial(item),
+                {"binding": item["binding"], "state": "blocked"},
+            )
+            contexts.append(context)
+            events.extend(emitted)
+        after = base64.b64encode(
+            json.dumps({"contexts": contexts, "events": events}).encode()
+        ).decode()
+        return self.request(targets, after)
+
+    def test_retained_attention_stays_pending_until_delivered(self):
+        request = self.retained_request(40)
+        first = self.wait("30")
+        self.assertEqual(len(first["events"]), 32)
+        self.assertEqual(
+            first["pending"], [t["binding"] for t in request["targets"][32:]]
+        )
+        (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
+        second = self.wait("30")
+        self.assertEqual(len(second["events"]), 8)
+        self.assertEqual(second["pending"], [])
+        (self.root / "wait.json").write_text(json.dumps(second["next_input"]))
+        self.assertEqual(self.wait("30")["reason"], "drained")
+        self.assertEqual(self.calls(), [])
+
+    def test_rearm_refuses_invalid_flag_and_undelivered_attention(self):
+        request = self.retained_request(1)
+        for flag in ("true", True):
+            with self.subTest(flag=flag):
+                request["targets"][0]["rearm"] = flag
+                (self.root / "wait.json").write_text(json.dumps(request))
+                result = self.wait(code=2)
+                self.assertIn("rearm", result.stderr)
+                self.assertEqual(self.calls(), [])
+
+    def test_duplicate_wait_is_refused_and_lock_released_after_interrupt(self):
+        import signal
+        import subprocess
+        import sys
+
+        from coordination_helpers import REPO
+
+        self.runtime([target()], ["working"], delay=10)
+        self.request()
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                str(REPO / "bin/lb"),
+                "--root",
+                str(self.root),
+                "agent",
+                "wait",
+                "--input-file",
+                "wait.json",
+                "--timeout",
+                "10",
+                "--json",
+            ],
+            cwd=self.root,
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+        try:
+            deadline = time.monotonic() + 2
+            while (
+                not self.calls()
+                and process.poll() is None
+                and time.monotonic() < deadline
+            ):
+                time.sleep(0.02)
+            self.assertTrue(
+                self.calls(), "First wait must have acquired its input lock"
+            )
+            result = self.wait(code=4)
+            self.assertIn("wait already running", result.stderr)
+            process.send_signal(signal.SIGINT)
+            process.communicate(timeout=3)
+            self.assertEqual(process.returncode, 130)
+            self.assertEqual(self.wait()["reason"], "timeout")
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGKILL)
+            process.communicate(timeout=2)
+
     def test_old_idle_seen_flip_does_not_claim_completed_work(self):
         targets = [target(state="idle")]
         self.runtime(targets, ["done"])

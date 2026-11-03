@@ -53,6 +53,25 @@ children. Reuse complete next_input unchanged; a missing token means observation
 gaps, not lossless replay. Return reasons include change, timeout, interrupted and
 unavailable; observations never establish acceptance or business completion.
 
+`pending` contains bindings still awaiting observation or retained attention not
+yet delivered. Previously delivered bindings are parked, not polled again. When no such bindings or retained
+events remain, `reason: drained` and `next_action: stop_waiting` return immediately
+without runtime calls. Handle the existing returns and take the next authorized
+action or report the gate; do not start another wait merely to keep a session alive.
+After an actual new instruction, or a deliberate recheck of a handled exception,
+set `rearm: true` on that target in the complete next_input. The flag is consumed;
+keep `after` and use the returned next_input unchanged thereafter. Rearming is not
+proof of execution: a fresh idle snapshot reports an observation gap, not completion.
+
+Only one process may wait on the same input file. A concurrent call is refused
+without runtime calls; do not replace that file or copy it to evade the guard.
+Keep tool-level waiting in one orchestration; a running tool handle or empty chunk
+is not an attention event. Resume that same handle mechanically without inspecting
+Sailors, writing status, or issuing repetitive progress messages. A timeout alone
+does not justify any of those actions. Do not claim automatic wake-up when the host
+cannot deliver tool completion. Once a return is read, act on it rather than reading
+the same terminal transcript again.
+
 Read attention targets, decide the appropriate next action, and retain other
 workers. For needs-input, recover available authorized inputs or ask the responsible
 person a focused question for the missing input. Preserve Captain's responsibility

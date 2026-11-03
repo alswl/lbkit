@@ -349,9 +349,20 @@ class LbkitInstallTest(unittest.TestCase):
     def test_anywhere_wrapper_fails_outside_a_logbook_repository(self):
         empty = Path(self.temp.name) / "empty"
         empty.mkdir()
+        # Model an empty ancestry even when TMPDIR is inside a consuming repo.
+        tools = Path(self.temp.name) / "outside-tools"
+        tools.mkdir()
+        dirname = tools / "dirname"
+        dirname.write_text("#!/bin/sh\nprintf '%s\\n' /\n", encoding="utf-8")
+        dirname.chmod(0o755)
         wrapper = INSTALLER.parent / "lb-anywhere"
         result = subprocess.run(
-            [str(wrapper)], cwd=empty, text=True, capture_output=True, check=False
+            [str(wrapper)],
+            cwd=empty,
+            text=True,
+            capture_output=True,
+            check=False,
+            env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"]},
         )
         self.assertEqual(result.returncode, 1)
         self.assertIn("no bin/lb found", result.stderr)

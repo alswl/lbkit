@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from logbook_cli import wait_state
 from logbook_cli.adapters import herdr
-from logbook_cli.document import EXIT_USAGE, LbError, root_path, safe_path
+from logbook_cli.document import EXIT_REFUSED, EXIT_USAGE, LbError, root_path, safe_path
 from logbook_cli.services.common import Result
 
 LIMIT = 1024 * 1024
@@ -37,8 +37,14 @@ def validate(value):
         raise ValueError("targets must contain 1..64 items")
     unique = {}
     for target in targets:
-        if not isinstance(target, dict) or set(target) - {"binding", "baseline"}:
+        if not isinstance(target, dict) or set(target) - {
+            "binding",
+            "baseline",
+            "rearm",
+        }:
             raise ValueError("invalid target")
+        if type(target.get("rearm", False)) is not bool:
+            raise ValueError("rearm must be boolean")
         binding = target.get("binding")
         if (
             not isinstance(binding, dict)
@@ -67,7 +73,8 @@ def validate(value):
         if key in unique and unique[key] != target:
             raise ValueError("conflicting duplicate binding")
         unique[key] = target
-    targets = list(unique.values())
+    rearm = [t.get("rearm", False) for t in unique.values()]
+    targets = [{k: v for k, v in t.items() if k != "rearm"} for t in unique.values()]
     contexts = [wait_state.initial(t) for t in targets]
     pending = []
     if value.get("after") is not None:
@@ -129,6 +136,18 @@ def validate(value):
                 }
             ):
                 raise ValueError("invalid retained event")
+    for index, requested in enumerate(rearm):
+        if requested:
+            binding = targets[index]["binding"]
+            if any(e["binding"] == binding for e in pending):
+                raise ValueError(
+                    "deliver retained events before rearming their binding"
+                )
+            # A new assignment is not proof that working was observed. Keep the
+            # event sequence so a later cycle cannot reuse a delivered event ID.
+            fresh = wait_state.initial({"binding": binding})
+            fresh["sequence"] = contexts[index]["sequence"]
+            contexts[index] = fresh
     if len(encoded([targets, contexts, pending])) * 5 > LIMIT:
         raise ValueError("request cannot fit complete reusable result")
     return targets, contexts, pending
@@ -141,6 +160,7 @@ async def observe_all(targets, contexts, pending, timeout):
     interrupted = False
     errors = set()
     scopes = {}
+    watching = [i for i, context in enumerate(contexts) if context["reported"] is None]
 
     async def call(machine, *args):
         async with asyncio.timeout(max(0, deadline - time.monotonic())):
@@ -151,7 +171,7 @@ async def observe_all(targets, contexts, pending, timeout):
 
     async def worker(index, target):
         binding = target["binding"]
-        if contexts[index]["reported"] in {"identity_changed", "exited"}:
+        if contexts[index]["reported"] is not None:
             return
         try:
             # Scope comes from the selected server, never a guessed --session flag.
@@ -233,11 +253,8 @@ async def observe_all(targets, contexts, pending, timeout):
     loop.add_signal_handler(signal.SIGINT, interrupt)
     workers = []
     try:
-        if not pending:
-            order = sorted(
-                range(len(targets)), key=lambda i: contexts[i]["reported"] is not None
-            )
-            workers = [asyncio.create_task(worker(i, targets[i])) for i in order]
+        if not pending and watching:
+            workers = [asyncio.create_task(worker(i, targets[i])) for i in watching]
             try:
                 await asyncio.wait_for(wake.wait(), max(0, deadline - time.monotonic()))
             except TimeoutError:
@@ -257,9 +274,11 @@ async def observe_all(targets, contexts, pending, timeout):
         "interrupted"
         if interrupted
         else "unavailable"
-        if len(errors) == len(targets)
+        if watching and len(errors) == len(watching)
         else "change"
         if events
+        else "drained"
+        if not watching
         else "timeout"
     )
     next_input = {
@@ -271,10 +290,16 @@ async def observe_all(targets, contexts, pending, timeout):
     result = {
         "reason": reason,
         "events": events,
+        "next_action": "handle_events"
+        if events
+        else "stop_waiting"
+        if reason in {"drained", "interrupted", "unavailable"} or cleanup_errors
+        else "wait",
         "pending": [
             t["binding"]
-            for t in targets
-            if t["binding"] not in [e["binding"] for e in events]
+            for t, context in zip(targets, contexts)
+            if context["reported"] is None
+            or any(e["binding"] == t["binding"] for e in retained)
         ],
         "next_input": next_input,
     }
@@ -293,15 +318,23 @@ async def observe_all(targets, contexts, pending, timeout):
 
 
 def wait(root, input_file, timeout):
+    import fcntl
+
     try:
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("timeout must be finite and positive")
         path = safe_path(root_path(root), input_file)
         with path.open("rb") as handle:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as exc:
+                raise LbError(
+                    "wait already running for this input file", EXIT_REFUSED
+                ) from exc
             raw = handle.read(LIMIT + 1)
-        if len(raw) > LIMIT:
-            raise ValueError("wait input exceeds size limit")
-        targets, contexts, pending = validate(json.loads(raw))
+            if len(raw) > LIMIT:
+                raise ValueError("wait input exceeds size limit")
+            targets, contexts, pending = validate(json.loads(raw))
+            return asyncio.run(observe_all(targets, contexts, pending, timeout))
     except (ValueError, TypeError, KeyError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
-    return asyncio.run(observe_all(targets, contexts, pending, timeout))
