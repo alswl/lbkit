@@ -89,6 +89,32 @@ connectivity; a request to test or fix lbkit does not authorize that. Report an
 unavailable external capability and continue independent authorized work.
 Inspection and control are separate calls, not a transactional runtime compare-and-swap.
 
+### Bounded agent waiting
+
+`agent wait --input-file FILE --timeout SECONDS --json` observes verified bindings
+without sending commands or changing Tasks. Input contains `targets` and optional
+opaque `after`; each target contains a `binding`, optional `baseline`, and optional
+one-shot boolean `rearm`. Keep the complete returned `next_input` for continuation.
+
+Delivered attention is parked. `pending` lists bindings awaiting observation or
+retained events not yet delivered; it is not a business Task status or a completion assertion. The
+result adds `next_action`: `handle_events`, `wait`, or `stop_waiting`. If all bindings
+are parked and no retained events remain, `reason: drained` returns immediately
+without runtime calls. Repeated calls do not poll idle/blocked/retired bindings.
+For an actually dispatched new instruction, or an intentional exception recheck,
+set `rearm: true` on the matching target while keeping `after`. This consumes the
+flag, preserves event numbering, and requires fresh runtime observations. An idle
+snapshot alone still cannot prove work completed. Retained events for that binding
+must be delivered before it can be rearmed.
+
+An advisory exclusive lock on the existing input file refuses concurrent waits on
+that same file (exit 4). No lock file or persistent runtime state is created; the
+lock is released when the process exits, including interruption. Do not replace an
+in-flight input file or use copies to bypass the guard. This is not a global lock
+across unrelated input files. Callers must keep one wait covering their in-flight
+bindings. Runtime observations and `drained` never authorize Task completion,
+session close, redispatch or other business actions.
+
 `skill check NAME --command EXECUTABLE` only checks executable discovery. It reports
 authentication and full readiness as unknown. It never executes configured shell code.
 Definitions come only from the selected repository. Usage JSON requires `id`, `task_id`,

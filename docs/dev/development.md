@@ -73,6 +73,20 @@ host's rules and current authorization, not a presumed exception in lbkit's rule
 
 ## Versioning and Evolution
 
+### Wait continuation compatibility
+
+Reported attention is now parked: `pending` excludes previously delivered
+attention, and an exhausted continuation returns `reason: drained` immediately.
+Consumers must stop waiting on drained input and explicitly request one-shot
+`rearm: true` for a new assignment or exception recheck, preserving `after`.
+This changes the previous behavior of continuing to poll delivered bindings.
+The result's `next_action` field is additive. Duplicate processes on the same
+input inode are refused by a read-only advisory lock, not a new state file.
+Shared waiting guidance and host AGENTS rules distinguish tool-handle continuation
+from actual attention so empty tool chunks do not drive model-side status loops.
+No new consumer configuration or automatic cleanup/dispatch is introduced.
+Package and skill versions remain unchanged pending the owner's release decision.
+
 lbkit uses semantic versioning; the current version is recorded in the root `VERSION` file (first release 0.1.0) and printed by `bin/lb --version`. The version covers three kinds of objects: lbkit as a whole (shared contracts, CLI, and installer), each lb-* skill (the `version` field in SKILL.md frontmatter), and the config formats owned by consuming repositories (`version` in `lbkit.yaml` and `lbkit-skills.yaml`). On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Configuration schema versions remain independent compatibility identifiers. Only the human decides and authorizes version upgrades. Agents must not automatically bump package, skill, or configuration versions. Report compatibility implications separately; update versions and dependent metadata only on explicit instruction. Semantic versioning informs the human release decision. Each consuming repository still pins one exact revision via the submodule pointer and chooses its own upgrade timing — updating the submodule pointer is the upgrade. Therefore:
 
 - Keep contract changes backward compatible where possible (adding fields beats changing semantics).
