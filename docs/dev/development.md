@@ -71,6 +71,18 @@ the submodule's development rules, including through installed symlinks. Shared
 background references use the lbkit README; cleanup permissions come from the
 host's rules and current authorization, not a presumed exception in lbkit's rules.
 
+### Consumer AGENTS additions
+
+The collaboration template defines factual local additions; lb-init applies that
+boundary during consumer maintenance. Keep shared behavior in skills/contracts and
+reference it rather than expanding copied instructions in the template. Project
+decisions and incident history stay in project records.
+
+Consumers adopt this maintenance boundary explicitly: updating the submodule does
+not overwrite AGENTS or revoke existing restrictions. Reconcile those only within
+an authorized migration. This changes no CLI, configuration schema or version and
+adds no execution approval gate.
+
 ## Versioning and Evolution
 
 lbkit uses semantic versioning; the current version is recorded in the root `VERSION` file (first release 0.1.0) and printed by `bin/lb --version`. The version covers three kinds of objects: lbkit as a whole (shared contracts, CLI, and installer), each lb-* skill (the `version` field in SKILL.md frontmatter), and the config formats owned by consuming repositories (`version` in `lbkit.yaml` and `lbkit-skills.yaml`). On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Configuration schema versions remain independent compatibility identifiers. Only the human decides and authorizes version upgrades. Agents must not automatically bump package, skill, or configuration versions. Report compatibility implications separately; update versions and dependent metadata only on explicit instruction. Semantic versioning informs the human release decision. Each consuming repository still pins one exact revision via the submodule pointer and chooses its own upgrade timing — updating the submodule pointer is the upgrade. Therefore:

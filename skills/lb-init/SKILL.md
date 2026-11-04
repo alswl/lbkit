@@ -13,6 +13,12 @@ report pending writes and verification gaps instead of silently stopping or bypa
 
 The consuming repository owns project logs, its `AGENTS.md`, `lbkit.yaml` (settings and agents) and `lbkit-skills.yaml` (skill recipes). lbkit owns the shared skill implementations, contracts, templates, and CLI. Read the consuming repository's instructions and Git state before changing it. Preserve existing project content and local configuration.
 
+Add only verified repository facts to the consuming AGENTS: layout, command entry
+points, configuration locations and human-established ownership/permission scope.
+Reference shared behavior rather than adding local collaboration rules or incident
+workarounds. Preserve existing restrictions until an authorized migration reconciles
+them; refreshing lbkit alone does not authorize their removal.
+
 ## User-facing line guidance
 
 Installation and configuration replies normally need no Logbook line. If a migration question concerns a specific existing Logbook item, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): name the file, item and verified `L50` position; do not create a Logbook just to supply a locator.
