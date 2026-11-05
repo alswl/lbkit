@@ -24,8 +24,11 @@ Never use launch as a probe. Partial creation retains owned IDs for recovery.
    replacement of in-flight work.
 4. Use one bounded `lb agent wait` request for pending bindings. Ordinary child
    processes observe unchanged state; do not create monitoring tabs, polling scripts
-   or repeated model queries. Reuse complete `next_input`, read returned attention
-   targets, handle blockers/results, and retain other pending Sailors. Timeout does
+   or repeated model queries. Persist the return and its `unresolved_events` before
+   reusing complete `next_input`; read attention targets, handle blockers/results,
+   verify delivery and save receipts before removing resolved events. Retain other
+   pending Sailors. User interjections reuse the running listener; cancellation
+   collects/reaps it before replacement. Timeout does
    not justify killing or resending work. Verify the Captain host actually delivers
    completion; a detached process ID does not establish automatic continuation.
 5. Captain checks the result against the agreed task, updates only applicable facts,
@@ -78,3 +81,14 @@ Before closing resources, ensure source references and key conclusions are recov
 When run metrics are requested, record run start/end/resume, human waiting/interruption, distinct human turns and applicable first acceptance/corrections in the existing bound Thinking using the [event contract](../../../docs/installable/coordination.md#run-event-and-close-out-metrics). Resume keeps the same run and counters. Captain records coordination facts; Sailor returns actual acceptance facts and later defect corrections. Do not archive raw trials or create a metrics sidecar.
 
 At Stage/logbook 🎉, report exact scope, wall elapsed with waiting/interruption union, human interaction count/categories and first-pass numerator/denominator/rate. Use the read-only `skills/lb-push/scripts/run-metrics.py` helper for deterministic arithmetic; no event history or zero denominator gives explicit unknown/no-calculable-data, never invented success. A corrected delivery defect removes an erroneous first-pass pass even if rework later succeeds. Metrics do not complete human gates or create a checker role.
+
+
+## Durable observation and handling
+
+Use the Observation/Event/Answer workflow in [Herdr collaboration](herdr.md).
+Claude Code prefers native Monitor; foreground managed wait reuses its handle
+elsewhere. Read fresh context, defer unresolved decisions, resolve assessed or
+obsolete Events, and submit only through native question confirmation. Reconcile
+uncertainty without resend; external prepare precedes a separately authorized UI
+action. Stop the listener before configuration changes. None of these operations
+replaces acceptance evidence or mutates business Tasks.

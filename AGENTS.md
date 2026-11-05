@@ -37,3 +37,8 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 
 - [docs/dev/development.md](docs/dev/development.md) — required reading before changing contracts, skills, or the installer: link rules, install manifest, version evolution.
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
+
+<!-- SPECKIT START -->
+Current feature plan: [Reliable Agent Waiting and Event Recovery](specs/005-reliable-agent-wait/plan.md).
+For this feature, follow the plan's user-required Red → Green → Refactor workflow; keep real-host acceptance separate from fixture tests.
+<!-- SPECKIT END -->

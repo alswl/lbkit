@@ -254,3 +254,59 @@ def recover(root: Path, path: Path, expected: str | None, dry_run: bool) -> dict
         }
     finally:
         os.close(directory)
+
+
+def replace_bytes_at(
+    directory: int, name: str, data: bytes, expected: bytes | None
+) -> None:
+    """Atomic single-file CAS relative to a pinned, caller-locked directory.
+
+    The caller owns writer exclusion. All file opens reject symlinks; replacing
+    an ancestor path cannot redirect this transaction into a different directory.
+    """
+    import stat
+    import uuid
+
+    if directory is None or Path(name).name != name or name in {".", ".."}:
+        raise LbError(
+            "invalid_transition: atomic target requires a pinned directory and filename",
+            EXIT_REFUSED,
+        )
+    temporary = ".lb-" + uuid.uuid4().hex
+    fd = os.open(
+        temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=directory
+    )
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            current_fd = os.open(
+                name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory
+            )
+        except FileNotFoundError:
+            current = None
+        else:
+            with os.fdopen(current_fd, "rb") as handle:
+                if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                    raise LbError("unsafe atomic file target", EXIT_REFUSED)
+                current = handle.read(len(expected or b"") + 1)
+        if current != expected:
+            raise LbError("version_conflict: atomic file changed", EXIT_REFUSED)
+        if expected is None:
+            os.link(
+                temporary,
+                name,
+                src_dir_fd=directory,
+                dst_dir_fd=directory,
+                follow_symlinks=False,
+            )
+        else:
+            os.replace(temporary, name, src_dir_fd=directory, dst_dir_fd=directory)
+        os.fsync(directory)
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=directory)
+        except FileNotFoundError:
+            pass

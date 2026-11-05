@@ -12,6 +12,10 @@ from observation_fixtures import ObservationTest, target
 
 
 class FoundationCase(ObservationTest):
+    def token(self):
+        # Task identity setup writes document state using its own context token.
+        return self.cli("log", "context", "log.md")["version_token"]
+
     def snapshot(self):
         # Include directories and links: even an empty state directory is a write.
         result = {}
@@ -33,9 +37,16 @@ class FoundationCase(ObservationTest):
 
     def configure(self, token, *, dry_run=False, code=0):
         return self.cli(
-            "agent", "observation", "configure", "log.md",
-            "--input-file", "targets.json", "--expect-version", token,
-            *(("--dry-run",) if dry_run else ()), code=code,
+            "agent",
+            "observation",
+            "configure",
+            "log.md",
+            "--input-file",
+            "targets.json",
+            "--expect-version",
+            token,
+            *(("--dry-run",) if dry_run else ()),
+            code=code,
         )
 
     def assert_refusal(self, result, category):
@@ -47,7 +58,6 @@ class FoundationCase(ObservationTest):
         self.identify()
         self.configuration()
         return self.context()["version_token"]
-
 
 
 class ObservationFoundationTest(FoundationCase):
@@ -77,26 +87,47 @@ class ObservationFoundationTest(FoundationCase):
         other.write_text("# Another log\n\n## Stage 01 Build\n\n- [ ] Another task\n")
         token = self.cli("log", "context", "other.md")["version_token"]
         self.cli(
-            "task", "identify", "other.md", "--stage", "Stage 01 Build",
-            "--task", "Another task", "--task-id", "T2", "--expect-version", token,
+            "task",
+            "identify",
+            "other.md",
+            "--stage",
+            "Stage 01 Build",
+            "--task",
+            "Another task",
+            "--task-id",
+            "T2",
+            "--expect-version",
+            token,
         )
         self.assertNotEqual(first, self.context("other.md")["version_token"])
         self.assertEqual(first, self.context()["version_token"])
 
     def test_configure_surface_requires_input_and_token(self):
         # Independently reaches configure: not blocked behind a context setup call.
-        result = self.run_process([
-            sys.executable, str(REPO / "bin/lb"), "--root", str(self.root),
-            "agent", "observation", "configure", "--help",
-        ])
+        result = self.run_process(
+            [
+                sys.executable,
+                str(REPO / "bin/lb"),
+                "--root",
+                str(self.root),
+                "agent",
+                "observation",
+                "configure",
+                "--help",
+            ]
+        )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("--input-file", result.stdout)
         self.assertIn("--expect-version", result.stdout)
         self.assertIn("--dry-run", result.stdout)
-        for flags, missing in (([], "--input-file"),
-                               (["--input-file", "targets.json"], "--expect-version")):
+        for flags, missing in (
+            ([], "--input-file"),
+            (["--input-file", "targets.json"], "--expect-version"),
+        ):
             with self.subTest(missing=missing):
-                result = self.cli("agent", "observation", "configure", "log.md", *flags, code=2)
+                result = self.cli(
+                    "agent", "observation", "configure", "log.md", *flags, code=2
+                )
                 self.assertIn(f"Missing option '{missing}'", result.stderr)
 
     def test_missing_identity_refuses_without_implicit_migration(self):
@@ -121,7 +152,9 @@ class ObservationFoundationTest(FoundationCase):
         self.assertNotEqual(token, result["version_token"])
         self.assertEqual(self.context()["version_token"], result["version_token"])
         self.assertEqual(self.log.read_bytes(), log)
-        self.assertEqual((self.root / "lb" / "log.md.json").read_bytes(), document_state)
+        self.assertEqual(
+            (self.root / "lb" / "log.md.json").read_bytes(), document_state
+        )
         self.assertEqual(self.calls(), [])
 
     def test_stale_absent_token_cannot_replace_configuration(self):

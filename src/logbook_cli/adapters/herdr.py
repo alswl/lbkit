@@ -251,17 +251,28 @@ def binding_observation(binding, pane, agent):
     }
     if any(not isinstance(v, str) or not v for v in observed.values()):
         raise LbError("incomplete observed binding", EXIT_REFUSED)
-    return {
+    result = {
         "binding": observed,
         "state": agent.get("agent_status", "unknown"),
         "observed_at": datetime.now(timezone.utc).isoformat(),
     }
+    return result
 
 
 def validate_session_binding(binding):
-    keys = {"machine", "server", "workspace_id", "tab_id", "pane_id", "agent_id", "session_id"}
+    keys = {
+        "machine",
+        "server",
+        "workspace_id",
+        "tab_id",
+        "pane_id",
+        "agent_id",
+        "session_id",
+    }
     if not isinstance(binding, dict) or set(binding) != keys:
-        raise LbError("binding requires complete machine/server/native identity", EXIT_USAGE)
+        raise LbError(
+            "binding requires complete machine/server/native identity", EXIT_USAGE
+        )
     for key, value in binding.items():
         records.single_line(value, key)
         if len(value) > 512:
@@ -337,6 +348,7 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
     try:
         process = await asyncio.shield(spawn)
     except asyncio.CancelledError:
+
         async def cleanup_spawn():
             process = await spawn
             await cleanup(process)
@@ -385,6 +397,7 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
     except TimeoutError as exc:
         raise LbError("Herdr read deadline expired", EXIT_REFUSED) from exc
     finally:
+
         async def finish_call():
             for reader in readers:
                 if not reader.done():
@@ -395,3 +408,42 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
         # A shared deadline and caller cancellation can arrive together. Defer
         # further cancellation until this call's readers and child are reaped.
         await finish_owned(asyncio.create_task(finish_call()))
+
+
+def inspect_question(binding, request):
+    """Read the explicitly configured native callback, never terminal text."""
+    try:
+        validate_session_binding(binding)
+    except (LbError, ValueError, TypeError) as exc:
+        raise LbError(
+            "identity_missing: complete verified native binding required", EXIT_REFUSED
+        ) from exc
+    from logbook_cli.adapters import claude_questions
+
+    return claude_questions.inspect(binding, request)
+
+
+def submit_question(binding, request):
+    from logbook_cli.adapters import claude_questions
+
+    return claude_questions.submit(binding, request)
+
+
+def confirm_question(binding, answer):
+    from logbook_cli.adapters import claude_questions
+
+    return claude_questions.confirm(binding, answer)
+
+
+def answer_capabilities():
+    from logbook_cli.adapters import claude_questions
+
+    native = claude_questions.capabilities()
+    if native is not None:
+        return native
+    return {
+        "available": False,
+        "reason": "native_question_protocol_unmapped",
+        "confirmation": "unavailable",
+        "transport_fallback": False,
+    }

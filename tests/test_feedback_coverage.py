@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_IDS = {
+    "20261105-event-wait-recovery",
     "2610141649", "2610141650", "2610141651", "2610141652", "2610141653",
     "2610141654", "20261012-skill-coverage", "20261012-workflow-registry",
     "20261012-repository-assignment", "20261013-shared-todo", "20261014-host-config",

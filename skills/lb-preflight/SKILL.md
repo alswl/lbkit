@@ -58,6 +58,10 @@ no invented skill label. Runtime prerequisites are separate from business eviden
 For Herdr, follow the current bundled skill and
 [collaboration guidance](../lb-push/references/herdr.md); distinguish skill
 installation/discovery, integration, session readiness and host completion delivery.
+Test same-turn foreground waiting separately from post-turn automatic wake: record
+inner/outer yield ceilings and model continuations over a long no-event interval,
+actual working/tool-wait versus human-input blocked UI, and steer/queue recovery
+with the original listener. A short return does not certify sustained suspension.
 Provided setup records are controlled observations, not live environment checks.
 
 ## Output and exit
@@ -72,3 +76,10 @@ Logbook line locators and a link to details. Record a new 🔮 marker only on an
 explicit human ruling; existing markers retain their human-only resolution rule.
 No preview claim substitutes for design confirmation, human acceptance or execution
 permission. Return to the authorized calling flow when preparation is sufficient.
+
+
+For coordinated waiting, verify managed Observation setup and stable document/native
+bindings. Claude Code prefers native Monitor with managed wait --stream when
+available; foreground wait is the fallback. Check context recovery and Event
+handling. Automatic answering may report capability_unavailable; prompt/send-keys
+cannot replace native question confirmation. Follow [the wait contract](../../docs/installable/lb-cli.md#agent-wait-and-event-handling).
