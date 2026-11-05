@@ -288,6 +288,7 @@ def answer_submit(root, log, event_id, operation_id, input_file, token, dry_run,
                     fresh, operation_id, receipt, "adapter"
                 ),
             )
+        # Receipt persistence returns a new snapshot; the pre-send intent stays unknown.
         answer = next(row for row in value["answers"] if row["id"] == operation_id)
         if answer["status"] != "confirmed":
             try:

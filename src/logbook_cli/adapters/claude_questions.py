@@ -32,7 +32,7 @@ def digest(value):
 
 
 def key(*values):
-    return digest(list(values))
+    return digest(values)
 
 
 def identifier(value):
@@ -324,7 +324,6 @@ def submit(binding, request):
     if response != {"accepted": True}:
         raise failure("delivery_unresolved", "native answer acceptance is unknown")
     # Callback acceptance is not proof that the native tool has executed.
-    return None
 
 
 def confirm(binding, answer, timeout=2):
@@ -358,6 +357,7 @@ def pre_tool(payload, timeout=120):
         return {}
     with runtime() as (path, directory):
         binding = current_binding(payload["session_id"])
+        # Keep publication bound to the callback even if the binding reader changes.
         if binding["session_id"] != payload["session_id"]:
             raise failure("identity_changed", "native hook session changed")
         question_id = payload["tool_use_id"]
