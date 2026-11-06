@@ -25,6 +25,7 @@ from logbook_cli.commands.common import (
     resolve_root,
 )
 from logbook_cli.services import (
+    agent_observation,
     agent_wait,
     agents,
     dispatches,
@@ -127,6 +128,98 @@ def agent(root):
     """Bind sessions, observe runtime, and perform guarded transport actions."""
 
 
+@agent.group("observation")
+@ROOT
+def observation_commands(root):
+    """Configure and recover durable worker observation."""
+
+
+route(observation_commands, "context", agent_observation.context, LOG)
+route(
+    observation_commands,
+    "configure",
+    agent_observation.configure,
+    LOG,
+    INPUT,
+    TOKEN,
+    DRY_RUN,
+)
+
+
+@agent.group("event")
+@ROOT
+def event_commands(root):
+    """Handle observed work independently of notification delivery."""
+
+
+for action in ("defer", "resolve"):
+    route(
+        event_commands,
+        action,
+        agent_observation.event_action,
+        LOG,
+        click.argument("event_id"),
+        click.option("--action-id", required=True),
+        INPUT,
+        TOKEN,
+        DRY_RUN,
+        action=action,
+    )
+
+
+@agent.group("answer")
+@ROOT
+def answer_commands(root):
+    """Submit, reconcile or prepare a correlated Answer attempt."""
+
+
+for name, mode in (("submit", "adapter"), ("prepare", "external")):
+    route(
+        answer_commands,
+        name,
+        agent_observation.answer_submit,
+        LOG,
+        click.argument("event_id"),
+        click.option("--operation-id", required=True),
+        INPUT,
+        TOKEN,
+        DRY_RUN,
+        mode=mode,
+    )
+route(
+    answer_commands,
+    "reconcile",
+    agent_observation.answer_reconcile,
+    LOG,
+    click.argument("operation_id"),
+    click.option("--input-file"),
+    TOKEN,
+    DRY_RUN,
+)
+
+
+@agent.command("wait")
+@options(
+    ROOT,
+    click.option("--input-file"),
+    click.option("--log"),
+    click.option("--expect-version", "token"),
+    click.option("--stream", is_flag=True),
+    DRY_RUN,
+    click.option("--timeout", type=float, required=True),
+    JSON,
+)
+def wait_command(root, input_file, log, token, stream, dry_run, timeout, json):
+    result = agent_wait.wait(
+        resolve_root(root), input_file, timeout, log, token, stream, dry_run
+    )
+    if stream and not dry_run:
+        if result.code:
+            raise click.exceptions.Exit(result.code)
+    else:
+        finish(result, json)
+
+
 @click.group("skill")
 @ROOT
 def skill(root):
@@ -199,13 +292,6 @@ def register(app):
             *extra,
             action=action,
         )
-    route(
-        agent,
-        "wait",
-        agent_wait.wait,
-        INPUT,
-        click.option("--timeout", type=float, required=True),
-    )
     route(dispatch, "list", dispatches.show, LOG, THINKING)
     route(dispatch, "show", dispatches.show, LOG, THINKING, ID)
     route(dispatch, "create", dispatches.create, LOG, THINKING, INPUT, TOKEN, DRY_RUN)

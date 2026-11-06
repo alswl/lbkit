@@ -56,6 +56,12 @@ Ordinary execution requires a settled, Admiral-confirmed repository spec and exe
 
 A skill name does not expand operation permissions; `lb-push` means project advancement, not Git push.
 
+## Event-driven collaboration waiting
+
+Use [lb-push's waiting workflow](.agents/skills/lb-push/references/herdr.md#wait-and-continue)
+and the [managed wait contract](docs/lb-cli.md#agent-wait-and-event-handling)
+for collaboration waiting, event handling and recovery.
+
 ## Environment and Files
 
 - The shared implementation and instructions come from the `.lbkit/` submodule; for background see [lbkit README](.lbkit/README.md). This file owns the consuming repository's conventions. The root `CLAUDE.md` is a link to this file.

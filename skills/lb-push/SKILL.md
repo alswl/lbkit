@@ -39,14 +39,16 @@ an executor returned or the user asked for status.
    Delivery, readiness, silence and idle do not establish acceptance. An accepted
    already-authorized instruction may execute immediately without another approval.
    A superseded reply cannot transfer responsibility for the replacement instruction.
-6. While Sailors run, use one `lb agent wait` call with verified bindings and the
-   complete continuation returned previously. Waiting is an ordinary process, not
-   repeated model polling, a dedicated monitor Agent/tab or a daemon. Read actual
-   attention targets through existing Herdr operations when wait returns; keep
-   other targets pending and do not resend or complete Tasks from observations.
-   For missing input, inspect authorized existing sources first. If the needed
-   input remains unavailable, ask the responsible person the smallest concrete
-   question that unblocks it; stating a future need does not request the input.
+6. While Sailors run, read Observation context and configure verified targets only
+   when absent or changed. In Claude Code prefer native Monitor with managed wait
+   --stream; foreground managed wait is the fallback. Reuse its listener across
+   host yields. On notification read fresh context, then event defer/resolve or
+   answer submit as applicable. Unknown/submitted delivery requires reconcile
+   without resend. Separately authorized external UI handling uses prepare before
+   the action and caller-evidence reconcile afterward. Follow the exact commands
+   in [Herdr collaboration](references/herdr.md). Receipt, handling and business
+   completion remain separate. For missing input, inspect authorized sources first,
+   then ask the responsible person the smallest concrete missing decision.
 7. Captain checks returned work against the actual contract and records canonical
    state through current-token CLI writes. Simple completion needs no mandatory
    Run, Result or invented start event. Record optional useful evidence; retain
@@ -69,9 +71,12 @@ before retry; a new operation ID does not make an unknown send safe to repeat.
 Retain the in-flight binding and explicitly record that Captain owns its unresolved
 handling and late replies, including in the pause status and handoff report.
 
-No automated wake injection is provided. Preflight must demonstrate the Captain
-host can deliver tool completion without repeated model queries. A detached PID
-alone is insufficient; report limited autonomous continuation when unsupported.
+Prefer foreground tool waiting and result handling within the current turn; this
+requires no new-turn wake. Preflight records actual inner/outer yield limits and
+model continuations over a long no-event window, plus working/tool-wait UI and
+steer/queue behavior. No automated post-turn wake injection is provided. A detached
+PID alone is insufficient; qualify that separate capability without rejecting a
+working same-turn path or claiming unmeasured zero model polling.
 Installation, skill discovery, runtime integration and session readiness are
 separate observations. Missing/stale setup does not authorize personal hook updates.
 

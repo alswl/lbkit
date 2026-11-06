@@ -8,7 +8,7 @@ This document covers development and maintenance of the lbkit repository itself 
 skills/        # lb-* skills, for consuming repositories; linked as their .agents/skills/lb-* on install
 docs/          # user guides, contributor docs and reference navigation
 docs/installable/   # contracts linked as consumer docs/<name>.md on install
-bin/           # the lb, lb-anywhere, and lbkit installers
+bin/           # the lb CLI launcher and lbkit installer
 src/           # the logbook_cli Python package
 scripts/       # repository development and maintenance tools
 tests/         # unittest tests
@@ -78,9 +78,20 @@ boundary during consumer maintenance. Keep shared behavior in skills/contracts a
 reference it rather than expanding copied instructions in the template. Project
 decisions and incident history stay in project records.
 
-Consumers adopt this maintenance boundary explicitly: updating the submodule does
-not overwrite AGENTS or revoke existing restrictions. Reconcile those only within
-an authorized migration. This changes no CLI, configuration schema or version and
+The waiting template links to the shared workflow rather than copying its steps.
+Routine preflight reuses applicable host capability evidence; first adoption or a
+relevant runtime/host change calls for validation of the affected path under the
+waiting contract. This does not impose full host acceptance on every task or add
+consumer configuration, approval gates or version changes.
+
+Explicit install now merges AGENTS template updates using a verified baseline and
+a checked diff, preserving consumer additions. The last successfully adopted template
+is stored in the worktree Git directory, outside tracked consumer content. Legacy
+installs can adopt an intact historical template from the pinned kit history.
+Without a verified baseline, install preserves AGENTS and reports manual merge is
+needed; conflicting edits refuse without writing conflict markers. Dry-run previews
+the patch without saving a baseline. Configuration and business records remain
+consumer-owned; installation does not revoke local restrictions. This changes no CLI, configuration schema or version and
 adds no execution approval gate.
 
 ## Versioning and Evolution
@@ -497,3 +508,56 @@ migration, stale/duplicate/missing state, dry-run, concurrent state edits and
 interrupted paired writes in disposable repositories. Preserve multilingual text,
 HTML-like reasons, evidence links and LF/CRLF; machine history is not permission
 to discard the reader's explanation. This adds no execution or approval gate.
+
+
+## Managed Observation adoption
+
+The installed CLI now supports explicit Observation configuration, durable Events
+and Answer intent/receipt handling, alongside the existing read-only raw wait.
+Consumer-owned runtime state lives under project/lb/observations; it is separate
+from document/execution tokens and changes no business Task. Context is read-only;
+all external writers use the Observation context token. No schema version is
+assigned or bumped by this addition; release numbering remains human-owned.
+
+Consumers adopt template changes through the installer’s checked merge; installation
+must preserve local AGENTS edits, configuration and logbooks. No new mandatory archive, role, daemon
+or messaging integration is introduced. Native Monitor is preferred in Claude Code;
+foreground managed wait reuses its handle elsewhere. Retain raw next_input for raw
+compatibility; caller carry cannot erase managed pending work.
+
+See [the CLI contract](../installable/lb-cli.md#agent-wait-and-event-handling) for
+payloads, safe paths, bounds and completion-space admission. Automatic
+answering requires an explicitly enabled native question/confirmation protocol; external
+prepare/reconcile preserves caller attribution. Never use ordinary prompt/send-keys
+as question-specific confirmation. Fake adapters validate ordering/refusal only;
+real runtime confirmation, Monitor, foreground and post-turn delivery need their
+own executed evidence. No bounded trial establishes indefinite suspension or a
+model-token saving ratio. Keep trial logs outside repository documentation.
+
+### Optional Claude native question callbacks
+
+Consumers choose whether to adopt the local Claude AskUserQuestion adapter. The
+installer must not add hooks, alter permissions or export environment variables.
+The owner configures only PreToolUse/PostToolUse matching AskUserQuestion in its
+project's Claude settings, running the installed Python environment with
+`-m logbook_cli.claude_native_hook`. Both worker and coordinator explicitly inherit
+LBKIT_CLAUDE_QUESTION_DIR for one owner-only short absolute runtime directory;
+`mktemp -d /tmp/lbq-XXXXXXXX` provides suitable initial permissions. The PreToolUse
+hook needs a timeout of at least 130 seconds for the bounded 120-second wait.
+Do not point a new runtime at an uncertain attempt's discarded receipt directory.
+
+The callback validates independent native session identity before opening a local
+Unix socket. Wait samples inspect it asynchronously within the caller's deadline,
+at most one second per read; generic Herdr lifecycle reports or display tokens are
+not native question proof. PreToolUse updatedInput carries the answer in memory;
+matching PostToolUse structured results create digest-only confirmation records.
+The owner-only directory is a trusted local callback boundary, not cryptographic
+attestation against other processes running as the same user. The entry never reads
+private transcript files or approves other tool kinds. Hook failure/expiry leaves
+Claude's ordinary UI available; accepted-but-unconfirmed delivery remains unknown.
+
+Retention is explicit: at most 1024 accepted questions reserve metadata and receipts.
+Keep records until all pending answers are reconciled; stop hooks/listeners before
+rotating a completed runtime directory. Unconfigured workers and Codex question
+APIs remain unavailable. This optional consumer setup adds no mandatory adoption,
+daemon, public command, installer manifest entry, schema or version upgrade.

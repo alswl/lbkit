@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import signal
@@ -16,6 +17,8 @@ import uuid
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
+MIN_AGENT_WIDTH = 80
+MIN_AGENT_HEIGHT = 20
 
 
 class Blocked(RuntimeError):
@@ -31,12 +34,21 @@ def load_config(path):
     value = json.loads(path.read_text())
     if not isinstance(value, dict):
         raise ValueError("configuration must be an object")
+    if value.get("agent_layout", "siblings") not in ("siblings", "tabs"):
+        raise ValueError("agent_layout must be siblings or tabs")
     runtimes = value.get("runtimes")
     if not isinstance(runtimes, dict) or not runtimes:
         raise ValueError("configure at least one runtime")
-    for name, runtime in runtimes.items():
-        if name not in {"codex", "claude"} or not isinstance(runtime, dict):
-            raise ValueError("runtime axes must be codex or claude")
+    runtime_entries = list(runtimes.items())
+    if "captain" in value:
+        if "captain" in runtimes or len(runtimes) != 2:
+            raise ValueError("dedicated Captain requires two distinct worker axes")
+        runtime_entries.append(("captain", value["captain"]))
+    for name, runtime in runtime_entries:
+        if not re.fullmatch(r"[a-z][a-z0-9_-]{0,15}", name) or not isinstance(
+            runtime, dict
+        ):
+            raise ValueError("runtime axes must be short lowercase identifiers")
         if not isinstance(runtime.get("kind"), str) or not runtime["kind"]:
             raise ValueError("runtime kind required")
         for field in ("args", "startup_keys"):
@@ -47,7 +59,73 @@ def load_config(path):
         duration = value.get(field, 120)
         if type(duration) not in {int, float} or not 0 < duration <= 600:
             raise ValueError(field + " must be in (0, 600]")
+    duration = value.get("foreground_wait_seconds", 2)
+    if type(duration) not in {int, float} or not 0 < duration <= 600:
+        raise ValueError("foreground_wait_seconds must be in (0, 600]")
+    if duration + 10 >= value.get("turn_timeout", 120):
+        raise ValueError(
+            "turn_timeout must exceed foreground wait by more than 10 seconds"
+        )
     return value
+
+
+def validate_host_trace(trace, *, post_turn=False):
+    """Validate supplied trace ordering, not the authenticity of its capture."""
+    assert isinstance(trace, dict) and trace.get("source") == "host_tool_trace", (
+        "original host tool trace required"
+    )
+    events = trace.get("events")
+    assert isinstance(events, list) and events, "nonempty trace required"
+    for event in events:
+        assert isinstance(event, dict) and type(event.get("at")) in {int, float}, (
+            "timestamped host event required"
+        )
+    invocations = {
+        event["invocation_id"] for event in events if event.get("invocation_id")
+    }
+    assert len(invocations) == 1, "trace must retain one listener"
+    yields = [event for event in events if event["kind"] == "yield"]
+    for event in yields:
+        assert all(
+            type(event.get(field)) in {int, float} and event[field] > 0
+            for field in ("requested_ms", "effective_ms")
+        ), "actual nested yield windows required"
+    result = {
+        "invocation_id": next(iter(invocations)),
+        "continuations": len(yields),
+        "post_turn": "unverified",
+        "capture_authenticity": "requires original host evidence",
+    }
+    result["interjection"] = "unverified"
+    if trace.get("interjection_claim"):
+        phases = {
+            event.get("phase") for event in events if event["kind"] == "interjection"
+        }
+        required = (
+            {"monitor_background"}
+            if trace.get("mode") == "monitor"
+            else {"suspended_tool", "between_calls"}
+        )
+        assert required.issubset(phases), "separate host interjection phases required"
+        result["interjection"] = "trace_phases_verified"
+    if post_turn:
+
+        def one(kind):
+            selected = [event for event in events if event["kind"] == kind]
+            assert len(selected) == 1, "one attributable " + kind + " required"
+            return selected[0]
+
+        final, done, resumed, handled = [
+            one(kind) for kind in ("final", "wait_done", "turn_start", "handled")
+        ]
+        assert final["at"] < done["at"] < resumed["at"] <= handled["at"], (
+            "final must precede completion and unprompted handling"
+        )
+        assert resumed.get("unprompted") is True and handled.get("event_key"), (
+            "unprompted turn plus actual handling required"
+        )
+        result["post_turn"] = "trace_order_verified"
+    return result
 
 
 class LiveSuite:
@@ -184,9 +262,18 @@ class LiveSuite:
         (self.output / f"reply-{pane.replace(':', '-')}.txt").write_text(text)
         return text
 
-    def wait(self, targets, *, after=None, timeout=1, expected=(0,)):
+    def wait(
+        self, targets, *, after=None, unresolved_events=None, timeout=1, expected=(0,)
+    ):
         name = f"wait-{self.counter + 1}.json"
-        dump(self.root / name, {"targets": targets, "after": after})
+        dump(
+            self.root / name,
+            {
+                "targets": targets,
+                "after": after,
+                "unresolved_events": unresolved_events or [],
+            },
+        )
         return self.command(
             [
                 *self.lb,
@@ -212,11 +299,37 @@ class LiveSuite:
             },
         }
 
-    def start(self, axis, runtime):
+    def create_agent_pane(self):
+        if self.config.get("agent_layout") == "tabs":
+            return self.herdr(
+                "tab",
+                "create",
+                "--workspace",
+                os.environ["HERDR_WORKSPACE_ID"],
+                "--cwd",
+                str(self.root),
+                "--no-focus",
+            )["result"]["root_pane"]
         caller = os.environ["HERDR_PANE_ID"]
         area = self.herdr("pane", "layout", "--pane", caller)["result"]["layout"]
         rect = next(p["rect"] for p in area["panes"] if p["pane_id"] == caller)
-        direction = "right" if rect["width"] >= rect["height"] * 2 else "down"
+        can_right = (
+            rect["width"] >= 2 * MIN_AGENT_WIDTH + 1
+            and rect["height"] >= MIN_AGENT_HEIGHT
+        )
+        can_down = (
+            rect["height"] >= 2 * MIN_AGENT_HEIGHT + 1
+            and rect["width"] >= MIN_AGENT_WIDTH
+        )
+        if can_right and (not can_down or rect["width"] >= rect["height"] * 2):
+            direction = "right"
+        elif can_down:
+            direction = "down"
+        else:
+            raise Blocked(
+                "insufficient sibling pane size for native UI detection; "
+                "configure agent_layout: tabs or enlarge the test area"
+            )
         pane = self.herdr(
             "pane",
             "split",
@@ -227,7 +340,10 @@ class LiveSuite:
             str(self.root),
             "--no-focus",
         )["result"]["pane"]
-        pane_id = pane["pane_id"]
+        return pane
+
+    def start(self, axis, runtime):
+        pane_id = self.create_agent_pane()["pane_id"]
         assert pane_id not in self.original_panes, (
             "creation returned a pre-existing pane"
         )
@@ -293,7 +409,12 @@ class LiveSuite:
         request = first["next_input"]
         self.continuations[axis] = request
         before = self.business_hashes()
-        second = self.wait(request["targets"], after=request["after"], timeout=1)
+        second = self.wait(
+            request["targets"],
+            after=request["after"],
+            unresolved_events=request["unresolved_events"],
+            timeout=1,
+        )
         assert second["reason"] == "timeout" and not second["events"], second
         assert before == self.business_hashes(), "wait changed business files"
         assert self.target(axis)["binding"] == target["binding"], (
@@ -371,6 +492,7 @@ class LiveSuite:
         follow = self.wait(
             result["next_input"]["targets"],
             after=result["next_input"]["after"],
+            unresolved_events=result["next_input"]["unresolved_events"],
             timeout=1,
         )
         assert all(e["kind"] != "settled" for e in follow["events"]), follow
@@ -380,25 +502,53 @@ class LiveSuite:
         axes = list(self.bindings)
         assert len(axes) >= 2, "two real runtimes required"
         axes = axes[:2]
-        for axis, count in zip(axes, (2500, 150)):
+        gates = {}
+        for axis in axes:
+            stem = f"multi-{axis}-{self.run_id}"
+            ready = self.root / f"{stem}.ready"
+            release = self.root / f"{stem}.release"
+            script = self.root / f"{stem}.py"
+            gates[axis] = (ready, release)
+            script.write_text(
+                "import pathlib, time\n"
+                f"pathlib.Path({str(ready)!r}).touch()\n"
+                f"deadline=time.monotonic()+{self.timeout!r}\n"
+                f"while not pathlib.Path({str(release)!r}).exists():\n"
+                " if time.monotonic()>deadline: raise SystemExit('release timeout')\n"
+                " time.sleep(0.1)\n"
+                f"print('MULTI-{axis}-{self.run_id}')\n"
+            )
             self.herdr(
                 "agent",
                 "prompt",
                 self.bindings[axis]["pane_id"],
-                "Do not use tools. Write every integer from 1 through "
-                f"{count} separated by spaces, without abbreviations. Then join "
-                f"these fragments with hyphens: MULTI, {axis}, {self.run_id}.",
+                "Authorized disposable integration test. Run exactly this "
+                "foreground command and reuse its handle until it completes: "
+                + shlex.join([self.python, str(script)])
+                + "\nThe controller releases its file barrier. Do not create the "
+                "release file, modify other files or prompt agents. After the "
+                "command returns, reply with its exact MULTI marker.",
             )
+        try:
+            return self._multi_active_results(axes, gates)
+        finally:
+            for _, release in gates.values():
+                release.touch()
+
+    def _multi_active_results(self, axes, gates):
         deadline = time.monotonic() + self.timeout
         while time.monotonic() < deadline:
             targets = [self.target(axis) for axis in axes]
-            if all(t["baseline"]["state"] == "working" for t in targets):
+            if all(t["baseline"]["state"] == "working" for t in targets) and all(
+                ready.exists() for ready, _ in gates.values()
+            ):
                 break
             if any(t["baseline"]["state"] == "blocked" for t in targets):
                 raise Blocked("multi-target runtime dialog")
             time.sleep(0.25)
         else:
             raise AssertionError("both targets were never observed working")
+        gates[axes[1]][1].touch()
         result = self.wait(targets, timeout=self.timeout)
         assert any(e["kind"] == "settled" for e in result["events"]), result
         assert result["pending"], "both targets completed before any-return"
@@ -406,10 +556,12 @@ class LiveSuite:
         live = [self.binding(b["pane_id"]) for b in pending]
         assert all(o["state"] == "working" for o in live), live
         assert all(o["binding"] in pending for o in live), live
+        gates[axes[0]][1].touch()
         # Observe natural completion without sending input or stopping the pending agent.
         follow = self.wait(
             result["next_input"]["targets"],
             after=result["next_input"]["after"],
+            unresolved_events=result["next_input"]["unresolved_events"],
             timeout=self.timeout,
         )
         assert any(
@@ -454,15 +606,88 @@ class LiveSuite:
         )
 
     def captain_return(self, axis):
+        duration = self.config.get("foreground_wait_seconds", 2)
         request = self.continuations[axis]
+        log = f"captain-{axis}.md"
+        (self.root / log).write_text(
+            "# Captain probe\n\n## Stage 01 Probe\n\n- [ ] Observe workers\n"
+        )
+        document = self.command([*self.lb, "log", "context", log, "--json"])
+        self.command(
+            [
+                *self.lb,
+                "task",
+                "identify",
+                log,
+                "--stage",
+                "Stage 01 Probe",
+                "--task",
+                "Observe workers",
+                "--task-id",
+                "observe",
+                "--expect-version",
+                document["version_token"],
+                "--json",
+            ]
+        )
+        config_name = f"captain-targets-{axis}.json"
+        dump(self.root / config_name, {"targets": request["targets"]})
+        context = self.command(
+            [*self.lb, "agent", "observation", "context", log, "--json"]
+        )
+        self.command(
+            [
+                *self.lb,
+                "agent",
+                "observation",
+                "configure",
+                log,
+                "--input-file",
+                config_name,
+                "--expect-version",
+                context["version_token"],
+                "--json",
+            ]
+        )
+        baseline = []
+        for _ in range(len(request["targets"]) + 1):
+            context = self.command(
+                [*self.lb, "agent", "observation", "context", log, "--json"]
+            )
+            initial = self.command(
+                [
+                    *self.lb,
+                    "agent",
+                    "wait",
+                    "--log",
+                    log,
+                    "--timeout",
+                    "2",
+                    "--expect-version",
+                    context["version_token"],
+                    "--json",
+                ],
+                expected=(0, 1),
+            )
+            baseline.append(initial)
+            if initial["reason"] == "timeout":
+                break
+            if initial["reason"] != "change":
+                raise Blocked("managed baseline unavailable: " + json.dumps(initial))
+        else:
+            raise Blocked("managed targets did not reach a quiet baseline")
+        dump(self.output / f"captain-baseline-{axis}.json", baseline)
         dump(self.root / f"captain-input-{axis}.json", request)
         script = self.root / f"captain-wait-{axis}.py"
         evidence = self.root / f"captain-result-{axis}.json"
         script.write_text(
-            "import json, os, pathlib, subprocess, sys\n"
+            "import json, os, pathlib, subprocess, sys, time\n"
             "d=subprocess.run(['herdr','status','--json'], capture_output=True, text=True)\n"
-            f"r=subprocess.run({[*self.lb, 'agent', 'wait', '--input-file', f'captain-input-{axis}.json', '--timeout', '2', '--json']!r}, capture_output=True, text=True)\n"
-            "e={'code':r.returncode,'stdout':r.stdout,'stderr':r.stderr,"
+            "started=time.monotonic()\n"
+            f"c=json.loads(subprocess.check_output({[*self.lb, 'agent', 'observation', 'context', log, '--json']!r}, text=True))\n"
+            f"cmd={[*self.lb, 'agent', 'wait', '--log', log, '--timeout', str(duration), '--json']!r}+['--expect-version',c['version_token']]\n"
+            "r=subprocess.run(cmd, capture_output=True, text=True)\n"
+            "e={'elapsed_seconds':time.monotonic()-started,'code':r.returncode,'stdout':r.stdout,'stderr':r.stderr,"
             "'herdr_status':{'code':d.returncode,'stdout':d.stdout,'stderr':d.stderr},"
             "'context':{k:os.environ.get(k) for k in "
             "['HERDR_ENV','HERDR_PANE_ID','HERDR_WORKSPACE_ID']}}\n"
@@ -476,14 +701,20 @@ class LiveSuite:
         prompt = (
             "You are the Captain for an authorized disposable integration test. "
             f"Run exactly this one foreground command: {command}\n"
-            "The wait itself lasts two seconds. If the command tool supports "
-            "yield_time_ms, set it to at least 10000 so it returns the completed "
-            "foreground result rather than a running process/session identifier. "
+            f"The wait itself lasts {duration} seconds. Keep this turn open. "
+            "Use the longest documented supported foreground wait window, at most "
+            "60000 ms for this test, and align any outer orchestration yield with "
+            "the inner wait. If a host yield ceiling returns a running handle, "
+            "reuse it with the longest supported wait; never restart the listener. "
+            "In your final reply report requested/effective inner and outer windows "
+            "and every model continuation. Do not claim zero polling from elapsed "
+            "time or successful result delivery alone. "
             "Wait for the command's actual JSON result. After that tool call returns, "
             f"use a separate file-edit tool call to create {receipt.name} containing "
             "the actual reason followed by the hyphen-joined fragments "
             f"HOST-RETURN, {axis}, {self.run_id}. Do not combine the receipt write "
-            "into the command, start background jobs, poll, prompt another agent, "
+            "into the command, end the turn to await wake, use short polling loops, "
+            "prompt another agent, "
             "or change any other file. Then reply with the same nonce. "
             "This authorizes only the specified command and receipt in this test directory."
         )
@@ -513,13 +744,19 @@ class LiveSuite:
             f"{axis}/captain-herdr-readiness",
             lambda: self.captain_readiness(actual, observed),
         )
+        if actual["reason"] == "timeout":
+            assert observed["elapsed_seconds"] >= duration, observed
         return {
             "receipt": text,
             "wait_reason": actual["reason"],
             "targets": request["targets"],
             "evidence_file": str(evidence.relative_to(self.output)),
             "reply_file": f"reply-{pane.replace(':', '-')}.txt",
-            "limitation": "foreground tool return only; no detached wake claim",
+            "requested_wait_seconds": duration,
+            "actual_wait_seconds": observed.get("elapsed_seconds"),
+            "sustained_suspension": "unverified: requires complete host tool trace",
+            "ui_and_mid_tool_steering": "unverified: requires independent live observation",
+            "limitation": "foreground tool return only; no detached wake or zero-polling claim",
         }
 
     def captain_readiness(self, actual, evidence):
@@ -587,6 +824,8 @@ class LiveSuite:
         status = self.herdr("status", "--json")["server"]
         assert status.get("running") and status.get("compatible"), status
         self.server = status.get("session") or "default"
+        if not self.record("caller-context", self.caller_context):
+            return 1
         self.original_panes = {
             p["pane_id"]
             for p in self.herdr(
@@ -619,7 +858,19 @@ class LiveSuite:
             if len(self.bindings) >= 2 and "multi" in self.cases:
                 self.record("multi-target/real-observations", self.multi)
                 self.record("multi-target/any-return-while-working", self.multi_active)
-            for axis in self.bindings if "captain" in self.cases else ():
+            if "captain" in self.cases and "captain" in self.config:
+                self.record(
+                    "captain/acceptance-identity",
+                    lambda: self.start("captain", self.config["captain"]),
+                )
+            captain_axes = (
+                ["captain"]
+                if "captain" in self.config and "captain" in self.bindings
+                else list(self.bindings)
+                if "captain" not in self.config
+                else []
+            )
+            for axis in captain_axes if "captain" in self.cases else ():
                 self.record(
                     f"{axis}/captain-foreground-return",
                     lambda: self.captain_probe(axis),
@@ -628,10 +879,22 @@ class LiveSuite:
             self.record("owned-resource-cleanup", self.close)
         return 0 if all(c["status"] == "PASS" for c in self.checks) else 1
 
+    def caller_context(self):
+        try:
+            current = self.herdr("pane", "current", "--current")["result"]["pane"]
+            assert current["pane_id"] == os.environ["HERDR_PANE_ID"]
+        except (AssertionError, KeyError) as exc:
+            raise Blocked(
+                "caller pane is unavailable; no test agents started: " + str(exc)
+            ) from exc
+        return {"pane_id": current["pane_id"]}
+
     def captain_probe(self, axis):
         # Captain observes distinct Sailors, never its own tool-running lifecycle.
         targets = [self.target(other) for other in self.bindings if other != axis]
         assert targets, "Captain probe requires a distinct accepted Sailor"
+        if "captain" in self.config and len(targets) != 2:
+            raise Blocked("dedicated Captain acceptance requires two accepted workers")
         first = self.wait(targets, timeout=2)
         self.continuations[axis] = first["next_input"]
         return self.captain_return(axis)

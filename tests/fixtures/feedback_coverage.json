@@ -1194,6 +1194,158 @@
           ]
         }
       ]
+    },
+    {
+      "id": "20261105-event-wait-recovery",
+      "criteria": [
+        {
+          "id": "single_listener",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 108,
+              "assertion": "single_listener",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 108,
+              "assertion": "no_model_heartbeat",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_observation_wait.ManagedWaitTest.test_duplicate_listener_and_configure_refuse_without_worker_calls"
+            },
+            {
+              "skill": "lb-push",
+              "case": 1001,
+              "assertion": "monitor_first",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "unresolved",
+          "checks": [
+            {
+              "test": "tests.test_agent_wait_e2e.AgentWaitE2ETest.test_unhandled_question_survives_other_worker_result_and_resume"
+            },
+            {
+              "skill": "lb-push",
+              "case": 107,
+              "assertion": "unresolved_is_not_new_notification",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 107,
+              "assertion": "no_false_resolution",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_observation_recovery.ObservationRecoveryTest.test_lost_result_after_commit_recovers_same_question_without_renotification"
+            },
+            {
+              "test": "tests.test_observation_recovery.ObservationRecoveryTest.test_observer_delta_preserves_concurrent_deferral_and_other_worker"
+            }
+          ]
+        },
+        {
+          "id": "cancel_recovery",
+          "checks": [
+            {
+              "test": "tests.test_agent_wait_e2e.AgentWaitE2ETest.test_interrupt_returns_130_and_reaps_wait_children"
+            },
+            {
+              "test": "tests.test_observation_cancel.ManagedCancelTest.test_repeated_sigterm_cleans_owned_children_and_releases_listener"
+            },
+            {
+              "test": "tests.test_observation_cancel.ManagedCancelTest.test_hard_kill_recovers_abandoned_gap_without_trusting_saved_pid"
+            }
+          ]
+        },
+        {
+          "id": "answer_receipt",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 109,
+              "assertion": "verify_answer_receipt",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 109,
+              "assertion": "no_blind_input",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_observation_answers.AnswerTest.test_unknown_intent_exists_before_send_and_confirmation_resolves_atomically"
+            },
+            {
+              "skill": "lb-push",
+              "case": 1002,
+              "assertion": "refuse_transport_confirmation",
+              "type": "contains"
+            }
+          ]
+        },
+        {
+          "id": "duplicate_delivery",
+          "checks": [
+            {
+              "test": "tests.test_agent_wait_e2e.AgentWaitE2ETest.test_handled_event_can_be_removed_without_rearming_notification"
+            },
+            {
+              "skill": "lb-push",
+              "case": 110,
+              "assertion": "receipt_precedes_removal",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 110,
+              "assertion": "no_duplicate_delivery",
+              "type": "not_contains"
+            },
+            {
+              "test": "tests.test_observation_answers.AnswerTest.test_confirmed_replay_does_not_read_live_question_or_send_again"
+            },
+            {
+              "test": "tests.test_observation_answers.AnswerTest.test_lost_send_receipt_blocks_same_and_new_id_retries"
+            }
+          ]
+        },
+        {
+          "id": "live_host_matrix",
+          "checks": [],
+          "gap": "Offline assertions and foreground-return probes cannot certify post-turn wake, user interjection or question-specific UI submission. Requires the real host acceptance matrix; no token savings inferred."
+        },
+        {
+          "id": "same_turn_suspension",
+          "checks": [
+            {
+              "skill": "lb-push",
+              "case": 111,
+              "assertion": "distinguish_wait_paths",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 111,
+              "assertion": "bound_suspension_claim",
+              "type": "contains"
+            },
+            {
+              "skill": "lb-push",
+              "case": 111,
+              "assertion": "no_capability_overclaim",
+              "type": "not_contains"
+            }
+          ],
+          "gap": "Behavior assertions do not certify actual host suspension, UI state or mid-tool user input; require separate timestamped live evidence."
+        }
+      ]
     }
   ]
 }

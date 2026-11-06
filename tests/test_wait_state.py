@@ -58,6 +58,16 @@ class WaitStateTest(unittest.TestCase):
         _, events = self.trace("blocked", ["blocked", "blocked"])
         self.assertEqual(len([e for e in events if e["kind"] == "needs_input"]), 1)
 
+    def test_native_question_identity_is_preserved_in_detected_event(self):
+        context = self.reducer.initial(self.target)
+        native = {"id": "native-question", "revision": "native-revision", "questions": []}
+        _, events = self.reducer.observe(context, {
+            "binding": self.target["binding"], "state": "blocked",
+            "observed_at": "2026-01-01T00:00:01Z", "question": native,
+        })
+        self.assertEqual(events[0]["question"], native)
+        self.assertIsNot(events[0]["question"], native)
+
     def test_unknown_is_not_exit_or_completion(self):
         _, events = self.trace("working", ["unknown", "unknown"])
         self.assertFalse(any(e["kind"] in {"settled", "exited"} for e in events))

@@ -171,7 +171,76 @@ class AgentWaitE2ETest(CoordinationTest):
         (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
         second = self.wait()
         self.assertFalse(any(e["kind"] == "needs_input" for e in second["events"]))
+        self.assertEqual(second["unresolved_events"], first["events"])
+        self.assertEqual(second["next_input"]["unresolved_events"], first["events"])
         self.assert_no_runtime_mutations_or_leaks()
+
+    def test_handled_event_can_be_removed_without_rearming_notification(self):
+        self.runtime([target()], ["blocked"])
+        self.request()
+        first = self.wait("1")
+        request = first["next_input"]
+        self.assertEqual(request["unresolved_events"], first["events"])
+        # Caller has saved and verified its handling receipt outside this read API.
+        request["unresolved_events"] = []
+        (self.root / "wait.json").write_text(json.dumps(request))
+        second = self.wait()
+        self.assertEqual(second["events"], [])
+        self.assertEqual(second["unresolved_events"], [])
+
+    def test_unresolved_event_from_other_binding_is_rejected(self):
+        self.runtime([target()], ["blocked"])
+        self.request()
+        first = self.wait("1")
+        request = first["next_input"]
+        request["unresolved_events"] = first["events"]
+        request["unresolved_events"][0]["binding"] = target(2)["binding"]
+        (self.root / "wait.json").write_text(json.dumps(request))
+        self.wait(code=2)
+
+    def test_unhandled_question_survives_other_worker_result_and_resume(self):
+        targets = [target(1), target(2)]
+        self.runtime(targets, ["blocked", "working"])
+        self.request(targets)
+        first = self.wait("1")
+        question = next(e for e in first["events"] if e["kind"] == "needs_input")
+        # Simulate a new caller turn reading only the durable complete checkpoint.
+        (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
+        self.runtime(targets, ["blocked", "idle"])
+        second = self.wait("1")
+        self.assertIn(question, second["unresolved_events"])
+        self.assertNotIn(question, second["events"])
+        self.assertTrue(any(e["kind"] == "settled" for e in second["events"]))
+        self.assertEqual(second["next_input"]["targets"], targets)
+        self.assert_no_runtime_mutations_or_leaks()
+
+    def test_duplicate_checkpoint_event_is_not_duplicated_or_renotified(self):
+        self.runtime([target()], ["blocked"])
+        self.request()
+        first = self.wait("1")
+        request = first["next_input"]
+        request["unresolved_events"] *= 2
+        (self.root / "wait.json").write_text(json.dumps(request))
+        second = self.wait()
+        self.assertEqual(second["events"], [])
+        self.assertEqual(second["unresolved_events"], first["events"])
+
+    def test_full_or_conflicting_checkpoint_is_refused_before_observation(self):
+        event = {
+            "event_id": "old-question",
+            "binding": target()["binding"],
+            "kind": "needs_input",
+        }
+        for events in (
+            [{**event, "event_id": str(i)} for i in range(256)],
+            [event, {**event, "kind": "settled"}],
+            [{**event, "event_id": None}],
+        ):
+            request = self.request()
+            request["unresolved_events"] = events
+            (self.root / "wait.json").write_text(json.dumps(request))
+            self.wait(code=2)
+            self.assertEqual(self.calls(), [])
 
     def test_old_idle_seen_flip_does_not_claim_completed_work(self):
         targets = [target(state="idle")]
@@ -256,9 +325,14 @@ class AgentWaitE2ETest(CoordinationTest):
 
         from coordination_helpers import REPO
 
-        targets = [target()]
-        self.runtime(targets, ["working"], delay=10)
+        targets = [target(), target(2)]
+        self.runtime(targets, ["blocked", "working"])
         self.request(targets)
+        first = self.wait("1")
+        self.assertTrue(first["unresolved_events"])
+        (self.root / "wait.json").write_text(json.dumps(first["next_input"]))
+        self.runtime(targets, ["blocked", "working"], delay=10)
+        previous_calls = len(self.calls())
         process = subprocess.Popen(
             [
                 sys.executable,
@@ -283,7 +357,9 @@ class AgentWaitE2ETest(CoordinationTest):
         try:
             limit = time.monotonic() + 2
             while (
-                process.poll() is None and not self.calls() and time.monotonic() < limit
+                process.poll() is None
+                and len(self.calls()) == previous_calls
+                and time.monotonic() < limit
             ):
                 time.sleep(0.02)
             self.assertIsNone(
@@ -292,7 +368,10 @@ class AgentWaitE2ETest(CoordinationTest):
             process.send_signal(signal.SIGINT)
             stdout, stderr = process.communicate(timeout=3)
             self.assertEqual(process.returncode, 130, stderr)
-            self.assertEqual(json.loads(stdout)["reason"], "interrupted")
+            result = json.loads(stdout)
+            self.assertEqual(result["reason"], "interrupted")
+            self.assertEqual(result["unresolved_events"], first["events"])
+            self.assertEqual(result["next_input"]["targets"], targets)
             self.assert_no_runtime_mutations_or_leaks()
         finally:
             if process.poll() is None:

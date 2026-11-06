@@ -73,6 +73,8 @@ def observe(context, observation):
                 "observed_at": observation.get("observed_at"),
             }
         )
+        if kind == "needs_input" and observation.get("question") is not None:
+            events[-1]["question"] = copy.deepcopy(observation["question"])
         result["reported"] = kind
     result["state"] = state
     result["observed"] = True

@@ -47,3 +47,8 @@ def render(result: Result, as_json: bool, view: str = "default") -> None:
             print(f"{n:4} {skill}  {cwd}")
     else:
         print(json.dumps(value, ensure_ascii=False, indent=2))
+
+
+def emit_jsonl(value) -> None:
+    """Emit one durable locator, without the ordinary result renderer's framing."""
+    print(json.dumps(value, separators=(",", ":")), flush=True)
