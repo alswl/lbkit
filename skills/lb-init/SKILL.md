@@ -47,6 +47,9 @@ Report changed fields and remaining work. Use the installation sections only whe
 
 ## Existing connection
 
-Inspect local changes and compare the old and new lbkit contracts before updating the submodule revision. Refresh only broken or newly required links. Verify mf remains installed even when minds.yaml exists. Migrate legacy markdown configuration to mind-forge explicitly, preserving the consumer's content and establishing Prompt/Thinking bindings according to existing host-owned records. Re-run the CLI and tests, and report any migration needed in local rules or configuration.
+Inspect local changes and compare the old and new lbkit contracts before updating the submodule revision. Refresh broken or newly required links through install. Inspect the AGENTS diff in
+--dry-run; install merges template updates against its saved or verified historical
+baseline and applies the checked patch. Resolve conflicts explicitly, preserving
+local restrictions; a missing baseline requires manual reconciliation. Verify mf remains installed even when minds.yaml exists. Migrate legacy markdown configuration to mind-forge explicitly, preserving the consumer's content and establishing Prompt/Thinking bindings according to existing host-owned records. Re-run the CLI and tests, and report any migration needed in local rules or configuration.
 
 Never create or amend commits when the user has forbidden commits. A stash can hold a prepared migration, but it cannot replace the commit required for a usable submodule pointer.

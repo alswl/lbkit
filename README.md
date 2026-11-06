@@ -145,7 +145,7 @@ git -C .lbkit switch --detach TARGET_REV
 ./bin/lb --version
 ```
 
-Resolve any local changes before switching; replace `TARGET_REV` with the chosen fetched commit or tag. Review and commit the `.lbkit` pointer change in the consuming repository to pin the upgrade. The [installer](bin/lbkit) refreshes locked dependencies, shared links and missing templates; it does not fetch newer code or overwrite existing host configuration.
+Resolve any local changes before switching; replace `TARGET_REV` with the chosen fetched commit or tag. Review and commit the `.lbkit` pointer change in the consuming repository to pin the upgrade. The [installer](bin/lbkit) refreshes locked dependencies, shared links and missing templates. It merges AGENTS template updates with a verified baseline and applies a checked diff while preserving local additions. Dry-run previews the patch; conflicting edits refuse, and a missing baseline is reported for manual reconciliation. It does not fetch newer code or overwrite existing host configuration.
 
 Review the [Task migration contract](docs/installable/document-state.md#canonical-task-migration) before converting legacy records: current Task state comes from Markdown, and split originals move to a historical sidecar archive. Migration is explicit and CAS-protected; ambiguous legacy facts are refused. Keep consumer documents and their state files together when reviewing or rolling back a migration.
 

@@ -17,7 +17,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - `skills/lb-*/` — the `lb-*` skills; linked as consumer `.agents/skills/lb-*` on install
 - `docs/installable/` — shared contract documents; linked as consumer `docs/<name>.md` on install
 - `docs/` — lbkit documentation; only `docs/installable/` is installed
-- `bin/` — the `lb`, `lb-anywhere`, and `lbkit` installers
+- `bin/` — the `lb` CLI launcher and `lbkit` installer
 - `src/logbook_cli/` — CLI implementation
 - `scripts/` — repository development and maintenance tools
 - `tests/` — unittest tests

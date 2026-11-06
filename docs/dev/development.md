@@ -8,7 +8,7 @@ This document covers development and maintenance of the lbkit repository itself 
 skills/        # lb-* skills, for consuming repositories; linked as their .agents/skills/lb-* on install
 docs/          # user guides, contributor docs and reference navigation
 docs/installable/   # contracts linked as consumer docs/<name>.md on install
-bin/           # the lb, lb-anywhere, and lbkit installers
+bin/           # the lb CLI launcher and lbkit installer
 src/           # the logbook_cli Python package
 scripts/       # repository development and maintenance tools
 tests/         # unittest tests
@@ -84,9 +84,14 @@ relevant runtime/host change calls for validation of the affected path under the
 waiting contract. This does not impose full host acceptance on every task or add
 consumer configuration, approval gates or version changes.
 
-Consumers adopt this maintenance boundary explicitly: updating the submodule does
-not overwrite AGENTS or revoke existing restrictions. Reconcile those only within
-an authorized migration. This changes no CLI, configuration schema or version and
+Explicit install now merges AGENTS template updates using a verified baseline and
+a checked diff, preserving consumer additions. The last successfully adopted template
+is stored in the worktree Git directory, outside tracked consumer content. Legacy
+installs can adopt an intact historical template from the pinned kit history.
+Without a verified baseline, install preserves AGENTS and reports manual merge is
+needed; conflicting edits refuse without writing conflict markers. Dry-run previews
+the patch without saving a baseline. Configuration and business records remain
+consumer-owned; installation does not revoke local restrictions. This changes no CLI, configuration schema or version and
 adds no execution approval gate.
 
 ## Versioning and Evolution
@@ -514,8 +519,8 @@ from document/execution tokens and changes no business Task. Context is read-onl
 all external writers use the Observation context token. No schema version is
 assigned or bumped by this addition; release numbering remains human-owned.
 
-Consumers intentionally adopt the template/skill guidance; installation must not
-overwrite AGENTS, configuration or logbooks. No new mandatory archive, role, daemon
+Consumers adopt template changes through the installer’s checked merge; installation
+must preserve local AGENTS edits, configuration and logbooks. No new mandatory archive, role, daemon
 or messaging integration is introduced. Native Monitor is preferred in Claude Code;
 foreground managed wait reuses its handle elsewhere. Retain raw next_input for raw
 compatibility; caller carry cannot erase managed pending work.

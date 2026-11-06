@@ -72,6 +72,73 @@ class LbkitInstallTest(unittest.TestCase):
             check=True,
         )
 
+    def test_agents_upgrade_merges_patch_and_preserves_local_content(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        kit = self.repo / ".lbkit"
+        kit.mkdir()
+        old = "# Shared\n\n## Waiting\nOld workflow.\n"
+        new = old.replace("Old workflow.", "New workflow.")
+        (kit / "AGENTS.template.md").write_text(new)
+        agents = self.repo / "AGENTS.md"
+        agents.write_text(old + "\n## Local\nKeep these permissions.\n")
+        before = agents.read_bytes()
+        installer["merge_agents"](self.repo, kit, True, baseline=old)
+        self.assertEqual(agents.read_bytes(), before)
+        installer["merge_agents"](self.repo, kit, False, baseline=old)
+        self.assertEqual(agents.read_text(), new + "\n## Local\nKeep these permissions.\n")
+        installer["merge_agents"](self.repo, kit, False, baseline=new)
+        self.assertEqual(agents.read_text(), new + "\n## Local\nKeep these permissions.\n")
+
+    def test_agents_saved_baseline_updates_without_history(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        kit = self.repo / ".lbkit"
+        kit.mkdir()
+        template = kit / "AGENTS.template.md"
+        template.write_text("# Shared\n\n## Entry\nOriginal.\n")
+        installer["merge_agents"](self.repo, kit, False)
+        agents = self.repo / "AGENTS.md"
+        agents.write_text(agents.read_text() + "\n## Local\nKeep me.\n")
+        template.write_text(template.read_text().replace("Original.", "Updated."))
+        installer["merge_agents"](self.repo, kit, False)
+        self.assertIn("Updated.", agents.read_text())
+        self.assertIn("Keep me.", agents.read_text())
+        before = agents.read_bytes()
+        installer["merge_agents"](self.repo, kit, False)
+        self.assertEqual(agents.read_bytes(), before)
+
+    def test_agents_unrecognized_host_and_symlink_are_protected(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        kit = self.repo / ".lbkit"
+        kit.mkdir()
+        (kit / "AGENTS.template.md").write_text("# Shared\n")
+        target = self.repo / "AGENTS.md"
+        target.write_text("# Custom host\n")
+        installer["merge_agents"](self.repo, kit, False)
+        self.assertEqual(target.read_text(), "# Custom host\n")
+        target.unlink()
+        external = self.repo / "private-rules.md"
+        external.write_text("Owner rules\n")
+        target.symlink_to(external)
+        with self.assertRaisesRegex(installer["InstallError"], "symlink"):
+            installer["merge_agents"](self.repo, kit, False)
+        self.assertEqual(external.read_text(), "Owner rules\n")
+
+    def test_agents_conflict_leaves_consumer_bytes_untouched(self):
+        import runpy
+        installer = runpy.run_path(str(INSTALLER))
+        kit = self.repo / ".lbkit"
+        kit.mkdir()
+        (kit / "AGENTS.template.md").write_text("# Rules\nUpstream choice.\n")
+        agents = self.repo / "AGENTS.md"
+        agents.write_text("# Rules\nLocal choice.\n")
+        before = agents.read_bytes()
+        with self.assertRaisesRegex(installer["InstallError"], "AGENTS.md.*conflict"):
+            installer["merge_agents"](self.repo, kit, False, baseline="# Rules\nOld choice.\n")
+        self.assertEqual(agents.read_bytes(), before)
+
     def test_install_initializes_mind_forge_repo_when_mf_available(self):
         self.prepare_initialized_submodule()
         fakebin = Path(self.temp.name) / "fakebin"
@@ -193,7 +260,6 @@ class LbkitInstallTest(unittest.TestCase):
             "git submodule add example.invalid/lbkit.git .lbkit", result.stdout
         )
         self.assertIn("bin/lbkit -> ../.lbkit/bin/lbkit", result.stdout)
-        self.assertIn("bin/lb-anywhere -> ../.lbkit/bin/lb-anywhere", result.stdout)
         self.assertIn(
             ".agents/skills/lb-init -> ../../.lbkit/skills/lb-init", result.stdout
         )
@@ -326,35 +392,6 @@ class LbkitInstallTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("not an indexed submodule", result.stderr)
 
-    def test_anywhere_wrapper_executes_nearest_bin_lb_at_repository_root(self):
-        root = Path(self.temp.name) / "proj"
-        (root / "deep/nested").mkdir(parents=True)
-        stub = root / "bin/lb"
-        stub.parent.mkdir()
-        stub.write_text('#!/bin/sh\necho "stub cwd=$(pwd) args=$*"\n', encoding="utf-8")
-        stub.chmod(0o755)
-        wrapper = INSTALLER.parent / "lb-anywhere"
-        result = subprocess.run(
-            [str(wrapper), "task", "list"],
-            cwd=root / "deep/nested",
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            result.stdout.strip(), f"stub cwd={root.resolve()} args=task list"
-        )
-
-    def test_anywhere_wrapper_fails_outside_a_logbook_repository(self):
-        empty = Path(self.temp.name) / "empty"
-        empty.mkdir()
-        wrapper = INSTALLER.parent / "lb-anywhere"
-        result = subprocess.run(
-            [str(wrapper)], cwd=empty, text=True, capture_output=True, check=False
-        )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("no bin/lb found", result.stderr)
 
 
 if __name__ == "__main__":
