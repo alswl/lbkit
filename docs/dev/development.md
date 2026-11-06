@@ -78,6 +78,12 @@ boundary during consumer maintenance. Keep shared behavior in skills/contracts a
 reference it rather than expanding copied instructions in the template. Project
 decisions and incident history stay in project records.
 
+The waiting template links to the shared workflow rather than copying its steps.
+Routine preflight reuses applicable host capability evidence; first adoption or a
+relevant runtime/host change calls for validation of the affected path under the
+waiting contract. This does not impose full host acceptance on every task or add
+consumer configuration, approval gates or version changes.
+
 Consumers adopt this maintenance boundary explicitly: updating the submodule does
 not overwrite AGENTS or revoke existing restrictions. Reconcile those only within
 an authorized migration. This changes no CLI, configuration schema or version and

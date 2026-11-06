@@ -90,24 +90,41 @@ Document writes carry the SHA-256 `version_token` returned by `log context --jso
 
 ### Herdr waiting
 
+Use managed Observation for durable event recovery. Read context first; configure
+only when targets are absent or changed, after the existing listener has exited:
+
 ```sh
-bin/lb agent wait --input-file wait.json --timeout 45 --json
+bin/lb agent observation context LOG --json
+bin/lb agent observation configure LOG --input-file targets.json --expect-version TOKEN
+bin/lb agent observation context LOG --json
+bin/lb agent wait --log LOG --timeout 45 --expect-version FRESH_TOKEN
 ```
 
-Use complete verified bindings in `wait.json`; follow the [Herdr workflow](skills/lb-push/references/herdr.md) for the input and continuation contract. One bounded call waits for any target needing attention and returns events, pending targets and reusable `next_input`. It is read-only and does not resend instructions, complete Tasks or stop Sailors. The Captain host must demonstrably deliver tool completion before unattended continuation can be claimed.
+Replace LOG and token placeholders with the actual logbook and the version_token
+from each preceding context read. targets.json contains `{"targets": [...]}` with
+complete verified bindings. Claude Code prefers native Monitor running the wait
+command with `--stream`; foreground wait is the fallback. Follow the
+[Herdr workflow](skills/lb-push/references/herdr.md#wait-and-continue) for setup and
+handling. Read fresh context on notification to recover unresolved Events and
+pending Answers. Observations never complete business Tasks.
+
+Legacy `bin/lb agent wait --input-file wait.json --timeout 45 --json` remains
+read-only. Preserve its complete next_input, including unresolved_events; this raw
+mode has no managed persistence or listener ownership guarantee.
 
 ```mermaid
 sequenceDiagram
     participant C as Captain
     participant W as lb agent wait
     participant H as Herdr
-    C->>W: Verified bindings + timeout
+    C->>W: Configured Observation + fresh token + timeout
     loop Within the shared deadline
         W->>H: Read state / bounded native wait
         H-->>W: State + session identity
     end
-    W-->>C: Events + pending targets + next_input
+    W-->>C: Persisted event notification / wait result
     opt An event needs attention
+        C->>W: Read fresh Observation context
         C->>H: Read the relevant executor reply
         Note over C: Check the Task result before updating progress
     end

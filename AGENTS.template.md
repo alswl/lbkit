@@ -58,23 +58,9 @@ A skill name does not expand operation permissions; `lb-push` means project adva
 
 ## Event-driven collaboration waiting
 
-Follow [the managed wait contract](docs/lb-cli.md#agent-wait-and-event-handling)
-and lb-push's Herdr reference: Observation context, explicit configure when needed,
-then one managed listener for all verified bindings. Claude Code prefers native
-Monitor with --stream; foreground wait is the fallback and reuses its live handle
-across yields. Avoid polling turns or an extra monitor Agent.
-
-Read fresh context on notification, then defer/resolve the Event or submit an Answer
-through a supported question protocol. Reported unresolved work remains visible.
-Reconcile uncertain delivery without resend. Separately authorized external answering
-uses prepare before the action and caller-evidence reconcile afterward. Stop and
-verify listener exit before changing targets. Pane position, message reachability
-or key-command receipts do not prove native identity or question acceptance.
-Business Task completion remains separate.
-
-Monitor delivery, same-turn foreground handling and post-turn unprompted handling
-need separate evidence. A PID, bounded quiet interval or tool completion alone
-proves no automatic wake or zero-model continuation guarantee.
+Use [lb-push's waiting workflow](.agents/skills/lb-push/references/herdr.md#wait-and-continue)
+and the [managed wait contract](docs/lb-cli.md#agent-wait-and-event-handling)
+for collaboration waiting, event handling and recovery.
 
 ## Environment and Files
 

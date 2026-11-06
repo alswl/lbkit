@@ -22,15 +22,17 @@ Never use launch as a probe. Partial creation retains owned IDs for recovery.
    instruction. Accepted work already within scope starts without a second approval.
    Captain retains responsibility for the authoritative record, late replies and
    replacement of in-flight work.
-4. Use one bounded `lb agent wait` request for pending bindings. Ordinary child
-   processes observe unchanged state; do not create monitoring tabs, polling scripts
-   or repeated model queries. Persist the return and its `unresolved_events` before
-   reusing complete `next_input`; read attention targets, handle blockers/results,
-   verify delivery and save receipts before removing resolved events. Retain other
-   pending Sailors. User interjections reuse the running listener; cancellation
-   collects/reaps it before replacement. Timeout does
-   not justify killing or resending work. Verify the Captain host actually delivers
-   completion; a detached process ID does not establish automatic continuation.
+4. Follow the [managed waiting workflow](herdr.md#wait-and-continue): read
+   Observation context, configure verified targets only when absent or changed,
+   and run one owned listener. Prefer native Monitor with --stream in Claude Code;
+   otherwise use foreground managed wait and retain its handle across host yields.
+   On notification read fresh context, then defer/resolve Events or submit Answers
+   as applicable. Reconcile uncertain delivery without resending. Retain other
+   pending Sailors. Stop and verify listener exit before changing targets.
+   Timeout does not justify killing or resending work; tool completion alone does
+   not establish post-turn automatic continuation. Only the legacy read-only raw
+   --input-file mode carries complete next_input, including unresolved_events;
+   it does not provide managed persistence or listener ownership.
 5. Captain checks the result against the agreed task, updates only applicable facts,
    and continues authorized work. An ordinary progress question is answered read-only
    before returning to execution. Explicit pause, human gates, real blockers and
