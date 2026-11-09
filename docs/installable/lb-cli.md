@@ -348,3 +348,142 @@ Replacement requires every referencing task to have an identity so its dependenc
 mapping can be explicit; use `task identify` on an unidentified dependent first.
 Both split forms preserve the original prerequisites in each replacement. Archived
 task IDs cannot be assigned to new work.
+
+
+## Agent wait and event handling
+
+Managed observation has three objects: Observation owns targets/cursors, Event owns
+handling, and Answer owns a delivery attempt. The commands below do not complete
+business Tasks or grant execution permission.
+
+| Object | Command | Purpose |
+| --- | --- | --- |
+| Observation | `agent observation context LOG --json` | Read state, unresolved Events, pending Answers, capabilities and version_token |
+| Observation | `agent observation configure LOG --input-file FILE --expect-version TOKEN` | Explicitly configure targets after listener exit |
+| Observation | `agent wait --log LOG --timeout SECONDS --expect-version TOKEN [--stream]` | Observe configured targets with one owned listener |
+| Event | `agent event defer LOG EVENT --action-id ID --input-file FILE --expect-version TOKEN` | Retain unresolved work with reason and responsible_party |
+| Event | `agent event resolve LOG EVENT --action-id ID --input-file FILE --expect-version TOKEN` | Assess non-question work, or record an evidenced obsolete question |
+| Answer | `agent answer submit LOG EVENT --operation-id ID --input-file FILE --expect-version TOKEN` | Save intent and submit through a supported native question protocol |
+| Answer | `agent answer reconcile LOG OPERATION --expect-version TOKEN [--input-file RECEIPT]` | Check delivery evidence without sending |
+| Answer | `agent answer prepare LOG EVENT --operation-id ID --input-file FILE --expect-version TOKEN` | Save external intent before a separately authorized manual/UI action |
+
+Prefix each command with `lb`. All managed mutations require the SHA-256 token from
+Observation context, including absent-state configure. Document and execution tokens
+are not interchangeable. Context is read-only; missing state is not created. Missing
+stable document identity requires explicit existing document migration. Mutations
+support --dry-run: no files, listener or external mutation; a preview reserves nothing.
+
+Configure input is exactly `{ "targets": [...] }`. Each target contains the existing
+full binding (machine/server/workspace_id/tab_id/pane_id/agent_id/session_id), plus
+optional baseline state/observed_at. Configure retains unaffected and retired cursors
+and unresolved Events. Reordering is a no-op, known baselines cannot reset, and a
+terminal identity cannot be rearmed after retirement. Listener and affected binding
+action locks exclude unsafe target changes; unknown/submitted Answer delivery blocks
+removal. Stop the host-owned listener and verify actual exit before reconfiguration.
+Saved PID/status is diagnostic, never ownership proof.
+
+One-shot wait returns reason, invocation_id, new_events, unresolved_events,
+pending_answers and version_token. Event and cursor commit atomically before output;
+no-event working re-arm also persists. Lost output is recovered through context.
+Already-reported unresolved work does not retrigger notifications. Another listener
+refuses while the real lock is held. SIGINT/SIGTERM clean only owned waiting children;
+a later exclusive admission records an abandoned gap after forced loss.
+
+Live --stream emits compact flushed JSONL locators after commit: type=event,
+observation_id, invocation_id, event_key, kind, target_key and version_token. There
+are no heartbeat snapshots or transcripts and no trailing pretty-JSON result.
+One listener_end reports timeout/cancelled/failed where output remains usable.
+Broken stdout stops observation with cleanup; saved work remains. A notification's
+token may already be stale, so read fresh context before handling.
+
+Defer input is reason, responsible_party and optional evidence references. Resolve
+input is assessment plus optional evidence for non-questions, or obsolete plus
+nonempty evidence for withdrawn/superseded questions. Plain resolve cannot assert
+answer confirmation; uncertain Answer delivery blocks obsolete closure. Action ID
+and canonical content replay without writes; conflicting content refuses. New actions
+on resolved Events refuse. Caller cannot provide adapter provenance.
+
+Automatic submit input is question_id, revision and answer. Unknown intent and answer
+digest persist before sending; raw answer text is not stored. The current Herdr adapter
+supports explicitly configured local Claude Code AskUserQuestion hooks. Without
+that native callback it refuses with capability_unavailable, or identity_missing
+for incomplete native bindings, before intent/send. Ordinary prompt or send-keys
+is never an automatic-answer fallback. Codex question answering remains unmapped.
+
+For the optional Claude integration, both coordinator and worker inherit
+LBKIT_CLAUDE_QUESTION_DIR pointing to the same short, absolute, owner-only directory.
+The consuming repository explicitly configures PreToolUse and PostToolUse command
+hooks matching only AskUserQuestion, invoking its installed environment's
+`python -m logbook_cli.claude_native_hook`; give the PreToolUse command a timeout
+of at least 130 seconds. Installation does not modify project/global Claude settings.
+These callbacks do not approve other tools. They require the worker's independently
+observed Herdr native session to match the actual callback session_id.
+
+While the native PreToolUse callback is waiting (at most 120 seconds), bounded
+local socket inspection augments the observed needs_input Event with question.id,
+question.revision and question.questions. This works even while Herdr sees the hook
+UI as working; expired/unreachable callbacks do not override native UI observations.
+Use those saved identifiers in submit. A single question accepts a nonempty string;
+multiple questions require an exact question-text-to-answer-string object.
+Callback acceptance alone leaves delivery unknown. Only matching native PostToolUse
+structured answers confirm delivery and atomically resolve the Event. Missing or
+late confirmation stays unknown and blocks new operation IDs; reconcile without an
+input file probes the saved native receipt without sending again.
+
+The runtime holds sockets and bounded correlation/digest/receipt records, with no
+copied transcripts, drafts or raw answers. It reserves a receipt per accepted
+question, up to 1024 questions; capacity exhaustion refuses before release. Retain
+this directory while any delivery is uncertain. Rotate it only after all pending
+answers are reconciled and hooks/listeners have stopped. Socket paths must fit the
+platform's Unix socket limit; a short mktemp directory under /tmp is suitable.
+This opt-in local callback protocol adds no public CLI command or configuration
+format change. Live host/runtime acceptance remains separate from fixture tests.
+
+External prepare input is answer_digest, execution_owner, nonempty evidence and
+optional question_id. It stores external unknown and sends nothing. It cannot be
+converted into adapter mode or bypass another pending attempt. Reconcile accepts a
+receipt with receipt_id, outcome (submitted/confirmed/not_submitted), answer_digest,
+matching question_id when present, and nonempty evidence. Supplied receipts remain
+caller-attributed; a native probe remains adapter-attributed. not_submitted additionally
+requires affirmative non_submission evidence and, for external execution,
+executor_terminated=true. Idle, timeout and lock possession are not evidence of
+non-submission. Confirmed receipt and Event resolution commit together. Same operation
+is replay before live question checks; a new ID cannot bypass uncertain delivery.
+
+State is private consumer runtime data at `project/lb/observations/<document-id>.json`.
+The cooperating single-location transaction uses safe no-follow directory descriptors,
+writer exclusion, CAS, atomic replacement and fsync. Directory fsync failure after
+replace is uncertain persistence: the writer returns persistence_failed (exit 3);
+reread actual state and do not assume nothing changed. Transport uncertainty keeps
+unknown/submitted delivery, while persistence errors are never a successful receipt.
+Input is bounded to 1 MiB; encoded state to 8 MiB, Events/Answers to 4096 each,
+transitions to 8192, encoded transition/completion records to 16 KiB, summaries/reasons
+to 4 KiB and evidence to four references of 2 KiB each. Admission reserves a complete
+target batch, pending Event/Answer completion and 64 KiB lifecycle/error space; it
+refuses before exhaustion without eviction. Distributed copies and raw callers are
+outside managed ownership guarantees; disk failure can still prevent persistence.
+
+### Host waiting and recovery
+
+Claude Code prefers native Monitor running managed wait --stream. Foreground managed
+wait is the fallback; preserve the same live handle across host yields and use finite
+supported deadlines. Host expiry, notification delivery and actual Captain handling
+are separate observations. A bounded quiet interval does not prove zero model turns.
+Record inner/outer requested/effective windows and all model continuations.
+
+Test Monitor background input, input during a suspended foreground call and input
+between calls independently. Post-turn wake requires final before wait completion,
+a new unprompted Captain turn and an actual handling receipt. A PID, badge, tool
+completion or manually resumed turn proves no automatic wake. Do not create a daemon
+or monitor Agent to substitute for missing host behavior. Unsupported facilities stay
+explicit; they are not successful positive acceptance.
+
+### Raw compatibility
+
+`lb agent wait --input-file FILE --timeout SECONDS --json` remains bounded/read-only.
+Keep complete next_input (targets, opaque after and unresolved_events). The carry list
+is bounded to 256 and does not provide managed persistence or a global listener lock.
+Legacy requests remain accepted; older binaries may reject additive continuation
+fields. Pin the observer revision with raw checkpoints. Managed --log forbids
+--input-file; raw mode rejects --stream, --expect-version and --dry-run. No package,
+skill or configuration version is automatically changed by this additive API.

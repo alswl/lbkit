@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import os
 import shutil
 import subprocess
@@ -38,12 +39,11 @@ def repository_root(path: Path) -> Path:
 def manifest(kit: Path) -> dict[Path, Path]:
     skills = kit / "skills"
     docs = kit / "docs/installable"
-    required = [kit / "bin/lb", kit / "bin/lb-anywhere", kit / "bin/lbkit", kit / "src/logbook_cli", kit / "lbkit.template.yaml", kit / "lbkit-skills.template.yaml", kit / "AGENTS.template.md", kit / "pyproject.toml", kit / "uv.lock"]
+    required = [kit / "bin/lb", kit / "bin/lbkit", kit / "src/logbook_cli", kit / "lbkit.template.yaml", kit / "lbkit-skills.template.yaml", kit / "AGENTS.template.md", kit / "pyproject.toml", kit / "uv.lock"]
     if any(not path.exists() for path in required) or not skills.is_dir() or not docs.is_dir():
         raise InstallError(f"incomplete lbkit checkout: {kit}")
     mapping = {
         Path("bin/lb"): Path(".lbkit/bin/lb"),
-        Path("bin/lb-anywhere"): Path(".lbkit/bin/lb-anywhere"),
         Path("bin/lbkit"): Path(".lbkit/bin/lbkit"),
     }
     for skill in sorted(skills.iterdir()):
@@ -179,6 +179,60 @@ def install_runtime(kit: Path) -> None:
         raise InstallError(f"CLI environment installation failed: {result.stderr.strip()}")
 
 
+def merge_agents(repo: Path, kit: Path, dry_run: bool, baseline: str | None = None) -> None:
+    """Merge template changes against a known base, then apply a checked diff."""
+    target = repo / "AGENTS.md"
+    if target.is_symlink():
+        raise InstallError("AGENTS.md must be a regular file, not a symlink")
+    template = (kit / "AGENTS.template.md").read_text(encoding="utf-8")
+    cache = Path(git(repo, "rev-parse", "--absolute-git-dir").stdout.strip()) / "lbkit-agents-template.md"
+    current = target.read_text(encoding="utf-8") if target.exists() else ""
+    if baseline is None and cache.is_file():
+        baseline = cache.read_text(encoding="utf-8")
+    if baseline is None and current:
+        # Adopt legacy installs only when an entire historical template is intact.
+        revisions = git(kit, "log", "--format=%H", "--", "AGENTS.template.md", check=False)
+        for revision in revisions.stdout.splitlines():
+            candidate = git(kit, "show", f"{revision}:AGENTS.template.md", check=False)
+            if candidate.returncode == 0 and candidate.stdout and candidate.stdout in current:
+                baseline = candidate.stdout
+                break
+    if not current:
+        merged = template
+    elif template in current:
+        merged = current
+    elif baseline is None:
+        print("AGENTS.md preserved: no verified template baseline; merge manually before retrying")
+        return
+    elif current.count(baseline) == 1:
+        merged = current.replace(baseline, template, 1)
+    else:
+        with tempfile.TemporaryDirectory() as scratch:
+            paths = [Path(scratch) / name for name in ("current", "base", "template")]
+            for path, content in zip(paths, (current, baseline, template)):
+                path.write_text(content, encoding="utf-8")
+            result = subprocess.run(["git", "merge-file", "-p", *map(str, paths)], capture_output=True, text=True)
+        if result.returncode:
+            raise InstallError("AGENTS.md merge conflict; preserve local rules and resolve against AGENTS.template.md")
+        merged = result.stdout
+    if merged != current:
+        patch = "".join(difflib.unified_diff(current.splitlines(True), merged.splitlines(True),
+                                           fromfile="a/AGENTS.md", tofile="b/AGENTS.md"))
+        print(patch, end="")
+        if target.exists():
+            for args in (("--check",), ()) if not dry_run else (("--check",),):
+                result = subprocess.run(["git", "apply", *args, "-"], cwd=repo, input=patch, text=True, capture_output=True)
+                if result.returncode:
+                    raise InstallError(f"AGENTS.md patch refused: {result.stderr.strip()}")
+        elif not dry_run:
+            with target.open("x", encoding="utf-8") as output:
+                output.write(merged)
+    if not dry_run:
+        cache.write_text(template, encoding="utf-8")
+        if merged != current:
+            print("AGENTS.md merged from template; local additions preserved")
+
+
 def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     repo = repository_root(repo)
     planned = manifest(kit)
@@ -207,6 +261,7 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
             git(repo, "submodule", "update", "--init", ".lbkit")
 
     if dry_run:
+        merge_agents(repo, destination if (destination / "AGENTS.template.md").is_file() else kit, True)
         retire_links(repo, dry_run=True)
         print("uv sync --locked --no-dev --project .lbkit")
         for link_rel, target_rel in planned.items():
@@ -225,14 +280,16 @@ def install(repo: Path, kit: Path, source: str | None, dry_run: bool) -> None:
     blocked = conflicts(repo, actual)
     if blocked:
         raise InstallError("installed lbkit conflicts with existing paths: " + ", ".join(map(str, blocked)))
+    had_agents = (repo / "AGENTS.md").exists()
+    merge_agents(repo, destination, True)
     install_runtime(destination)
+    merge_agents(repo, destination, False)
     created = install_links(repo, actual)
     retire_links(repo, dry_run=False)
     for name in missing_config(repo):
         with (repo / name).open("x", encoding="utf-8") as target:
             target.write((destination / f"{name.removesuffix('.yaml')}.template.yaml").read_text(encoding="utf-8"))
-    if not (repo / "AGENTS.md").exists():
-        (repo / "AGENTS.md").write_text((destination / "AGENTS.template.md").read_text(encoding="utf-8"), encoding="utf-8")
+    if not had_agents:
         created.append(Path("AGENTS.md"))
     claude_md = repo / "CLAUDE.md"
     if not claude_md.exists() and not claude_md.is_symlink():

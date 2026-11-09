@@ -41,22 +41,11 @@ The consuming repository owns its project logs, `AGENTS.md`, `lbkit.yaml` and `l
 .agents/skills/lb-*  -> ../../.lbkit/skills/lb-*
 .claude/skills/lb-*  -> ../../.lbkit/skills/lb-*
 bin/lb               -> ../.lbkit/bin/lb
-bin/lb-anywhere      -> ../.lbkit/bin/lb-anywhere
 bin/lbkit            -> ../.lbkit/bin/lbkit
 docs/<shared>.md     -> ../.lbkit/docs/installable/<shared>.md
 ```
 
 The installer links only entry points. The CLI implementation (`src/logbook_cli/`) stays inside the `.lbkit` submodule — `bin/lb` resolves it through its own path.
-
-### Run from anywhere
-
-`bin/lb` runs from the repository root. To invoke `lb` from any subdirectory of any consuming repository, link the wrapper once:
-
-```sh
-ln -s /path/to/repo/bin/lb-anywhere ~/.local/bin/lb
-```
-
-The wrapper finds the nearest parent directory with `bin/lb`. It runs that command from the repository root. This selects the repository's pinned lbkit revision.
 
 ## Refresh contract links after upgrading
 

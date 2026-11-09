@@ -22,12 +22,17 @@ Never use launch as a probe. Partial creation retains owned IDs for recovery.
    instruction. Accepted work already within scope starts without a second approval.
    Captain retains responsibility for the authoritative record, late replies and
    replacement of in-flight work.
-4. Use one bounded `lb agent wait` request for pending bindings. Ordinary child
-   processes observe unchanged state; do not create monitoring tabs, polling scripts
-   or repeated model queries. Reuse complete `next_input`, read returned attention
-   targets, handle blockers/results, and retain other pending Sailors. Timeout does
-   not justify killing or resending work. Verify the Captain host actually delivers
-   completion; a detached process ID does not establish automatic continuation.
+4. Follow the [managed waiting workflow](herdr.md#wait-and-continue): read
+   Observation context, configure verified targets only when absent or changed,
+   and run one owned listener. Prefer native Monitor with --stream in Claude Code;
+   otherwise use foreground managed wait and retain its handle across host yields.
+   On notification read fresh context, then defer/resolve Events or submit Answers
+   as applicable. Reconcile uncertain delivery without resending. Retain other
+   pending Sailors. Stop and verify listener exit before changing targets.
+   Timeout does not justify killing or resending work; tool completion alone does
+   not establish post-turn automatic continuation. Only the legacy read-only raw
+   --input-file mode carries complete next_input, including unresolved_events;
+   it does not provide managed persistence or listener ownership.
 5. Captain checks the result against the agreed task, updates only applicable facts,
    and continues authorized work. An ordinary progress question is answered read-only
    before returning to execution. Explicit pause, human gates, real blockers and
@@ -78,3 +83,14 @@ Before closing resources, ensure source references and key conclusions are recov
 When run metrics are requested, record run start/end/resume, human waiting/interruption, distinct human turns and applicable first acceptance/corrections in the existing bound Thinking using the [event contract](../../../docs/installable/coordination.md#run-event-and-close-out-metrics). Resume keeps the same run and counters. Captain records coordination facts; Sailor returns actual acceptance facts and later defect corrections. Do not archive raw trials or create a metrics sidecar.
 
 At Stage/logbook 🎉, report exact scope, wall elapsed with waiting/interruption union, human interaction count/categories and first-pass numerator/denominator/rate. Use the read-only `skills/lb-push/scripts/run-metrics.py` helper for deterministic arithmetic; no event history or zero denominator gives explicit unknown/no-calculable-data, never invented success. A corrected delivery defect removes an erroneous first-pass pass even if rework later succeeds. Metrics do not complete human gates or create a checker role.
+
+
+## Durable observation and handling
+
+Use the Observation/Event/Answer workflow in [Herdr collaboration](herdr.md).
+Claude Code prefers native Monitor; foreground managed wait reuses its handle
+elsewhere. Read fresh context, defer unresolved decisions, resolve assessed or
+obsolete Events, and submit only through native question confirmation. Reconcile
+uncertainty without resend; external prepare precedes a separately authorized UI
+action. Stop the listener before configuration changes. None of these operations
+replaces acceptance evidence or mutates business Tasks.

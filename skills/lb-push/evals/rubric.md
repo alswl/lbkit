@@ -54,3 +54,9 @@ analysis takeover/handoff. Verify the completed correction's status changes to
 finished responsibility, while the separate pending task and status remain byte
 for byte unchanged. This exercises cleanup and preservation beyond case 104's
 initially absent marker. No new execution or delegation of remaining work is allowed.
+
+Cases 1001–1002 are core decision-only coverage for Monitor-first managed waiting
+and external prepare/reconcile. Grade actual model output and exact command choices;
+these cases request no tool execution and certify no runtime or UI operation.
+Raw wait as the managed default, transport-as-confirmation or bypassing unknown
+delivery is a veto. Real Monitor/foreground/post-turn/Answer gates remain separate.

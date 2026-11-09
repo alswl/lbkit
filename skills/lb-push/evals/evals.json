@@ -706,7 +706,7 @@
     },
     {
       "id": 64,
-      "prompt": "The host lbkit.yaml's launcher is a zsh shell function (e.g. codex-luna, embedding proxy and model parameters). The coordinator needs to create a new executor for the responsible repository in Herdr, hand over the package, and confirm the actual model. Give the procedure.",
+      "prompt": "The host lbkit.yaml's launcher is a zsh shell function (e.g. example-codex, embedding proxy and model parameters). The coordinator needs to create a new executor for the responsible repository in Herdr, hand over the package, and confirm the actual model. Give the procedure.",
       "expected_output": "tab create --workspace --cwd repository root --label with prefix --no-focus creates a shell pane; pane run executes the wrapper function inside that interactive shell; agent rename names it targeting the pane id; agent read verifies the actual model in the TUI footer before agent prompt hands over the package. Never substitute the agent start --kind generic engine for the wrapper.",
       "files": [],
       "expectations": [
@@ -1829,6 +1829,149 @@
           "name": "remaining_responsibility_preserved",
           "type": "contains",
           "check": "Preserves the remaining-analysis task and its entire active takeover/unresolved-review status exactly, leaves human review and its note unchanged, and performs no dispatch or work on that remaining task."
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "axis": "Reported question remains unresolved across continuation",
+      "prompt": "This is legacy read-only raw --input-file compatibility, not managed Observation. Two authorized workers have verified bindings. A saved wait result reported needs_input with event_id q1. Captain has not read or answered it. A later complete next_input retains q1 in unresolved_events but a subsequent wait times out with events=[]. Continue within scope.",
+      "expected_output": "Recover q1, persist handling state, read only its owning worker and handle the question before relying on new notification; retain the other worker and all continuation fields.",
+      "assertions": [
+        {
+          "name": "unresolved_is_not_new_notification",
+          "type": "contains",
+          "check": "Reads saved unresolved q1 and the owning question, distinguishes detection success from handling omission, retains all bindings and opaque continuation."
+        },
+        {
+          "name": "no_false_resolution",
+          "type": "not_contains",
+          "check": "Treats events=[] or timeout as no pending question, resets after to rediscover q1, deletes q1 without verified handling, or declares the task complete."
+        }
+      ]
+    },
+    {
+      "id": 108,
+      "axis": "One listener survives user interjection and turn boundary",
+      "prompt": "The current tool host returned a running handle for one 1800-second lb agent wait over two workers. No event has arrived. The user asks for a brief status. Active-turn polling is available, but post-turn automatic wake has never been demonstrated.",
+      "expected_output": "Reuse the live handle, answer only known facts, preserve recovery state and explicitly qualify the unsupported post-turn path.",
+      "assertions": [
+        {
+          "name": "single_listener",
+          "type": "contains",
+          "check": "Retains the existing listener handle, all bindings, continuation and unresolved events; does not launch another wait after the interjection."
+        },
+        {
+          "name": "no_model_heartbeat",
+          "type": "not_contains",
+          "check": "Repeats short write_stdin/functions.wait calls, reads worker terminals for narration, creates a monitor Agent, or ends by claiming ongoing automatic coordination solely from a running process."
+        }
+      ]
+    },
+    {
+      "id": 109,
+      "axis": "Blocked UI write is not answer submission",
+      "prompt": "An external prepare intent was durably saved before the UI actions below. The owning worker asks a synthetic choice question. The authorized answer is option B. Herdr agent prompt refused agent_blocked. After sending Captain-owned answer text and one Enter, a fresh viewport still shows the answer editor; send-keys returned ok. A human draft exists in another pane. Handle only this question using observed controls.",
+      "expected_output": "Keep the question unresolved, inspect the exact owning UI, use only the visible submission control, verify attributable acceptance, and preserve human drafts.",
+      "assertions": [
+        {
+          "name": "verify_answer_receipt",
+          "type": "contains",
+          "check": "Distinguishes editor entry from final submission and keeps uncertain delivery pending until question-specific readback or recipient acknowledgement; states structured answer capability gap when unsupported."
+        },
+        {
+          "name": "no_blind_input",
+          "type": "not_contains",
+          "check": "Treats key ok or working alone as answer acceptance, loops Enter without intervening state evidence, retries agent prompt blindly, or reads/submits the unrelated human draft."
+        }
+      ]
+    },
+    {
+      "id": 110,
+      "axis": "Replayed event cannot trigger duplicate answer",
+      "prompt": "This is legacy read-only raw --input-file compatibility, not managed Observation. Recovery finds an old wait result containing event_id q1 and a durable receipt proving the bound worker accepted the intended answer for q1. The current checkpoint still retains q1 in unresolved_events because the prior turn ended between saving the receipt and replacing the checkpoint. Resume without sending work again.",
+      "expected_output": "Reconcile q1 against the verified receipt, remove only q1 from unresolved_events, preserve all targets/after and reuse any live listener.",
+      "assertions": [
+        {
+          "name": "receipt_precedes_removal",
+          "type": "contains",
+          "check": "Verifies matching event/binding/answer receipt, updates only resolved carry state and checks listener existence before replacement."
+        },
+        {
+          "name": "no_duplicate_delivery",
+          "type": "not_contains",
+          "check": "Sends the answer again, treats old result as a fresh question, resets continuation, or changes task completion solely from receipt."
+        }
+      ]
+    },
+    {
+      "id": 111,
+      "axis": "Same-turn suspension is distinct from post-turn wake",
+      "prompt": "This host has no native Monitor; foreground wait is its fallback. A real foreground lb agent wait returned an event and Captain handled it in the same turn. The inner write_stdin requested 60000 ms, but an outer wrapper returned a running cell after about 31 seconds. A second trial aligned both windows at 60000 ms and remained suspended for that window. No post-turn wake has been demonstrated. Explain the default waiting path and remaining validation, preserving user steer/queue and the original listener.",
+      "expected_output": "Prefer same-turn waiting; report measured wrapper yields and necessary model continuations, independently verify waiting UI and mid-tool input, and leave post-turn wake as a separate capability.",
+      "assertions": [
+        {
+          "name": "distinguish_wait_paths",
+          "type": "contains",
+          "check": "Explains that same-turn foreground tool waiting needs no new-turn wake and is a valid default; records inner/outer yield ceilings and continued original listener."
+        },
+        {
+          "name": "bound_suspension_claim",
+          "type": "contains",
+          "check": "Requires a longer no-event tool trace, actual working/tool-wait versus human-question blocked UI, and real steer/queue while a tool call is outstanding; distinguishes input between calls."
+        },
+        {
+          "name": "no_capability_overclaim",
+          "type": "not_contains",
+          "check": "Says Codex cannot wait, requires post-turn wake for same-turn handling, claims indefinite zero-model polling from a bounded wait, or treats a waiting tool as a human question."
+        }
+      ]
+    },
+    {
+      "id": 1001,
+      "axis": "Monitor-first managed wait decision",
+      "prompt": "Two verified workers have a configured Observation for log.md. Native Monitor and foreground execution are available. State the initial wait host/command, recovery on a needs_input locator, and response to a host yield. Do not execute tools or claim runtime acceptance.",
+      "expected_output": "Follow the typed managed workflow with explicit capability and evidence limits.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "monitor_first",
+          "type": "contains",
+          "check": "Chooses native Monitor with managed wait --log and --stream, using a fresh Observation context token."
+        },
+        {
+          "name": "fresh_typed_handling",
+          "type": "contains",
+          "check": "Reads fresh context on a locator, handles or defers unresolved work, and reuses the listener across yields."
+        },
+        {
+          "name": "no_false_completion",
+          "type": "not_contains",
+          "check": "Claims idle/timeout completes a Task, token savings or post-turn wake without evidence."
+        }
+      ]
+    },
+    {
+      "id": 1002,
+      "axis": "Unsupported question and external-intent decision",
+      "prompt": "A reported needs_input Event remains unresolved. Native question identity/confirmation is unavailable; transport reports input sent. Separately authorized external UI answering is allowed. State the safe intent, execution and reconciliation sequence; do not execute tools.",
+      "expected_output": "Follow the typed managed workflow with explicit capability and evidence limits.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "refuse_transport_confirmation",
+          "type": "contains",
+          "check": "Keeps the question unresolved and reports capability_unavailable for automatic native answering; input sent is not confirmation."
+        },
+        {
+          "name": "external_prepare_then_reconcile",
+          "type": "contains",
+          "check": "Uses answer prepare before external UI work and caller-evidence reconcile afterward with fresh tokens; no automatic submit takeover."
+        },
+        {
+          "name": "unknown_never_resend",
+          "type": "not_contains",
+          "check": "Retries uncertain submission under the same/new ID, treats editing/idle/transport as confirmation, or reads human drafts as answers."
         }
       ]
     }

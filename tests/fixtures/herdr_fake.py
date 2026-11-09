@@ -9,6 +9,7 @@ through responses, repeating the last. The lock serializes concurrent children.
 import fcntl
 import json
 import os
+import select
 import signal
 import sys
 import time
@@ -61,8 +62,27 @@ def main():
     signal.signal(signal.SIGTERM, terminate)
     if response.get("record_ready"):
         record("ready")
+
+    def checkpoint(name):
+        barrier = response.get("barriers", {}).get(name)
+        if barrier is None:
+            return
+        # The controller owns a FIFO endpoint before spawning this child.
+        fd = os.open(root / barrier, os.O_RDONLY | os.O_NONBLOCK)
+        try:
+            record("checkpoint", name=name)
+            if not select.select([fd], [], [], 5)[0] or os.read(fd, 1) != b"1":
+                raise RuntimeError(f"fixture barrier not released: {name}")
+        finally:
+            os.close(fd)
+
     try:
         time.sleep(response.get("delay", 0))
+        checkpoint("before_submit")
+        if response.get("submission"):
+            record("submission", submission=response["submission"])
+        checkpoint("after_submit")
+        checkpoint("before_receipt")
         for stream in ("stdout", "stderr"):
             out = getattr(sys, stream)
             if stream + "_bytes" in response:
@@ -77,6 +97,7 @@ def main():
                 value = response[stream]
                 out.write(value if isinstance(value, str) else json.dumps(value))
                 out.flush()
+        checkpoint("after_receipt")
         return response.get("code", 0)
     finally:
         record("exit", code=response.get("code", 0))

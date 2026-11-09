@@ -509,6 +509,42 @@
           "acceptance": "Receipt-only handback retains a written host responsibility checkpoint before reporting completion."
         }
       ]
+    },
+    {
+      "id": "20261105-event-wait-recovery",
+      "title": "Event-driven waiting and unresolved event recovery",
+      "source": "Maintainer-directed feedback: distinguish observation, host wake capability and coordinator handling; update the default collaboration template.",
+      "todos": [],
+      "criteria": [
+        {
+          "id": "single_listener",
+          "acceptance": "One listener retains all bindings across user interjections; no model heartbeat or extra monitoring Agent."
+        },
+        {
+          "id": "unresolved",
+          "acceptance": "Reported but unhandled events persist independently of notification deduplication and survive another worker result."
+        },
+        {
+          "id": "cancel_recovery",
+          "acceptance": "Graceful interruption reaps only waiting children and retains all bindings, continuation and unresolved questions."
+        },
+        {
+          "id": "answer_receipt",
+          "acceptance": "Blocked answer editing and submission are distinct; verify question-specific receipt and protect human drafts."
+        },
+        {
+          "id": "duplicate_delivery",
+          "acceptance": "Recovery reconciles prior handling receipts before any resend; carry removal must not re-arm notifications."
+        },
+        {
+          "id": "live_host_matrix",
+          "acceptance": "Real two-worker Codex/Herdr validation separately proves no-event suspension, blocked question handling, user interjection, post-turn automatic wake and duplicate side-effect protection."
+        },
+        {
+          "id": "same_turn_suspension",
+          "acceptance": "Prefer same-turn tool waiting without new-turn wake; measure nested yield ceilings and model continuations, actual working/tool-wait UI, and steer/queue during an outstanding tool call separately from input between calls."
+        }
+      ]
     }
   ]
 }
