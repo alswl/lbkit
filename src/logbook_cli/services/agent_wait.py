@@ -203,24 +203,16 @@ async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample
         if contexts[index]["reported"] in {"identity_changed", "exited"}:
             return
         try:
-            # Scope comes from the selected server, never a guessed --session flag.
             if binding["machine"] not in scopes:
                 scopes[binding["machine"]] = asyncio.create_task(
-                    call(binding["machine"], "status", "--json")
+                    call("local", *herdr.scope_command(binding["machine"]))
                 )
-            status = await asyncio.shield(scopes[binding["machine"]])
-            scope = status.get("server", {})
-            if (
-                not isinstance(scope, dict)
-                or not scope.get("running")
-                or scope.get("compatible") is False
-                or (scope.get("session") or "default") != binding["server"]
-            ):
-                raise LbError("server scope unavailable or mismatched", EXIT_USAGE)
+            scope = await asyncio.shield(scopes[binding["machine"]])
+            machine = herdr.scope_machine(binding["machine"], binding["server"], scope)
             while time.monotonic() < deadline:
                 agent_result, pane_result = await asyncio.gather(
-                    call(binding["machine"], "agent", "get", binding["pane_id"]),
-                    call(binding["machine"], "pane", "get", binding["pane_id"]),
+                    call(machine, "agent", "get", binding["pane_id"]),
+                    call(machine, "pane", "get", binding["pane_id"]),
                 )
                 agent = agent_result.get("result", {}).get("agent", {})
                 pane = pane_result.get("result", {}).get("pane", {})
@@ -243,7 +235,7 @@ async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample
                         return
                     started = time.monotonic()
                     await call(
-                        binding["machine"],
+                        machine,
                         "agent",
                         "wait",
                         binding["pane_id"],

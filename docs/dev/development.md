@@ -534,6 +534,13 @@ real runtime confirmation, Monitor, foreground and post-turn delivery need their
 own executed evidence. No bounded trial establishes indefinite suspension or a
 model-token saving ratio. Keep trial logs outside repository documentation.
 
+Remote Herdr Observation and session lifecycle probes require saved-machine JSON
+discovery and machine API forwarding. The saved profile's explicit session must
+match the requested server; subsequent API calls use its stable ID. Local status
+is not a remote probe. This fixes scope admission without changing bindings,
+consumer configuration, schema or versions; unreachable and changed native
+identities retain their existing refusal/Event behavior.
+
 ### Optional Claude native question callbacks
 
 Consumers choose whether to adopt the local Claude AskUserQuestion adapter. The

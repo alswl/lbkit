@@ -20,6 +20,55 @@ def available():
     }
 
 
+def scope_command(machine):
+    # Machine profiles own the remote session; status describes only Local.
+    return ("status", "--json") if machine == "local" else ("machine", "list", "--json")
+
+
+def scope_machine(machine, server, value):
+    """Validate scope and pin a remote label to its stable profile ID."""
+    if machine == "local":
+        scope = value.get("server", {}) if isinstance(value, dict) else {}
+        if (
+            not isinstance(scope, dict)
+            or not scope.get("running")
+            or scope.get("compatible") is False
+            or (scope.get("session") or "default") != server
+        ):
+            raise LbError("server scope mismatch; no fallback allowed", EXIT_REFUSED)
+        return machine
+    if not isinstance(value, list) or any(not isinstance(p, dict) for p in value):
+        raise LbError("machine profiles unavailable", EXIT_REFUSED)
+    matches = [p for p in value if p.get("id") == machine]
+    if not matches:
+        matches = [p for p in value if p.get("label") == machine]
+    if len(matches) != 1:
+        raise LbError(
+            "missing or ambiguous machine profile; no fallback allowed", EXIT_REFUSED
+        )
+    profile = matches[0]
+    identity = profile.get("id")
+    if (
+        profile.get("enabled") is not True
+        or profile.get("session") != server
+        or not isinstance(identity, str)
+        or not identity.strip()
+        or identity == "local"
+    ):
+        raise LbError(
+            "machine/server scope mismatch; no fallback allowed", EXIT_REFUSED
+        )
+    return identity
+
+
+def structured_output(stdout, args):
+    value = json.loads(stdout)
+    expected = list if args == ("machine", "list", "--json") else dict
+    if not isinstance(value, expected):
+        raise ValueError("unexpected Herdr response shape")
+    return value
+
+
 def invoke(machine, *args, mutation=False, raw=False):
     if os.environ.get("HERDR_ENV") != "1":
         raise LbError(
@@ -53,10 +102,7 @@ def invoke(machine, *args, mutation=False, raw=False):
     if raw:
         return result.stdout
     try:
-        value = json.loads(result.stdout)
-        if not isinstance(value, dict):
-            raise ValueError("object required")
-        return value
+        return structured_output(result.stdout, args)
     except ValueError as exc:
         raise LbError(
             "Herdr did not return structured output; reconcile before retry",
@@ -388,10 +434,7 @@ async def invoke_bounded(machine, *args, deadline, output_limit):
                 pass
             raise LbError("Herdr read unavailable", EXIT_REFUSED)
         try:
-            value = json.loads(stdout)
-            if not isinstance(value, dict):
-                raise ValueError("object required")
-            return value
+            return structured_output(stdout, args)
         except (ValueError, UnicodeError) as exc:
             raise LbError("Herdr returned invalid JSON", EXIT_REFUSED) from exc
     except TimeoutError as exc:

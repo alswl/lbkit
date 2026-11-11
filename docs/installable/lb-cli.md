@@ -382,6 +382,13 @@ action locks exclude unsafe target changes; unknown/submitted Answer delivery bl
 removal. Stop the host-owned listener and verify actual exit before reconfiguration.
 Saved PID/status is diagnostic, never ownership proof.
 
+Herdr remote scope uses the enabled saved machine profile's explicit session,
+which must match the binding's server. Reads and lifecycle controls use that
+profile's stable ID with `--machine`; live pane/agent API reads verify reachability
+and native identity. Open verifies the remote parent pane before creating a pane.
+Missing, ambiguous, disabled or mismatched profiles refuse without Local fallback.
+`herdr status --json` remains a Local-only probe and is never forwarded remotely.
+
 One-shot wait returns reason, invocation_id, new_events, unresolved_events,
 pending_answers and version_token. Event and cursor commit atomically before output;
 no-event working re-arm also persists. Lost output is recovered through context.
