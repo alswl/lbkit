@@ -36,3 +36,4 @@ Thumbs.db
 
 # Isolated local execution and validation checkouts.
 /.worktrees/
+.claude/worktrees
