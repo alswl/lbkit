@@ -1,14 +1,9 @@
-"""Behavioral regressions from the local CR; public Markdown and CLI boundaries."""
+"""Document parsing, annotations and derived semantic values."""
 
-import json
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-KIT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(KIT / "src"))
 from logbook_cli.document import parse
 from logbook_cli.skills import extract
 
@@ -113,54 +108,6 @@ class ModelRegressionTest(unittest.TestCase):
             StageStatus.SETTLED,
         )
 
-    def test_english_sync_and_resolution_preserve_crlf_and_human_tail(self):
-        self.path.write_bytes(
-            b"# Research\r\n\r\n> Status: pending Stage 01 Research -- keep my words\r\n\r\n## pending Stage 01 Research\r\n\r\n- [-] Research: cancelled\r\n"
-        )
-
-        def run(*args):
-            p = subprocess.run(
-                [
-                    sys.executable,
-                    str(KIT / "bin/lb"),
-                    "--root",
-                    str(self.root),
-                    *args,
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            self.assertEqual(p.returncode, 0, p.stderr)
-            return json.loads(p.stdout)
-
-        rel = str(self.path.relative_to(self.root))
-        token = run('log', 'context', rel, "--json")["version_token"]
-        token = run(
-            "task",
-            "resolve",
-            rel,
-            "--stage",
-            "Stage 01 Research",
-            "--task",
-            "Research: cancelled",
-            "--as",
-            "human-cancelled",
-            "--decision",
-            "human ruling",
-            "--note",
-            "scope removed",
-            '--expect-version',
-            token,
-            "--json",
-        )["version_token"]
-        run('log', 'sync', rel, '--expect-version', token, "--json")
-        data = self.path.read_bytes()
-        self.assertIn(b"    - Resolution:", data)
-        self.assertIn(b"## settled Stage 01 Research", data)
-        self.assertIn(b" -- keep my words\r\n", data)
-        self.assertNotIn(b"\n", data.replace(b"\r\n", b""))
-        self.assertTrue(parse(self.path, self.root).stages[0].tasks[0].settled)
 
 
 if __name__ == "__main__":

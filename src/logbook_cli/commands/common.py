@@ -20,6 +20,11 @@ PROJECTS = click.option(
 )
 LOG = click.argument("log")
 DRY_RUN = click.option("--dry-run", is_flag=True, help="Preview without writing.")
+CONFIRMED = click.option(
+    "--confirmed",
+    is_flag=True,
+    help="The human explicitly confirmed this specific task change.",
+)
 TOKEN = click.option(
     "--expect-version",
     "token",

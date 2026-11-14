@@ -8,8 +8,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 
 ## Common Commands
 
-- Full test run: `uv run --locked python -m unittest discover tests`
-- Installer unit tests: `uv run --locked python -m unittest tests.test_lbkit_install`
+- Unit tests: `uv run --locked python -m unittest discover tests`
 - CLI self-check: `./bin/lb --help`, `./bin/lb --version`
 
 ## Structure
@@ -24,6 +23,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 
 ## Hard Rules
 
+- Keep only unit tests in this repository. CLI, installer, cross-service integration and real-runtime E2E tests belong to the external verification repository. A fake external process does not turn an integrated workflow into a unit test.
 - Never commit or push automatically: leave Git changes in the working tree or staging area; commit and push only when a human explicitly instructs it.
 - Keep non-public product names, internal project or consuming-repository identifiers, personal site addresses, and private environment details out of repository content, including documentation, skills, evals, tests, examples, and commit messages. Use generic fictional names and reserved example domains; retain real names only when the owner has confirmed they may be public. Before preparing changes for publication, check both current content and Git history for leaks; deleting or replacing current text does not remove historical copies. Rewrite history only with explicit human authorization.
 - `docs/dev/` (and repo docs generally) holds long-lived documentation only. Do not record per-round feedback processing, acceptance status, or trial-run evidence in repo docs: pointed conclusions land in contracts/skills/evals/tests, the consumer's ledger and its git history own the per-item record, and trial artifacts stay in ephemeral directories.
@@ -39,6 +39,6 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
 
 <!-- SPECKIT START -->
-Current feature plan: [Reliable Agent Waiting and Event Recovery](specs/005-reliable-agent-wait/plan.md).
+Current feature plan: [Herdr display policy — Issue #1](specs/007-herdr-label-prefix/plan.md).
 For this feature, follow the plan's user-required Red → Green → Refactor workflow; keep real-host acceptance separate from fixture tests.
 <!-- SPECKIT END -->

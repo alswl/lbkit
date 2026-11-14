@@ -46,6 +46,18 @@ read-only evidence or a human answer, never invented.
 `settings.runtime` contains `adapter`, optional provider `quota` declarations and
 `herdr` parameters (`workspace_id_env`, `label_prefix`, `shell`,
 `permission_mode`). It contains no launcher or launcher alternatives.
+`label_prefix` is optional single-line text (default empty), consumed by
+`lb herdr` for supported tab/pane creation and by `lb agent herdr open`. It affects
+human-visible names only, never logical agent IDs. A name already starting with
+the complete prefix is preserved. Unknown/ambiguous native syntax is forwarded
+without applying or verifying policy, with a diagnostic for recognized creation.
+See [creation support and compatibility](lb-cli.md#herdr-resource-creation).
+`workspace_id_env`, `shell`, and `permission_mode` remain host/Skill guidance;
+these CLI creation routes do not apply them or select a launcher from the agent
+registry. Explicit native selectors and the host-approved wrapper remain required.
+`config check` validates configuration shape, not runtime adoption, integration,
+wrapper availability, display names or focus. `config resolve` likewise reports
+`readiness: not_checked` and `execution: none`.
 `settings.roles`, `browser`, `auth`, and `limits` retain host collaboration
 parameters; auth contains guidance only, never secrets. Limits include
 `wait_seconds`, `review_rounds` and `context_unknown_packages`. Limits and quota

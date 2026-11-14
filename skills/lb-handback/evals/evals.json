@@ -223,6 +223,24 @@
           "check": "Execution context keeps delegation_restricted=true for other work; no unrelated dispatch or repeat authorization request occurs."
         }
       ]
+    },
+    {
+      "id": 11,
+      "prompt": "During an authorized execution handback, a required new Herdr tab is created with an unsupported option and returns configuration_not_applied. Explain recovery and whether to recreate, rename the last listed tab, or claim naming verified. Do not execute any operation.",
+      "expected_output": "Follow the assertions using the installed candidate; this is a decision-only case, not live runtime acceptance.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "b",
+          "type": "contains",
+          "check": "Explain B exact argv/native stdout/exit pass-through and no appended rename/get; naming is unverified."
+        },
+        {
+          "name": "recover",
+          "type": "contains",
+          "check": "Do not recreate blindly or rename the last resource; inspect only known returned IDs, and do not claim handoff accepted merely from creation."
+        }
+      ]
     }
   ]
 }

@@ -23,6 +23,7 @@ Follow the [installation and upgrade guide](docs/guide/install.md). mind-forge i
 | Skill | Role |
 |---|---|
 | [lb-init](skills/lb-init/SKILL.md) | Install or refresh lbkit; maintain host configuration and reusable skill recipes |
+| [lb-cli](skills/lb-cli/SKILL.md) | Discover and use CLI commands, guarded writes, confirmed human task states and Herdr operations |
 | [lb-scaffold](skills/lb-scaffold/SKILL.md) | Create a workflow instance logbook for a real project |
 | [lb-workflow](skills/lb-workflow/SKILL.md) | Create and refine reusable workflow templates without rewriting existing instances |
 | [lb-plan](skills/lb-plan/SKILL.md) | Create or change the route: goals, Tasks, order, dependencies, planned responsibility, skills and acceptance criteria |

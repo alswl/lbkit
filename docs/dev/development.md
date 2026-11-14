@@ -26,11 +26,13 @@ uv run --locked mypy src/logbook_cli
 uv build
 ```
 
-Real Herdr/runtime acceptance lives in [tests/e2e/herdr](../../tests/e2e/herdr/README.md).
-It requires explicit opt-in and local runtime configuration; ordinary unittest
-discovery never launches agents. Keep raw trials and machine-specific configuration
-in temporary directories. A blocked Captain host remains a separate limitation
-even when CLI tests and live Sailor lifecycle assertions pass.
+This repository owns unit tests only. Test one parser, reducer, adapter or helper
+at a time, replacing external transport with mocks. Temporary files may represent
+inputs to the component under test; multi-command workflows, CLI subprocesses,
+installer runs, cross-service state changes and real-runtime acceptance belong
+to the external verification repository. Executable fakes do not change an
+integration test's ownership. Run those suites against an explicitly selected
+candidate and retain their results separately from local unit-test results.
 
 ## Dependency Index
 
@@ -62,7 +64,7 @@ Contract files (`docs/installable/`) and skills (`skills/`) are installed into c
 
 1. **Relative links must also resolve inside the consuming repository.** Skills live at the installed `.agents/skills/lb-X/`, symlinked to `.lbkit/skills/lb-X/`; contracts live in the consumer's `docs/`, pointing to `.lbkit/docs/installable/`. Within a skill, reference contracts as `../../docs/installable/...` in SKILL.md (`../../../docs/installable/...` from the references subdirectory); within a contract, reference skills as `../../skills/...`. You can write paths according to lbkit's internal layout — inside a consuming repository they resolve through the symlinks to the same file under `.lbkit/`.
 2. **Update `manifest()` in `bin/lbkit`** if you add a new top-level directory or file that must be installed.
-3. **Run the full test suite**; for installer-related changes also run `uv run --locked python -m unittest tests.test_lbkit_install`.
+3. **Run the unit suite** and coordinate affected CLI/installer integration checks in the external verification repository.
 4. **The consuming repository owns** its project logbook, `AGENTS.md`, `lbkit.yaml`, `lbkit-skills.yaml`; do not inject new obligations into it through shared contracts without documenting them here.
 
 When referring to consumer authorization, name the consuming repository's root
@@ -125,7 +127,8 @@ The CLI uses Click and uv. The installer remains a small standard-library bootst
 
 The runtime dependency change requires consumer environment setup; its release version is for the human to decide. The concept-oriented command migration replaces old command paths and option spellings; target-file CAS and dry-run guarantees remain. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
 
-The existing unittest suite remains the regression baseline. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
+The local unittest suite covers isolated components; CLI and installation
+regressions are maintained in the external verification repository. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
 
 ## Human edits and progress refresh
 
@@ -188,14 +191,13 @@ configuration or consumer adoption requirement. Repository coverage and human
 protections are enforced by the CLI; authorization and evidence applicability
 remain the caller's responsibility. Existing task commands keep their behavior.
 
-The reusable feedback acceptance inventory lives in
-`tests/fixtures/feedback_requirements.json`; its separate check mapping lives in
-`tests/fixtures/feedback_coverage.json`. Keep original feedback IDs, atomic
-requirement IDs and explicit unmapped gaps. `tests/test_feedback_coverage.py`
-checks inventory completeness, assertion references/polarity and CLI test
-locators; it does not evaluate assertion meaning or certify model behavior.
-Review inventory changes against original requirements independently of the
-mapping. New source feedback must be added to that inventory explicitly.
+The reusable feedback acceptance inventory, check mappings and locator validation
+live with the integration cases in the external verification repository. Keep
+original feedback IDs, atomic requirement IDs and explicit unmapped gaps there.
+Mapping validation checks completeness and references; it does not evaluate
+assertion meaning or certify model behavior. Review inventory changes against
+original requirements independently of the mapping, and add new source feedback
+explicitly.
 
 For mutation checks, use isolated copies of the current candidate. Establish a
 passing baseline, change one relevant behavior or mapping at a time, and count
@@ -344,6 +346,25 @@ Write lbkit instructions and documentation in English. Keep localized parser/UI 
 Stable task metadata is opt-in; existing Markdown remains intact, but consumers must use the new command paths. Identified tasks require semantic transitions and refuse legacy checkbox/structural mutation. Old top-level aliases, runtime commands, workflow instantiate/replace and option aliases are removed. New workflow templates start in draft and need explicit availability before instantiation; existing unknown-status templates retain compatibility. Shared skills use the domain command contract, with human ownership and authorization unchanged. Toolkit diagnostics add PyYAML for safe declaration parsing; no package or skill version is bumped automatically.
 
 ## Configuration files
+
+Herdr resource creation consumes the existing consumer-owned `label_prefix`
+through a thin `lb herdr -- NATIVE_ARGV...` proxy and shared naming service with
+`agent herdr open`. Sailor delegation is independent of its collaboration
+adapter: Herdr-specific lifecycle input, owned panes and display policy live in
+the Herdr service and explicit `agent herdr` command namespace. The former
+`agent open/close-session` routes are removed without aliases. Do not invent a
+backend-neutral session schema until another implementation supplies actual
+shared requirements. This early-project change deliberately does not preserve
+command compatibility. Skills route new tab/pane creation through it while retaining reuse,
+tab preference, explicit targets, approved wrappers and no-focus behavior. No
+consumer configuration file, launcher selection, mandatory installation step or
+version change is added. An upgrade changes `agent herdr open`: missing/invalid host
+configuration now refuses before allocation; empty/absent prefix retains native
+naming. Unknown native commands pass through, and recognized but unsafe creation
+syntax follows the explicit pass-through policy without rename/readback. See the
+[CLI contract](../installable/lb-cli.md#herdr-resource-creation) for supported syntax
+and partial-resource diagnostics. Fixture calls do not certify real display,
+wrapper, reuse or focus behavior.
 
 The configuration contract replaces `lbkit-agents.yaml` with `lbkit.yaml`
 (settings and agents) and `lbkit-skills.json` with `lbkit-skills.yaml` (recipes). Recipes
@@ -561,3 +582,20 @@ Keep records until all pending answers are reconciled; stop hooks/listeners befo
 rotating a completed runtime directory. Unconfigured workers and Codex question
 APIs remain unavailable. This optional consumer setup adds no mandatory adoption,
 daemon, public command, installer manifest entry, schema or version upgrade.
+
+## CLI usage skill and confirmed human task states
+
+The installed `lb-cli` skill owns CLI discovery, command selection, token handling
+and bounded operation guidance; collaboration Skills retain planning and acceptance.
+Installer skill-directory discovery includes it without a new manifest category.
+Consumers choose when to adopt it and retain their own conflicting Skill content.
+
+Task state commands accept `--confirmed` when the human explicitly confirmed the
+requested state change. Without it human tasks retain pending-to-active protection.
+Confirmation lifts only that ownership restriction, preserving file CAS, migration,
+dependencies, state transitions and preflight gates; it does not authorize unrelated content changes. Explicitly confirmed human
+details and unfinished-task wording use `task note/artifact/rewrite --confirmed`,
+with exact annotation line/kind, task identity, ownership, repository scope and
+completed-result reopening checks retained. No automatic task/configuration migration or version change is
+introduced. Herdr/CLI decision evals certify only the decisions they actually run;
+model trigger, runtime and independent acceptance remain separate validation.

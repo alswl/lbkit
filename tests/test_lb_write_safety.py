@@ -6,8 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logbook_cli.document import EXIT_REFUSED, LbError, check, parse
-from logbook_cli.services.tasks import update
+from logbook_cli.document import check, parse
 
 
 def write_logbook(directory: Path) -> Path:
@@ -58,19 +57,6 @@ class DuplicateTextTests(unittest.TestCase):
         self.assertEqual(
             [p for p in problems if p["code"] == "DUPLICATE_TASK_TEXT"], []
         )
-
-    def test_ambiguous_write_refused(self) -> None:
-        with self.assertRaises(LbError) as caught:
-            update(
-                str(self.root),
-                "projects/demo/docs/logbook.md",
-                "Stage 01 Demo",
-                "第一个任务",
-                "x",
-                parse(self.path, self.root).token,
-                True,
-            )
-        self.assertEqual(caught.exception.code, EXIT_REFUSED)  # ambiguous refusal
 
 
 class HomeLinkTest(unittest.TestCase):

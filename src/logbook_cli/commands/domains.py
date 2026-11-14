@@ -13,6 +13,7 @@ from logbook_cli.commands import (
     workflows,
 )
 from logbook_cli.commands.common import (
+    CONFIRMED,
     DRY_RUN,
     JSON,
     LOG,
@@ -30,6 +31,7 @@ from logbook_cli.services import (
     agents,
     dispatches,
     execution,
+    herdr_sessions,
     skill_capabilities,
     task_lifecycle,
 )
@@ -126,6 +128,12 @@ def dispatch(root):
 @ROOT
 def agent(root):
     """Bind sessions, observe runtime, and perform guarded transport actions."""
+
+
+@agent.group("herdr")
+@ROOT
+def herdr_agent(root):
+    """Provision native Herdr sessions and close explicitly owned panes."""
 
 
 @agent.group("observation")
@@ -268,6 +276,7 @@ def register(app):
             BASIS,
             TOKEN,
             DRY_RUN,
+            CONFIRMED,
             click.option("--reason"),
             click.option("--to", type=click.Choice(["pending", "active"])),
             action=action,
@@ -289,6 +298,7 @@ def register(app):
             BASIS,
             TOKEN,
             DRY_RUN,
+            CONFIRMED,
             *extra,
             action=action,
         )
@@ -326,8 +336,10 @@ def register(app):
         TOKEN,
         DRY_RUN,
     )
-    route(agent, "open", agents.session_operation, INPUT, action="open")
-    route(agent, "close-session", agents.session_operation, INPUT, action="close")
+    route(herdr_agent, "open", herdr_sessions.session_operation, INPUT, action="open")
+    route(
+        herdr_agent, "close-session", herdr_sessions.session_operation, INPUT, action="close"
+    )
     route(agent, "bind", agents.bind, LOG, THINKING, ID, INPUT, TOKEN, DRY_RUN)
     route(
         agent,

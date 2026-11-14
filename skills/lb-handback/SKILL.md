@@ -67,6 +67,8 @@ Preserve running work outside the authorized handoff.
    create/replace only with permission and a concrete reason. When a new Herdr
    execution surface is needed, prefer a tab under the shared
    [Herdr collaboration rules](../lb-push/references/herdr.md#open-close-and-correlate).
+   Route new tab/pane creation through `lb --root ROOT herdr -- NATIVE_ARGV...`
+   to consume the host display-name policy; preserve approved wrappers and no-focus.
    Under
    [lifecycle operations](../../docs/installable/lifecycle-operations.md), keep
    dispatch/run/counter identities, reconcile saved bindings with the live

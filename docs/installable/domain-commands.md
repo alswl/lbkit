@@ -13,6 +13,7 @@ the next task, or equates runtime success with acceptance.
 | Attempt | `dispatch attempt` | started → finished, failed or interrupted; a retry gets a new ID |
 | Execution facts | `log execution context/record` | caller-attributed instructions/observations; derived delegation policy, not runtime orchestration |
 | Agent | `agent bind/inspect/send/close` | saved binding is a claim; live state comes from the selected runtime |
+| Herdr session | `agent herdr open/close-session` | backend-specific resource lifecycle; creation is not Sailor acceptance or Task progress |
 | Workflow | `workflow list/show/check/create/update/set-status/diff` | draft → available → deprecated → retired; retired must reopen to draft |
 | Skill | `skill list/show/check/usage/record-usage` | definition, readiness and usage are separate facts |
 | Feedback | `feedback scan/show/record/update` | disposition, implementation, verification and adoption stay separate |
@@ -28,8 +29,12 @@ CAS covers the document and its sidecar state. The recovery journal protects pai
 Markdown/state writes; separate commands and runtime effects are not transactional.
 Skills reread the current Logbook before acting on Thinking records.
 
-The public root has exactly eight groups: log, task, dispatch, agent, workflow, skill,
-feedback, config. Old command paths and option aliases are removed, not forwarded or hidden.
+The public root has eight groups: log, task, dispatch, agent, workflow, skill,
+feedback, config, plus the thin native `herdr` proxy command. Herdr lifecycle
+operations live under `agent herdr`; the former `agent open/close-session` paths
+are removed without aliases. Sailor is an execution role, independent of the
+collaboration adapter selected by the Skill. Tab/pane placement and display names
+are Herdr concerns. Old command paths and option aliases are removed, not forwarded or hidden.
 `config recipe` maintains work-type recipes in `lbkit-skills.yaml` through guarded atomic commands; `config agent`
 defines launchable agents, while `agent` binds and controls live sessions. `skill extract` reads planned annotations,
 and `skill history` reads authorized session records. These differ from `skill usage`,
@@ -40,6 +45,15 @@ Task identities are registered explicitly; existing Markdown is never bulk-rewri
 Once identified, use semantic task actions rather than checkbox/structural editing.
 Historical completed items retain unknown evidence. Preserving human-owned document
 bytes is independent of command compatibility.
+
+Human-owned Task state changes require explicit human confirmation and
+`--confirmed` on the state command; pending-to-active remains allowed without it.
+Use semantic actions for identified tasks and `task update` only for unidentified
+checkboxes. The flag preserves CAS, dependency, migration and transition guards;
+it grants no permission to clear a preflight gate or change task ownership.
+For separately human-approved content, `task note/artifact/rewrite --confirmed`
+permits bounded edits: note replacement still matches exact line/kind; rewrite
+requires an unfinished task and preserves identity, ownership and repository scope.
 
 ## Task and dispatch example
 

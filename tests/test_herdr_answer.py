@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from observation_fixtures import target
+from herdr_fixtures import target
 
 from logbook_cli.adapters import claude_questions, herdr
 from logbook_cli.document import LbError

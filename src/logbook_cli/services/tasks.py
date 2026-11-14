@@ -73,7 +73,14 @@ def add(
 
 
 def update(
-    root: str, log: str, stage: str, task: str, status: str, token: str, dry_run: bool
+    root: str,
+    log: str,
+    stage: str,
+    task: str,
+    status: str,
+    token: str,
+    dry_run: bool,
+    confirmed: bool = False,
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
@@ -84,9 +91,13 @@ def update(
             "identified task: use semantic lifecycle actions such as start/complete/pause/resume/cancel/reopen",
             EXIT_REFUSED,
         )
-    if item.human and not (item.status is TaskState.TODO and status == "/"):
+    if (
+        item.human
+        and not confirmed
+        and not (item.status is TaskState.TODO and status == "/")
+    ):
         raise LbError(
-            "refusing to change a human-owned task checkbox except from not-started to in-progress",
+            "human-owned checkbox change requires --confirmed after explicit human confirmation; pending-to-active remains allowed",
             EXIT_REFUSED,
         )
     if status not in CHECKBOX:
@@ -105,10 +116,11 @@ def note(
     token: str,
     dry_run: bool,
     replace_line: int | None = None,
+    confirmed: bool = False,
 ) -> Result:
     doc = writable(root, log, token)
     changed, line = append_note(
-        doc, find_task(doc, stage, task), text, kind, replace_line
+        doc, find_task(doc, stage, task), text, kind, replace_line, confirmed=confirmed
     )
     return save(doc, changed, dry_run, line=line)
 
@@ -123,12 +135,13 @@ def rewrite(
     token: str,
     dry_run: bool,
     assign_repo: str | None = None,
+    confirmed: bool = False,
 ) -> Result:
     doc = writable(root, log, token)
     item = find_task(doc, stage, task)
     return save(
         doc,
-        rewrite_task(doc, item, text, decision, assign_repo),
+        rewrite_task(doc, item, text, decision, assign_repo, confirmed=confirmed),
         dry_run,
         line=item.line,
     )

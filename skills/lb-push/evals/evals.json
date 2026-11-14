@@ -413,7 +413,8 @@
       "expectations": [
         "Reuse the existing fitting session instead of creating one per work package",
         "Use the host-declared label prefix; agent identifiers follow the Herdr format",
-        "Explicitly specify the coordinator's workspace and keep no-focus"
+        "Explicitly specify the coordinator's workspace and keep no-focus",
+        "When a new surface is required, use the lb Herdr creation proxy; apply prefix only to visible names and verify the returned resource ID."
       ]
     },
     {
@@ -707,13 +708,14 @@
     {
       "id": 64,
       "prompt": "The host lbkit.yaml's launcher is a zsh shell function (e.g. example-codex, embedding proxy and model parameters). The coordinator needs to create a new executor for the responsible repository in Herdr, hand over the package, and confirm the actual model. Give the procedure.",
-      "expected_output": "tab create --workspace --cwd repository root --label with prefix --no-focus creates a shell pane; pane run executes the wrapper function inside that interactive shell; agent rename names it targeting the pane id; agent read verifies the actual model in the TUI footer before agent prompt hands over the package. Never substitute the agent start --kind generic engine for the wrapper.",
+      "expected_output": "Reuse a suitable Sailor first; otherwise create a no-focus shell tab through lb herdr, preserve the approved wrapper with pane run, keep logical agent IDs unprefixed and verify actual model/session before guarded dispatch.",
       "files": [],
       "expectations": [
         "Use pane run to launch the wrapper function inside the target pane's interactive shell, not agent start --kind to assemble a generic engine",
-        "Run agent rename targeting the pane id, with the host prefix and no focus stolen",
+        "Apply and verify the host prefix on the returned tab/pane display name via lb herdr; logical agent rename uses an unprefixed valid ID and never an inventory index.",
         "Before handing over the package, use agent read to verify the actual model and deployment ownership",
-        "New tabs use --no-focus and never steal human focus"
+        "New tabs use --no-focus and never steal human focus",
+        "New tab/pane allocation goes through lb --root ROOT herdr -- NATIVE_ARGV; do not substitute agent herdr open for a required wrapper."
       ]
     },
     {
@@ -1972,6 +1974,29 @@
           "name": "unknown_never_resend",
           "type": "not_contains",
           "check": "Retries uncertain submission under the same/new ID, treats editing/idle/transport as confirmation, or reads human drafts as answers."
+        }
+      ]
+    },
+    {
+      "id": 1003,
+      "prompt": "The host requires approved-runner, a shell wrapper binding its model. A new Herdr surface is authorized only if the existing suitable Sailor cannot be reused. Explain creation, naming and model verification before dispatch. Do not execute any operation.",
+      "expected_output": "Follow the assertions using the installed candidate; this is a decision-only case, not live runtime acceptance.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reuse",
+          "type": "contains",
+          "check": "Reuse the existing suitable Sailor first."
+        },
+        {
+          "name": "wrapper",
+          "type": "contains",
+          "check": "For a needed new surface use the lb Herdr creation proxy with explicit workspace/cwd/no-focus and retain the approved shell wrapper; never substitute native agent start/open for that wrapper."
+        },
+        {
+          "name": "identity",
+          "type": "contains",
+          "check": "Keep prefix on display names, logical agent ID unprefixed, and verify actual model/session before dispatch."
         }
       ]
     }
