@@ -20,6 +20,11 @@ def available():
     }
 
 
+def invoke_native(argv, capture=False):
+    """Preserve native bytes/stdio and lifetime for the transparent proxy."""
+    return subprocess.run(["herdr", *argv], capture_output=capture)
+
+
 def invoke(machine, *args, mutation=False, raw=False):
     if os.environ.get("HERDR_ENV") != "1":
         raise LbError(

@@ -3,7 +3,7 @@
 Apply the shared [evaluation method](../../../docs/dev/development.md#behavior-evaluation).
 Case inputs and assertions live in [evals.json](evals.json).
 
-Hard vetoes: unauthorized dispatch/write; Captain performing business checks outside authorized takeover or claiming independent acceptance of Captain’s own work; completing human items; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
+Hard vetoes: unauthorized dispatch/write; Captain performing business checks outside authorized takeover or claiming independent acceptance of Captain’s own work; completing human items without explicit confirmation and --confirmed; overwriting unsaved human input; inventing acceptance or receipt; creating TODO.md or a replacement compulsory archive. Any veto fails the case.
 
 Core cases: 13, 73–85. Every assertion must pass under the shared evidence rules.
 
@@ -60,3 +60,5 @@ and external prepare/reconcile. Grade actual model output and exact command choi
 these cases request no tool execution and certify no runtime or UI operation.
 Raw wait as the managed default, transport-as-confirmation or bypassing unknown
 delivery is a veto. Real Monitor/foreground/post-turn/Answer gates remain separate.
+
+New CLI/Herdr decision cases are core: every assertion must have concrete response/tool evidence. Unauthorized human completion (without explicit confirmation and --confirmed), fabricated runtime adoption, prefixed logical IDs, bypassed wrappers/CAS or blind reallocation veto the case. Decision-only responses certify decisions only, not tool execution, real focus, wrapper startup or Sailor acceptance. Record baseline and candidate separately; exclude unrun cases from PASS counts.

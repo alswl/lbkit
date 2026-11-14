@@ -7,6 +7,12 @@ from test_agent_wait_e2e import observation, target
 
 
 class CollaborationLifecycleTest(CoordinationTest):
+    def setUp(self):
+        super().setUp()
+        (self.root / "lbkit.yaml").write_text(json.dumps({
+            "version": "0.2.0", "settings": {}, "agents": {},
+        }))
+
     def request(self, value):
         (self.root / "request.json").write_text(json.dumps(value))
 
@@ -58,7 +64,7 @@ class CollaborationLifecycleTest(CoordinationTest):
                 "name": "example-worker",
             }
         )
-        r = self.cli("agent", "open", "--input-file", "request.json")
+        r = self.cli("agent", "herdr", "open", "--input-file", "request.json")
         self.assertEqual(r["binding"], b)
         self.assertEqual(r["owned_panes"], ["w1:p1"])
         self.assertIn("--no-focus", self.calls()[2]["argv"])
@@ -99,7 +105,7 @@ class CollaborationLifecycleTest(CoordinationTest):
             }
         )
         r = json.loads(
-            self.cli("agent", "open", "--input-file", "request.json", code=1).stdout
+            self.cli("agent", "herdr", "open", "--input-file", "request.json", code=1).stdout
         )
         self.assertEqual(r["owned_panes"], ["w1:p1"])
         self.assertEqual(r["status"], "unknown")
@@ -113,7 +119,7 @@ class CollaborationLifecycleTest(CoordinationTest):
 
     def test_close_refuses_unowned_pane_before_mutation(self):
         self.request({"binding": target()["binding"], "owned_panes": []})
-        self.cli("agent", "close-session", "--input-file", "request.json", code=4)
+        self.cli("agent", "herdr", "close-session", "--input-file", "request.json", code=4)
         self.assertEqual(self.calls(), [])
 
     def close_runtime(self, *, changed=False, remaining=False, failed=False, server='example-session'):
@@ -132,17 +138,17 @@ class CollaborationLifecycleTest(CoordinationTest):
 
     def test_changed_native_session_refuses_close(self):
         self.close_runtime(changed=True)
-        self.cli('agent', 'close-session', '--input-file', 'request.json', code=4)
+        self.cli('agent', 'herdr', 'close-session', '--input-file', 'request.json', code=4)
         self.assertFalse(any(c['argv'][:2] == ['pane', 'close'] for c in self.calls()))
 
     def test_server_scope_mismatch_refuses_close(self):
         self.close_runtime(server='another-server')
-        self.cli('agent', 'close-session', '--input-file', 'request.json', code=4)
+        self.cli('agent', 'herdr', 'close-session', '--input-file', 'request.json', code=4)
         self.assertFalse(any(c['argv'][:2] == ['pane', 'close'] for c in self.calls()))
 
     def test_successful_close_observes_absence_but_not_descendant_cleanup(self):
         self.close_runtime()
-        result = self.cli('agent', 'close-session', '--input-file', 'request.json')
+        result = self.cli('agent', 'herdr', 'close-session', '--input-file', 'request.json')
         self.assertEqual(result['status'], 'closed')
         self.assertEqual(result['remaining_owned_panes'], [])
         self.assertEqual(result['process_cleanup'], 'not independently verified')
@@ -151,6 +157,6 @@ class CollaborationLifecycleTest(CoordinationTest):
         for options in ({'remaining': True}, {'failed': True}):
             with self.subTest(options=options):
                 self.close_runtime(**options)
-                result = json.loads(self.cli('agent', 'close-session', '--input-file', 'request.json', code=1).stdout)
+                result = json.loads(self.cli('agent', 'herdr', 'close-session', '--input-file', 'request.json', code=1).stdout)
                 self.assertEqual(result['status'], 'unknown')
                 self.assertEqual(result['remaining_owned_panes'], ['w1:p1'])

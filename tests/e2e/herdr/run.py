@@ -786,6 +786,7 @@ class LiveSuite:
                         [
                             *self.lb,
                             "agent",
+                            "herdr",
                             "close-session",
                             "--input-file",
                             "close.json",

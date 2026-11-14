@@ -169,6 +169,7 @@ class DomainTest(unittest.TestCase):
                 "skill",
                 "feedback",
                 "config",
+                "herdr",
             },
         )
         for route in (

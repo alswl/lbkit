@@ -10,6 +10,7 @@ import click
 
 from logbook_cli.commands import domains, tasks, workflows
 from logbook_cli.commands.common import ROOT
+from logbook_cli.commands.herdr_proxy import herdr
 from logbook_cli.document import EXIT_PATH, LbError
 
 
@@ -33,6 +34,7 @@ def app(ctx: click.Context, root: str | None) -> None:
 
 app.add_command(tasks.task)
 app.add_command(workflows.workflow)
+app.add_command(herdr)
 domains.register(app)
 
 

@@ -107,13 +107,19 @@ def append_note(
     note: str,
     kind: str | None = None,
     replace_line: int | None = None,
+    confirmed: bool = False,
 ) -> tuple[str, int]:
     """Append one child line after the task's existing indented content."""
-    if task.human and not (
-        kind is not None and (field_value(kind + ":") or (None,))[0] is Field.STATUS
+    if (
+        task.human
+        and not confirmed
+        and not (
+            kind is not None and (field_value(kind + ":") or (None,))[0] is Field.STATUS
+        )
     ):
         raise LbError(
-            "human-owned tasks accept only a status note (--kind 状态)", EXIT_REFUSED
+            "human-owned task details require --confirmed after human confirmation; unconfirmed status append is allowed",
+            EXIT_REFUSED,
         )
     if not note.strip() or "\n" in note or "\r" in note:
         raise LbError("task note must be one nonempty line", EXIT_USAGE)
@@ -152,14 +158,14 @@ def append_note(
             )
     if replace_line is not None:
         if (
-            task.human
+            (task.human and not confirmed)
             or kind is None
             or not semantic
             or semantic[0]
             not in (Field.SOURCE, Field.ACCEPTANCE, Field.SKILLS, Field.STATUS)
         ):
             raise LbError(
-                "replacement requires explicit Source/Acceptance/Skills/Status on an agent task",
+                "replacement requires explicit Source/Acceptance/Skills/Status; human tasks require --confirmed",
                 EXIT_REFUSED,
             )
         targets = [
@@ -261,13 +267,18 @@ def single_line(value: str, label: str) -> None:
 
 
 def rewrite_task(
-    doc: Document, task: Task, text: str, decision: str, assign_repo: str | None = None
+    doc: Document,
+    task: Task,
+    text: str,
+    decision: str,
+    assign_repo: str | None = None,
+    confirmed: bool = False,
 ) -> str:
     single_line(text, "task text")
     single_line(decision, "decision")
-    if task.human or task.state not in (" ", "/"):
+    if (task.human and not confirmed) or task.state not in (" ", "/"):
         raise LbError(
-            "only unfinished agent tasks may be rewritten; reopen and reverify completed results separately",
+            "only unfinished tasks may be rewritten; human tasks require --confirmed and completed tasks require reopening",
             EXIT_REFUSED,
         )
     if text.startswith(("- [", "* [", "+ [")):
@@ -284,12 +295,12 @@ def rewrite_task(
                 EXIT_REFUSED,
             )
     if (
-        updated.human
+        updated.human != task.human
         or (assign_repo is None and updated.repositories != task.repositories)
         or updated.preflight_blocker
     ):
         raise LbError(
-            "rewrite must preserve agent ownership and repositories, and cannot introduce a preflight gate",
+            "rewrite must preserve ownership and repositories, and cannot introduce a preflight gate",
             EXIT_REFUSED,
         )
     changed, _ = append_note(
@@ -298,6 +309,7 @@ def rewrite_task(
         prefix(Field.STATUS, doc.locale)
         + SUMMARY_TEXT[doc.locale]["rewrite"]
         + decision,
+        confirmed=confirmed,
     )
     return changed
 

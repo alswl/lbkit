@@ -345,6 +345,25 @@ Stable task metadata is opt-in; existing Markdown remains intact, but consumers 
 
 ## Configuration files
 
+Herdr resource creation consumes the existing consumer-owned `label_prefix`
+through a thin `lb herdr -- NATIVE_ARGV...` proxy and shared naming service with
+`agent herdr open`. Sailor delegation is independent of its collaboration
+adapter: Herdr-specific lifecycle input, owned panes and display policy live in
+the Herdr service and explicit `agent herdr` command namespace. The former
+`agent open/close-session` routes are removed without aliases. Do not invent a
+backend-neutral session schema until another implementation supplies actual
+shared requirements. This early-project change deliberately does not preserve
+command compatibility. Skills route new tab/pane creation through it while retaining reuse,
+tab preference, explicit targets, approved wrappers and no-focus behavior. No
+consumer configuration file, launcher selection, mandatory installation step or
+version change is added. An upgrade changes `agent herdr open`: missing/invalid host
+configuration now refuses before allocation; empty/absent prefix retains native
+naming. Unknown native commands pass through, and recognized but unsafe creation
+syntax follows the explicit pass-through policy without rename/readback. See the
+[CLI contract](../installable/lb-cli.md#herdr-resource-creation) for supported syntax
+and partial-resource diagnostics. Fixture calls do not certify real display,
+wrapper, reuse or focus behavior.
+
 The configuration contract replaces `lbkit-agents.yaml` with `lbkit.yaml`
 (settings and agents) and `lbkit-skills.json` with `lbkit-skills.yaml` (recipes). Recipes
 stay separate because they describe the host's whole skill set, not lbkit settings, and
@@ -561,3 +580,20 @@ Keep records until all pending answers are reconciled; stop hooks/listeners befo
 rotating a completed runtime directory. Unconfigured workers and Codex question
 APIs remain unavailable. This optional consumer setup adds no mandatory adoption,
 daemon, public command, installer manifest entry, schema or version upgrade.
+
+## CLI usage skill and confirmed human task states
+
+The installed `lb-cli` skill owns CLI discovery, command selection, token handling
+and bounded operation guidance; collaboration Skills retain planning and acceptance.
+Installer skill-directory discovery includes it without a new manifest category.
+Consumers choose when to adopt it and retain their own conflicting Skill content.
+
+Task state commands accept `--confirmed` when the human explicitly confirmed the
+requested state change. Without it human tasks retain pending-to-active protection.
+Confirmation lifts only that ownership restriction, preserving file CAS, migration,
+dependencies, state transitions and preflight gates; it does not authorize unrelated content changes. Explicitly confirmed human
+details and unfinished-task wording use `task note/artifact/rewrite --confirmed`,
+with exact annotation line/kind, task identity, ownership, repository scope and
+completed-result reopening checks retained. No automatic task/configuration migration or version change is
+introduced. Herdr/CLI decision evals certify only the decisions they actually run;
+model trigger, runtime and independent acceptance remain separate validation.

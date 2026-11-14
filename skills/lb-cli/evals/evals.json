@@ -1,0 +1,54 @@
+{
+  "skill_name": "lb-cli",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The human explicitly confirmed that identified human Task H1 is complete. Explain how to apply that state with the current CLI, preview it, and handle a version conflict. Do not execute any write.",
+      "expected_output": "Follow the assertions using the installed candidate; this is a decision-only case, not live runtime acceptance.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "confirmation",
+          "type": "contains",
+          "check": "Use --confirmed only because the prompt supplies explicit human confirmation, with task complete H1 and a basis."
+        },
+        {
+          "name": "cas",
+          "type": "contains",
+          "check": "Read log context version_token and use --expect-version; preview with --dry-run, reread/reassess on conflict, never bypass CAS."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I only asked for current project status. The next Task is ready. Explain which CLI operations to use and whether to initialize Observation, create an executor or update progress. Do not execute commands.",
+      "expected_output": "Follow the assertions using the installed candidate; this is a decision-only case, not live runtime acceptance.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "readonly",
+          "type": "contains",
+          "check": "Use read-only context/state/task queries; no initialization, executor launch or progress write from this status-only request."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The human approved this exact new wording for an unfinished human task: Human review: inspect the revised report 👱. They also supplied a new acceptance criterion and result link. Explain the current CLI procedure to apply these scoped edits, and what changes if the task is already completed. Do not execute writes.",
+      "expected_output": "Use confirmed bounded task edits with fresh context; completed criteria require authorized reopening.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "confirmed_content",
+          "type": "contains",
+          "check": "Use task rewrite with --confirmed and --decision for approved unfinished wording, note --confirmed for the approved criterion, and artifact --confirmed for the result; preview with a fresh matching token."
+        },
+        {
+          "name": "preserve_identity_and_guards",
+          "type": "contains",
+          "check": "Preserve task identity, human ownership and repositories; annotation replacement matches the same kind and exact current line; never rewrite a completed task without first obtaining authorization to reopen it."
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 import click
 
 from logbook_cli.commands.common import (
+    CONFIRMED,
     DECISION,
     DRY_RUN,
     JSON,
@@ -109,6 +110,7 @@ def add(
     DRY_RUN,
     JSON,
     click.option("--status", required=True),
+    CONFIRMED,
 )
 def update(
     root: str | None,
@@ -119,9 +121,20 @@ def update(
     dry_run: bool,
     json: bool,
     status: str,
+    confirmed: bool,
 ) -> None:
     finish(
-        tasks.update(resolve_root(root), log, stage, task, status, token, dry_run), json
+        tasks.update(
+            resolve_root(root),
+            log,
+            stage,
+            task,
+            status,
+            token,
+            dry_run,
+            confirmed=confirmed,
+        ),
+        json,
     )
 
 
@@ -133,6 +146,7 @@ def update(
     TASK,
     TOKEN,
     DRY_RUN,
+    CONFIRMED,
     JSON,
     click.option("--artifact", required=True),
 )
@@ -144,11 +158,20 @@ def artifact(
     token: str,
     dry_run: bool,
     json: bool,
+    confirmed: bool,
     artifact: str,
 ) -> None:
     finish(
         tasks.note(
-            resolve_root(root), log, stage, task, artifact, "产物", token, dry_run
+            resolve_root(root),
+            log,
+            stage,
+            task,
+            artifact,
+            "产物",
+            token,
+            dry_run,
+            confirmed=confirmed,
         ),
         json,
     )
@@ -162,6 +185,7 @@ def artifact(
     TASK,
     TOKEN,
     DRY_RUN,
+    CONFIRMED,
     JSON,
     TEXT,
     click.option("--kind", type=click.Choice(NOTE_KINDS)),
@@ -175,6 +199,7 @@ def note(
     token: str,
     dry_run: bool,
     json: bool,
+    confirmed: bool,
     text: str,
     kind: str | None,
     replace_line: int | None,
@@ -190,13 +215,14 @@ def note(
             token,
             dry_run,
             replace_line,
+            confirmed=confirmed,
         ),
         json,
     )
 
 
 @task.command("rewrite")
-@options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, JSON, TEXT, DECISION)
+@options(ROOT, LOG, STAGE, TASK, TOKEN, DRY_RUN, CONFIRMED, JSON, TEXT, DECISION)
 @click.option(
     "--assign-repo",
     help="Explicitly assign an unassigned task; repository name without @.",
@@ -209,6 +235,7 @@ def rewrite(
     token: str,
     dry_run: bool,
     json: bool,
+    confirmed: bool,
     text: str,
     decision: str,
     assign_repo: str | None,
@@ -224,6 +251,7 @@ def rewrite(
             token,
             dry_run,
             assign_repo,
+            confirmed=confirmed,
         ),
         json,
     )

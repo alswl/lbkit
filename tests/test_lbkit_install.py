@@ -306,7 +306,7 @@ class LbkitInstallTest(unittest.TestCase):
             .resolve()
             .is_file()
         )
-        for name in ("lb-takeover", "lb-handback"):
+        for name in ("lb-takeover", "lb-handback", "lb-cli"):
             for registry in (".agents", ".claude"):
                 skill = self.repo / registry / "skills" / name
                 self.assertTrue((skill / "SKILL.md").is_file())

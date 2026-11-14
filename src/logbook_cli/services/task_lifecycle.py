@@ -161,7 +161,16 @@ def canonical_record(item):
 
 
 def semantic_transition(
-    root, log, task_id, action, basis, token, dry_run, reason=None, to=None
+    root,
+    log,
+    task_id,
+    action,
+    basis,
+    token,
+    dry_run,
+    reason=None,
+    to=None,
+    confirmed=False,
 ):
     from logbook_cli.edit import task_content_end
     from logbook_cli.models import Field
@@ -178,8 +187,15 @@ def semantic_transition(
         raise LbError(
             "conflicting legacy state requires explicit migration", EXIT_REFUSED
         )
-    if task.human and not (action == "start" and task.effective_state == "pending"):
-        raise LbError("human-owned task transitions are protected", EXIT_REFUSED)
+    if (
+        task.human
+        and not confirmed
+        and not (action == "start" and task.effective_state == "pending")
+    ):
+        raise LbError(
+            "human-owned task state change requires --confirmed after explicit human confirmation",
+            EXIT_REFUSED,
+        )
     from logbook_cli.task_records import require_current, resolution_text
 
     require_current(task, old)
@@ -297,18 +313,29 @@ def semantic_transition(
 
 
 def transition(
-    root, log, task_id, action, basis, token, dry_run, input_file=None, candidate=None
+    root,
+    log,
+    task_id,
+    action,
+    basis,
+    token,
+    dry_run,
+    input_file=None,
+    candidate=None,
+    confirmed=False,
 ):
     doc = writable(root, log, token)
     records.read(doc, "task", require_closed=True)
     task, index, old = identity.lookup(doc, task_id)
     if action in {"cancel", "reopen"}:
-        return semantic_transition(root, log, task_id, action, basis, token, dry_run)
+        return semantic_transition(
+            root, log, task_id, action, basis, token, dry_run, confirmed=confirmed
+        )
     canonical = "status" not in old
     if canonical:
         if action == "start":
             return semantic_transition(
-                root, log, task_id, action, basis, token, dry_run
+                root, log, task_id, action, basis, token, dry_run, confirmed=confirmed
             )
         old = {
             **old,
@@ -330,8 +357,15 @@ def transition(
             "task metadata and checkbox disagree; reconcile human edits first",
             EXIT_REFUSED,
         )
-    if task.human and not (action == "start" and old["status"] == "pending"):
-        raise LbError("human-owned task transitions are protected", EXIT_REFUSED)
+    if (
+        task.human
+        and not confirmed
+        and not (action == "start" and old["status"] == "pending")
+    ):
+        raise LbError(
+            "human-owned task state change requires --confirmed after explicit human confirmation",
+            EXIT_REFUSED,
+        )
     transitions = {
         "start": ({"pending"}, "active"),
         "record-result": ({"active", "submitted"}, "submitted"),

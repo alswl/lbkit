@@ -87,4 +87,4 @@ After interruption, reread the checkpoint and actual disk/runtime state before
 resuming. Reconcile pending commands and partial ownership changes; do not repeat
 side effects or silently resume stale Sailor work. Report the scoped executor,
 current result and next action briefly; switching modes does not reset counters,
-complete human items, or expand commit/push/publication authorization.
+supply human confirmation for task state changes, or expand commit/push/publication authorization.

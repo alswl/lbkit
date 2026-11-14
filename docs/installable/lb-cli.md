@@ -73,9 +73,83 @@ The "next item" in `log context`, `log state`, and `todo` is computed only from 
 
 Discovery defaults to `projects/*/docs/*.md` inside the root; `list`, `log check --all`, and `task list` accept `--projects-dir` to pass in the host-configured `settings.documents.project_root`, and recognize candidates with the heuristic "exactly one visible H1, plus an H2 stage or a todo"; this excludes `thinking/` and `prompts/` but is not a semantic classifier for arbitrary articles. The `projects`, project, and `docs` directories all get containment checks before traversal; directories pointing outside the root or otherwise anomalous are not traversed. Headings, todos, and links inside code fences and HTML comments do not participate in parsing; a trailing HTML comment hides only the comment itself, so a task before the comment keeps its full original text and updatable identity. If a multiline comment's closing line is followed by structural text, `COMMENT_STRUCTURE_AMBIGUOUS` is reported rather than guessing the parse. A fence closes only with a fence of the same character, sufficient length, and nothing but whitespace at end of line. `context.stages[].tasks` gives each item's original text, status, line number, repository marker, and human marker. `bound_records` lists only places in the body that explicitly link to `thinking/` or `prompts/` — bindings are never guessed from same-named files.
 
+## Herdr resource creation
+
+```sh
+lb --root ROOT herdr -- tab create --workspace w1 --cwd /example/repo --label reviewer --no-focus
+lb --root ROOT herdr -- pane split w1:p9 --cwd /example/repo --no-focus
+```
+
+The proxy consumes `settings.runtime.herdr.label_prefix` from the host's
+`lbkit.yaml`. It prefixes display names, never logical Agent IDs, and reads back
+the exact newly returned resource ID. It does not select a runtime/model, replace
+an approved wrapper, grant dispatch permission or implement guarded business send.
+Reuse and tab preference remain Skill decisions. Focus flags are preserved;
+Skills supply `--no-focus`. Workspace creation is outside managed naming support.
+
+All tokens after `--` belong to Herdr, including `--json` and `--dry-run`. Empty
+argv is a usage error (2), never a launch of the native TUI. There is no shell
+evaluation or extra proxy timeout. Unknown command paths and native help/version
+pass through once with inherited stdio and native exit status. Recognized creation
+with unsafe/unsupported arguments also passes the original argv once, adding
+`configuration_not_applied` to stderr; it reads no policy and performs no rename
+or readback. This is the B pass-through policy, not proof of configured naming.
+
+Supported creation syntax (based on Herdr 0.9.5):
+
+| Path | Options |
+| --- | --- |
+| `tab create` | `--workspace`, `--cwd`, `--label`, repeatable `--env`; `--focus` or `--no-focus` |
+| `pane split` | One positional pane, `--pane`, or `--current`; `--direction`, `--ratio`, `--cwd`, repeatable `--env`, `--right-click`; `--focus` or `--no-focus` |
+
+The classifier recognizes separate and equals forms without shell parsing; native
+syntax validation still belongs to Herdr. Herdr 0.9.5 creation accepts the separate
+forms shown above and rejects equals options such as `--label=value`; that native
+failure is preserved, not converted into a successful creation. Global `--machine`
+and `--session` selector tokens are retained unchanged on derived commands. Unknown leading
+syntax is forwarded without guessing a command position. Duplicate scalar options,
+missing values, conflicting focus/targets and unknown creation options take the B
+path; option values containing command words remain data.
+
+For safely parsed creation, configuration is read before allocation. Missing or
+invalid configuration refuses with exit 4 and no allocation. An absent/empty prefix
+forwards unchanged, without extra naming/readback. With a nonempty prefix, an
+explicit tab label is prefixed before creation, then verified. Otherwise the new
+tab's native label supplies the base name; a pane uses its first nonempty label,
+title, then terminal_title_stripped, falling back explicitly to its returned pane
+ID. Only that resource may be renamed and read back. A complete existing prefix
+is not doubled; text is not trimmed.
+
+Native creation failure preserves original stdout/stderr bytes and exit status,
+with no naming follow-up. Successful creation preserves its stdout. Missing ID,
+rename failure, read failure or label mismatch adds a stderr JSON diagnostic with
+`reason`, `stage`, `resource_kind`, `resource_id` (null when unknown), known
+`owned_panes` and `retry_safe: false`, then exits 4. Inspect and repair the known
+resource; the proxy never retries allocation, deletes resources, guesses the last
+resource or renames unrelated resources. Signals use shell status 128+signal;
+missing/nonexecutable native binaries return 127/126. Interrupted transport may
+have side effects and must be reconciled before retrying.
+
+`lb agent herdr open --input-file FILE --json` is a Herdr-specific lifecycle
+operation. Its six inputs (machine, server, parent_pane, cwd, runtime, name),
+no-focus pane layout and native runtime restriction belong to that backend, not
+to a general Sailor contract. The logical agent name remains unprefixed.
+It shares the naming service and verifies prefix+name before starting the runtime.
+Success adds `display_policy` (`verified` or `not_required`) to existing fields.
+Naming failure returns exit 1, `status: unknown`, the known `owned_panes`,
+`failure_stage` and failed `display_policy`; no runtime is started. Other lifecycle
+failures retain the documented failure contract. `lb agent herdr close-session`
+accepts the returned binding and owned_panes, checks native identity and closes
+only its explicitly owned pane.
+
+The generic `agent open` and `agent close-session` routes are removed without
+aliases. Use the explicit Herdr routes and valid host configuration before
+allocation. Sailor delegation selects a collaboration adapter; it does not define
+tab/pane topology or display-name policy. `config check/resolve` never certify runtime adoption.
+
 ## Write and Concurrency Protection
 
-Every write operation (including `log sync`) must supply the SHA-256 `version_token` returned by `log context --json` or the preceding successful write. Any single-byte file change, or a stage and task original text that cannot be uniquely matched, refuses the write with exit code 4; an invalid status value is a parameter error with exit code 2. Tasks are located by the stage heading (minus the status emoji) plus the full original task text — never by line number. `task update` allows only `[ ] → [/]` on `👱` or `人工验证：` human items; completion, cancellation and reversal remain refused; `task artifact` and `task note` refuse to write sub-lines onto human-owned items, except `task note --kind 状态` (`Status`), which appends a status sub-line and leaves the first line and checkbox untouched. `task add` creates only not-started items and rejects same-text todos in the same stage; `--before-task` matches exact task text uniquely in that stage; it is mutually exclusive with legacy `--before-line`, which must point to a task first line. Line numbers shift after every insert, so repeated `--before-line N` with the same N places each later item before the earlier one; use `--before-task` with the same anchor text to keep insertion order. Before using `task add`, an agent still needs the human's explicit confirmation of the new items and their order. `--dry-run` writes nothing and prints a reviewable unified diff (the JSON `diff` field).
+Every write operation (including `log sync`) must supply the SHA-256 `version_token` returned by `log context --json` or the preceding successful write. Any single-byte file change, or a stage and task original text that cannot be uniquely matched, refuses the write with exit code 4; an invalid status value is a parameter error with exit code 2. Tasks are located by the stage heading (minus the status emoji) plus the full original task text — never by line number. `task update` and semantic task state commands allow human-owned state changes with `--confirmed` after explicit human confirmation; without it only pending-to-active is allowed. Confirmation does not bypass CAS, dependencies, valid transitions, migration or preflight checks; `task artifact` and `task note` require `--confirmed` for explicitly human-approved details on human-owned items, except `task note --kind 状态` (`Status`), which appends a status sub-line and leaves the first line and checkbox untouched. `task add` creates only not-started items and rejects same-text todos in the same stage; `--before-task` matches exact task text uniquely in that stage; it is mutually exclusive with legacy `--before-line`, which must point to a task first line. Line numbers shift after every insert, so repeated `--before-line N` with the same N places each later item before the earlier one; use `--before-task` with the same anchor text to keep insertion order. Before using `task add`, an agent still needs the human's explicit confirmation of the new items and their order. `--dry-run` writes nothing and prints a reviewable unified diff (the JSON `diff` field).
 
 All write commands re-parse the candidate text before writing and reject newly introduced deterministic `log check` issues (such as missing in-repo links). Pre-existing issues do not block unrelated local updates; transient stage emoji, explicit `[-]`, unfetched external links, and unverified local links outside the repository count as permitted notices. The `issues_introduced` field of the JSON write result is an empty list when admission passes. `task artifact` and `task note` place new sub-lines after the existing indented sub-items; appending a duplicate is refused when an identical sub-line already exists. `task artifact` prepends the `产物：` (`Artifact:`) label when the text does not already start with it. When `task note` text starts with `🚨 ` and a `--kind` is given, the marker stays at the very front of the sub-item body.
 
@@ -136,7 +210,7 @@ there is no migration workflow. The only active reserved comment is a short task
 
 Successful logbook writes return `version_token` for the resulting Markdown and its state section, including no-op writes. Dry-run returns the original current token, not a token for the uncommitted preview. This removes token-only reads between already-understood sequential writes; it does not make the sequence transactional or replace semantic rereading after conflicts or changed acceptance criteria.
 
-`task rewrite LOG --stage STAGE --task OLD --text NEW --decision SOURCE --expect-version TOKEN` changes only an unfinished agent task's first-line text, preserving its checkbox, position, children and repository ownership, and records the supplied decision in a status child. Human items, completed/skipped items, changed ownership, duplicate text and stale tokens are refused. The caller must verify authorization and evidence applicability; the CLI cannot authenticate the supplied decision.
+`task rewrite LOG --stage STAGE --task OLD --text NEW --decision SOURCE --expect-version TOKEN` changes only an unfinished task's first-line text, preserving its checkbox, position, children and repository ownership, and records the supplied decision in a status child. Human items require `--confirmed` after approval of that exact rewrite. Completed/skipped items, changed ownership, duplicate text and stale tokens remain refused. The caller must verify authorization and evidence applicability; the CLI cannot authenticate the supplied decision.
 
 For an explicitly authorized initial assignment, add `--assign-repo NAME` (without `@`) and include exactly `@NAME` in the new text. This permits assigning one repository only when the original unfinished agent task has none; it never transfers existing ownership or splits the task. Preview first with the same decision and token. The caller verifies the named repository is in the approved working directories and that the human decision authorizes this assignment; the flag and decision string cannot authenticate consent. All other rewrite protections remain in force.
 
@@ -154,7 +228,7 @@ The low-level CLI remains a standard-library Markdown tool for inspection, migra
 
 ## Protected task details and offline observations
 
-`task note --kind` also accepts Source/来源, Acceptance/验收 and Skills/技能. Values are single nonempty lines; new Skills are four-space-indented slash/backtick spans. Historical chain forms remain readable. Without `--replace-line N`, notes append and all Acceptance entries remain conjunctive. With that option, explicit Source/Acceptance/Skills/Status replaces exactly the matching current task annotation line; a mismatch, stale token or ambiguous task is refused. Status replacement maintains a current fact such as the Captain takeover marker without changing the task checkbox or first line. Human items accept only the existing additive Status exception; replacement remains forbidden. Source/Acceptance append or replacement on `[x]` or `[-]` agent tasks requires an authorized reopening first; Skills correction establishes no new acceptance. Context exposes annotation kind/value/line and parsed skill names/diagnostics. Changed conditions invalidate affected returns/bindings.
+`task note --kind` also accepts Source/来源, Acceptance/验收 and Skills/技能. Values are single nonempty lines; new Skills are four-space-indented slash/backtick spans. Historical chain forms remain readable. Without `--replace-line N`, notes append and all Acceptance entries remain conjunctive. With that option, explicit Source/Acceptance/Skills/Status replaces exactly the matching current task annotation line; a mismatch, stale token or ambiguous task is refused. Status replacement maintains a current fact such as the Captain takeover marker without changing the task checkbox or first line. Without confirmation, human items accept only the additive Status exception. With explicit human approval and `--confirmed`, note/artifact may append details and note may replace the exact same-kind annotation line. Source/Acceptance append or replacement on `[x]` or `[-]` tasks requires an authorized reopening first; Skills correction establishes no new acceptance. Context exposes annotation kind/value/line and parsed skill names/diagnostics. Changed conditions invalidate affected returns/bindings.
 
 Machine groups accept `- ` followed by a backticked explicit machine name, alongside legacy local/remote groups. Context preserves machine spelling and adds machine_name/group_kind. `skills usage --machine NAME` includes only that named group plus legacy local groups and this repository; without it named groups are not scanned. This selector grants no remote access and probes no remote filesystem.
 

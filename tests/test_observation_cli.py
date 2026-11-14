@@ -220,7 +220,7 @@ class RequiredInputCompatibilityTest(ObservationTest):
         before = self.snapshot()
         for command in ("open", "close-session"):
             with self.subTest(command=command):
-                result = self.cli("agent", command, code=2)
+                result = self.cli("agent", "herdr", command, code=2)
                 self.assertIn("Missing option '--input-file'", result.stderr)
         self.assertEqual(self.snapshot(), before)
         self.assertEqual(self.calls(), [])

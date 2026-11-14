@@ -13,7 +13,7 @@ or overwrite customization. Existing authorization governs setup, not automatic
 hook refresh. A noncontrolling Sailor needs its instruction, not control skills.
 
 Use host-approved runtime/model/wrapper, workspace and cwd. Preserve explicit
-wrapper requirements: the native `agent open` convenience route supports selected
+wrapper requirements: the native `agent herdr open` convenience route supports selected
 native runtimes only; it is not permission to substitute a generic executable for
 a required wrapper. Consult current Herdr guidance for authorized wrappers.
 
@@ -21,18 +21,32 @@ a required wrapper. Consult current Herdr guidance for authorized wrappers.
 
 Reuse a suitable existing Sailor session first. When lb-push or lb-handback needs
 a new execution surface, prefer a Herdr tab in the selected workspace. Use the
-installed Herdr guidance for tab creation and verify its returned tab/pane/session
-identities without stealing focus. Use a split pane only when explicitly requested
+installed Herdr guidance for native syntax, but create tabs/panes through
+`lb --root ROOT herdr -- NATIVE_ARGV...` so the host's `label_prefix` is applied
+and read back. Supply the selected workspace, cwd and `--no-focus`; verify returned
+tab/pane/session identities without stealing focus. Use a split pane only when explicitly requested
 or when tab creation is unavailable or unsuitable; report the concrete reason.
 
-`lb agent open --input-file FILE --json` creates a no-focus sibling of the explicit
+`lb agent herdr open --input-file FILE --json` creates a no-focus sibling of the explicit
 parent pane and starts the selected runtime. Input fields are machine, server,
 parent_pane, absolute cwd, runtime and name. Verify returned identity/readiness.
+It reads the host configuration before allocation and verifies the pane display
+name before starting the runtime; the logical agent name remains unprefixed.
 Partial failure returns created pane IDs; inspect them instead of blindly opening
 another session. Server scope must match the selected server; no local fallback.
 This pane convenience route is the split-pane fallback, not the default tab path.
 
-`lb agent close-session --input-file FILE --json` takes the returned binding and
+The proxy preserves native launch commands and arguments: use the approved wrapper
+inside the new shell through Herdr's native operations, then verify the actual
+model and session before dispatch. Do not substitute `agent herdr open` for a required
+wrapper. Unknown commands pass through; recognized creation with unsupported or
+ambiguous syntax passes through with `configuration_not_applied`. That diagnostic
+means display policy was not applied or verified: inspect the returned resource
+before relying on its name, without allocating again or renaming unrelated resources.
+The proxy is not guarded business send; retain the existing send journal and
+identity checks. See [the CLI contract](../../../docs/installable/lb-cli.md#herdr-resource-creation).
+
+`lb agent herdr close-session --input-file FILE --json` takes the returned binding and
 explicit owned_panes. It verifies native identity, closes only the selected owned
 pane and checks inventory. Pane disappearance alone does not prove all descendant
 processes stopped. Existing dispatch-bound close/send routes remain compatible.
