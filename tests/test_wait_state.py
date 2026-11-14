@@ -8,7 +8,7 @@ import copy
 import importlib.util
 import unittest
 
-from test_agent_wait_e2e import target
+from herdr_fixtures import target
 
 
 class WaitStateTest(unittest.TestCase):

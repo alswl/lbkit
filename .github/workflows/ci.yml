@@ -30,11 +30,7 @@ jobs:
       - run: uv sync --locked --all-groups
       - run: uv run --locked ruff check src scripts tests
       - run: uv run --locked mypy src/logbook_cli
-      - name: Unit and offline integration tests (including coordination and Herdr)
+      - name: Unit tests
         run: uv run --locked python -m unittest discover tests
       - name: Build package
         run: uv build
-      - name: CLI smoke checks
-        run: |
-          ./bin/lb --help
-          ./bin/lb --version

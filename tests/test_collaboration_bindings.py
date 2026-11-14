@@ -2,7 +2,7 @@
 
 import unittest
 
-from test_agent_wait_e2e import observation, target
+from herdr_fixtures import observation, target
 
 from logbook_cli.adapters import herdr
 from logbook_cli.document import LbError

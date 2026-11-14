@@ -26,11 +26,13 @@ uv run --locked mypy src/logbook_cli
 uv build
 ```
 
-Real Herdr/runtime acceptance lives in [tests/e2e/herdr](../../tests/e2e/herdr/README.md).
-It requires explicit opt-in and local runtime configuration; ordinary unittest
-discovery never launches agents. Keep raw trials and machine-specific configuration
-in temporary directories. A blocked Captain host remains a separate limitation
-even when CLI tests and live Sailor lifecycle assertions pass.
+This repository owns unit tests only. Test one parser, reducer, adapter or helper
+at a time, replacing external transport with mocks. Temporary files may represent
+inputs to the component under test; multi-command workflows, CLI subprocesses,
+installer runs, cross-service state changes and real-runtime acceptance belong
+to the external verification repository. Executable fakes do not change an
+integration test's ownership. Run those suites against an explicitly selected
+candidate and retain their results separately from local unit-test results.
 
 ## Dependency Index
 
@@ -62,7 +64,7 @@ Contract files (`docs/installable/`) and skills (`skills/`) are installed into c
 
 1. **Relative links must also resolve inside the consuming repository.** Skills live at the installed `.agents/skills/lb-X/`, symlinked to `.lbkit/skills/lb-X/`; contracts live in the consumer's `docs/`, pointing to `.lbkit/docs/installable/`. Within a skill, reference contracts as `../../docs/installable/...` in SKILL.md (`../../../docs/installable/...` from the references subdirectory); within a contract, reference skills as `../../skills/...`. You can write paths according to lbkit's internal layout — inside a consuming repository they resolve through the symlinks to the same file under `.lbkit/`.
 2. **Update `manifest()` in `bin/lbkit`** if you add a new top-level directory or file that must be installed.
-3. **Run the full test suite**; for installer-related changes also run `uv run --locked python -m unittest tests.test_lbkit_install`.
+3. **Run the unit suite** and coordinate affected CLI/installer integration checks in the external verification repository.
 4. **The consuming repository owns** its project logbook, `AGENTS.md`, `lbkit.yaml`, `lbkit-skills.yaml`; do not inject new obligations into it through shared contracts without documenting them here.
 
 When referring to consumer authorization, name the consuming repository's root
@@ -125,7 +127,8 @@ The CLI uses Click and uv. The installer remains a small standard-library bootst
 
 The runtime dependency change requires consumer environment setup; its release version is for the human to decide. The concept-oriented command migration replaces old command paths and option spellings; target-file CAS and dry-run guarantees remain. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
 
-The existing unittest suite remains the regression baseline. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
+The local unittest suite covers isolated components; CLI and installation
+regressions are maintained in the external verification repository. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
 
 ## Human edits and progress refresh
 
@@ -188,14 +191,13 @@ configuration or consumer adoption requirement. Repository coverage and human
 protections are enforced by the CLI; authorization and evidence applicability
 remain the caller's responsibility. Existing task commands keep their behavior.
 
-The reusable feedback acceptance inventory lives in
-`tests/fixtures/feedback_requirements.json`; its separate check mapping lives in
-`tests/fixtures/feedback_coverage.json`. Keep original feedback IDs, atomic
-requirement IDs and explicit unmapped gaps. `tests/test_feedback_coverage.py`
-checks inventory completeness, assertion references/polarity and CLI test
-locators; it does not evaluate assertion meaning or certify model behavior.
-Review inventory changes against original requirements independently of the
-mapping. New source feedback must be added to that inventory explicitly.
+The reusable feedback acceptance inventory, check mappings and locator validation
+live with the integration cases in the external verification repository. Keep
+original feedback IDs, atomic requirement IDs and explicit unmapped gaps there.
+Mapping validation checks completeness and references; it does not evaluate
+assertion meaning or certify model behavior. Review inventory changes against
+original requirements independently of the mapping, and add new source feedback
+explicitly.
 
 For mutation checks, use isolated copies of the current candidate. Establish a
 passing baseline, change one relevant behavior or mapping at a time, and count
