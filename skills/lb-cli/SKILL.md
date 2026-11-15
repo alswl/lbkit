@@ -4,7 +4,47 @@ version: 0.6.0-dev
 description: "Use the lb CLI to inspect or change logbooks, tasks, configuration and runtime bindings. Use for lb command selection, JSON inputs, version_token/CAS conflicts, human-confirmed task changes, Herdr resource creation or CLI failures. Collaboration planning and advancement remain with their owning lb skills."
 ---
 
+## New-run document and Task operations
+
+Initialize an authorized new Logbook with `log init-state LOG --name NAME`;
+explicitly identify short Task IDs, then `log sync-state LOG`. Document edits take
+no caller token, save Markdown only, and return sync_required. Sync explicitly
+after each authorized edit batch; status/context reads never sync. A failed sync
+leaves the saved Markdown authoritative. Use current Markdown and actual evidence,
+not a stale projection, when interpreting state.
+
+Use Task assign/bind-execution/agent inspect/send with fresh execution context
+and --expect-execution-version. Use agent monitoring context/configure for targets,
+and event/answer/wait with their monitoring token. Configuration tokens remain
+separate. For results use artifact → sync-state → result-source; for completion use
+complete → sync-state. Sources reference the original same-Task binding or explicit
+subject+basis. No new-run Dispatch/Attempt or record-result/accept flow applies.
+
+The generic token guidance below applies to execution, monitoring, configuration
+and older command surfaces; it does not require document CAS for new runs.
+
 # Use the lb CLI
+
+## Recover through the public document contract
+
+After a document-save or sync error, inspect the command's actual outcome, reread
+the current Markdown and use the published help/contract. A failed sync does not
+undo an already saved artifact. Once the current document is valid, retry only the
+unfinished local step; preserve original operation and provenance, without resend.
+
+If this invocation encounters a save or sync failure, retain it in the next user
+update and final reply even after recovery. State separately what was saved (or
+not applied), why sync failed, whether it has recovered, and any remaining local
+step. For example: "Artifact link saved; sync rejected a duplicate Task ID and
+has now recovered; no work was resent." Report only failures observed in this
+invocation; do not repeatedly surface unrelated historical errors.
+
+Honor the host's source-access boundary. A consumer update does not implicitly
+authorize inspecting or patching lbkit's implementation, even if a submodule makes
+it visible. Do not use source lookup to guess undocumented state or recovery
+semantics. If public context is insufficient, report the exact pending step and
+contract gap and continue independent authorized work. Toolkit development or
+source-level debugging requires its own applicable scope.
 
 ## Discover the installed candidate
 

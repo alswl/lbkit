@@ -16,9 +16,23 @@ _Avoid_: Resource creation, message delivery (neither alone establishes delegati
 A concrete means of interacting with Sailors through an execution environment. The Sailor role and delegation responsibility are independent of the chosen adapter.
 _Avoid_: Sailor (the executing role), runtime (the agent's execution engine)
 
-**Observation**:
-The continuing responsibility to observe a defined set of workers for a logbook and retain work that still requires attention. It survives individual listening runs.
-_Avoid_: Session (ambiguous with a runtime session), monitor (a host facility)
+**Task responsibility**:
+The current Human or Agent assigned to a Task. Admiral/Captain/Sailor describe
+logical roles; Human/Agent describe engineering subjects. Assignment alone does
+not start work, stop old work or authorize runtime control.
+
+**Execution binding**:
+An immutable snapshot locating a Task's actual subject, machine, native session,
+repository/work directory and instruction input. A Task can retain historical
+bindings; its current binding is only a reference.
+
+**Document projection**:
+Rebuildable structured data generated explicitly from Markdown by sync-state.
+Markdown is the document SSOT; execution and monitoring facts are independent.
+
+**Monitoring**:
+An internal capability for observing native sessions and retaining unresolved
+events and answers. Empty targets are valid. It is not a separate business object.
 
 **Event**:
 An observed change in a worker that requires assessment or intervention. Delivery of its notification does not mean the intervention is complete.

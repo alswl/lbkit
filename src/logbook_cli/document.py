@@ -73,6 +73,9 @@ class Document:
     dependencies: list[tuple[Path, bytes | None]] = field(default_factory=list)
     state_dependencies: list[tuple[Path, bytes | None]] = field(default_factory=list)
 
+    markdown_authority: bool = False
+    sync_status: str = "missing"
+
     @property
     def locale(self) -> str:
         return language(
@@ -155,7 +158,14 @@ def visible_lines(lines: list[str]):
 def parse(path: Path, root: Path) -> Document:
     import fcntl
 
+    from logbook_cli import unified
     from logbook_cli.state import load
+
+    _, new_state = unified.locate(root, path)
+    if new_state:
+        from logbook_cli.repository import read_document
+
+        return read_document(root, path)
 
     directory = os.open(root, os.O_RDONLY)
     try:
@@ -303,6 +313,10 @@ def parse_text(
         source.state_data if source else None,
         source.metadata if source else {},
     )
+    if source is not None and source.markdown_authority:
+        from logbook_cli.repository import markdown_document
+
+        return markdown_document(data, path, root)
     if source is not None:
         from logbook_cli.task_records import hydrate
 
@@ -484,6 +498,7 @@ def context(doc: Document) -> dict:
         if "/thinking/" in link["target"] or "/prompts/" in link["target"]
     ]
     return {
+        "sync_status": doc.sync_status,
         "path": str(doc.path.relative_to(doc.root)),
         "version_token": doc.token,
         "state_path": str(state_path_for(doc.path, doc.root).relative_to(doc.root)),
@@ -898,6 +913,8 @@ def context_command(doc: Document, *, execution: bool = False) -> str:
 
 
 def require_token(doc: Document, token: str | None) -> None:
+    if doc.markdown_authority:
+        return
     if not token:
         raise LbError(
             f"write commands require --expect-version for {doc.path.relative_to(doc.root)}; "

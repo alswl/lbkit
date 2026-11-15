@@ -4,6 +4,14 @@ version: 0.6.0-dev
 description: "Read-only project and executor status, blockers and next work. Reports canonical tasks and attributable runtime observations without writes, cleanup, dispatch or changing ongoing authorization."
 ---
 
+## Current Markdown and synchronization
+
+For new runs, queries read current Markdown and show missing/stale/synced. Report
+stale projection without writing sync-state. Show responsibility, immutable binding
+and original result provenance where available; absent source is unknown. Use
+agent monitoring context for pending events/answers. Empty targets/no_targets
+means no current monitoring targets, not business completion or absent history.
+
 # Read project status
 
 ## Purpose and inputs

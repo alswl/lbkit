@@ -20,7 +20,6 @@ from logbook_cli.document import (
 from logbook_cli.edit import ADVISORY_ISSUES
 from logbook_cli.services.common import Result, load
 from logbook_cli.state import encode
-from logbook_cli.state import path_for as state_path_for
 from logbook_cli.state import token as state_token
 from logbook_cli.storage import write_bytes
 
@@ -234,21 +233,19 @@ def instantiate(root, name, inputs_file, token, output, dry_run):
             + ", ".join(sorted({i["code"] for i in issues})),
             EXIT_REFUSED,
         )
-    records.put(candidate, "workflow", rendered.value["provenance"])
-    write_bytes(candidate, content.encode("utf-8"), dry_run, create=True)
+    from logbook_cli.storage import create_bytes
+
+    create_bytes(destination, content.encode("utf-8"), dry_run)
     return Result(
         {
             "path": str(destination.relative_to(base)),
             "dry_run": dry_run,
-            "version_token": state_token(candidate.data, encode(candidate.metadata)),
             "content": content if dry_run else None,
-            "state_content": json.loads(encode(candidate.metadata))
-            if dry_run
-            else None,
-            "state_path": str(state_path_for(destination, base).relative_to(base)),
+            "provenance": rendered.value["provenance"],
+            "initialization_required": True,
             "bindings": "pending",
             "managed_workflow_complete": False,
-            "next": rendered.value["next"],
+            "next": "log init-state, identify Tasks and log sync-state; record workflow provenance through the host document adapter",
         }
     )
 

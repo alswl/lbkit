@@ -1,5 +1,58 @@
 # `lb`: the guarded lightweight Logbook CLI
 
+## Markdown SSOT and new-run commands
+
+For new runs, the [document state contract](document-state.md) defines storage and
+sync. Initialize with `log init-state LOG --name NAME [--document PATH ...]`, then
+identify Tasks and explicitly run `log sync-state LOG`. Queries read current
+Markdown and return sync_status. Document edits save Markdown only and return
+sync_required; caller document tokens are retired. `log sync` retains its separate
+stage/summary editing purpose. Use `--dry-run --json` to inspect authorized writes.
+
+Task execution interfaces:
+
+- `task assign|unassign LOG TASK --input-file FILE --expect-execution-version TOKEN`
+- `task bind-execution LOG TASK --input-file FILE --expect-execution-version TOKEN`
+- `task agent inspect LOG TASK --binding-id ID`
+- `task agent send LOG TASK --binding-id ID --operation-id ID --expect-execution-version TOKEN --expected-session ID --expected-observation VALUE --message-file FILE`
+- `task result-source LOG TASK --input-file FILE --expect-execution-version TOKEN`
+
+Execution tokens come from `log execution context LOG --json`. Assignment payload
+is `{subject:{kind,subject_id},basis}`; unassign uses `{basis}`. Binding requires
+id, assignment_revision, machine, session_id, adapter=herdr, runtime_locator
+(workspace_id, tab_id, pane_id, agent_id, server), work_context (repository_ref or
+null, working_directory), input_ref, basis and observed_at. Bindings are immutable.
+For Herdr bindings, `machine` selects the transport host (`local` or a configured
+machine profile); `server` is the selected server session scope, not the machine
+name. Inspect `herdr status --json` on that same selected machine. The JSON has a
+top-level `server` object, not `result.server`. Require a running compatible server;
+use its nonempty `session` exactly, or the lb scope `default` when that selected
+server reports no named session. Never substitute `local`, a pane ID or a logical
+Agent ID for server scope. Do not retarget an unrelated server to make a binding
+match. Use this same observed scope in execution runtime_locator and monitoring
+binding; workspace/tab/pane and native session identity must come from that server.
+
+Result source payload is `{ref,source,version_ref?,observed_at}`, with source either
+`{binding_id}` belonging to this Task or `{kind,subject_id,basis}`.
+
+These runtime writes require synced current Task content. Send also retains live
+identity, active lifecycle, dependency, human and takeover protection. Send intent
+is durable before transport; unknown forbids resend. Existing execution record
+reconciliation remains available after Task deletion or stale Markdown.
+
+`agent monitoring context LOG` and `agent monitoring configure LOG --input-file FILE
+--expect-version TOKEN` replace the independently stored Observation setup for new
+runs. Configure accepts `{targets:[]}`; managed wait returns no_targets without
+runtime calls, retaining pending events/answers. Raw wait still requires 1..64.
+Event and Answer commands retain their own contracts and monitoring tokens.
+
+New Task flows do not use Dispatch/Attempt or record-result/accept. Legacy domain
+writers are refused in the new document mode, rather than silently storing a second
+Task state. Configuration and template tokens are unchanged. The historical command
+reference below describes older layouts where specifically named; it does not
+restore old sidecar/CAS obligations for new document runs or provide migration.
+
+
 `bin/lb` uses Python 3.11+ and Click, with a uv-locked environment, built for structured reading of this repo's Markdown conventions and minimal-scope edits. Skills own scheduling, authorization and evidence judgment. The CLI records atomic transitions and reports; explicit agent transport commands can contact the configured runtime after identity checks. A recorded acceptance is an attributed decision, not a CLI business verdict.
 
 ```sh
@@ -447,9 +500,38 @@ are not interchangeable. Context is read-only; missing state is not created. Mis
 stable document identity requires explicit existing document migration. Mutations
 support --dry-run: no files, listener or external mutation; a preview reserves nothing.
 
-Configure input is exactly `{ "targets": [...] }`. Each target contains the existing
-full binding (machine/server/workspace_id/tab_id/pane_id/agent_id/session_id), plus
-optional baseline state/observed_at. Configure retains unaffected and retired cursors
+Configure input is exactly `{ "targets": [...] }`. Each nonempty target wraps the
+full native identity in **`binding`**, with an optional sibling **`baseline`**;
+identity fields placed directly on the target are invalid. The same input shape
+applies to new-run `agent monitoring configure`:
+
+```json
+{
+  "targets": [
+    {
+      "binding": {
+        "machine": "local",
+        "server": "default",
+        "workspace_id": "w1",
+        "tab_id": "w1:t2",
+        "pane_id": "w1:p2",
+        "agent_id": "codex",
+        "session_id": "native-session-id"
+      },
+      "baseline": {
+        "state": "working",
+        "observed_at": "2026-01-01T00:00:00Z"
+      }
+    }
+  ]
+}
+```
+
+Replace the example identities with values observed on the selected server.
+`agent_id` is the native runtime Agent identity, not the Task assignee subject ID.
+Omit `baseline` unless its state and timestamp were actually observed; never invent
+or reset a baseline. `server=default` applies only to a running unnamed server.
+Configure retains unaffected and retired cursors
 and unresolved Events. Reordering is a no-op, known baselines cannot reset, and a
 terminal identity cannot be rearmed after retirement. Listener and affected binding
 action locks exclude unsafe target changes; unknown/submitted Answer delivery blocks
@@ -500,7 +582,13 @@ UI as working; expired/unreachable callbacks do not override native UI observati
 Use those saved identifiers in submit. A single question accepts a nonempty string;
 multiple questions require an exact question-text-to-answer-string object.
 Callback acceptance alone leaves delivery unknown. Only matching native PostToolUse
-structured answers confirm delivery and atomically resolve the Event. Missing or
+structured answers confirm delivery and atomically resolve the Event. For this
+hook protocol, PostToolUse must carry the same session_id/tool_use_id and the
+PreToolUse updatedInput as tool_input. Its structured tool_response includes
+`questions` equal to updatedInput.questions and `answers` equal to
+updatedInput.answers (an exact question-text-to-answer-string mapping). Omitted or
+mismatched questions/answers are not confirmation; a zero hook exit alone does not
+prove that a receipt was created. Missing or
 late confirmation stays unknown and blocks new operation IDs; reconcile without an
 input file probes the saved native receipt without sending again.
 

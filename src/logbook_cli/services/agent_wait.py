@@ -58,7 +58,7 @@ def encoded(value):
     return json.dumps(value, separators=(",", ":"), sort_keys=True).encode()
 
 
-def validate(value):
+def validate(value, *, allow_empty=False):
     if not isinstance(value, dict) or set(value) - {
         "targets",
         "after",
@@ -68,7 +68,10 @@ def validate(value):
             "request must contain targets, optional after and unresolved_events"
         )
     targets = value.get("targets")
-    if not isinstance(targets, list) or not 1 <= len(targets) <= 64:
+    if (
+        not isinstance(targets, list)
+        or not (0 if allow_empty else 1) <= len(targets) <= 64
+    ):
         raise ValueError("targets must contain 1..64 items")
     unique = {}
     for target in targets:
@@ -406,12 +409,46 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
         raise LbError("observation_not_configured: configure before wait", EXIT_REFUSED)
     if current != token:
         raise LbError("version_conflict: reread observation context", EXIT_REFUSED)
+    if not initial["targets"]:
+        from contextlib import nullcontext
+
+        with nullcontext() if dry_run else observation.listener_lock(doc, create=True):
+            value, latest = observation.read(doc)
+            if latest != token or value is None or value["targets"]:
+                raise LbError(
+                    "version_conflict: reread monitoring context", EXIT_REFUSED
+                )
+            result = {
+                "reason": "no_targets",
+                "invocation_id": None,
+                "new_events": [],
+                "unresolved_events": [
+                    e for e in value["events"] if e["handling"] != "resolved"
+                ],
+                "pending_answers": [
+                    a
+                    for a in value["answers"]
+                    if a["status"] in {"unknown", "submitted"}
+                ],
+                "version_token": latest,
+                "dry_run": dry_run,
+            }
+            if stream:
+                emit_jsonl(
+                    {
+                        "type": "listener_end",
+                        "reason": "no_targets",
+                        "invocation_id": None,
+                        "version_token": latest,
+                    }
+                )
+            return Result(result)
     if dry_run:
         observation.admit(initial)
         return Result({"dry_run": True, "version_token": current})
     invocation = uuid.uuid4().hex
     targets = copy.deepcopy(initial["targets"])
-    contexts = copy.deepcopy(initial["contexts"])
+    contexts = copy.deepcopy(initial["cursors"])
     new_events = []
     failures = []
 
@@ -454,7 +491,7 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
                 raise LbError(
                     "invalid_transition: listener generation changed", EXIT_REFUSED
                 )
-            value["contexts"][index] = copy.deepcopy(cursor)
+            value["cursors"][index] = copy.deepcopy(cursor)
             existing = {event["id"] for event in value["events"]}
             for event in events:
                 binding = hashlib.sha256(encoded(event["binding"])).hexdigest()

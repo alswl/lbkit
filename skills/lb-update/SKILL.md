@@ -4,6 +4,31 @@ version: 0.6.0-dev
 description: "Use when the user asks to update current facts, progress or explicit state decisions in the existing Logbook, or asks to reread human edits. Preserve the route: task membership, outcomes, order, dependencies, planned responsibility, goals and acceptance criteria change only through lb-plan. Rereading is read-only by default; completion aligns applicable executor results. Does not dispatch work. Managed logbooks use mind-forge."
 ---
 
+## New-run write sequence
+
+For an authorized update, read current Markdown and actual returned evidence.
+Use task artifact/note to edit readable references, explicitly log sync-state,
+then task result-source with a fresh execution token and original same-Task binding
+or attributed subject+basis. Do not require started or create candidate submissions.
+A changed ref has unknown provenance until explicitly registered; keep original
+source history. Completion is separate: task complete with evidence/--confirmed
+when required, then sync-state. These document writes do not carry document CAS.
+
+On sync refusal, first reread current Markdown and the public diagnostics/help.
+Preserve the saved artifact; after the document is valid, retry sync and remaining
+source registration. Respect host restrictions on toolkit source access: ordinary
+progress maintenance does not authorize reading or editing lbkit implementation
+to infer recovery behavior. Missing public guidance is a precise pending contract
+gap, not permission to inspect private internals or redo completed work.
+
+Report document_saved and sync outcome separately, including in the next user
+update and final reply when a failure occurred during this invocation. Successful
+recovery must not erase the saved effect, failure cause or recovered/pending state
+from that report. On partial failure retry only
+the unfinished local step, never resend work or roll back Markdown. Reread/status
+requests stay read-only. The new-run sequence supersedes older token/accept recipes
+below; use [document state](../../docs/installable/document-state.md) for authority.
+
 Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
 If lb is unavailable or crashes, notify the user and take over safe authorized work;
 report pending writes and verification gaps instead of silently stopping or bypassing CAS.

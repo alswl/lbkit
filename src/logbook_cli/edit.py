@@ -73,7 +73,7 @@ def require_valid_candidate(doc: Document, changed: str) -> None:
             for stage in document.stages
             for task in stage.tasks
             for a in task.annotations
-            if a.kind is Field.RESUME
+            if (a.kind is Field.RESUME and not document.markdown_authority)
             or (a.kind is Field.RESOLUTION and a.value.startswith(("{", "[")))
         )
 

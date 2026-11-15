@@ -1,5 +1,21 @@
 # Core concepts
 
+## Task responsibility and document authority
+
+Admiral, Captain and Sailor are logical responsibilities; Human and Agent are
+engineering subjects. A Task has one current assignee and may reference one current
+immutable execution binding. Machine/session/repository locate execution; changing
+assignee does not stop the old process or erase its returned results. New flows do
+not require an independent Dispatch or Attempt lifecycle.
+
+Markdown is the SSOT for document and Task state. Explicit sync-state creates a
+rebuildable projection inside one per-run JSON. Execution identities, send facts,
+result provenance and monitoring history remain independent facts in that file.
+Result links locate actual content and original source; they introduce no separate
+submission/acceptance state machine. Monitoring is an internal capability and may
+have no targets. See [storage contract](../installable/document-state.md).
+
+
 
 lbkit uses a **Logbook** to organize a human goal into an actionable task route.
 **Admiral** owns goals and authorization, **Captain** designs with Admiral and maintains the

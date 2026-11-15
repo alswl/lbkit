@@ -20,6 +20,7 @@ def state_snapshot(doc: Document) -> dict:
     delivery = {s.title: derive_stage_status(s) for s in doc.stages if s.is_delivery}
     records = summary_lines(doc)
     return {
+        "sync_status": doc.sync_status,
         "path": str(doc.path.relative_to(doc.root)),
         "version_token": doc.token,
         "summary": compact(doc)[2:] if lifecycle["managed"] else summary_derived(doc),

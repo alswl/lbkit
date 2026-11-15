@@ -3,12 +3,14 @@
 import click
 
 from logbook_cli.commands.common import (
+    DOCUMENT_TOKEN as TOKEN,
+)
+from logbook_cli.commands.common import (
     DRY_RUN,
     JSON,
     LOG,
     PROJECTS,
     ROOT,
-    TOKEN,
     finish,
     options,
     resolve_root,
@@ -98,5 +100,45 @@ def recover(root, log, dry_run, json, expect_version):
 
 
 def register(app: click.Group) -> None:
-    for command in (list_logs, context, check, state, sync, state_set, recover):
+    for command in (
+        list_logs,
+        context,
+        check,
+        state,
+        sync,
+        state_set,
+        recover,
+        init_state,
+        sync_state,
+    ):
         app.add_command(command)
+
+
+@click.command("init-state", help="Initialize an explicitly associated new run.")
+@options(
+    ROOT,
+    LOG,
+    click.option("--name", required=True),
+    click.option("--document", multiple=True),
+    DRY_RUN,
+    JSON,
+)
+def init_state(root, log, name, document, dry_run, json):
+    from logbook_cli import unified
+    from logbook_cli.document import root_path, safe_path
+    from logbook_cli.services.common import Result
+
+    base = root_path(resolve_root(root))
+    finish(
+        Result(unified.initialize(base, safe_path(base, log), name, document, dry_run)),
+        json,
+    )
+
+
+@click.command("sync-state", help="Explicitly project Markdown into unified run state.")
+@options(ROOT, LOG, DRY_RUN, JSON)
+def sync_state(root, log, dry_run, json):
+    from logbook_cli.repository import sync_document
+    from logbook_cli.services.common import Result
+
+    finish(Result(sync_document(resolve_root(root), log, dry_run)), json)

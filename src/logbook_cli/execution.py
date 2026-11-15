@@ -72,6 +72,26 @@ def unique_keys(pairs):
 
 
 def read(doc):
+    if doc.markdown_authority:
+        from logbook_cli import unified
+
+        path, envelope = unified.locate(doc.root, doc.path, required=True)
+        ex = envelope["execution"]
+        identity = envelope["identity"]
+        value = {
+            "name": path.stem,
+            "log": identity["log_path"],
+            "thinking": next(
+                (p for p in identity["document_paths"] if p != identity["log_path"]),
+                identity["log_path"],
+            ),
+            "advancement": ex.get("advancement", path.stem),
+            "captain": ex.get("captain", "captain"),
+            "facts": ex["facts"],
+            "operations": list(ex["operations"].values()),
+        }
+        raw = unified.encode({"identity": identity, "execution": ex})
+        return path, raw, value
     base = project(doc)
     log = str(doc.path.relative_to(base))
     matches = []
@@ -213,7 +233,9 @@ def require_delegation(doc, dispatch_id=None, owner=None):
 
 def require_token(doc, path, data, token):
     if token != hashlib.sha256(data).hexdigest():
-        target = str(path.relative_to(doc.root)) if path else "uninitialized execution JSON"
+        target = (
+            str(path.relative_to(doc.root)) if path else "uninitialized execution JSON"
+        )
         raise LbError(
             f"execution version token differs for {target}; "
             f"reread `{context_command(doc, execution=True)}` and review changes before retrying. "
@@ -223,6 +245,42 @@ def require_token(doc, path, data, token):
 
 
 def write(doc, name, value, token, dry_run):
+    if doc.markdown_authority:
+        from logbook_cli import unified
+
+        path, raw, old = read(doc)
+        require_token(doc, path, raw, token)
+        target, envelope = unified.locate(doc.root, doc.path, required=True)
+        if name != target.stem:
+            raise LbError("execution name already bound", EXIT_REFUSED)
+        prior = []
+        from logbook_cli import execution_facts
+
+        for fact in value["facts"]:
+            execution_facts.validate_fact(fact, prior)
+            prior.append(fact)
+        ex = envelope["execution"]
+        ex.update(
+            facts=value["facts"],
+            operations={op["id"]: op for op in value["operations"]},
+        )
+        for key in ("captain", "advancement"):
+            if value.get(key) != old.get(key):
+                ex[key] = value[key]
+        changed = value != old
+        if changed and not dry_run:
+            unified.publish(target, envelope)
+        return {
+            "path": str(target.relative_to(doc.root)),
+            "state": value,
+            "version_token": token
+            if dry_run
+            else unified.section_token(envelope, "execution"),
+            "changed": changed,
+            "dry_run": dry_run,
+            "record_saved": not dry_run,
+            "projection": projection(value),
+        }
     path, data, old = read(doc)
     require_token(doc, path, data, token)
     # `<name>.md.json` belongs to document state of the same mind.
@@ -232,7 +290,8 @@ def write(doc, name, value, token, dry_run):
         or name.endswith(".md")
     ):
         raise LbError(
-            "execution name must be one stable filename component not ending in .md", EXIT_REFUSED
+            "execution name must be one stable filename component not ending in .md",
+            EXIT_REFUSED,
         )
     target = directory(doc) / f"{name}.json"
     if path and path != target:

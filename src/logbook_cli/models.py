@@ -106,6 +106,8 @@ class Task:
         if self.state == "-" and self.resolution:
             if self.resolution["as"] in {"human-cancelled", "cancelled"}:
                 return "cancelled"
+            if self.resolution["as"] == "not-applicable":
+                return "not-applicable"
         return "unknown"
 
 

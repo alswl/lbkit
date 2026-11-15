@@ -65,3 +65,12 @@ def finish(result: Result, json: bool, view: str = "default") -> None:
     render(result, json, view)
     if result.code:
         raise click.exceptions.Exit(result.code)
+
+
+DOCUMENT_TOKEN = click.option(
+    "--expect-version",
+    "token",
+    default=None,
+    hidden=True,
+    help="Retired document token; new runs use explicit sync-state.",
+)
