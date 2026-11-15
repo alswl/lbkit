@@ -58,6 +58,10 @@ def identify(root, log, stage, task, task_id, token, dry_run):
 
 def show(root, log, task_id):
     doc = load(root, log)
+    if doc.markdown_authority:
+        from logbook_cli.services.task_coordination import show as show_current
+
+        return Result(show_current(root, log, task_id))
     task, _, item = identity.lookup(doc, task_id)
     return Result({"task": identity.snapshot(task, item), "version_token": doc.token})
 
@@ -199,9 +203,13 @@ def semantic_transition(
     from logbook_cli.task_records import require_current, resolution_text
 
     require_current(task, old)
-    if any(a.kind in {Field.RESUME, Field.RESOLUTION} for a in task.annotations) and (
-        any(a.kind is Field.RESUME for a in task.annotations)
-        or (task.resolution and "resolution" not in old)
+    if (
+        not doc.markdown_authority
+        and any(a.kind in {Field.RESUME, Field.RESOLUTION} for a in task.annotations)
+        and (
+            any(a.kind is Field.RESUME for a in task.annotations)
+            or (task.resolution and "resolution" not in old)
+        )
     ):
         raise LbError("inline task records require explicit task migrate", EXIT_REFUSED)
     item = canonical_record(old)
@@ -242,10 +250,15 @@ def semantic_transition(
         marker = "!"
         remove.add(Field.RESUME)
         item["resume"] = "pending" if task.state == " " else "active"
+        if doc.markdown_authority:
+            notes.append("Resume: " + item["resume"])
     elif action == "resume":
         if to is not None and "resume" in item and to != item["resume"]:
             raise LbError("--to conflicts with recorded prior state", EXIT_REFUSED)
-        destination = item.get("resume", to)
+        readable = next(
+            (a.value for a in task.annotations if a.kind is Field.RESUME), None
+        )
+        destination = item.get("resume", readable or to)
         if destination not in {"pending", "active"}:
             raise LbError(
                 "resume needs known prior state or --to pending|active", EXIT_REFUSED
@@ -330,6 +343,11 @@ def transition(
     if action in {"cancel", "reopen"}:
         return semantic_transition(
             root, log, task_id, action, basis, token, dry_run, confirmed=confirmed
+        )
+    if doc.markdown_authority and action not in {"start", "cancel", "reopen"}:
+        raise LbError(
+            "retired result lifecycle; use artifact, sync-state and result-source",
+            EXIT_REFUSED,
         )
     canonical = "status" not in old
     if canonical:

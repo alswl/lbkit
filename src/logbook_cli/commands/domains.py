@@ -14,6 +14,7 @@ from logbook_cli.commands import (
 )
 from logbook_cli.commands.common import (
     CONFIRMED,
+    DOCUMENT_TOKEN,
     DRY_RUN,
     JSON,
     LOG,
@@ -62,6 +63,14 @@ def route(group, name, service, *parameters, **fixed):
     """Adapt shared CLI options to a service without adding orchestration."""
 
     def callback(root, json, **kwargs):
+        if group.name == "observation":
+            from logbook_cli.document import EXIT_REFUSED, LbError
+            from logbook_cli.services.common import load
+
+            if load(resolve_root(root), kwargs["log"]).markdown_authority:
+                raise LbError(
+                    "retired Observation interface; use agent monitoring", EXIT_REFUSED
+                )
         result = service(root=resolve_root(root), **kwargs, **fixed)
         finish(result if isinstance(result, Result) else Result(result), json)
 
@@ -261,11 +270,11 @@ def register(app):
         STAGE,
         TASK,
         click.option("--task-id"),
-        TOKEN,
+        DOCUMENT_TOKEN,
         DRY_RUN,
     )
     route(tasks.task, "show", task_lifecycle.show, LOG, click.argument("task_id"))
-    route(tasks.task, "migrate", task_lifecycle.migrate, LOG, TOKEN, DRY_RUN)
+    route(tasks.task, "migrate", task_lifecycle.migrate, LOG, DOCUMENT_TOKEN, DRY_RUN)
     for action in ("complete", "pause", "resume", "block", "unblock"):
         route(
             tasks.task,
@@ -274,7 +283,7 @@ def register(app):
             LOG,
             click.argument("task_id"),
             BASIS,
-            TOKEN,
+            DOCUMENT_TOKEN,
             DRY_RUN,
             CONFIRMED,
             click.option("--reason"),
@@ -296,7 +305,7 @@ def register(app):
             LOG,
             click.argument("task_id"),
             BASIS,
-            TOKEN,
+            DOCUMENT_TOKEN,
             DRY_RUN,
             CONFIRMED,
             *extra,
@@ -316,7 +325,7 @@ def register(app):
             "--status", required=True, type=click.Choice(list(dispatches.TRANSITIONS))
         ),
         BASIS,
-        TOKEN,
+        DOCUMENT_TOKEN,
         DRY_RUN,
     )
     route(
@@ -333,12 +342,16 @@ def register(app):
             type=click.Choice(["started", "finished", "failed", "interrupted"]),
         ),
         BASIS,
-        TOKEN,
+        DOCUMENT_TOKEN,
         DRY_RUN,
     )
     route(herdr_agent, "open", herdr_sessions.session_operation, INPUT, action="open")
     route(
-        herdr_agent, "close-session", herdr_sessions.session_operation, INPUT, action="close"
+        herdr_agent,
+        "close-session",
+        herdr_sessions.session_operation,
+        INPUT,
+        action="close",
     )
     route(agent, "bind", agents.bind, LOG, THINKING, ID, INPUT, TOKEN, DRY_RUN)
     route(
@@ -372,7 +385,7 @@ def register(app):
             click.option("--expected-session", required=True),
             click.option("--expected-observation", required=True),
             *((BASIS,) if action == "close" else ()),
-            TOKEN,
+            DOCUMENT_TOKEN,
             DRY_RUN,
             *extra,
             action=action,
@@ -403,7 +416,7 @@ def register(app):
                 "using the returned Thinking token; arrays are not accepted."
             ),
         ),
-        TOKEN,
+        DOCUMENT_TOKEN,
         DRY_RUN,
     )
     route(
@@ -417,6 +430,75 @@ def register(app):
             type=click.Choice(["draft", "available", "deprecated", "retired"]),
         ),
         BASIS,
-        TOKEN,
+        DOCUMENT_TOKEN,
         DRY_RUN,
     )
+
+
+EXECUTION_TOKEN = click.option(
+    "--expect-execution-version", "execution_token", required=True
+)
+
+
+def register_task_coordination():
+    from logbook_cli.services import task_coordination as service
+    from logbook_cli.services import transport
+
+    for name, action in [
+        ("assign", "assign"),
+        ("unassign", "unassign"),
+        ("bind-execution", "bind"),
+        ("result-source", "result-source"),
+    ]:
+        route(
+            tasks.task,
+            name,
+            service.mutate,
+            LOG,
+            click.argument("task_id"),
+            INPUT,
+            EXECUTION_TOKEN,
+            DRY_RUN,
+            action=action,
+        )
+
+    @click.group("agent")
+    def task_agent():
+        """Inspect or send to the current Task execution binding."""
+
+    tasks.task.add_command(task_agent)
+    route(
+        task_agent,
+        "inspect",
+        service.inspect,
+        LOG,
+        click.argument("task_id"),
+        click.option("--binding-id", required=True),
+    )
+    route(
+        task_agent,
+        "send",
+        transport.send_task,
+        LOG,
+        click.argument("task_id"),
+        click.option("--binding-id", required=True),
+        click.option("--operation-id", required=True),
+        EXECUTION_TOKEN,
+        click.option("--expected-session", required=True),
+        click.option("--expected-observation", required=True),
+        click.option("--message-file", required=True),
+        DRY_RUN,
+    )
+
+
+register_task_coordination()
+
+
+@click.group("monitoring")
+def monitoring():
+    """Configure internal monitoring targets and inspect pending work."""
+
+
+agent.add_command(monitoring)
+route(monitoring, "context", agent_observation.context, LOG)
+route(monitoring, "configure", agent_observation.configure, LOG, INPUT, TOKEN, DRY_RUN)

@@ -599,3 +599,33 @@ with exact annotation line/kind, task identity, ownership, repository scope and
 completed-result reopening checks retained. No automatic task/configuration migration or version change is
 introduced. Herdr/CLI decision evals certify only the decisions they actually run;
 model trigger, runtime and independent acceptance remain separate validation.
+
+
+## Markdown-authoritative document sync
+
+New runs explicitly initialize a unified `lb/<name>.json` with `log init-state`,
+then refresh document projections with `log sync-state`. Document edits write only
+Markdown and no longer require a caller document CAS token. Skills must report
+document-save and projection-sync outcomes separately. Reads use current Markdown
+and never synchronize implicitly. Execution and monitoring retain independent
+context tokens and delivery safeguards. Consumers choose when to adopt this
+breaking storage/CLI contract; installation must not rewrite consumer logbooks or
+configuration. No old-state conversion, version bump or automatic consumer upgrade
+is authorized by implementation of this feature.
+
+Managed monitoring stores `cursors` and `revision` as defined by the new-run
+model. Raw wait continuation `contexts` remains its distinct wire format. Workflow
+instance creation now saves Markdown only and returns provenance; scaffold records
+that provenance through the host adapter and explicitly initializes/synchronizes
+the run. No implicit sidecar, schema numbering or version upgrade is introduced.
+
+The public Herdr binding contract specifies selected machine versus server scope:
+read top-level server.session from status --json, with lb's default scope for an
+unnamed running server. Skills use the same scope for execution and monitoring;
+this documents existing scope checks rather than bypassing them or adding setup.
+
+The CLI/update skills recover document sync through current Markdown and public
+diagnostics while respecting consumer source-access restrictions. A consumer
+progress update does not implicitly authorize toolkit implementation inspection.
+Toolkit source debugging remains separately scoped; source visibility alone does
+not expand the consumer task's authorization.

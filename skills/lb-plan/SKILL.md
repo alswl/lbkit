@@ -4,6 +4,15 @@ version: 0.6.0-dev
 description: "Create, revise or review a Logbook route. Use for adding/removing/splitting Tasks, changing outcomes, order, dependencies, planned responsibility, skill chains, goals, design or acceptance criteria, including route changes requested through lb-update. Personally develop repository specs with Admiral; does not dispatch execution."
 ---
 
+## Initialize and synchronize new runs
+
+After generating an authorized new Markdown Logbook, run log init-state LOG
+--name NAME with explicit associated --document paths. Identify Tasks with stable
+short IDs and run log sync-state. After an authorized plan edit batch, explicitly
+sync-state again. Markdown is SSOT; document writes need no caller CAS. Preserve
+runtime history when moving/deleting Tasks; new split IDs inherit no execution
+permission. Do not migrate old sidecars or rewrite consumer configuration.
+
 Read the [document state contract](../../docs/installable/document-state.md),
 [configuration](../../docs/installable/configuration.md),
 [planning reference](references/planning.md), and

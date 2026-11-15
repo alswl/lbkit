@@ -4,6 +4,16 @@ version: 0.6.0-dev
 description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 
+## New-run results and handback
+
+Preserve Task and original execution binding identity when reporting results.
+Captain records the readable artifact, runs log sync-state, and registers
+result-source with fresh execution context. No started/finished Dispatch records
+are required. Missing source/version is unknown, not a fabricated candidate.
+A return never automatically changes checkbox or proves acceptance. Record actual
+completion separately through task complete and explicit sync-state. Unknown send
+or Answer delivery remains pending reconciliation, independent of result links.
+
 Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
 If lb is unavailable or crashes, notify the user and take over safe authorized work;
 report pending writes and verification gaps instead of silently stopping or bypassing CAS.

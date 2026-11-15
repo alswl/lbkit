@@ -41,6 +41,28 @@ TRANSITIONS = {
 
 
 def get(doc: Document) -> dict:
+    if doc.markdown_authority:
+        lines = doc.status_lines
+        matches = {
+            key
+            for key, (glyph, zh, en) in VALUES.items()
+            if any(
+                re.match(
+                    r"> (?:状态：|Status: )"
+                    + re.escape(glyph)
+                    + r"\s+(?:"
+                    + re.escape(zh)
+                    + "|"
+                    + re.escape(en)
+                    + r")(?:$| ·)",
+                    row["raw"],
+                )
+                for row in lines
+            )
+        }
+        if len(lines) > 1 or len(matches) > 1:
+            raise LbError("ambiguous Markdown lifecycle", EXIT_REFUSED)
+        return {"value": next(iter(matches), "unknown"), "managed": bool(matches)}
     items = records.read(doc, "lifecycle")
     if len(items) > 1:
         raise LbError("duplicate lifecycle records", EXIT_REFUSED)
@@ -158,6 +180,29 @@ def set_state(
         "at": datetime.now(timezone.utc).isoformat(),
         "previous": old["value"],
     }
+    if doc.markdown_authority:
+        rows = summary_lines(doc)
+        if len(rows) > 1:
+            raise LbError("multiple status lines", EXIT_REFUSED)
+        glyph, zh, en = VALUES[value]
+        line = (
+            "> Status: " + glyph + " " + en
+            if doc.locale == "en"
+            else "> 状态：" + glyph + " " + zh
+        )
+        nl = "\r\n" if b"\r\n" in doc.data else "\n"
+        if rows:
+            row = rows[0]
+            changed = doc.text[: row["start"]] + line + nl + doc.text[row["end"] :]
+        else:
+            first = next(
+                (i for i, line in enumerate(doc.lines) if line.startswith("# ")), None
+            )
+            if first is None:
+                raise LbError("one H1 is required", EXIT_REFUSED)
+            at = doc.offsets[first] + len(doc.lines[first])
+            changed = doc.text[:at] + nl + line + nl + doc.text[at:]
+        return save(doc, changed, dry_run, lifecycle=item)
     changed = records.put(doc, "lifecycle", item)
     candidate = parse_text(changed.encode(), doc.path, doc.root, source=doc)
     return save(doc, render(candidate), dry_run, lifecycle=item)

@@ -24,12 +24,18 @@ class Result:
 
 def load(root: str, log: str) -> Document:
     base = root_path(root)
-    return parse(safe_path(base, log), base)
+    from logbook_cli import unified
+    from logbook_cli.repository import read_document
+
+    path = safe_path(base, log)
+    _, value = unified.locate(base, path)
+    return read_document(base, path) if value else parse(path, base)
 
 
 def writable(root: str, log: str, token: str) -> Document:
     doc = load(root, log)
-    require_token(doc, token)
+    if not doc.markdown_authority:
+        require_token(doc, token)
     require_preflight_clear(doc)
     from logbook_cli.document import EXIT_REFUSED, LbError
     from logbook_cli.lifecycle import get
@@ -45,6 +51,42 @@ def writable(root: str, log: str, token: str) -> Document:
 def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Result:
     from logbook_cli.state import encode, path_for, section, token
 
+    if doc.markdown_authority:
+        from logbook_cli.repository import edit_document
+
+        for key, archived in doc.metadata.get("task-archive", {}).items():
+            if "content" in archived:
+                nl = "\r\n" if b"\r\n" in doc.data else "\n"
+                fence = "`" * max(
+                    3,
+                    max(
+                        (
+                            len(m[0]) + 1
+                            for m in __import__("re").finditer(
+                                r"`{3,}", archived["content"]
+                            )
+                        ),
+                        default=3,
+                    ),
+                )
+                changed += (
+                    nl
+                    + "### Archived Task "
+                    + key
+                    + nl
+                    + nl
+                    + archived.get("basis", "")
+                    + nl
+                    + fence
+                    + "markdown"
+                    + nl
+                    + archived["content"].rstrip()
+                    + nl
+                    + fence
+                    + nl
+                )
+        require_valid_candidate(doc, changed)
+        return Result({**edit_document(doc, changed, dry_run), **details})
     require_valid_candidate(doc, changed)
     write_bytes(doc, changed.encode("utf-8"), dry_run)
     path = str(doc.path.relative_to(doc.root))

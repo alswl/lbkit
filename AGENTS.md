@@ -30,7 +30,7 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - Relative links inside `docs/installable/` and `skills/` must still resolve in a consuming repository after symlink resolution: SKILL.md uses `../../docs/installable/...`, the references subdirectory uses `../../../docs/installable/...`, and contracts referencing skills use `../../skills/...`.
 - When adding a new top-level installed directory or file, update `manifest()` in `bin/lbkit` accordingly.
 - On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Config schema versions describe compatibility and are independent of release suffixes. Only the human may decide and authorize version upgrades. Do not automatically bump `VERSION`, package versions, skill frontmatter versions, or config format versions when changing implementation. Report any release or compatibility implications and wait for an explicit version instruction; synchronize dependent metadata only with that instruction.
-- CLI write commands must carry the `version_token` (SHA-256 CAS) returned by `context --json` to prevent concurrent-write conflicts; do not bypass this.
+- New document edits use Markdown as SSOT and return `sync_required`; explicitly run `log sync-state` to refresh the projection. Document edits and sync do not require caller CAS. Execution and monitoring writes must still carry their own context version tokens; never bypass unknown-delivery, live identity or authorization checks.
 - The consuming repository owns its logbook, `AGENTS.md`, `lbkit.yaml`, and `lbkit-skills.yaml`; do not inject new obligations into consumers through shared contracts without documenting them in docs/dev.
 
 ## References
@@ -39,6 +39,6 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
 
 <!-- SPECKIT START -->
-Current feature plan: [Herdr display policy — Issue #1](specs/007-herdr-label-prefix/plan.md).
-For this feature, follow the plan's user-required Red → Green → Refactor workflow; keep real-host acceptance separate from fixture tests.
+Current feature plan: [Markdown SSOT and Task coordination — Issues #8/#9](specs/008-return-observation-closeout/plan.md).
+For this feature, follow the plan's Red → Green → Refactor workflow; keep unit tests separate from external CLI and real-host acceptance. Human design review confirmed; no automatic commit, push or version change.
 <!-- SPECKIT END -->

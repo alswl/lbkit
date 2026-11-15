@@ -13,10 +13,12 @@ from logbook_cli.commands.common import (
     STAGE,
     TASK,
     TEXT,
-    TOKEN,
     finish,
     options,
     resolve_root,
+)
+from logbook_cli.commands.common import (
+    DOCUMENT_TOKEN as TOKEN,
 )
 from logbook_cli.format import NOTE_KINDS
 from logbook_cli.services import tasks

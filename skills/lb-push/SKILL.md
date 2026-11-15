@@ -4,6 +4,26 @@ version: 0.6.0-dev
 description: "Advance or resume a confirmed Logbook through its authorized endpoint. Preserve explicit Captain takeover across subsequent tasks; otherwise dispatch Sailors or select automatic problem-specific takeover. Stop at human gates or concrete blockers. push means project advancement, not Git push; use lb-status for queries."
 ---
 
+## New-run CLI sequence
+
+Before Task runtime actions explicitly run `lb log sync-state LOG --json`; do not
+silently turn a status read into sync. Read `log execution context`, assign the
+current subject, reread execution context, bind-execution with exact native identity,
+then task agent inspect. Read fresh execution context and send with its token,
+operation ID and live expected session/observation. Unknown delivery requires
+reconciliation, never a new operation ID retry. No Dispatch/Attempt is required.
+
+For binding/monitoring server scope, inspect `herdr status --json` on the selected
+machine: read top-level server.session, using lb scope `default` for a running
+unnamed server. machine=`local` does not mean server=`local`; do not guess server
+scope or substitute a pane/Agent ID. Use the same observed scope for execution
+binding and monitoring.
+
+Use agent monitoring context/configure and managed wait for verified native
+sessions. Empty targets return no_targets; this is not business completion. Retain
+events, answers and old bindings while handling late results. Sync does not change
+assignee, authorize takeover, start agents or accept results.
+
 # Advance authorized work
 
 ## Purpose and inputs
@@ -49,8 +69,11 @@ an executor returned or the user asked for status.
    in [Herdr collaboration](references/herdr.md). Receipt, handling and business
    completion remain separate. For missing input, inspect authorized sources first,
    then ask the responsible person the smallest concrete missing decision.
-7. Captain checks returned work against the actual contract and records canonical
-   state through current-token CLI writes. Simple completion needs no mandatory
+7. Captain checks returned work against the actual contract. Compose lb-update
+   for progress/result writes and lb-cli for command selection and recovery; use
+   the new-run sequence above for document and execution writes. Preserve their
+   separate document-save and sync outcomes in the user update and final reply,
+   including a failure that recovered during this invocation. Simple completion needs no mandatory
    Run, Result or invented start event. Record optional useful evidence; retain
    required candidate/independent-review checks. If a writer is unavailable, report
    the exact pending change honestly and continue independent authorized work.

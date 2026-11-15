@@ -60,7 +60,7 @@ def configure(root, log, input_file, token, dry_run):
     try:
         if not isinstance(value, dict) or set(value) != {"targets"}:
             raise ValueError("configure input must contain exactly targets")
-        targets, contexts, _, _ = validate(value)
+        targets, contexts, _, _ = validate(value, allow_empty=True)
     except (ValueError, TypeError, KeyError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
     return observation.configure(doc, targets, contexts, token, dry_run)
@@ -240,7 +240,10 @@ def answer_submit(root, log, event_id, operation_id, input_file, token, dry_run,
                 or native_question.get("id") != payload["question_id"]
                 or native_question.get("revision") != payload["revision"]
             ):
-                raise LbError("identity_changed: saved Event names a different native question", EXIT_REFUSED)
+                raise LbError(
+                    "identity_changed: saved Event names a different native question",
+                    EXIT_REFUSED,
+                )
             native = herdr.inspect_question(binding, payload)
             if not native.get("live_verified"):
                 raise LbError(
@@ -276,7 +279,11 @@ def answer_submit(root, log, event_id, operation_id, input_file, token, dry_run,
         try:
             receipt = herdr.submit_question(
                 binding,
-                {**payload, "operation_id": operation_id, "answer_digest": answer["answer_digest"]},
+                {
+                    **payload,
+                    "operation_id": operation_id,
+                    "answer_digest": answer["answer_digest"],
+                },
             )
         except (OSError, LbError, TimeoutError):
             return {"answer": answer, "version_token": current, "dry_run": False}

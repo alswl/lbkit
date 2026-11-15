@@ -33,6 +33,8 @@ def inspect(root: str, log: str, view: str = "context") -> Result:
 
     result = state_snapshot(doc) if view == "state" else context(doc)
     result["execution"] = execution_view(doc)
+    if doc.markdown_authority:
+        result["sync_status"] = doc.sync_status
     return Result(result)
 
 

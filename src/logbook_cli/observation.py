@@ -13,6 +13,11 @@ from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError
 
 
 def scope(doc):
+    if getattr(doc, "markdown_authority", False):
+        from logbook_cli import unified
+
+        path, _ = unified.locate(doc.root, doc.path, required=True)
+        return path
     identity = doc.metadata.get("document", {}).get("identity", {}).get("uuid")
     name = identity or str(doc.path.relative_to(doc.root))
     path = state.directory(doc.path, doc.root) / "observations" / (name + ".json")
@@ -35,8 +40,10 @@ def validate(value):
         or uuid.UUID(hex=value["id"]).hex != value["id"]
     ):
         raise ValueError("invalid observation identity")
-    targets, _, _, _ = validate_targets({"targets": value.get("targets")})
-    contexts = value.get("contexts")
+    targets, _, _, _ = validate_targets(
+        {"targets": value.get("targets")}, allow_empty=True
+    )
+    contexts = value.get("cursors")
     if not isinstance(contexts, list) or len(contexts) != len(targets):
         raise ValueError("invalid observation cursors")
     for cursor, target in zip(contexts, targets):
@@ -82,6 +89,11 @@ def parent_directory(path, root, create=False):
 
 
 def read_bytes(doc):
+    if getattr(doc, "markdown_authority", False):
+        from logbook_cli import unified
+
+        _, value = unified.locate(doc.root, doc.path, required=True)
+        return None if value["monitoring"] is None else encode(value["monitoring"])
     path = scope(doc)
     with parent_directory(path, doc.root) as directory:
         if directory is None:
@@ -192,7 +204,7 @@ def _configure(doc, targets, contexts, expected, dry_run):
 
     known = copy.deepcopy(value.get("retired", {}))
     active = {}
-    for item, cursor in zip(value.get("targets", []), value.get("contexts", [])):
+    for item, cursor in zip(value.get("targets", []), value.get("cursors", [])):
         key = hashlib.sha256(encode(item["binding"])).hexdigest()
         known[key] = {"target": item, "context": cursor}
         active[key] = known[key]
@@ -216,12 +228,12 @@ def _configure(doc, targets, contexts, expected, dry_run):
             selected[key] = known[key]
         else:
             selected[key] = {"target": item, "context": cursor}
-    if set(selected) != set(active):
+    if "targets" not in value or set(selected) != set(active):
         value.update(
             targets=[row["target"] for row in selected.values()],
-            contexts=[row["context"] for row in selected.values()],
+            cursors=[row["context"] for row in selected.values()],
             retired={key: row for key, row in known.items() if key not in selected},
-            target_revision=value.get("target_revision", 0) + 1,
+            revision=value.get("revision", 0) + 1,
         )
     admit(value)
     data = encode(value)
@@ -315,6 +327,21 @@ def _evidence_bounds(value):
 
 
 def _publish(doc, data, before, *, create=False):
+    if getattr(doc, "markdown_authority", False):
+        from logbook_cli import unified
+
+        with unified.writer(doc.root, doc.path):
+            target, value = unified.locate(doc.root, doc.path, required=True)
+            current = (
+                None if value["monitoring"] is None else encode(value["monitoring"])
+            )
+            if current != before:
+                raise LbError("version_conflict: monitoring changed", EXIT_REFUSED)
+            value["monitoring"] = json.loads(
+                data, object_pairs_hook=state.unique_object
+            )
+            unified.publish(target, value)
+        return
     from logbook_cli.storage import replace_bytes_at
 
     path = scope(doc)

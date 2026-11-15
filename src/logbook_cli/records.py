@@ -55,6 +55,12 @@ def read(
     doc: Document, kind: str, *, require_closed: bool = False
 ) -> list[tuple[int, dict]]:
     positions = anchors(doc, require_closed=require_closed)
+    if doc.markdown_authority and kind == "task":
+        ids = [identity for _, identity in positions]
+        if len(ids) != len(set(ids)):
+            raise LbError("duplicate task identity", EXIT_REFUSED)
+        doc.metadata["task"] = {identity: {"id": identity} for _, identity in positions}
+        return [(index, {"id": identity}) for index, identity in positions]
     rows = doc.metadata.get(kind, {})
     for key, row in rows.items():
         identity = row.get("id") or row.get("record_id")
@@ -100,6 +106,11 @@ def observed(value: str) -> str:
 def put(doc: Document, kind: str, item: dict) -> str:
     """Stage a record; the shared writer commits Markdown and state together."""
     anchors(doc, require_closed=True)
+    if doc.markdown_authority and kind not in {"task", "task-archive", "lifecycle"}:
+        raise LbError(
+            "retired document metadata write; use execution or monitoring facts",
+            EXIT_REFUSED,
+        )
     if "document" not in doc.metadata:
         doc.metadata["document"] = {
             "identity": {"id": "identity", "uuid": uuid.uuid4().hex}

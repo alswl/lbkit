@@ -179,3 +179,162 @@ def send(
             "runtime_transfer_verified": False,
         }
     )
+
+
+def task_send_guard(ex, task_id, operation_id, request):
+    existing = ex["operations"].get(operation_id)
+    if existing:
+        if existing["request"] != request:
+            raise LbError("operation ID binds another request", EXIT_REFUSED)
+        if existing["outcome"] == "submitted":
+            return existing
+        raise LbError(
+            "operation already recorded; reconcile without resend", EXIT_REFUSED
+        )
+    if any(op["outcome"] == "unknown" for op in ex["operations"].values()):
+        raise LbError("unknown delivery blocks further delegation", EXIT_REFUSED)
+    if any(
+        op["request"].get("task_id") == task_id
+        and op["request"].get("binding_id") == request.get("binding_id")
+        and op["outcome"] == "submitted"
+        for op in ex["operations"].values()
+    ):
+        raise LbError(
+            "Task binding already has submitted delivery; do not resend", EXIT_REFUSED
+        )
+    return None
+
+
+def send_task(
+    root,
+    log,
+    task_id,
+    binding_id,
+    operation_id,
+    execution_token,
+    expected_session,
+    expected_observation,
+    message_file,
+    dry_run=False,
+):
+    from logbook_cli import observation, unified
+    from logbook_cli.document import safe_path
+    from logbook_cli.repository import require_synced
+    from logbook_cli.services.task_coordination import native_binding
+    from logbook_cli.task_identity import dependencies, lookup
+
+    records.single_line(operation_id, "operation_id")
+    doc, task = require_synced(root, log, task_id)
+    message = safe_path(doc.root, message_file).read_text()
+    if not message.strip():
+        raise LbError("send requires nonempty message", EXIT_REFUSED)
+    with unified.writer(doc.root, doc.path, dry_run):
+        doc, task = require_synced(root, log, task_id)
+        path, envelope = unified.locate(doc.root, doc.path, required=True)
+        if unified.section_token(envelope, "execution") != execution_token:
+            raise LbError("execution version conflict", EXIT_REFUSED)
+        ex = envelope["execution"]
+        runtime = ex["tasks"].get(task_id, {})
+        if runtime.get("current_binding_id") != binding_id:
+            raise LbError("send requires current Task binding", EXIT_REFUSED)
+        binding = runtime["execution_bindings"][binding_id]
+        native = native_binding(binding)
+        if expected_session != native["session_id"]:
+            raise LbError("expected session differs", EXIT_REFUSED)
+        request = {
+            "task_id": task_id,
+            "binding_id": binding_id,
+            "run_id": envelope["identity"]["run_id"],
+            "recipient": binding["subject"]["subject_id"],
+            "session_id": binding["session_id"],
+            "binding_digest": unified.digest(binding),
+            "message_digest": hashlib.sha256(message.encode()).hexdigest(),
+        }
+        existing = task_send_guard(ex, task_id, operation_id, request)
+        if existing:
+            return Result(
+                {
+                    "operation": existing,
+                    "replayed_record": True,
+                    "effect": "no runtime operation",
+                }
+            )
+        if (
+            task.human
+            or binding["subject"]["kind"] != "agent"
+            or task.effective_state not in {"pending", "active"}
+        ):
+            raise LbError(
+                "Task cannot be delegated in current state/ownership", EXIT_REFUSED
+            )
+        for dep in dependencies(task):
+            if lookup(doc, dep)[0].effective_state != "done":
+                raise LbError("hard dependency is not done: " + dep, EXIT_REFUSED)
+        from logbook_cli.lifecycle import get
+
+        if get(doc)["value"] != "active":
+            raise LbError("new send requires active Logbook", EXIT_REFUSED)
+        execution.require_delegation(doc, task_id, binding["subject"]["subject_id"])
+    intent_saved = False
+
+    def persist():
+        nonlocal intent_saved
+        with unified.writer(doc.root, doc.path):
+            current, _ = require_synced(root, log, task_id)
+            if current.data != doc.data:
+                raise LbError(
+                    "document changed before send; inspect current instruction",
+                    EXIT_REFUSED,
+                )
+            target, value = unified.locate(current.root, current.path, required=True)
+            if unified.section_token(value, "execution") != execution_token:
+                raise LbError("execution changed before send", EXIT_REFUSED)
+            task_send_guard(value["execution"], task_id, operation_id, request)
+            value["execution"]["operations"][operation_id] = {
+                "id": operation_id,
+                "request": request,
+                "outcome": "unknown",
+                "receipt": None,
+                "provenance": "adapter",
+            }
+            unified.publish(target, value)
+            intent_saved = True
+
+    # The session action lock spans transport; the run writer only spans local writes.
+    from contextlib import nullcontext
+
+    with nullcontext() if dry_run else observation.action_lock(doc, native):
+        result = herdr.control(
+            native,
+            "send",
+            expected_session,
+            expected_observation,
+            message,
+            dry_run,
+            before_mutation=persist,
+        )
+        if dry_run:
+            return Result(result | {"record_saved": False})
+        if not intent_saved:
+            raise LbError(
+                "adapter omitted durable intent; reconcile without resend", EXIT_REFUSED
+            )
+        try:
+            with unified.writer(doc.root, doc.path):
+                target, value = unified.locate(doc.root, doc.path, required=True)
+                op = value["execution"]["operations"][operation_id]
+                op.update(outcome="submitted", receipt=result["receipt"])
+                unified.publish(target, value)
+                token = unified.section_token(value, "execution")
+        except (OSError, LbError):
+            return Result(
+                result
+                | {
+                    "record_saved": False,
+                    "effect": "transport occurred; reconcile without resend",
+                },
+                EXIT_REFUSED,
+            )
+    return Result(
+        result | {"record_saved": True, "operation": op, "version_token": token}
+    )
