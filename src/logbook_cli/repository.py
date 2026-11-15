@@ -30,8 +30,6 @@ def markdown_document(data, path, root):
                 a.value for a in task.annotations if a.kind is Field.RESOLUTION
             ]
             if resolutions:
-                import re
-
                 match = re.fullmatch(
                     r"(cancelled|human-cancelled|not-applicable): (.+?) — (.+)",
                     resolutions[0],
@@ -207,7 +205,6 @@ def require_synced(root, log, task_id):
 def edit_document(doc, changed, dry_run=False):
     from logbook_cli.storage import replace_bytes_at
 
-    # Candidate state is derived solely from Markdown, including newly inserted IDs.
     candidate = markdown_document(changed.encode(), doc.path, doc.root)
     records.anchors(candidate, require_closed=True)
     if not dry_run and changed.encode() != doc.data:

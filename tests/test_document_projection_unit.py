@@ -45,7 +45,6 @@ class ProjectionTests(unittest.TestCase):
             Path("/repo/work.md"),
             Path("/repo"),
         )
-        # The actual managed spelling includes the lifecycle marker.
         doc = markdown_document(
             doc.text.replace("Status: Active", "Status: \U0001f6a7 Active").encode(),
             doc.path,
