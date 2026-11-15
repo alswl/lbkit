@@ -1,6 +1,6 @@
 ---
 name: lb-cli
-version: 0.6.0-dev
+version: 0.6.1-dev
 description: "Use the lb CLI to inspect or change logbooks, tasks, configuration and runtime bindings. Use for lb command selection, JSON inputs, version_token/CAS conflicts, human-confirmed task changes, Herdr resource creation or CLI failures. Collaboration planning and advancement remain with their owning lb skills."
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: lb-update
-version: 0.6.0-dev
+version: 0.6.1-dev
 description: "Use when the user asks to update current facts, progress or explicit state decisions in the existing Logbook, or asks to reread human edits. Preserve the route: task membership, outcomes, order, dependencies, planned responsibility, goals and acceptance criteria change only through lb-plan. Rereading is read-only by default; completion aligns applicable executor results. Does not dispatch work. Managed logbooks use mind-forge."
 ---
 

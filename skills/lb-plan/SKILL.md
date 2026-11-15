@@ -1,6 +1,6 @@
 ---
 name: lb-plan
-version: 0.6.0-dev
+version: 0.6.1-dev
 description: "Create, revise or review a Logbook route. Use for adding/removing/splitting Tasks, changing outcomes, order, dependencies, planned responsibility, skill chains, goals, design or acceptance criteria, including route changes requested through lb-update. Personally develop repository specs with Admiral; does not dispatch execution."
 ---
 
