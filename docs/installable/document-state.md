@@ -17,7 +17,7 @@ lb log sync-state docs/delivery.md --json
 ```
 
 Optional repeated `--document PATH` associates other existing project documents
-at initialization. Paths stay fixed for this revision. A run has one Logbook.
+at initialization. Those paths are fixed at initialization. A run has one Logbook.
 Old layouts conflict and are refused; there is no conversion or migration.
 
 The sole structured file is `lb/<name>.json`, format

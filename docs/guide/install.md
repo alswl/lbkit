@@ -49,7 +49,7 @@ The installer links only entry points. The CLI implementation (`src/logbook_cli/
 
 ## Refresh contract links after upgrading
 
-The shared source directory is now `docs/installable/`. Consumer entry points remain `docs/<name>.md`.
+Shared contract sources live in `docs/installable/`; consumer entry points are `docs/<name>.md`.
 
 1. Inspect local changes before updating the pinned submodule revision.
 2. Run the installer with `--dry-run`.
@@ -60,6 +60,6 @@ The installer replaces only recognized old contract links that target `.lbkit/do
 
 ## CLI dependencies
 
-The CLI now uses Click. After upgrading the pinned submodule, rerun the installer to synchronize its environment. `bin/lb` use `.lbkit/.venv`; they never install dependencies implicitly. A missing environment produces an actionable error. The standalone installer itself needs only Python's standard library.
+The CLI uses Click. After upgrading the pinned submodule, rerun the installer to synchronize its environment. `bin/lb` uses `.lbkit/.venv` and never installs dependencies implicitly. A missing environment produces an actionable error. The standalone installer itself needs only Python's standard library.
 
 For local lbkit development, run `uv sync --locked` from the lbkit checkout. The consuming repository's Python environment is separate.

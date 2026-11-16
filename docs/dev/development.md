@@ -73,123 +73,89 @@ the submodule's development rules, including through installed symlinks. Shared
 background references use the lbkit README; cleanup permissions come from the
 host's rules and current authorization, not a presumed exception in lbkit's rules.
 
-### Consumer AGENTS additions
+### Consumer ownership
 
-The collaboration template defines factual local additions; lb-init applies that
-boundary during consumer maintenance. Keep shared behavior in skills/contracts and
-reference it rather than expanding copied instructions in the template. Project
-decisions and incident history stay in project records.
+The consuming repository owns its Logbook, AGENTS.md, configuration, document
+bindings and runtime setup. Shared skills and contracts define reusable behavior;
+installation does not authorize business work or migration of consumer records.
+Keep template additions limited to verified local conventions and scope. Consumer
+decisions and incidents stay in their own records.
 
-The waiting template links to the shared workflow rather than copying its steps.
-Routine preflight reuses applicable host capability evidence; first adoption or a
-relevant runtime/host change calls for validation of the affected path under the
-waiting contract. This does not impose full host acceptance on every task or add
-consumer configuration, approval gates or version changes.
+The installer merges instruction-template changes against a verified adoption
+baseline stored in the worktree Git directory. It preserves consumer additions,
+reports missing baselines or conflicts, and previews changes with dry-run. It
+must not install hooks, alter permissions or rewrite business records implicitly.
 
-Explicit install now merges AGENTS template updates using a verified baseline and
-a checked diff, preserving consumer additions. The last successfully adopted template
-is stored in the worktree Git directory, outside tracked consumer content. Legacy
-installs can adopt an intact historical template from the pinned kit history.
-Without a verified baseline, install preserves AGENTS and reports manual merge is
-needed; conflicting edits refuse without writing conflict markers. Dry-run previews
-the patch without saving a baseline. Configuration and business records remain
-consumer-owned; installation does not revoke local restrictions. This changes no CLI, configuration schema or version and
-adds no execution approval gate.
+## Documentation boundaries
 
-## Versioning and Evolution
+`docs/guide/` explains usage, `docs/dev/` holds durable contributor and architecture
+guidance, and `docs/manual/` provides reference navigation. Installable contracts
+live in `docs/installable/`; only that directory is linked into consumer docs.
+Do not add a documentation homepage to the installed contract directory.
 
-lbkit uses semantic versioning; the current version is recorded in the root `VERSION` file (first release 0.1.0) and printed by `bin/lb --version`. The version covers three kinds of objects: lbkit as a whole (shared contracts, CLI, and installer), each lb-* skill (the `version` field in SKILL.md frontmatter), and the config formats owned by consuming repositories (`version` in `lbkit.yaml` and `lbkit-skills.yaml`). On `master`, project and skill versions use `x.y.z-dev`; Python package metadata uses the equivalent PEP 440 `x.y.z.dev0`. Configuration schema versions remain independent compatibility identifiers. Only the human decides and authorizes version upgrades. Agents must not automatically bump package, skill, or configuration versions. Report compatibility implications separately; update versions and dependent metadata only on explicit instruction. Semantic versioning informs the human release decision. Each consuming repository still pins one exact revision via the submodule pointer and chooses its own upgrade timing — updating the submodule pointer is the upgrade. Therefore:
+Describe current intent, responsibilities, stable behavior, constraints and
+necessary operations. Skill presentation and sequencing belong in the relevant
+skill; shared command schemas belong in contracts. Change those sources directly
+instead of appending a matching change summary here. A skill-only presentation
+change does not require a development-guide entry. Document a real new consumer
+obligation or compatibility requirement at its authoritative boundary, without
+copying the implementation narrative.
 
-- Keep contract changes backward compatible where possible (adding fields beats changing semantics).
-- Note the change points of breaking changes in the corresponding contract document so consumers can evaluate whether to upgrade.
-- CLI write operations carry a `version_token` (SHA-256 CAS) to prevent concurrent-write conflicts; the matching between logbook files and parsing code is guaranteed by the pinned revision.
+Plans and unimplemented proposals belong in specs. Round-specific feedback,
+progress, candidate identities, acceptance results, timing and trial evidence
+belong in the consumer ledger, verification repository or approved temporary
+storage. Do not keep them in docs, including under a historical-evidence heading.
+Git history retains document evolution; it is not a reason to duplicate it here.
 
-## 0.2 Consumer Migration
+Use fictional names and reserved example domains in reusable content. Before
+publication, inspect both candidate content and Git history for private identifiers,
+paths, hosts and credentials. Removing current text does not remove historical
+copies; rewriting history requires explicit human authorization. Real trial
+inputs and reports stay outside tracked content, in an ignored scratch directory.
 
-Managed logbooks use the declared document adapter; consumers own their configuration migration. Business record retention follows the host contract.
-Research and other non-software results must remain first-class
-behavioral test cases. Do not infer that a passing CLI suite proves skill behavior
-or live runtime/provider compatibility.
+## Architecture and sources of authority
 
-## Documentation Layout
+- [Document model and CLI layers](document-model.md): semantic types, representation,
+  parsed annotations and command/service boundaries.
+- [Coordination and lifecycle](coordination-lifecycle-design.md): route ownership,
+  lifecycle, workflow provenance, delivery checks and run metrics.
+- [Execution records](execution-records.md): attributed facts, runtime effects,
+  uncertain delivery and ownership constraints.
+- [Observation recovery](observation-recovery-design.md): cursor/event persistence,
+  listener ownership and question-delivery boundaries.
 
-Use `docs/guide/` for product usage and `docs/dev/` for contributions and long-lived development guidance. `docs/manual/` provides reference navigation.
+Markdown is authoritative for document and Task facts. Saving a document and
+refreshing its projection are distinct operations; document edits require no
+caller CAS. Execution and monitoring writes retain their own current context
+tokens. Use the [document-state contract](../installable/document-state.md) for
+storage and synchronization, and the [CLI contract](../installable/lb-cli.md)
+for supported commands, tokens and failure behavior. Do not duplicate command
+schemas or retired storage layouts in contributor guidance.
 
-Keep installable contract bodies in `docs/installable/`. The installer links only those Markdown files into consumer `docs/` directories. Do not put a documentation homepage in `docs/installable/`, because it would become an installed contract.
+## CLI runtime
 
-After moving a contract, update skill references and the installer mapping. Test both a new installation and recognized legacy links. Consumer documents and unrelated symlinks must remain untouched.
+The main CLI uses Click with dependencies declared in `pyproject.toml` and locked
+in `uv.lock`. `bin/lbkit` is a standard-library bootstrap that prepares the checkout
+runtime during explicit installation. Read commands never install dependencies.
+The checkout and consumer launcher is `bin/lb`; installed packages expose `lb`,
+and `uv run --locked python -m logbook_cli` invokes the same implementation.
+Run the installer after a submodule upgrade to synchronize its environment.
 
-## CLI and document model migration
+Optional host integrations remain owner-configured. Claude native question hook
+setup, directory permissions, retention and confirmation are specified in the
+[CLI contract](../installable/lb-cli.md#agent-wait-and-event-handling). Installation
+must not create that setup automatically. Source visibility in a submodule does
+not grant a consuming Agent permission to debug the toolkit implementation.
 
-The CLI uses Click and uv. The installer remains a small standard-library bootstrap so it can create the CLI environment before importing Click. `pyproject.toml` and `uv.lock` stay in the submodule; `lbkit install` runs `uv sync --locked --no-dev --project .lbkit`. The launchers use the existing `.lbkit/.venv`, preserve the caller's working directory, and never download dependencies on a read command. Rerun the installer after a submodule upgrade.
+## Instruction language and maintenance
 
-`commands/` adapts Click parameters, `services/` implements use cases, `storage.py` owns guarded writes, and `render.py` owns CLI output. `models.py` defines semantic task/stage states and annotations. `format.py` owns Markdown labels and marker mappings. `document.py` parses once, and skill extraction consumes its task annotations.
-
-The runtime dependency change requires consumer environment setup; its release version is for the human to decide. The concept-oriented command migration replaces old command paths and option spellings; target-file CAS and dry-run guarantees remain. English labels and text stage markers are optional additions. The format is explicitly bilingual, not arbitrary-language inference.
-
-The local unittest suite covers isolated components; CLI and installation
-regressions are maintained in the external verification repository. Ruff and basic mypy checks cover the source package; strict typing of every historical JSON record is not yet complete.
-
-## Human edits and progress refresh
-
-Human-facing lb skill replies now provide current Logbook line locators (`L50`)
-where they help locate a confirmation, decision, review, blocker or next action.
-The coordination contract defines freshness and fallback rules; each skill
-identifies its applicable interaction points. This is presentation guidance,
-not a new approval gate, consumer configuration or document schema. Physical
-lines remain navigation hints rather than stable task identifiers. Versions are
-unchanged pending explicit human instruction.
-
-`lb-update` keeps two intents in one entry. A human edit notification defaults to
-read-only alignment with the current logbook. It does not create mind-forge
-bindings, write Thinking, sync markers or begin execution. A reliable prior
-version is required to claim a difference; otherwise report current understanding.
-A request to refresh progress permits reading already-authorized available records
-and writing supported facts. Mixed requests reread first and re-evaluate evidence
-against the edited criteria. The existing format/progress/close modes apply only
-after an authorized write is selected. This adds no consumer configuration or
-new approval requirement; project and skill versions remain unchanged.
-
-Only `lb-plan` changes the route: Task membership/results, order, dependencies,
-planned responsibility/repositories, skill chains, goals, design and acceptance
-criteria. `lb-update` records current facts, applicable results and existing Task
-state. Pause/resume, blockers and explicit cancellation/reopening preserve identity,
-intended result and route position; they do not authorize rerouting. Mixed requests
-compose `lb-plan` then `lb-update`, reusing explicit authorization and reassessing
-affected evidence after reading the saved route. Shared writer capabilities do not
-expand either skill's responsibility. Consumers adopting this revision should route
-human-supplied task/goal rewrites through planning rather than progress maintenance;
-already-saved human edits remain authoritative. This introduces no configuration,
-version change or additional approval gate.
-
-## Logbook coordination migration
-
-The coordination revision uses three roles: Admiral supplies goals and authorization, Captain maintains the route and coordinates assignments, and Sailor accepts a self-contained instruction and performs assigned business work including testing and review. Captain checks completion and is the sole Agent writer of the Logbook; Sailor needs no Logbook access. Independent checks, when needed, are Sailor tasks. A current result and applicable acceptance return support progress; a runtime exit or a bare completion claim does not. Status-only requests authorize no new business execution.
-
-The revision intentionally removes the `lb todo` companion-view command and automatic TODO.md refresh, and retires the shared evidence.md/source-index rule model. It does not delete consumer-owned TODO files, business sources, human instructions or historical records. Installer migration must remove only exactly recognized installer-owned retired symlinks; copied files and unrelated links remain owned by consumers. Consumers decide their submodule revision and local instruction changes. No automatic version or config upgrade accompanies this work.
-
-Skills reconcile Sailor returns rather than requiring a framework acceptance archive. The host determines business record storage and delivery layout. Requested run statistics use the existing bound Thinking. Skill evaluation follows the behavior evaluation rules below.
-
-Delivery follows the host plan and explicit Admiral ruling. A PR-required gate retains PR/head/accessibility checks; branch-only review uses the branch/ref and candidate identity with a usable entry. Uncommitted changes are not branch contents. This adds no mandatory PR or permission to commit, push or merge.
-
-Delivery scope is defined in the [coordination contract](../installable/coordination.md#human-deliveryreadiness--us4). Its inventory, binding and final-link checks clarify existing host-owned delivery rules; they add no consumer configuration, mandatory archive or cleanup authorization. Document identity comes from explicit paths or host metadata rather than naming conventions.
-
-## Design and direct dialogue migration
-
-Consumers adopting this revision gain a design-readiness obligation before ordinary lb-push: Captain personally develops specs with Admiral in authorized project repositories and links the current design and confirmation to the route. Reuse existing applicable specs and confirmations; no required Spec Kit installation, fixed spec path, additional CLI state, config field or automatic version bump is introduced. Host design workflows and write permissions still apply. Captain's spec authorship is an explicit planning responsibility; implementation and POCs remain scoped executor work; Captain checks whether the returned result satisfies the task. Requests to create or draft the supplied Logbook route authorize saving proposed result-oriented unfinished agent-task wording within that scope, including in an existing draft, before final design confirmation. Spec/Thinking-only proposals leave the Logbook unchanged and authorize no task writes or previews. Older narrow editing limits do not override a newer planning request; confirmed scope/order, human tasks and execution gates remain protected. This clarifies planning authorization rather than adding a new approval or CLI write bypass. Existing annotation refinements use the matching `task note --replace-line` operation and current token; first-line task rewrites and direct body edits are not substitutes. Bound Thinking body edits are distinct: resolve/check identity with mind-forge and use the host writer or authorized local Markdown edit, while preserving bindings and content. The missing dedicated Thinking-write subcommand alone creates no new adapter prerequisite.
-
-Preflight may inspect unfinished design. A real POC requires an explicit todo, affected-route reorganization and renewed Admiral discussion, then bounded execution authorization; completion cannot silently release ordinary implementation. Design reading, spec writing and execution permissions remain distinct across repositories. Specs own design prose; Logbook owns scheduling; Thinking/Sources retain decisions or references under host rules.
-
-Direct Admiral–Sailor dialogue requires Captain's permission and a verified interaction window for the owning Sailor. Captain recovers attributable content, decisions and open points into the applicable existing records before affected work resumes or the entry closes. This is a scoped interaction capability, not permission to start extra executors or a requirement for a new transcript archive. Consumers own adoption in their AGENTS and runtime conventions; the installer must not overwrite these. Existing Admiral rulings remain authoritative and are not subject to a second approval by Captain.
+Write instructions and documentation in English. Localized parser/UI constants,
+format examples and fixtures retain the languages they specify or test. Integrate
+behavior into its responsible step; remove superseded procedures rather than
+appending parallel workflows. Keep semantic decisions in skills and deterministic
+schemas and common write rules in contracts.
 
 ## Behavior evaluation
-
-The optional `task split` command adds atomic replacement of an explicitly
-authorized unfinished agent package. It archives the original identity/content outside the current task list and creates
-ordered not-started replacements with source provenance. It adds no document schema,
-configuration or consumer adoption requirement. Repository coverage and human
-protections are enforced by the CLI; authorization and evidence applicability
-remain the caller's responsibility. Existing task commands keep their behavior.
 
 The reusable feedback acceptance inventory, check mappings and locator validation
 live with the integration cases in the external verification repository. Keep
@@ -206,12 +172,6 @@ unavailable environments are not kills. Include silent requirement deletion,
 not only broken reference tests. Report surviving mutants and the tested scope;
 a passing mapping check or killed CLI mutant does not certify live skill behavior.
 Keep mutation patches, outputs and trial reports outside the repository.
-
-Feedback-derived refinements retain host-owned records: current status replaces stale summaries locally while dated evidence stays in existing Thinking; operation returns distinguish effective configuration/results from intent and unverified recovery; planning compares workflows, definitions and shared review allowances across the confirmed route. These clarify existing acceptance and authorization duties, without requiring a new archive or configuration. The optional `task rewrite --assign-repo` adds initial assignment of an unassigned unfinished agent task under an explicit decision; default rewrites still preserve ownership. Existing owners, human items, CAS and previews remain protected. This is an additive CLI capability; no version or schema change is made without human instruction.
-
-Actionable return gaps belong in the existing task and its owning return: a configuration correction requests the evidence applicable to the actual tool (pipeline configuration/graph/results or local target/digest/exit/readback), rather than universally requiring pipeline fields; an update-only delivery note names the owner and missing inventory/binding checks without dispatching. Recovery records retain the exact supported scope and evidence pointer even when the task completes. These clarify existing return alignment; they introduce no new host configuration, archive, approval or business execution permission.
-
-Feedback expresses a reported symptom and a proposed solution, not an automatic new consumer obligation. Validate both against the task's intended result and host ownership. Pair success-dependent operations with diagnosis-only tasks, pipeline evidence with local tools that have no graph, and explicitly required independent reviews with routes that need only self-checks. Formatting and renderer preferences are host-specific unless already part of the shared format contract. Review limits count agreed independent submissions, not all tests or environments. These clarifications add no new configuration fields, universal review gates or execution permission.
 
 Reusable local progress and controlled-runtime fixtures live under the corresponding skill's `evals/fixtures/`. Reset messages, receipts and task states before each comparison, verify document bindings, and keep grading out of the subject workspace. Controlled adapter receipt proves message submission only, not live monitoring or business execution. A surviving instruction mutant may be masked by another applicable rule; report that outcome rather than counting a kill without the intended behavioral failure.
 
@@ -252,6 +212,19 @@ Use these dimensions to explain failures, without partial assertion credit:
 | Tool and file behavior | Invented action or destructive write | Required observation missing | Real actions and protected changes verified |
 | Delivery and reporting | Unusable or fabricated outcome | Gaps incompletely stated | Useful entry and explicit limitations |
 
+## Versioning and Evolution
+
+The root `VERSION` identifies lbkit; skill frontmatter versions identify installed
+skills, and consumer configuration versions describe format compatibility.
+On `master`, project and skill versions use `x.y.z-dev`; Python metadata uses
+`x.y.z.dev0`. Configuration schema versions evolve independently. Only the human
+chooses and authorizes version changes, commits, tags and publication.
+
+Consumers pin an exact submodule revision and choose their upgrade timing.
+Compatibility changes must be stated in the authoritative contract. Installation
+must preserve consumer configuration, instruction edits and business records.
+Do not infer an automatic migration from an implementation change.
+
 ## Version bumps
 
 A human selects the version change. `scripts/bump.py` synchronizes `VERSION`,
@@ -272,16 +245,6 @@ validating every required file. It can run with other changes in the worktree.
 It does not stage, commit, create tags, generate changelogs, switch branches or
 push. Review and perform those publishing actions separately when authorized.
 
-## CLI entry points
-
-`bin/lb` is the checkout and consumer launcher; it loads `src/logbook_cli/`
-and uses the existing checkout environment. Installed Python packages expose
-`lb` through `pyproject.toml`; `uv run --locked python -m logbook_cli` invokes
-the same implementation. `scripts/` contains repository maintenance tools only.
-The former `python scripts/lb.py` compatibility entry is removed; consumers
-using it must switch to `bin/lb` on submodule upgrade. The installer requires
-only the supported launchers and package files, and adds no consumer obligations.
-
 ## Release tags in master history
 
 Create a formal release metadata commit on the master lineage and annotate it
@@ -297,335 +260,3 @@ Historical metadata-only release commits can be integrated with an explicit
 history-only merge after verifying their diffs, preserving current content and
 the existing tag objects. Check ancestry with
 `git merge-base --is-ancestor vX.Y.Z master` before publishing.
-
-## Scoped Captain execution migration
-
-`lb-push` now selects scoped `lb-takeover` automatically for difficult work and
-`lb-handback` when its exit condition is met. This relaxes the former unconditional
-Sailor-only execution boundary. Consumers adopting it should reconcile explicit
-local prohibitions in their own AGENTS/runtime instructions; shared skills never
-override them. Existing authorization covers mode changes, not new business scope.
-Captain direct checks retain attribution and do not replace required independent
-review. Execution ownership uses project-local JSON for lb CLI hosts; reasoning and results
-remain in Thinking. Non-CLI hosts retain their protected records. New skills are picked
-up by the installer's existing directory enumeration. Re-run the installer after
-upgrading the submodule. No version or schema bump is made without human instruction.
-
-Explicit takeover covers the whole currently authorized advancement, including
-later lb-push tasks, until a human release or a previously authorized condition;
-task completion, skill changes and recovery do not release it. Repeated entry is
-idempotent, and missing model metadata alone no longer blocks it. Handback reuses
-an existing suitable executor before creating one and still requires independent
-monitoring. Consumers adopt this broader meaning when upgrading shared
-instructions; no host files are rewritten and no configuration is added.
-
-The takeover display uses `Status: 👨‍✈️ Captain takeover` under the task, with host
-field-language preservation. `task note --kind Status/状态 --replace-line` now
-replaces a matching agent-task Status line under the existing CAS/preview rules.
-It preserves comment suffixes and line endings, rejects stale/mismatched writes
-and still forbids human-task replacement. This additive CLI capability avoids
-competing current statuses; it introduces no parsed emoji/state or schema change.
-
-The scoped execution return skill is renamed from `lb-handoff` to `lb-handback`.
-Consumers should update explicit skill references when adopting this revision.
-Captain identity and coordination responsibility persist through execution handback;
-this clarifies the existing role boundary and adds no consumer configuration.
-
-## Lifecycle operations adoption
-
-The current CLI introduces opt-in lifecycle metadata and generated short page status, template contract/render/provenance operations, guarded Thinking event writes, delivery-link audit, a host feedback ledger and offline dispatch bindings. Consumers adopting these commands must review the installable lifecycle-operations contract and integrate the updated skill steps. Old human-authored page status is preserved and may need explicit migration. No historical project/template/feedback conversion is automatic. The new shared lb-workflow name may collide with a host-owned skill; the existing installer preserves it and reports the conflict. No force overwrite is added. The installer manifest discovers both new skills and the new installable contract dynamically. Package/config/skill release versions are not bumped.
-
-Atomic workflow maintenance adds `workflow update` for one document/state pair with candidate preview/CAS, and destination-aware create-only instance validation. Skills continue to own semantic edits, bindings and recovery; adapter bindings remain separate and no new host configuration is added. Directory substitution preserves following rulings; declared YAML front matter is retained. Unclosed Thinking syntax refuses event append. Retro explicitly limits coverage to its fixed snapshot rather than discovering other branches; session cleanup remains an execution-skill responsibility. No existing templates or logs are migrated automatically.
-
-## Instruction language and maintenance
-
-Write lbkit instructions and documentation in English. Keep localized parser/UI constants and localization fixtures unchanged where they test or specify the supported format. Integrate new skill behavior into the responsible existing step; remove superseded procedures instead of appending parallel workflows. Shared contracts own command schemas and common rules; skill entrypoints own decisions, sequencing and recovery.
-
-## Domain command migration
-
-Stable task metadata is opt-in; existing Markdown remains intact, but consumers must use the new command paths. Identified tasks require semantic transitions and refuse legacy checkbox/structural mutation. Old top-level aliases, runtime commands, workflow instantiate/replace and option aliases are removed. New workflow templates start in draft and need explicit availability before instantiation; existing unknown-status templates retain compatibility. Shared skills use the domain command contract, with human ownership and authorization unchanged. Toolkit diagnostics add PyYAML for safe declaration parsing; no package or skill version is bumped automatically.
-
-## Configuration files
-
-Herdr resource creation consumes the existing consumer-owned `label_prefix`
-through a thin `lb herdr -- NATIVE_ARGV...` proxy and shared naming service with
-`agent herdr open`. Sailor delegation is independent of its collaboration
-adapter: Herdr-specific lifecycle input, owned panes and display policy live in
-the Herdr service and explicit `agent herdr` command namespace. The former
-`agent open/close-session` routes are removed without aliases. Do not invent a
-backend-neutral session schema until another implementation supplies actual
-shared requirements. This early-project change deliberately does not preserve
-command compatibility. Skills route new tab/pane creation through it while retaining reuse,
-tab preference, explicit targets, approved wrappers and no-focus behavior. No
-consumer configuration file, launcher selection, mandatory installation step or
-version change is added. An upgrade changes `agent herdr open`: missing/invalid host
-configuration now refuses before allocation; empty/absent prefix retains native
-naming. Unknown native commands pass through, and recognized but unsafe creation
-syntax follows the explicit pass-through policy without rename/readback. See the
-[CLI contract](../installable/lb-cli.md#herdr-resource-creation) for supported syntax
-and partial-resource diagnostics. Fixture calls do not certify real display,
-wrapper, reuse or focus behavior.
-
-The configuration contract replaces `lbkit-agents.yaml` with `lbkit.yaml`
-(settings and agents) and `lbkit-skills.json` with `lbkit-skills.yaml` (recipes). Recipes
-stay separate because they describe the host's whole skill set, not lbkit settings, and
-change on a different cadence; they no longer reference an agent. All configuration
-commands live under `lb config`; `lb agent` stays the runtime session group.
-The project is early, so the CLI carries no migration commands or legacy reads, and the
-installer only creates missing files from templates; the agent maintaining a host rewrites
-older files by hand (see the configuration contract). CLI operations preserve unknown
-fields and comments, require CAS and mutate one registry object. Model evaluation must
-compare current skills against help/docs only on the same frozen candidate.
-
-## Installed skill discovery and incomplete closeout
-
-The consumer instruction template now identifies local skill directory symlinks
-and exact CLI paths before task routing. Existing hosts adopt that short entry
-section deliberately; installing links does not overwrite host AGENTS.md.
-Configuration-only maintenance routes to lb-init without requiring installation
-or document bindings. Closeout reporting names the existing owner and missing
-evidence; it does not dispatch work or create a new task. Behavior fixtures use
-the same entry section so discovery instructions are product content, not hidden
-grader hints. No package, skill, or configuration version changes are included.
-
-
-## Project execution JSON adoption
-
-The [execution-record design](execution-records.md) separates attributed facts,
-policy checks and runtime effects. CLI hosts store execution facts and send
-intents in `<project>/lb/<name>.json` (nearest `mind.yaml`, otherwise `--root`);
-dispatch, binding and run-event records stay in Thinking. Only records bound to
-the current Logbook are validated, so another Logbook's record cannot block it.
-`log execution context/record` replaces the unreleased draft transition commands
-without aliases or conversion; an absent JSON file does not prove an old takeover
-was released.
-
-Consumer-visible changes: `agent send` requires `--operation-id` and
-`--expect-execution-version`, drops `--basis`, and creates an empty record when
-none exists. A local advisory `lb/.lock` serializes cooperating writers. Herdr
-controls read native `agent_session` IDs and keep flat-ID compatibility. Runtime
-provisioning stays host-owned. No package, skill or configuration version is
-bumped without human instruction.
-
-## External document state
-
-Consumer Markdown machine records now live in the project's `lb/` directory, one
-`lb/<name>.md.json` per mind (mf keys each type directory by mind name), with a
-section per document. Consumers must retain and review these files with their
-documents and ignore `lb/*.transaction` and `lb/.lock`.
-Only short task IDs remain as machine comments in Markdown. Legacy task
-Resolution/Resume annotations have explicit migration; other retired inline JSON
-and event blocks have no compatibility reader. Document CAS includes the Markdown and its own state section;
-execution/configuration JSON retains its separate token semantics. Root-directory
-locks and recoverable journals coordinate local writes; they cannot make runtime
-transport or arbitrary editor writes transactional. See the installed
-[document state contract](../installable/document-state.md) for identity, human
-edits, merge and recovery rules. Installer manifest discovery already includes
-new contract Markdown files; consumer state is not installed by lbkit.
-
-This is a storage and token compatibility change. No project, skill or existing
-configuration version is advanced without explicit human instruction. Skills
-must notify users of CLI failure and continue useful authorized work through the
-shared fallback; unsafe dependent writes remain explicitly pending. A CLI
-outage adds no approval requirement or alternate execution role. Behavior cases
-must distinguish tool outage, business failure and CAS refusal, and verify that
-fallback never invents success or reintroduces inline metadata.
-
-An authorized update blocked by the writer still produces a concrete pending
-change with identity, current/proposed values and evidence, using guarded command
-inputs where appropriate. This clarifies the existing fallback handoff; it adds
-no consumer file, approval gate or permission to apply a raw sidecar patch.
-Source locators require numbered physical reads when CLI context is unavailable.
-Read-only requests remain observations, not pending write proposals. Keep eval
-cases, rubrics and grading files outside the subject workspace when preparing
-real skill trials; install only the runtime skill content and its references.
-
-## Supplied returns and recoverable write errors
-
-Progress/closeout input discovery includes supplied structured returns within the
-authorized task directory, not only saved state. A local input/token mistake may
-be corrected after rereading and reassessing the missing authorized change; this
-does not permit blind CAS retries, stale acceptance or uncertain runtime resends.
-Usage recording is independent of unknown timing and remote observations. Reports
-name the existing owner and evidence needed, or Captain’s owner-resolution action.
-These clarify existing coordination duties; they add no consumer files, external
-execution permissions, configuration or version changes.
-
-
-## Canonical Task adoption
-
-The coordination feature changes split from a retained skipped parent to removal
-from the current list plus a complete historical archive. Consumers adopting this
-revision must review changed task identities and provide explicit dependency
-mappings for identified replacements. Canonical actions add visible pause,
-obstacle-preserving resume and direct completion without compulsory Run/Result.
-Legacy task records remain readable; migration must be previewed and applied with
-context CAS. Unknown or conflicting legacy meaning is not guessed. A canonical
-cancellation attributes its actor rather than claiming a human decision.
-These are compatibility changes requiring a human release decision; no version
-or consumer configuration is automatically upgraded.
-
-Canonical writes refuse remaining sidecar dependency/ownership/parent fields
-instead of partially converting a legacy record. Dependency reads and legacy start
-checks retain sidecar meaning until explicit CAS-protected migration; migration
-also recovers records with canonical status and unmigrated dependencies. Consumers
-must identify referencing tasks before replacement so reference changes can be
-mapped. Both split forms retain prerequisites, and archived IDs remain reserved
-for their historical work. These tighten the existing migration and historical
-identity guarantees without changing configuration or schema versions.
-
-The installed coordination, lifecycle and domain-command contracts distinguish
-Sailor acceptance of an instruction from Captain checking completion. Consumers
-should remove old requirements that Sailors read/write the Logbook or that every
-Task has a Run, submission or independent reviewer. Task-specific evidence and
-human gates still apply. Status is pure read-only; an authorized caller continues
-after answering an ordinary progress question. Summary maintenance is explicit,
-never a hidden status effect.
-
-Herdr uses bounded one-shot waiting and caller-held continuation, not a compulsory
-monitoring pane. Consumers must verify host tool-completion delivery before claiming
-unattended progress. No hook refresh, installation, consumer configuration change
-or native-subagent backend is implicit. Open/close report owned resources and
-partial outcomes; they do not certify descendant cleanup or change Task state.
-Legacy dispatch sends retain uncertain-delivery guards.
-
-For lb-push and lb-handback, reuse suitable Sailor sessions first and prefer Herdr
-tabs when a new execution surface is needed. Split panes remain an explicit or
-reasoned fallback; the pane-only CLI convenience route does not override that
-preference. This changes surface selection guidance without adding configuration,
-execution authorization or a version change.
-
-Paused in-flight work retains Captain's binding and responsibility for handling
-late replies. Needs-input observations require recovery of available authorized
-inputs or a focused request to their owner. Completed Task-specific takeover notes
-describe finished work while broader takeover and unresolved handoffs stay visible.
-These clarify existing coordination duties without adding consumer configuration.
-
-
-## Task record boundary maintenance
-
-Task dispositions and prior resume state use the existing per-mind document state,
-not a new store. `task_records.py` validates disposition payloads and their readable
-projection for both disk reads and candidate parses. `document.py` retains the
-bounded inline Resolution compatibility parser; duplicate JSON keys are refused.
-Task lifecycle, resolve and migration write state through `records.put` and the
-existing paired CAS writer. Split archives the original without generating an
-intermediate inline disposition. Identity, record shape, digest and projection
-checks must remain aligned across context, task queries, check and transitions.
-
-Consumers adopting this revision gain explicit task inline migration. Resolution
-becomes readable prose; Resume moves to the task record. Depends and Blocker stay
-shared human/machine facts; the short ID comment is the indispensable join, not
-removable decoration. Migration retains original inline annotation bytes, task
-identity and evidence history; reopen retains readable historical reasons too.
-Legacy reads do not convert files, ordinary transitions require migration first,
-and ambiguous or conflicting records refuse. Existing lock, composite token,
-dual-file journal and recovery semantics are unchanged. No real consumer records,
-configuration format or versions are upgraded automatically. Selecting a release
-version and consumer migration schedule remains a human decision.
-
-Regression coverage must exercise cancellation/reopen, legacy and unidentified
-migration, stale/duplicate/missing state, dry-run, concurrent state edits and
-interrupted paired writes in disposable repositories. Preserve multilingual text,
-HTML-like reasons, evidence links and LF/CRLF; machine history is not permission
-to discard the reader's explanation. This adds no execution or approval gate.
-
-
-## Managed Observation adoption
-
-The installed CLI now supports explicit Observation configuration, durable Events
-and Answer intent/receipt handling, alongside the existing read-only raw wait.
-Consumer-owned runtime state lives under project/lb/observations; it is separate
-from document/execution tokens and changes no business Task. Context is read-only;
-all external writers use the Observation context token. No schema version is
-assigned or bumped by this addition; release numbering remains human-owned.
-
-Consumers adopt template changes through the installer’s checked merge; installation
-must preserve local AGENTS edits, configuration and logbooks. No new mandatory archive, role, daemon
-or messaging integration is introduced. Native Monitor is preferred in Claude Code;
-foreground managed wait reuses its handle elsewhere. Retain raw next_input for raw
-compatibility; caller carry cannot erase managed pending work.
-
-See [the CLI contract](../installable/lb-cli.md#agent-wait-and-event-handling) for
-payloads, safe paths, bounds and completion-space admission. Automatic
-answering requires an explicitly enabled native question/confirmation protocol; external
-prepare/reconcile preserves caller attribution. Never use ordinary prompt/send-keys
-as question-specific confirmation. Fake adapters validate ordering/refusal only;
-real runtime confirmation, Monitor, foreground and post-turn delivery need their
-own executed evidence. No bounded trial establishes indefinite suspension or a
-model-token saving ratio. Keep trial logs outside repository documentation.
-
-### Optional Claude native question callbacks
-
-Consumers choose whether to adopt the local Claude AskUserQuestion adapter. The
-installer must not add hooks, alter permissions or export environment variables.
-The owner configures only PreToolUse/PostToolUse matching AskUserQuestion in its
-project's Claude settings, running the installed Python environment with
-`-m logbook_cli.claude_native_hook`. Both worker and coordinator explicitly inherit
-LBKIT_CLAUDE_QUESTION_DIR for one owner-only short absolute runtime directory;
-`mktemp -d /tmp/lbq-XXXXXXXX` provides suitable initial permissions. The PreToolUse
-hook needs a timeout of at least 130 seconds for the bounded 120-second wait.
-Do not point a new runtime at an uncertain attempt's discarded receipt directory.
-
-The callback validates independent native session identity before opening a local
-Unix socket. Wait samples inspect it asynchronously within the caller's deadline,
-at most one second per read; generic Herdr lifecycle reports or display tokens are
-not native question proof. PreToolUse updatedInput carries the answer in memory;
-matching PostToolUse structured results create digest-only confirmation records.
-The owner-only directory is a trusted local callback boundary, not cryptographic
-attestation against other processes running as the same user. The entry never reads
-private transcript files or approves other tool kinds. Hook failure/expiry leaves
-Claude's ordinary UI available; accepted-but-unconfirmed delivery remains unknown.
-
-Retention is explicit: at most 1024 accepted questions reserve metadata and receipts.
-Keep records until all pending answers are reconciled; stop hooks/listeners before
-rotating a completed runtime directory. Unconfigured workers and Codex question
-APIs remain unavailable. This optional consumer setup adds no mandatory adoption,
-daemon, public command, installer manifest entry, schema or version upgrade.
-
-## CLI usage skill and confirmed human task states
-
-The installed `lb-cli` skill owns CLI discovery, command selection, token handling
-and bounded operation guidance; collaboration Skills retain planning and acceptance.
-Installer skill-directory discovery includes it without a new manifest category.
-Consumers choose when to adopt it and retain their own conflicting Skill content.
-
-Task state commands accept `--confirmed` when the human explicitly confirmed the
-requested state change. Without it human tasks retain pending-to-active protection.
-Confirmation lifts only that ownership restriction, preserving file CAS, migration,
-dependencies, state transitions and preflight gates; it does not authorize unrelated content changes. Explicitly confirmed human
-details and unfinished-task wording use `task note/artifact/rewrite --confirmed`,
-with exact annotation line/kind, task identity, ownership, repository scope and
-completed-result reopening checks retained. No automatic task/configuration migration or version change is
-introduced. Herdr/CLI decision evals certify only the decisions they actually run;
-model trigger, runtime and independent acceptance remain separate validation.
-
-
-## Markdown-authoritative document sync
-
-New runs explicitly initialize a unified `lb/<name>.json` with `log init-state`,
-then refresh document projections with `log sync-state`. Document edits write only
-Markdown and no longer require a caller document CAS token. Skills must report
-document-save and projection-sync outcomes separately. Reads use current Markdown
-and never synchronize implicitly. Execution and monitoring retain independent
-context tokens and delivery safeguards. Consumers choose when to adopt this
-breaking storage/CLI contract; installation must not rewrite consumer logbooks or
-configuration. No old-state conversion, version bump or automatic consumer upgrade
-is authorized by implementation of this feature.
-
-Managed monitoring stores `cursors` and `revision` as defined by the new-run
-model. Raw wait continuation `contexts` remains its distinct wire format. Workflow
-instance creation now saves Markdown only and returns provenance; scaffold records
-that provenance through the host adapter and explicitly initializes/synchronizes
-the run. No implicit sidecar, schema numbering or version upgrade is introduced.
-
-The public Herdr binding contract specifies selected machine versus server scope:
-read top-level server.session from status --json, with lb's default scope for an
-unnamed running server. Skills use the same scope for execution and monitoring;
-this documents existing scope checks rather than bypassing them or adding setup.
-
-The CLI/update skills recover document sync through current Markdown and public
-diagnostics while respecting consumer source-access restrictions. A consumer
-progress update does not implicitly authorize toolkit implementation inspection.
-Toolkit source debugging remains separately scoped; source visibility alone does
-not expand the consumer task's authorization.

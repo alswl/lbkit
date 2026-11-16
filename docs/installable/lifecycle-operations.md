@@ -7,7 +7,7 @@ These operations extend the existing lb skills; the host root AGENTS.md and curr
 
 ## Current facts and one page status
 
-The only new skill is [lb-retro](../../skills/lb-retro/SKILL.md). Lifecycle management stays in plan/scaffold, push, update and status.
+[lb-retro](../../skills/lb-retro/SKILL.md) owns cross-logbook retrospective work. Lifecycle management stays in plan/scaffold, push, update and status.
 
 - plan/scaffold record draft, then ready after route confirmation. Ready does not authorize execution.
 - push records active on actual authorized start, and resumes only with the applicable explicit resume instruction.
@@ -24,7 +24,7 @@ At each accepted return, keep a concise current task result, usable artifact ent
 
 `lb-update` owns delivery/close-out reconciliation. `lb log links audit LOG` inventories artifact-annotation links as required delivery entries; background links remain references. Actual business checks belong to the owning Sailor, dispatched via lb-push only within execution authorization. Update-only reports a missing check without dispatch.
 
-Sailor uses the appropriate approved filesystem/browser/service CLI and returns the observed candidate, entry, time, access conditions and result. Captain checks correspondence and readiness. Register observations with existing `lb log links record-check` (now supporting local/remote targets as well as HTTP(S)), current token, dry-run and write. Put non-secret machine/access conditions in `--basis` and identify the candidate in `--result-identity`. `verified`, `unavailable`, `revoked` remain the outcome values. This stores evidence; it does not fetch or authenticate. Never include credentials or signed URL secrets.
+Sailor uses the appropriate approved filesystem/browser/service CLI and returns the observed candidate, entry, time, access conditions and result. Captain checks correspondence and readiness. Register local, remote or HTTP(S) observations with `lb log links record-check`, current token, dry-run and write. Put non-secret machine/access conditions in `--basis` and identify the candidate in `--result-identity`. `verified`, `unavailable`, `revoked` remain the outcome values. This stores evidence; it does not fetch or authenticate. Never include credentials or signed URL secrets.
 
 Audit probes existence only within the host root. Existing local bytes do not prove content or candidate correctness; outside-root and remote links need supplied observations. Changed target/context/acceptance/artifact invalidates the matching observation. Check replacement locations before cleanup and final delivery locations after cleanup. Keep the original delivery/cleanup responsibility open when its required entry is unusable; preserve recovery material. Historical reference failure alone is not a new gate.
 

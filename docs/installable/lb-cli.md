@@ -230,7 +230,7 @@ The tool only detects markers and does not verify a 🔮's provenance; write and
 
 Manage status emoji through this script first; do not hand-edit H2 emoji or the machine-readable status segment. `log state --json` gives a structured snapshot: overall counts (delivery stages done/in_flight/not_started), `summary` (the derived machine-readable string), `next_task`, the 🔮 gate, and the `owned` attribution of every `> 状态：` line.
 
-The CLI now creates a missing compact status line; lifecycle-managed pages use the one-line renderer described in [lifecycle operations](lifecycle-operations.md). Legacy human commentary and free-text status remain protected; explicit migration is required before lifecycle takeover. Existing un-migrated owned legacy lines retain their former rendering for compatibility. `log state` adds lifecycle, generated_status, actionable and inconsistency fields. `log state-set` records lifecycle plus the generated line atomically using the current token. New normal writes stop while paused/completed/terminated. Only lifecycle pause/termination may preserve an unresolved 🔮 while recording that terminal control decision; it cannot clear the gate or advance tasks.
+The CLI creates a missing compact status line; lifecycle-managed pages use the one-line renderer described in [lifecycle operations](lifecycle-operations.md). Legacy human commentary and free-text status remain protected; explicit migration is required before lifecycle takeover. Existing un-migrated owned legacy lines retain their former rendering for compatibility. `log state` reports lifecycle, generated_status, actionable and inconsistency fields. `log state-set` records lifecycle plus the generated line atomically using the current token. Normal writes stop while paused/completed/terminated. Only lifecycle pause/termination may preserve an unresolved 🔮 while recording that terminal control decision; it cannot clear the gate or advance tasks.
 
 Running tests:
 
@@ -455,7 +455,7 @@ remain protected. These actions preserve history and derive current state from
 Markdown plus validated disposition records, without a duplicate current status.
 Resume reads the prior state from the task record in `lb/`; Blocker and Depends
 remain readable Markdown. Cancellation and reopen preserve readable reasons and
-structured historical evidence. See [task data ownership](document-state.md#task-data-ownership-and-inline-compatibility).
+structured historical evidence. See [document and Task authority](document-state.md#read-and-edit).
 
 `task migrate LOG --expect-version TOKEN --dry-run --json` previews supported
 legacy mappings and inline Resolution/Resume conversion; omit `--dry-run` to apply with the same token. Consistent

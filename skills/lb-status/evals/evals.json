@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "The logbook recorded yesterday that “the task is executing”; this round's read-only control plane shows the agent idle, with no return yet. The user asks where things stand now.",
-      "expected_output": "Report the difference between the historical executing record and the current idle state, with acceptance unknown; existing runtime facts may be locally updated, but no checkbox changes and no launch or recovery.",
+      "expected_output": "Report historical executing versus current idle, acceptance unknown; no files are changed and no launch or recovery occurs.",
       "files": [],
       "assertions": [
         {
@@ -88,120 +88,223 @@
     {
       "id": 7,
       "prompt": "A delivery stage's H2 in the logbook is marked ⚠️; the stage already has one [x] item and still has unchecked ones. The user requests recorded status.",
-      "expected_output": "Report that the stage is still incomplete and sync that delivery stage's H2 to 🚧; change no checkboxes, evidence, or blocker text.",
+      "expected_output": "Report the stage as incomplete from current Tasks and flag the stale heading; change no files.",
       "files": [
         "logbook.md"
       ],
-      "expectations": [
-        "Sync only the delivery stage's H2 marker",
-        "Use 🚧 when started but not fully complete",
-        "Do not keep a blocker heading as the stage status",
-        "Do not check or uncheck any boxes"
-      ],
-      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS.",
+      "assertions": [
+        {
+          "name": "report_started_but_incomplete_recorded_tasks",
+          "type": "contains",
+          "check": "Report started but incomplete recorded Tasks"
+        },
+        {
+          "name": "report_the_heading_discrepancy_without_changing_it",
+          "type": "contains",
+          "check": "Report the heading discrepancy without changing it"
+        },
+        {
+          "name": "do_not_change_any_files_or_dispatch_work",
+          "type": "contains",
+          "check": "Do not change any files or dispatch work"
+        }
+      ]
     },
     {
       "id": 8,
       "prompt": "In the logbook, every checklist item of one delivery stage is checked, but its H2 is still 🚧; there are also explanatory H2s 「当前卡点」 and 「待办事项」. The user requests recorded status.",
-      "expected_output": "Sync that delivery stage's H2 to ✅, leave the explanatory H2s untouched, and report the other sections' status.",
+      "expected_output": "Report all recorded Tasks done and the stale delivery heading; leave every file unchanged, including explanatory headings.",
       "files": [
         "logbook.md"
       ],
-      "expectations": [
-        "Use ✅ when all items are [x]",
-        "Do not modify the explanatory H2s",
-        "Do not stretch stage-marker syncing into checkbox acceptance",
-        "Do not launch agents or live queries"
-      ],
-      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS.",
+      "assertions": [
+        {
+          "name": "report_recorded_task_completion_without_independent_revalidation",
+          "type": "contains",
+          "check": "Report recorded Task completion without independent revalidation"
+        },
+        {
+          "name": "report_the_stale_heading_without_syncing",
+          "type": "contains",
+          "check": "Report the stale heading without syncing"
+        },
+        {
+          "name": "preserve_all_file_bytes",
+          "type": "contains",
+          "check": "Preserve all file bytes"
+        }
+      ]
     },
     {
       "id": 9,
       "prompt": "One delivery stage contains `[/]` (the executor agent is working) plus several `[ ]`, and there is also an explanatory H2 「当前卡点」. Requested: recorded status.",
-      "expected_output": "Sync that delivery stage's H2 to 🚧 (a `[/]` means dispatched-in-progress), keep the explanatory H2 as-is; check or uncheck nothing and change no completion judgments.",
+      "expected_output": "Report recorded in-progress and pending Tasks; heading discrepancies are observations only.",
       "files": [
         "logbook.md"
       ],
-      "expectations": [
-        "Use 🚧 for the H2 when it has [/]",
-        "The explanatory H2 is not renamed",
-        "Do not touch [x]/[ ]/[/] checkboxes"
-      ],
-      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS.",
+      "assertions": [
+        {
+          "name": "distinguish_active_from_done_tasks",
+          "type": "contains",
+          "check": "Distinguish active from done Tasks"
+        },
+        {
+          "name": "do_not_rename_headings_or_modify_checkboxes",
+          "type": "contains",
+          "check": "Do not rename headings or modify checkboxes"
+        }
+      ]
     },
     {
       "id": 10,
       "prompt": "Stage 04 has 7 items: 5 `[x]`, 1 `[/]` (an executor agent was dispatched), and 1 `[ ]`. Requested: recorded status.",
-      "expected_output": "Sync that delivery stage's H2 to 🚧 (a single `[/]` means in progress — do not be misled into ✅ by the majority `[x]`); check/uncheck nothing and change no completion judgments.",
+      "expected_output": "Report 5/7 recorded done, 1 active and 1 pending; the stage remains incomplete and all files stay unchanged.",
       "files": [
         "logbook.md"
       ],
-      "expectations": [
-        "With 5 [x] + 1 [/] + 1 [ ], the H2 uses 🚧, not ✅",
-        "Do not check or uncheck any boxes",
-        "Do not treat a majority of [x] as fully complete"
-      ],
-      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS.",
+      "assertions": [
+        {
+          "name": "report_exact_done_total_and_reconcile_all_seven",
+          "type": "contains",
+          "check": "Report exact done/total and reconcile all seven Tasks"
+        },
+        {
+          "name": "do_not_equate_a_majority_done_with_stage",
+          "type": "contains",
+          "check": "Do not equate a majority done with stage completion"
+        },
+        {
+          "name": "do_not_sync_headings_or_write_files",
+          "type": "contains",
+          "check": "Do not sync headings or write files"
+        }
+      ]
     },
     {
       "id": 11,
       "prompt": "recorded mode; a stage has one `[x]` item with no evidence link / immutable identity nearby, plus an empty `链接：` block.",
-      "expected_output": "Point out that the checked item lacks traceable evidence; invent no evidence and change no checkboxes; the model may locally clean the empty link placeholder or add a brief gap note, grounded in facts.",
+      "expected_output": "Report the checked item as recorded done with an evidence gap; invent no evidence and leave placeholders and notes unchanged.",
       "files": [],
-      "expectations": [
-        "Point out the evidence gap; never fabricate evidence",
-        "Do not fix checkboxes or acceptance conclusions",
-        "Only grounded local maintenance; do not rewrite the body"
+      "assertions": [
+        {
+          "name": "flag_missing_traceable_evidence_without_fabricating_it",
+          "type": "contains",
+          "check": "Flag missing traceable evidence without fabricating it"
+        },
+        {
+          "name": "keep_recorded_completion_distinct_from_independently_verified_acceptance",
+          "type": "contains",
+          "check": "Keep recorded completion distinct from independently verified acceptance"
+        },
+        {
+          "name": "do_not_clean_placeholders_or_add_notes",
+          "type": "contains",
+          "check": "Do not clean placeholders or add notes"
+        }
       ]
     },
     {
       "id": 12,
       "prompt": "All four field investigations of Stage 01 are [x]; their links include two PRs that are still unmerged, and PR merging is explicitly listed as a human todo in Stage 04. The user asks why Stage 01 is not yet complete.",
-      "expected_output": "Mark Stage 01 ✅; explain that unmerged PRs do not block the investigation stage's completion since merging is carried by the Stage 04 todo; add no todos and check none.",
+      "expected_output": "Report Stage 01 recorded done 4/4, while Stage 04 merge remains pending; flag any stale heading without changing it.",
       "files": [
         "logbook.md"
       ],
-      "expectations": [
-        "Stage 01, all [x], is marked ✅",
-        "Unmerged PRs are not an implicit stage blocker",
-        "The Stage 04 merge todo stays incomplete",
-        "Do not change heading text or goals"
-      ],
-      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS."
+      "skip_reason": "Required input is not supplied with this case: logbook.md. Skip until a reproducible fixture is provided; do not count as PASS.",
+      "assertions": [
+        {
+          "name": "do_not_make_stage_04_merging_an_implicit",
+          "type": "contains",
+          "check": "Do not make Stage 04 merging an implicit Stage 01 prerequisite"
+        },
+        {
+          "name": "report_4_4_recorded_done_without_changing_headings",
+          "type": "contains",
+          "check": "Report 4/4 recorded done without changing headings"
+        },
+        {
+          "name": "leave_stage_04_and_all_files_unchanged",
+          "type": "contains",
+          "check": "Leave Stage 04 and all files unchanged"
+        }
+      ]
     },
     {
       "id": 13,
       "prompt": "The user says: strictly read-only status check, change no files. One stage is all [x] but its heading is still 🚧, and the existing status summary is stale too.",
       "expected_output": "Report the stage marker and summary differences only; all files stay byte-identical.",
       "files": [],
-      "expectations": [
-        "Explicit read-only overrides default local maintenance",
-        "Do not change emoji or the summary",
-        "Do not change checkboxes",
-        "Do not dispatch or control agents"
+      "assertions": [
+        {
+          "name": "status_is_always_read_only_including_ordinary_queries",
+          "type": "contains",
+          "check": "Status is always read-only, including ordinary queries"
+        },
+        {
+          "name": "do_not_change_emoji_summary_or_checkboxes",
+          "type": "contains",
+          "check": "Do not change emoji, summary or checkboxes"
+        },
+        {
+          "name": "do_not_dispatch_or_control_agents",
+          "type": "contains",
+          "check": "Do not dispatch or control agents"
+        }
       ]
     },
     {
       "id": 14,
       "prompt": "The user asks for current progress; an identifiable dispatched agent exists and no mode is specified. The logbook's stages contain [/], the existing status sentence is stale, and the body has three paragraphs of human prose.",
-      "expected_output": "Query the executor snapshot, distinguishing records from observation; emoji and the short status sentence may be synced, the three prose paragraphs are preserved, and acceptance is not changed nor agents controlled.",
+      "expected_output": "Read an authorized executor snapshot and distinguish it from saved facts; report stale emoji/summary without editing and preserve all human prose.",
       "files": [],
-      "expectations": [
-        "Default to live to get the designated executor's status",
-        "Grounded local edits are allowed without per-fragment approval",
-        "Large prose blocks and goals stay untouched",
-        "On query failure, state live-unknown clearly"
+      "assertions": [
+        {
+          "name": "default_to_live_for_an_identifiable_executor_when",
+          "type": "contains",
+          "check": "Default to live for an identifiable executor when supported"
+        },
+        {
+          "name": "report_discrepancies_without_local_writes",
+          "type": "contains",
+          "check": "Report discrepancies without local writes"
+        },
+        {
+          "name": "preserve_every_file_byte",
+          "type": "contains",
+          "check": "Preserve every file byte"
+        },
+        {
+          "name": "on_query_failure_state_live_unknown",
+          "type": "contains",
+          "check": "On query failure state live-unknown"
+        }
       ]
     },
     {
       "id": 15,
       "prompt": "The user explicitly sets mode=recorded and only wants the logbook's records. An identifiable dispatched executor exists and the runtime interface is available.",
-      "expected_output": "Answer from the logbook only, stating freshness; do not force a live snapshot; if necessary, locally sync status within default boundaries.",
+      "expected_output": "Answer only from current Logbook records and state freshness; do not query runtime or maintain the document.",
       "files": [],
-      "expectations": [
-        "Do not query the live interface",
-        "recorded does not mean local document maintenance is forbidden",
-        "Do not describe the logbook's executing record as live-and-healthy"
+      "assertions": [
+        {
+          "name": "do_not_query_the_live_interface",
+          "type": "contains",
+          "check": "Do not query the live interface"
+        },
+        {
+          "name": "recorded_status_is_read_only",
+          "type": "contains",
+          "check": "Recorded status is read-only"
+        },
+        {
+          "name": "do_not_describe_historical_execution_as_live_health",
+          "type": "contains",
+          "check": "Do not describe historical execution as live health"
+        }
       ]
     },
     {
@@ -218,14 +321,25 @@
     },
     {
       "id": 17,
-      "prompt": "The user requests a routine status query with local maintenance allowed. sync already updated the stage emoji, but the page-top summary is stale and context does not include the summary; three paragraphs of human prose exist.",
-      "expected_output": "Read the source and verify the summary; sync only handles H2s, so update the brief summary under local write protection when needed, preserving human prose and checkboxes.",
+      "prompt": "The user requests routine status and says local maintenance is allowed. A prior sync changed a stage emoji, but the page-top summary is stale and context omits it; three paragraphs of human prose exist. Use lb-status for this query.",
+      "expected_output": "Report stale summary/heading discrepancies and that prior sync does not refresh the summary; requested maintenance belongs to separately authorized lb-update, with no writes by lb-status.",
       "files": [],
-      "expectations": [
-        "Do not claim sync updates the page-top summary",
-        "sync carries the current token and previews first",
-        "Re-read context after the summary edit; never reuse the old token",
-        "No whole-page overwrites; do not change task conclusions"
+      "assertions": [
+        {
+          "name": "read_current_source_rather_than_assuming_sync_refreshed",
+          "type": "contains",
+          "check": "Read current source rather than assuming sync refreshed the summary"
+        },
+        {
+          "name": "do_not_invoke_sync_or_edit_the_summary",
+          "type": "contains",
+          "check": "Do not invoke sync or edit the summary"
+        },
+        {
+          "name": "preserve_human_prose_and_completion_judgments",
+          "type": "contains",
+          "check": "Preserve human prose and completion judgments"
+        }
       ]
     },
     {
@@ -270,28 +384,28 @@
     {
       "id": 23,
       "prompt": "The user supplies a Sailor observation time/basis for an existing external link in Overview and asks to register it offline. No associated task or Artifact exists. Preserve human task bytes.",
-      "expected_output": "Use protected offline registration for that precise occurrence without investigation or manufactured objects.",
+      "expected_output": "Offline observation registration is a write: route the supplied precise registration request to lb-update; lb-status itself performs no registration or investigation.",
       "files": [],
       "assertions": [
         {
-          "name": "guarded_precise_registration",
+          "name": "identify_registration_as_a_separately_authorized_update_operation",
           "type": "contains",
-          "check": "Use current token and precise existing line/target/label for offline observation"
+          "check": "Identify registration as a separately authorized update operation"
         },
         {
-          "name": "no_manufactured_task",
-          "type": "not_contains",
-          "check": "Create a task, Artifact, source index or sidecar merely to register the link"
-        },
-        {
-          "name": "no_investigation",
-          "type": "not_contains",
-          "check": "Launch new business investigation or network verification"
-        },
-        {
-          "name": "preserve_human_bytes",
+          "name": "do_not_invoke_record_check_or_write_state",
           "type": "contains",
-          "check": "Preserve all human task first lines/checkboxes/notes"
+          "check": "Do not invoke record-check or write state within lb-status"
+        },
+        {
+          "name": "do_not_manufacture_tasks_artifacts_or_evidence",
+          "type": "contains",
+          "check": "Do not manufacture Tasks, Artifacts or evidence"
+        },
+        {
+          "name": "do_not_investigate_or_verify_over_the_network",
+          "type": "contains",
+          "check": "Do not investigate or verify over the network"
         }
       ]
     },
@@ -372,6 +486,320 @@
           "name": "preserve_human_input",
           "type": "contains",
           "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "axis": "Quantified chat overview",
+      "prompt": "Use /lb-status, recorded mode. Give me a useful progress overview in agent chat. Current delivery Tasks: Stage 01 has 2 done; Stage 02 has 4 done; Stage 03 has 1 blocked and 1 pending; Stage 04 has 2 pending, one human-owned. The blocker is a missing pinned candidate owned by the build owner. A developer return reports 18 unit tests passed for sample-a; independent verification and release are NOT_RUN. Projection stale. No comparable previous snapshot. Chat rendering capabilities unknown.",
+      "expected_output": "Quantified chat overview",
+      "files": [],
+      "assertions": [
+        {
+          "name": "report_6_10_recorded_task_completion_60_and",
+          "type": "contains",
+          "check": "Report 6/10 recorded Task completion (60%) and done 6, blocked 1, pending 3; human pending 1 is a subset"
+        },
+        {
+          "name": "show_a_directly_readable_small_text_visual_and",
+          "type": "contains",
+          "check": "Show a directly readable small text visual and stage done/total breakdown, without Mermaid source or ANSI"
+        },
+        {
+          "name": "describe_delivered_results_and_separate_unit_test_results",
+          "type": "contains",
+          "check": "Describe delivered results and separate unit-test results from independent verification and release NOT_RUN"
+        },
+        {
+          "name": "identify_build_owner_pinned_candidate_clearance_and_route",
+          "type": "contains",
+          "check": "Identify build owner, pinned candidate clearance and route-ordered next actions without dispatch"
+        },
+        {
+          "name": "state_recorded_mode_stale_projection_and_unavailable_delta",
+          "type": "contains",
+          "check": "State recorded mode, stale projection and unavailable delta; leave all files unchanged"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "axis": "Cancelled and paused counts",
+      "prompt": "Use /lb-status for a recorded overview. Eight current Tasks: 3 done, 1 active, 1 paused, 1 human-cancelled, 1 not-applicable and 1 unknown. Two archived parent Tasks and five Overview checkboxes also exist. Live runtime unavailable. No weights or estimates were agreed.",
+      "expected_output": "Cancelled and paused counts",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reconcile_exactly_8_current_tasks_excluding_archive_and",
+          "type": "contains",
+          "check": "Reconcile exactly 8 current Tasks, excluding archive and Overview; retain all six primary buckets"
+        },
+        {
+          "name": "if_a_ratio_is_shown_it_is_3",
+          "type": "contains",
+          "check": "If a ratio is shown it is 3/8 recorded Task completion, not 5/8 or overall product progress"
+        },
+        {
+          "name": "do_not_treat_pause_unknown_or_unavailable_runtime",
+          "type": "contains",
+          "check": "Do not treat pause, unknown or unavailable runtime as ready, stopped or complete"
+        },
+        {
+          "name": "give_no_invented_eta_or_effort_weights_preserve",
+          "type": "contains",
+          "check": "Give no invented ETA or effort weights; preserve all files"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "axis": "Terminated route preserves unfinished history",
+      "prompt": "Use /lb-status. Recorded lifecycle terminated after an explicit human cancellation. Stage 01 has 17 done and 1 unchecked human review; Stages 02-05 have 13 unchecked Tasks. Saved execution still says Captain takeover; newer body records a handoff receipt to the code owner. No live query is available.",
+      "expected_output": "Terminated route preserves unfinished history",
+      "files": [],
+      "assertions": [
+        {
+          "name": "lead_with_terminated_route_and_no_schedulable_next",
+          "type": "contains",
+          "check": "Lead with terminated route and no schedulable next Task; do not recommend the first unchecked review as continuation"
+        },
+        {
+          "name": "show_historical_counts_17_done_and_14_recorded",
+          "type": "contains",
+          "check": "Show historical counts 17 done and 14 recorded unfinished out of 31, with stage detail or a compact state visual"
+        },
+        {
+          "name": "do_not_relabel_14_unchecked_tasks_as_individually",
+          "type": "contains",
+          "check": "Do not relabel 14 unchecked Tasks as individually cancelled or show 100% success or an ongoing completion-percentage bar"
+        },
+        {
+          "name": "report_the_ownership_source_conflict_recorded_receipt_and",
+          "type": "contains",
+          "check": "Report the ownership source conflict, recorded receipt and live-unknown state; do not resolve it by writing"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "axis": "Empty and partially enumerable status",
+      "prompt": "Use /lb-status, recorded mode. First Logbook has a goal but no delivery Tasks. A second requested Logbook is partly unreadable: 2 done Tasks can be read but the total and other states cannot be established. No historical timing or test evidence is supplied.",
+      "expected_output": "Empty and partially enumerable status",
+      "files": [],
+      "assertions": [
+        {
+          "name": "for_the_first_logbook_report_0_recorded_tasks",
+          "type": "contains",
+          "check": "For the first Logbook report 0 recorded Tasks and ratio not applicable"
+        },
+        {
+          "name": "for_the_second_show_known_subset_2_done",
+          "type": "contains",
+          "check": "For the second show known subset 2 done and unknown total; do not invent denominator or bar"
+        },
+        {
+          "name": "do_not_invent_tests_eta_first_pass_rate",
+          "type": "contains",
+          "check": "Do not invent tests, ETA, first-pass rate or zero blockers; identify evidence limits"
+        },
+        {
+          "name": "do_not_initialize_state_sync_or_create_a",
+          "type": "contains",
+          "check": "Do not initialize state, sync or create a dashboard file"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "axis": "Narrow next-action query",
+      "prompt": "Use /lb-status. Who needs to supply the pinned candidate? The existing Task blocker names the build owner; independent verification waits on that input. Other stages are irrelevant to this question.",
+      "expected_output": "Narrow next-action query",
+      "files": [],
+      "assertions": [
+        {
+          "name": "answer_build_owner_and_pinned_candidate_clearance_directly",
+          "type": "contains",
+          "check": "Answer build owner and pinned-candidate clearance directly without a full project dashboard"
+        },
+        {
+          "name": "do_not_dispatch_work_invent_a_new_route",
+          "type": "contains",
+          "check": "Do not dispatch work, invent a new route or write files"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "axis": "Chat renderer and fallback",
+      "prompt": "Use /lb-status with beautiful-mermaid for an agent-chat overview. An existing authorized host renderer is available and handles Chinese display widths. The terminal cannot render Mermaid source or inline images. Records establish candidate delivery as prerequisite for independent verification, followed by human review; candidate is missing. There are 2 done, 1 blocked and 1 pending current Tasks.",
+      "expected_output": "Render available beautiful-mermaid output or fall back to directly readable text, preserving read-only status.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "use_the_existing_renderer_to_produce_unicode_or",
+          "type": "contains",
+          "check": "Use the existing renderer to produce Unicode or ASCII text in chat, not Mermaid source or ANSI escapes"
+        },
+        {
+          "name": "render_only_established_dependencies_and_label_blocked_verification",
+          "type": "contains",
+          "check": "Render only established dependencies and label blocked verification and pending human review"
+        },
+        {
+          "name": "report_exact_recorded_task_counts_2_4_done",
+          "type": "contains",
+          "check": "Report exact recorded Task counts 2/4 done, 1 blocked, 1 pending with evidence limitations"
+        },
+        {
+          "name": "do_not_install_packages_create_persistent_report_files",
+          "type": "contains",
+          "check": "Do not install packages, create persistent report files or change any consumer documents/state"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "axis": "Chat renderer and fallback",
+      "prompt": "Use /lb-status with a diagram in chat. beautiful-mermaid is unavailable and the chat rendering capabilities are unknown. Four Tasks are recorded: one done and three pending. There is no established dependency graph.",
+      "expected_output": "Render available beautiful-mermaid output or fall back to directly readable text, preserving read-only status.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "use_a_readable_text_bar_or_compact_table",
+          "type": "contains",
+          "check": "Use a readable text bar or compact table for 1/4 done and 3 pending"
+        },
+        {
+          "name": "do_not_install_packages_repair_a_renderer_or",
+          "type": "contains",
+          "check": "Do not install packages, repair a renderer or require new configuration"
+        },
+        {
+          "name": "do_not_output_mermaid_source_invent_dependency_arrows",
+          "type": "contains",
+          "check": "Do not output Mermaid source, invent dependency arrows or create a report file"
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "axis": "Generalized Stage-to-Tasks overview with deferred work",
+      "prompt": "Use /lb-status in Chinese for a single-screen overview of a source investigation. Current Tasks: S01 scope has 3 done; S02 investigation has 2 done and 1 paused follow-up; S03 object inventory has 2 pending; S04 handoff has 4 pending including one human review. The confirmed route explicitly permits S03 while the S02 follow-up stays paused; S03 design is already authorized and needs no human input for this step. No hard S02-to-S03 dependency remains. The CLI first-unfinished suggestion points to the paused follow-up. A current result sample-a and a 12-entry source inventory are recorded delivered, not independently verified. Role is not established. Runtime not requested.",
+      "expected_output": "Generalized Stage-to-Tasks overview with deferred work",
+      "files": [],
+      "assertions": [
+        {
+          "name": "reconciled_item_bar",
+          "type": "contains",
+          "check": "Show recorded item completion 5/12 (42%) with one overall bar; done 5, paused 1, pending 6 and human 1 as a subset"
+        },
+        {
+          "name": "stage_task_primary_view",
+          "type": "contains",
+          "check": "Show all four Stages in order with Task states and 3/3, 2/3, 0/2, 0/4; mark S03 as the next applicable work"
+        },
+        {
+          "name": "deferred_next_exception",
+          "type": "contains",
+          "check": "Explain the confirmed exception allowing S03 despite paused S02 and the CLI mismatch; do not claim the follow-up done or runtime stopped"
+        },
+        {
+          "name": "owner_duties_without_new_gate",
+          "type": "contains",
+          "check": "Identify the Agent object-inventory deliverable and no human action for this step; retain the actual later human review without inventing a new current gate"
+        },
+        {
+          "name": "generalized_evidence_and_role",
+          "type": "contains",
+          "check": "Use the investigation results and candidate identity; do not invent a role, software release, tests, ETA or independent acceptance"
+        },
+        {
+          "name": "read_only_chat",
+          "type": "contains",
+          "check": "Return the overview in chat without document edits, synchronization, dispatch or companion reports"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "axis": "Ambiguous current-branch binding",
+      "prompt": "Use /lb-status for the current branch. The host has no explicit branch-to-Logbook binding. Two readable Logbooks have equally plausible names, and neither contains a branch binding. No user-selected Logbook is supplied.",
+      "expected_output": "Ambiguous current-branch binding",
+      "files": [],
+      "assertions": [
+        {
+          "name": "no_name_based_binding",
+          "type": "contains",
+          "check": "Explain that the branch cannot uniquely identify the Logbook and ask a focused target question"
+        },
+        {
+          "name": "no_cross_project_counts",
+          "type": "contains",
+          "check": "Do not silently choose by filename, merge project counts or invent a project role/status"
+        },
+        {
+          "name": "no_binding_creation",
+          "type": "contains",
+          "check": "Do not create a binding, edit configuration or dispatch work"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "axis": "Git and diagnostic footer preserves evidence scope",
+      "prompt": "Use /lb-status for the designated Logbook in recorded mode. Host repository is project-root, toolkit is a separate checkout. Authorized reads show branch work/report, HEAD abc1234, one modified file, and local tracking ahead 2 behind 1; reference freshness is unknown. Log check exits 1 and returns no structural codes, 3 LINK_UNVERIFIED and 4 LOCAL_LINK_UNVERIFIED occurrences, including repeated URLs. Current PR status is unavailable; an old record says merged. There are 2 current Tasks, one done and one pending. No renderer is installed.",
+      "expected_output": "Git and diagnostic footer preserves evidence scope",
+      "files": [],
+      "assertions": [
+        {
+          "name": "host_repository_footer",
+          "type": "contains",
+          "check": "Use project-root Git facts: work/report, abc1234, modified worktree, ahead 2 behind 1; state tracking freshness unknown"
+        },
+        {
+          "name": "diagnostic_occurrence_units",
+          "type": "contains",
+          "check": "Report zero structural errors and seven unverified link occurrences, not seven unique URLs or one structural error from exit 1"
+        },
+        {
+          "name": "pr_record_freshness",
+          "type": "contains",
+          "check": "Distinguish recorded merged from unverified current PR and draft/WIP state"
+        },
+        {
+          "name": "no_display_driven_mutation",
+          "type": "contains",
+          "check": "Do not fetch, install a renderer, repair records, query unrelated services or change files to fill the footer"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "axis": "Large route and unknown chat viewport",
+      "prompt": "Use /lb-status for a compact overview. Viewport width and rendering capabilities are unknown. Twelve Stages: S01-S10 each have 2 done Tasks; S11 has 1 active and 1 pending; S12 has 2 pending, one human-owned. Current focus S11; no dependency edges are established between Stages. There are material human review conditions in S12 and no blockers recorded. Authoritative goal and delivered result links exist. Produce the broad overview in the user language without a full Task dump.",
+      "expected_output": "Large route and unknown chat viewport",
+      "files": [],
+      "assertions": [
+        {
+          "name": "main_progress_and_totals",
+          "type": "contains",
+          "check": "Retain the overall bar and 20/24 (83%) recorded completion, active 1 and pending 3; do not assign active partial credit"
+        },
+        {
+          "name": "compact_stage_distribution",
+          "type": "contains",
+          "check": "Compress Stages to short lines or a labelled folded remainder with reconcilable counts while keeping S11 current Tasks and S12 human gate visible"
+        },
+        {
+          "name": "no_invented_dependencies_or_viewport",
+          "type": "contains",
+          "check": "Do not infer dependency arrows from Stage order or claim measured screen/A4 fit without viewport evidence"
+        },
+        {
+          "name": "no_redundant_inventory",
+          "type": "contains",
+          "check": "Use a compact Stage-to-Tasks overview without repeating identical charts, expanding every completed Task or forcing 3-5 nonexistent成果"
         }
       ]
     }

@@ -35,5 +35,6 @@ Thumbs.db
 *.swp
 
 # Isolated local execution and validation checkouts.
+/tmp/
 /.worktrees/
 .claude/worktrees

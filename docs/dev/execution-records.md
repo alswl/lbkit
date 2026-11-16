@@ -1,6 +1,6 @@
 # Execution records and runtime boundaries
 
-## Responsibility and alternatives
+## Responsibility and evidence
 
 The execution CLI records attributed facts and computes delegation constraints.
 Those record commands do not orchestrate runtime pause/resume or an entire
@@ -9,15 +9,8 @@ and perform one-shot read-only waiting. Compatible dispatch-bound input retains
 guarded-send journaling. It cannot establish exclusive execution ownership or independent
 review completion. A successful file write must not claim those capabilities.
 
-Three interface designs were considered:
-
-| Interface | Benefit | Problem / decision |
-| --- | --- | --- |
-| Public state transitions (`confirm`, `authorize-handback`) | Small implementation | Requires callers to drive internal phases; a basis string appears to certify ownership/permission. Remove. |
-| End-to-end `takeover` / `handback` orchestration | Could own runtime recovery | Requires verifiable exclusive ownership and runtime pause/resume beyond open/close and observation. Defer, rather than disguise missing operations. |
-| `log execution context/record` plus explicit `agent send` | Separates record writes from runtime effects; batches facts already available | Requires typed provenance and conservative projections. Selected. |
-
-This choice is about effects and evidence, not command depth or command count.
+Recording facts and controlling a runtime are separate effects. A record write
+cannot certify exclusive ownership, pause/resume support or a complete handoff.
 `record` accepts domain facts, not a requested phase or a `verified=true` flag.
 Caller facts are always attributed to the caller, including reports of runtime
 observations or verified checks. The CLI validates their structure and references;
@@ -42,9 +35,10 @@ that assurance applies to transport only. A saved binding is not a live observat
   result by the CLI. Every projection states its evidence origin and limitations.
 - An unresolved transport intent prevents another send, including under a new ID.
   A receipt does not prove readiness, ownership transfer, review or acceptance.
-- Single-file CAS plus a local nonblocking writer lock serializes cooperating CLI
-  mutations. It is not a lock against manual edits, a distributed lock, or a
-  transaction spanning runtime, JSON and Markdown.
+- Execution writes use their current context token and a local writer lock for
+  cooperating CLI mutations. Document edits and explicit projection sync follow
+  the [document-state contract](../installable/document-state.md). Neither boundary
+  is a distributed lock or a transaction spanning runtime effects and files.
 
 ## Complete workflows
 
@@ -87,10 +81,11 @@ inspecting an idle recipient is not proof of non-delivery.
 
 **Partial writes and projections.** If intent cannot be saved, do not send. If runtime
 succeeds but receipt persistence fails, expose the receipt and the pending recovery;
-leave durable intent unknown. JSON mutations never silently edit Markdown. Context
-reports page projection disagreement; use fresh Markdown CAS and `log sync` to repair
-it. A stale Markdown marker cannot change the JSON delegation policy. Preserve human
-text and report any protected task-note reconciliation separately.
+leave durable intent unknown. JSON mutations never silently edit Markdown. Current
+Markdown defines document facts; explicitly synchronize its projection after an
+authorized edit and report the two outcomes separately. A stale page marker
+cannot supply execution permission or erase unknown delivery. Preserve human text
+and report any unfinished task-note reconciliation separately.
 
 ## Explicit limits
 
