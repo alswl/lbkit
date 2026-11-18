@@ -63,15 +63,17 @@ def session_operation(root, input_file, action):
             machine, server = b["machine"], b["server"]
     except (ValueError, TypeError, KeyError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
-    scope = herdr.invoke(machine, "status", "--json").get("server", {})
-    if (
-        not isinstance(scope, dict)
-        or not scope.get("running")
-        or scope.get("compatible") is False
-        or (scope.get("session") or "default") != server
-    ):
-        raise LbError("server scope mismatch; no fallback allowed", EXIT_REFUSED)
+    scope = herdr.invoke("local", *herdr.scope_command(machine))
+    binding_machine = machine
+    machine = herdr.scope_machine(machine, server, scope)
     if action == "open":
+        if machine != "local":
+            parent = herdr.invoke(machine, "pane", "get", request["parent_pane"])
+            if (
+                parent.get("result", {}).get("pane", {}).get("pane_id")
+                != request["parent_pane"]
+            ):
+                raise LbError("parent pane scope unavailable", EXIT_REFUSED)
         prefix = herdr_labels.prefix(base)
         created = []
         display_policy = None
@@ -127,7 +129,7 @@ def session_operation(root, input_file, action):
                 .get("agent", {})
             )
             observed = herdr.binding_observation(
-                {"machine": machine, "server": server}, pane, agent
+                {"machine": binding_machine, "server": server}, pane, agent
             )
             if (
                 observed["binding"]["pane_id"] != pane_id
