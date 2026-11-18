@@ -34,6 +34,11 @@ to the external verification repository. Executable fakes do not change an
 integration test's ownership. Run those suites against an explicitly selected
 candidate and retain their results separately from local unit-test results.
 
+Remote Herdr scope admission reads the enabled saved machine profile and requires
+its explicit session to match the binding. Pin subsequent API calls to the
+profile's stable ID; local status is not a remote probe, and missing or ambiguous
+profiles must refuse without Local fallback.
+
 ## Dependency Index
 
 The project uses official PyPI (`https://pypi.org/simple`) for dependency

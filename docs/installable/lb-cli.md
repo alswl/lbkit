@@ -195,6 +195,13 @@ failures retain the documented failure contract. `lb agent herdr close-session`
 accepts the returned binding and owned_panes, checks native identity and closes
 only its explicitly owned pane.
 
+Remote scope checks use the enabled saved machine profile's explicit session,
+which must match the binding's server. The profile's stable ID is used for
+subsequent remote API calls. Live reads verify reachability and native identity;
+remote open verifies the parent pane before creating a pane. Missing, ambiguous,
+disabled or mismatched profiles refuse without Local fallback. `herdr status --json`
+remains a Local-only probe and is never forwarded remotely.
+
 The generic `agent open` and `agent close-session` routes are removed without
 aliases. Use the explicit Herdr routes and valid host configuration before
 allocation. Sailor delegation selects a collaboration adapter; it does not define
