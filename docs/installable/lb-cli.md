@@ -24,13 +24,15 @@ id, assignment_revision, machine, session_id, adapter=herdr, runtime_locator
 null, working_directory), input_ref, basis and observed_at. Bindings are immutable.
 For Herdr bindings, `machine` selects the transport host (`local` or a configured
 machine profile); `server` is the selected server session scope, not the machine
-name. Inspect `herdr status --json` on that same selected machine. The JSON has a
-top-level `server` object, not `result.server`. Require a running compatible server;
-use its nonempty `session` exactly, or the lb scope `default` when that selected
-server reports no named session. Never substitute `local`, a pane ID or a logical
-Agent ID for server scope. Do not retarget an unrelated server to make a binding
-match. Use this same observed scope in execution runtime_locator and monitoring
-binding; workspace/tab/pane and native session identity must come from that server.
+name. For `local`, inspect `herdr status --json` and require a running compatible
+server; use its nonempty `session` exactly, or the lb scope `default` when Local
+reports no named session. For a remote machine, inspect the enabled saved profile
+locally, require its explicit `session` to match `server`, and use its stable ID for
+subsequent API calls. Never forward Local-only status remotely, substitute `local`,
+guess a default remote session or fall back to Local. Do not retarget an unrelated
+server to make a binding match. Use this same observed scope in execution
+runtime_locator and monitoring binding; workspace/tab/pane and native session
+identity must come from that server.
 
 Result source payload is `{ref,source,version_ref?,observed_at}`, with source either
 `{binding_id}` belonging to this Task or `{kind,subject_id,basis}`.
@@ -195,12 +197,9 @@ failures retain the documented failure contract. `lb agent herdr close-session`
 accepts the returned binding and owned_panes, checks native identity and closes
 only its explicitly owned pane.
 
-Remote scope checks use the enabled saved machine profile's explicit session,
-which must match the binding's server. The profile's stable ID is used for
-subsequent remote API calls. Live reads verify reachability and native identity;
-remote open verifies the parent pane before creating a pane. Missing, ambiguous,
-disabled or mismatched profiles refuse without Local fallback. `herdr status --json`
-remains a Local-only probe and is never forwarded remotely.
+Remote lifecycle opening verifies the parent pane through the selected profile
+before creating a pane. Missing, ambiguous, disabled or mismatched profiles refuse
+without Local fallback.
 
 The generic `agent open` and `agent close-session` routes are removed without
 aliases. Use the explicit Herdr routes and valid host configuration before
