@@ -479,6 +479,59 @@
           "check": "Treats absence of the control skill on the noncontrolling Sailor as a blocker, installs anything, or requires Sailor to read the Logbook."
         }
       ]
+    },
+    {
+      "axis": "#18 Distinguish a skill noted in Thinking from a skill attached to a task",
+      "prompt": "Read log.md, its linked Thinking and the local evidence before reporting. Apply lb-preflight to the next step. Work read-only without delegation or business execution.",
+      "expected_output": "Locate the missing task skill annotation on A and account for the companion. Treat B as a valid built-in-only task.",
+      "files": ["fixtures/21.json"],
+      "assertions": [
+        {
+          "name": "locate_missing_task_annotation",
+          "type": "contains",
+          "check": "Identifies task A and the missing saved Skills sub-line for report-render, even though it was noted in Thinking."
+        },
+        {
+          "name": "check_required_companion",
+          "type": "contains",
+          "check": "Accounts for the applicable output-check companion in A's skill coverage."
+        },
+        {
+          "name": "no_false_missing_skill",
+          "type": "not_contains",
+          "check": "Reports a missing specialized skill for B, or marks A's saved skill coverage complete."
+        }
+      ],
+      "id": 21
+    },
+    {
+      "axis": "#35 Separate a technical preparation gap from a decision requiring the user",
+      "prompt": "Read log.md, its linked Thinking and the local evidence before reporting. Apply lb-preflight to the next step. Work read-only without delegation or business execution.",
+      "expected_output": "Report A as blocked, name the missing input, evidence, owner and clear condition, state that no user input is needed now, and leave B unverified.",
+      "files": ["fixtures/22.json"],
+      "assertions": [
+        {
+          "name": "locate_gap_and_evidence",
+          "type": "contains",
+          "check": "Names task A, the missing input snapshot and the check that confirmed absence."
+        },
+        {
+          "name": "owner_and_clear_condition",
+          "type": "contains",
+          "check": "Says the technical owner can resolve A and specifies both readability and candidate digest match."
+        },
+        {
+          "name": "no_user_input_now",
+          "type": "contains",
+          "check": "States that no user input is needed now and does not ask the user to supply the snapshot or renew authorization."
+        },
+        {
+          "name": "preserve_unknown_later_task",
+          "type": "contains",
+          "check": "Reports B as unverified, without marking it ready or missing."
+        }
+      ],
+      "id": 22
     }
   ]
 }

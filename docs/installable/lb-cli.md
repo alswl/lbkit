@@ -655,3 +655,59 @@ Legacy requests remain accepted; older binaries may reject additive continuation
 fields. Pin the observer revision with raw checkpoints. Managed --log forbids
 --input-file; raw mode rejects --stream, --expect-version and --dry-run. No package,
 skill or configuration version is automatically changed by this additive API.
+
+## Route confirmation and task readiness
+
+Use `lb log route LOG --json` to read the reviewed scope, its `route_ref` and
+each task's `criteria_digest`. To record decisions or preflight observations in
+an explicitly bound Thinking document, use
+`lb log record-readiness LOG --thinking PATH --input-file FILE --dry-run --json`.
+Apply with the same inputs after reviewing and then explicitly synchronize the
+saved Thinking document. The input carries `run_ref` (the run ID) and arrays
+`confirmations`, `observations` and `grants`. Preserve each existing array as a
+prefix of the updated array.
+
+All records carry `source` and `route_ref`. A confirmation uses status
+`confirmed`. A ready observation uses `task_id`, status `ready`,
+`criteria_digest` and `skills` (verified applicable names, or an empty list
+for built-in work). Blocked observations can supply `object`, `owner`,
+`clear_when` and `human_action`. An authorization uses `task_id`, `actor`
+(the executor subject ID), `action` (`dispatch` or `takeover`) and status
+`granted` or `revoked`. Record decisions and observations from their actual
+sources. The CLI checks their applicability to the current route.
+
+Query `lb log readiness LOG --task-id ID --actor ACTOR --action dispatch --json`.
+A blocked result provides recovery steps. Reconcile unknown operations before
+another attempt. New sends require applicable evidence. For an existing run,
+reuse verifiable decisions and collect missing preflight evidence before a new
+dispatch. Existing submitted operations retain their replay behavior.
+
+Record an observed action through `lb log execution record` using a
+`business-action` fact with `id`, the submitted `operation_id`, `outcome`
+(`started` or `not_started`), and a `source` of kind
+`runtime_observation` referencing the actual evidence. A submitted receipt
+with no action evidence requires reconciliation before a new send to the
+task. Replaying the same operation still returns its saved receipt.
+Follow-up instructions on the same binding use the existing live identity and
+delegation guards. Sending on a replacement binding rechecks readiness.
+
+Readiness evidence can include stable `id` and an explicit `supersedes` for a
+same-scope record. Observations can supply an `inputs` map from repository
+relative file paths to SHA-256 digests. The query and dispatch check reread
+those files. For an environment-specific observation, `machine` pins it to
+the dispatch binding's machine or to `local` for Captain execution.
+`expires_at` accepts a timestamp with timezone, after which the observation
+requires rechecking. A revoked authorization remains effective until explicitly
+superseded in the same authorization scope.
+
+Captain first start uses `lb log takeover-start LOG --task-id ID --actor ACTOR
+--operation-id OP --expect-execution-version TOKEN --transition reserve --json`.
+A successful new reservation returns `may_start: true`. Resolve the same
+operation with `--transition started` or `--transition not_started` and
+`--evidence SOURCE`. An existing reservation returns `may_start: false`.
+
+The route query also returns `source_digest` for auditing and `task_scopes`
+for an explicitly reviewed Task scope. An evidence row with `scope` equal to
+its Task ID uses the corresponding task scope digest as its `route_ref`.
+A whole-route decision uses the output's top-level `route_ref`. A Task scope
+includes its position, preceding work and transitive dependencies.

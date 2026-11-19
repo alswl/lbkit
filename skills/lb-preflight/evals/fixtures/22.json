@@ -1,0 +1,7 @@
+{
+  "files_override": {
+    "log.md": "# Sample workflow\n\n## Overview\n\nThinking: [Preparation](records/thinking.md)\n\n## Stage 1\n\n- [ ] A — Verify the approved snapshot\n- [ ] B — Count the Markdown headings using built-in tools\n",
+    "records/thinking.md": "# Preparation\n\nExecution proposal: A uses inputs/approved.json. Responsible owner: fixture-operator. The owner may obtain the snapshot under the current authorization. When the file arrives compare its SHA-256 to the approved candidate digest recorded in records/candidate.txt before use. There are no pending route decisions.\n",
+    "records/candidate.txt": "sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

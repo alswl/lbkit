@@ -85,3 +85,28 @@ Logbook line locators and a link to details. Record a new 🔮 marker only on an
 explicit human ruling; existing markers retain their human-only resolution rule.
 No preview claim substitutes for design confirmation, human acceptance or execution
 permission. Return to the authorized calling flow when preparation is sufficient.
+
+Compare verified applicable primary and companion skills directly with the saved
+task annotations. For each required annotation missing from the Logbook, identify
+the task and the missing skill. A skill recorded only in Thinking still needs a
+task annotation when applicable. Mark built-in-only work accordingly.
+Read the applicable workflow and registry entries, then open the primary and
+conditional companion definitions that apply to the task. Verify availability
+where execution will occur. If the user authorizes an annotation repair, use
+`lb task note` on that task's Skills sub-line, explicitly run
+`lb log sync-state` on the Logbook, and read the saved body back. Refresh
+the affected preflight observation against the current task criteria.
+
+For each blocking observation, report the prerequisite, affected step, evidence,
+owner and clearance condition. State whether the user needs to act now, including
+when the named technical owner can resolve the gap under existing authorization.
+For a decision that requires the user, state the available choices, their
+effects and the step by which a decision is needed.
+
+Record task readiness in the bound Thinking document with
+`lb log record-readiness LOG --thinking PATH --input-file FILE --dry-run --json`.
+Review the proposed update before applying. Carry forward the recorded history
+and cite the actual source of each observation. Where a check depends on
+workspace files, record their digests. Mark unverified external conditions as
+unverified. After applying, synchronize Thinking explicitly and read back the
+current outcome. See [the CLI contract](../../docs/installable/lb-cli.md#route-confirmation-and-task-readiness).

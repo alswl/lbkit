@@ -88,3 +88,20 @@ resuming. Reconcile pending commands and partial ownership changes; do not repea
 side effects or silently resume stale Sailor work. Report the scoped executor,
 current result and next action briefly; switching modes does not reset counters,
 supply human confirmation for task state changes, or expand commit/push/publication authorization.
+
+## Check readiness before the first business action
+
+Run `lb log readiness LOG --task-id ID --actor ACTOR --action dispatch --json`
+for delegation, or select `--action takeover` for Captain execution. Use the
+actual executor's subject identifier. If blocked, report the missing evidence
+and recovery entry. If reconciliation is required, resolve the existing
+operation before taking another business action. Ready permits proceeding
+through the existing ownership, authorization and live identity checks.
+
+Before the first business action, reserve it with `lb log takeover-start LOG
+--task-id ID --actor ACTOR --operation-id OP --expect-execution-version TOKEN
+--transition reserve --json`. Start only on a newly saved `may_start: true`.
+Use the returned execution token to record `--transition started --evidence
+SOURCE` after the first action. On interruption, retain the same operation ID
+and reconcile from actual evidence. Use `not_started` only when the evidence
+establishes that no action occurred.

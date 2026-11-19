@@ -110,6 +110,10 @@ def register(app: click.Group) -> None:
         recover,
         init_state,
         sync_state,
+        route,
+        record_readiness,
+        takeover_start,
+        readiness,
     ):
         app.add_command(command)
 
@@ -142,3 +146,98 @@ def sync_state(root, log, dry_run, json):
     from logbook_cli.services.common import Result
 
     finish(Result(sync_document(resolve_root(root), log, dry_run)), json)
+
+
+@click.command("route", help="Show the reviewable route and its fingerprint.")
+@options(ROOT, LOG, JSON)
+def route(root, log, json):
+    from logbook_cli.services.common import Result, load
+    from logbook_cli.services.route_scope import route_scope
+
+    finish(Result(route_scope(load(resolve_root(root), log))), json)
+
+
+@click.command("record-readiness", help="Save an append-only update to bound Thinking.")
+@options(
+    ROOT,
+    LOG,
+    click.option("--thinking", required=True),
+    click.option("--input-file", required=True),
+    DRY_RUN,
+    JSON,
+)
+def record_readiness(root, log, thinking, input_file, dry_run, json):
+    finish(
+        logbook.record_readiness(
+            resolve_root(root), log, thinking, input_file, dry_run
+        ),
+        json,
+    )
+
+
+@click.command("readiness", help="Inspect recorded evidence for a task start.")
+@options(
+    ROOT,
+    LOG,
+    click.option("--task-id", required=True),
+    click.option("--actor", required=True),
+    click.option(
+        "--action", type=click.Choice(["dispatch", "takeover"]), default="dispatch"
+    ),
+    JSON,
+)
+def readiness(root, log, task_id, actor, action, json):
+    from logbook_cli import task_identity, unified
+    from logbook_cli.services.common import Result, load
+    from logbook_cli.services.readiness import evaluate
+
+    doc = load(resolve_root(root), log)
+    task_identity.lookup(doc, task_id)
+    _, run = unified.locate(doc.root, doc.path, required=True)
+    finish(Result(evaluate(doc, run, task_id, actor, action)), json)
+
+
+@click.command(
+    "takeover-start", help="Reserve or resolve a Captain first-start intent."
+)
+@options(
+    ROOT,
+    LOG,
+    click.option("--task-id", required=True),
+    click.option("--actor", required=True),
+    click.option("--operation-id", required=True),
+    click.option("--expect-execution-version", required=True),
+    click.option(
+        "--transition",
+        type=click.Choice(["reserve", "started", "not_started"]),
+        required=True,
+    ),
+    click.option("--evidence"),
+    JSON,
+)
+def takeover_start(
+    root,
+    log,
+    task_id,
+    actor,
+    operation_id,
+    expect_execution_version,
+    transition,
+    evidence,
+    json,
+):
+    from logbook_cli.services.readiness import record_takeover
+
+    finish(
+        record_takeover(
+            resolve_root(root),
+            log,
+            task_id,
+            actor,
+            operation_id,
+            expect_execution_version,
+            transition,
+            evidence,
+        ),
+        json,
+    )

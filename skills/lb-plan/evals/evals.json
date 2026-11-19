@@ -878,6 +878,48 @@
           "check": "Actual before/after files preserve records/human-notes.txt and human task text, state and note. No human task is completed."
         }
       ]
+    },
+    {
+      "id": 54,
+      "axis": "Stage overview and reviewed scope",
+      "prompt": "The saved route has Stage 1 deliverable a rendered report (task A, Captain, acceptance: matching source digest) and Stage 2 deliverable a release review (task B depends on A, human decision). Present the saved route for review in read-only mode. No confirmation has been given.",
+      "expected_output": "Show ordered Stage deliverables, dependency, owner, acceptance and the human review gate. Name the scope awaiting confirmation.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "route_review_matches_scope",
+          "type": "contains",
+          "check": "Show ordered Stage deliverables, dependency, owner, acceptance and the human review gate. Name the scope awaiting confirmation."
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "axis": "A short outcome can remain a single Stage",
+      "prompt": "The approved goal is to inspect three titles and hand back the count. The saved route has one Stage covering inspection and report. Prepare the Stage overview read-only.",
+      "expected_output": "Keep both steps under the one Stage. Present the outcome and acceptance in the overview without inventing another Stage.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "route_review_matches_scope",
+          "type": "contains",
+          "check": "Keep both steps under the one Stage. Present the outcome and acceptance in the overview without inventing another Stage."
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "axis": "A separate outcome can be reviewed without losing existing history",
+      "prompt": "The saved route contains completed Task A with a stable ID and acceptance evidence. The user proposes adding a separate release review result with its own human approval. Present what should change for review. No edits are authorized.",
+      "expected_output": "Present a separate review Stage candidate. Explicitly carry forward Task A identity and acceptance history. Make the new scope pending review and describe it without claiming a write.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "route_review_matches_scope",
+          "type": "contains",
+          "check": "Present a separate review Stage candidate. Explicitly carry forward Task A identity and acceptance history. Make the new scope pending review and describe it without claiming a write."
+        }
+      ]
     }
   ]
 }

@@ -72,7 +72,7 @@ def send(
         (op for op in state["operations"] if op["id"] == operation_id), None
     )
     if existing:
-        if existing["request"] != request:
+        if {k: v for k, v in existing["request"].items() if k != "task_id"} != request:
             raise LbError(
                 "operation ID already binds another message/package/recipient",
                 EXIT_REFUSED,
@@ -121,6 +121,22 @@ def send(
         )
     if dispatch["status"] != "prepared":
         raise LbError("new send requires a prepared dispatch", EXIT_REFUSED)
+    from logbook_cli import unified
+    from logbook_cli.repository import require_synced
+    from logbook_cli.services.readiness import require_ready
+
+    task_id = dispatch["task_id"]
+    request["task_id"] = task_id
+
+    def check_readiness():
+        current, _ = require_synced(doc.root, doc.path, task_id)
+        if current.data != doc.data or thinking.path.read_bytes() != thinking.data:
+            raise LbError("dispatch documents changed before send", EXIT_REFUSED)
+        _, envelope = unified.locate(doc.root, doc.path, required=True)
+        task_send_guard(envelope["execution"], task_id, operation_id, request)
+        require_ready(current, envelope, task_id, dispatch["owner"])
+
+    check_readiness()
     changed = copy.deepcopy(state)
     intent = {
         "id": operation_id,
@@ -134,6 +150,7 @@ def send(
 
     def persist_intent():
         nonlocal intent_token
+        check_readiness()
         intent_token = execution.write(doc, state["name"], changed, token, False)[
             "version_token"
         ]
@@ -193,16 +210,35 @@ def task_send_guard(ex, task_id, operation_id, request):
         )
     if any(op["outcome"] == "unknown" for op in ex["operations"].values()):
         raise LbError("unknown delivery blocks further delegation", EXIT_REFUSED)
-    if any(
-        op["request"].get("task_id") == task_id
-        and op["request"].get("binding_id") == request.get("binding_id")
-        and op["outcome"] == "submitted"
-        for op in ex["operations"].values()
-    ):
-        raise LbError(
-            "Task binding already has submitted delivery; do not resend", EXIT_REFUSED
-        )
+    delivery_started(ex, task_id, request)
     return None
+
+
+def delivery_started(ex, task_id, request):
+    """Establish first action separately from transport and protect replay."""
+    outcomes = {
+        fact["operation_id"]: fact["outcome"]
+        for fact in ex.get("facts", ())
+        if fact["kind"] == "business-action"
+    }
+    started = False
+    for operation_id, op in ex["operations"].items():
+        prior = op["request"]
+        if prior.get("task_id") != task_id or op["outcome"] != "submitted":
+            continue
+        if op.get("provenance") == "takeover":
+            raise LbError("Captain already started this Task", EXIT_REFUSED)
+        outcome = outcomes.get(operation_id)
+        if outcome is None:
+            raise LbError(
+                "Submitted delivery has no business-action outcome; reconcile first",
+                EXIT_REFUSED,
+            )
+        if outcome == "started":
+            if prior == request:
+                raise LbError("Use the original operation ID to replay", EXIT_REFUSED)
+            started |= prior.get("binding_id") == request.get("binding_id")
+    return started
 
 
 def send_task(
@@ -220,6 +256,7 @@ def send_task(
     from logbook_cli import observation, unified
     from logbook_cli.document import safe_path
     from logbook_cli.repository import require_synced
+    from logbook_cli.services.readiness import require_ready
     from logbook_cli.services.task_coordination import native_binding
     from logbook_cli.task_identity import dependencies, lookup
 
@@ -235,9 +272,9 @@ def send_task(
             raise LbError("execution version conflict", EXIT_REFUSED)
         ex = envelope["execution"]
         runtime = ex["tasks"].get(task_id, {})
-        if runtime.get("current_binding_id") != binding_id:
-            raise LbError("send requires current Task binding", EXIT_REFUSED)
-        binding = runtime["execution_bindings"][binding_id]
+        binding = runtime.get("execution_bindings", {}).get(binding_id)
+        if binding is None:
+            raise LbError("Task binding not found", EXIT_REFUSED)
         native = native_binding(binding)
         if expected_session != native["session_id"]:
             raise LbError("expected session differs", EXIT_REFUSED)
@@ -259,6 +296,8 @@ def send_task(
                     "effect": "no runtime operation",
                 }
             )
+        if runtime.get("current_binding_id") != binding_id:
+            raise LbError("send requires current Task binding", EXIT_REFUSED)
         if (
             task.human
             or binding["subject"]["kind"] != "agent"
@@ -270,11 +309,15 @@ def send_task(
         for dep in dependencies(task):
             if lookup(doc, dep)[0].effective_state != "done":
                 raise LbError("hard dependency is not done: " + dep, EXIT_REFUSED)
+        from logbook_cli.document import require_preflight_clear
         from logbook_cli.lifecycle import get
 
+        require_preflight_clear(doc)
         if get(doc)["value"] != "active":
             raise LbError("new send requires active Logbook", EXIT_REFUSED)
         execution.require_delegation(doc, task_id, binding["subject"]["subject_id"])
+        if not delivery_started(ex, task_id, request):
+            require_ready(doc, envelope, task_id, binding["subject"]["subject_id"])
     intent_saved = False
 
     def persist():
@@ -289,7 +332,11 @@ def send_task(
             target, value = unified.locate(current.root, current.path, required=True)
             if unified.section_token(value, "execution") != execution_token:
                 raise LbError("execution changed before send", EXIT_REFUSED)
+            if value.get("documents") != envelope.get("documents"):
+                raise LbError("document evidence changed before send", EXIT_REFUSED)
             task_send_guard(value["execution"], task_id, operation_id, request)
+            if not delivery_started(value["execution"], task_id, request):
+                require_ready(current, value, task_id, binding["subject"]["subject_id"])
             value["execution"]["operations"][operation_id] = {
                 "id": operation_id,
                 "request": request,

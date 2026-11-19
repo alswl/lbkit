@@ -56,6 +56,7 @@ def validate_fact(fact, prior):
             "delegation-release": "id kind source takeover_id dispatch_id recipient scope condition_result_id",
             "handoff": "id kind release_id receipt execution_ready monitor_ready ownership",
             "transport-resolution": "id kind source operation_id outcome",
+            "business-action": "id kind source operation_id outcome",
         }.get(kind)
         if isinstance(kind, str)
         else None
@@ -147,6 +148,11 @@ def validate_fact(fact, prior):
             if fact[key]["status"] not in values:
                 refuse("invalid handoff observation")
             source(fact[key]["source"], ("runtime_observation", "caller_judgment"))
+    elif kind == "business-action":
+        source(fact["source"], ("runtime_observation",))
+        text(fact["operation_id"])
+        if fact["outcome"] not in ("started", "not_started"):
+            refuse("business-action evidence requires a definite observed outcome")
     else:
         source(fact["source"], ("runtime_observation",))
         text(fact["operation_id"])

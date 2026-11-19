@@ -30,7 +30,7 @@ Keep scope/interface/acceptance choices in Captain's planning; give Sailor clear
 
 ## Size and Template Selection
 
-Derive stages from real separately delivered or accepted results. Small work (roughly one person-day or less) and lightweight operational runs default to one Stage; an applicable human gate is a todo, not a compulsory final Stage. Explain a multi-stage exception. Research, writing, events and environment work use their own criteria; no automatic code, release or merge steps.
+Derive stages from real separately delivered or accepted results. Small work (roughly one person-day or less) and lightweight operational runs default to one Stage. When a revision introduces a distinct deliverable with its own acceptance, propose a separate Stage for that result and its gate. Keep completed task IDs, acceptance, and artifacts in their existing Stage. A human gate on the existing result stays in that result's Stage. Research, writing, events and environment work use their own criteria.
 
 A workflow run uses the template's 「运行实例模板」 section and exactly three mutable slots: target date, working directories, run rulings. Validate complete goal sentences, stage/todo structure and established human gates before fill-in. An object name cannot replace the target-date slot. A confirmed template is not freely compressed or extended by scaffold; missing slots require template maintenance, and an explicitly requested structural change belongs to planning.
 
@@ -74,3 +74,12 @@ When the user explicitly asks to split an existing logbook, first confirm where 
 Item by item, confirm goal coverage, conflict-free dependencies, clear ownership, provable evidence, current work package completeness, valid parameters, and explicit authorization status. Separate observed facts, current goals, and unknowns. Finally present the plan location, paths, acceptance, and items awaiting human decisions; a file existing does not mean it was presented, and presentation does not mean execution is approved.
 
 Ordinary execution also requires the confirmed core design described above; an authorized POC has only its bounded exception. Before exit, confirm the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation); plans short of confirmation must not enter lb-push execution.
+
+After saving the route, use `lb log route LOG --json` to read back stage order,
+tasks, dependencies and the reviewed scope. Show the deliverables, owners,
+acceptance criteria and human gates. Record a genuine confirmation from its
+source, using the whole route reference or the applicable task scope reference.
+When a confirmation still applies, reuse it.
+
+Use the [route readiness CLI contract](../../../docs/installable/lb-cli.md#route-confirmation-and-task-readiness)
+for the evidence format and protected update.

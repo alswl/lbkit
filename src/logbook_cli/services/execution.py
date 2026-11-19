@@ -65,13 +65,39 @@ def record(root, log, input_file, token, dry_run):
                     )
                 continue
             execution_facts.validate_fact(fact, value["facts"])
+            if fact["kind"] == "business-action":
+                op = next(
+                    (
+                        op
+                        for op in value["operations"]
+                        if op["id"] == fact["operation_id"]
+                    ),
+                    None,
+                )
+                if (
+                    op is None
+                    or op["provenance"] == "takeover"
+                    or op["outcome"] != "submitted"
+                    or any(
+                        previous["kind"] == "business-action"
+                        and previous["operation_id"] == fact["operation_id"]
+                        for previous in value["facts"]
+                    )
+                ):
+                    execution_facts.refuse(
+                        "business-action evidence requires an unresolved submitted delivery"
+                    )
             if fact["kind"] == "transport-resolution":
                 matches = [
                     op for op in value["operations"] if op["id"] == fact["operation_id"]
                 ]
-                if len(matches) != 1 or matches[0]["outcome"] != "unknown":
+                if (
+                    len(matches) != 1
+                    or matches[0]["outcome"] != "unknown"
+                    or matches[0]["provenance"] == "takeover"
+                ):
                     execution_facts.refuse(
-                        "only an unknown operation can be reconciled"
+                        "only an unknown transport operation can be reconciled"
                     )
                 matches[0].update(
                     outcome=fact["outcome"],

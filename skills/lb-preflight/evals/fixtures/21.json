@@ -1,0 +1,8 @@
+{
+  "files_override": {
+    "log.md": "# Sample workflow\n\n## Overview\n\nThinking: [Preparation](records/thinking.md)\n\n## Stage 1\n\n- [ ] A — Render the sample report\n- [ ] B — Count the Markdown headings using built-in tools\n",
+    "records/thinking.md": "# Preparation\n\nTask A preparation: report-render and output-check (required companion) definitions were inspected. Task B needs built-in reading only.\n",
+    "skills/report-render/SKILL.md": "---\nname: report-render\ndescription: Prepare example report\n---\nRead-only inspection supported. No preview command.\n",
+    "skills/output-check/SKILL.md": "---\nname: output-check\ndescription: Prepare example report\n---\nRead-only inspection supported. No preview command.\n"
+  }
+}

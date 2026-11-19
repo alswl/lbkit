@@ -131,3 +131,20 @@ def sync(root: str, log: str, token: str, dry_run: bool) -> Result:
         ),
         summary_kept_human=sum(1 for r in summaries if not r["owned"]),
     )
+
+
+def record_readiness(root, log, thinking, input_file, dry_run):
+    import json
+
+    from logbook_cli import state
+    from logbook_cli.services.route_evidence import update_evidence
+
+    doc = load(root, log)
+    try:
+        payload = json.loads(
+            safe_path(doc.root, input_file).read_bytes(),
+            object_pairs_hook=state.unique_object,
+        )
+    except (OSError, ValueError) as exc:
+        raise LbError("invalid route evidence input", EXIT_USAGE) from exc
+    return Result(update_evidence(doc, thinking, payload, dry_run))
