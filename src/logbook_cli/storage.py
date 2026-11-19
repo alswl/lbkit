@@ -7,6 +7,13 @@ from pathlib import Path
 from logbook_cli.document import EXIT_REFUSED, Document, LbError
 
 
+class WriterBusy(LbError):
+    """A cooperating writer lock refused admission before publication."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, EXIT_REFUSED)
+
+
 def _sync_directory(path: Path) -> None:
     directory = os.open(path, os.O_RDONLY)
     try:

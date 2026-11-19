@@ -10,6 +10,7 @@ from contextlib import contextmanager
 
 from logbook_cli import state
 from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError
+from logbook_cli.storage import WriterBusy
 
 
 def scope(doc):
@@ -431,9 +432,7 @@ def _change(doc, expected, mutate, *, new_work=False, dry_run=False):
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise LbError(
-                "writer_busy: another state writer is active", EXIT_REFUSED
-            ) from exc
+            raise WriterBusy("writer_busy: another state writer is active") from exc
         value, token, before = _snapshot(doc)
         if value is None:
             raise LbError(
