@@ -188,6 +188,21 @@ def mutate(root, log, task_id, input_file, execution_token, dry_run, action):
         elif action == "result-source":
             result_value(runtime, artifact_refs(task), payload)
         prior = value["execution"]["tasks"].get(task_id)
+        if (
+            action in {"assign", "unassign", "bind"}
+            and prior
+            and (
+                prior.get("assignee") != runtime.get("assignee")
+                or prior.get("current_binding_id") != runtime.get("current_binding_id")
+            )
+        ):
+            from logbook_cli.services.readiness import unresolved_operation
+
+            if unresolved_operation(value["execution"], task_id):
+                raise LbError(
+                    "Reconcile the Task operation before changing execution binding",
+                    EXIT_REFUSED,
+                )
         changed = prior != runtime
         value["execution"]["tasks"][task_id] = runtime
         if changed and not dry_run:

@@ -81,3 +81,7 @@ Report saved outputs, relevant constraints, open decisions and the next step.
 Use current Logbook line locators under the
 [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators).
 Reuse explicit confirmation already supplied; planning itself dispatches no work.
+
+After saving the route, read it back with `lb log route LOG --json`. Present the
+Stage order, deliverables, dependencies, owners, acceptance and human gates.
+Record the human decision with its source and the reviewed route fingerprint.

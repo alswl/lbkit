@@ -265,3 +265,12 @@ Historical metadata-only release commits can be integrated with an explicit
 history-only merge after verifying their diffs, preserving current content and
 the existing tag objects. Check ancestry with
 `git merge-base --is-ancestor vX.Y.Z master` before publishing.
+
+### Route readiness adoption
+
+Consumer Skills record the human decision and checked prerequisites in a bound
+Thinking document. The user or an authorized operator owns that record. New
+Task sends require the recorded scope, preflight and execution authorization.
+A previously initialized run may need to record verifiable decisions and current
+observations before its next dispatch. Preserve the existing run and operation
+history when adopting the readiness checks.

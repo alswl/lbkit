@@ -115,3 +115,17 @@ Report actual work and checks, remaining Tasks and precise blockers/gates with
 current Logbook locators and usable delivery links. Attribute executor results;
 keep business evidence in host-owned records. Do not claim whole-feature acceptance
 from fixture tests or live compatibility from controlled observations.
+
+## Check readiness before the first business action
+
+Run `lb log readiness LOG --task-id ID --actor ACTOR --action dispatch --json`
+for delegation, or select `--action takeover` for Captain execution. Use the
+actual executor's subject identifier. If blocked, report the missing evidence
+and recovery entry. If reconciliation is required, resolve the existing
+operation before taking another business action. Ready permits proceeding
+through the existing ownership, authorization and live identity checks.
+Keep transport, receipt, and the first business action as separate evidence.
+When the runtime shows the action or establishes that it did not occur,
+record a `business-action` fact for the original operation with the observed
+source. If the outcome remains unknown, keep the operation pending
+reconciliation before sending to that task again or changing its binding.
