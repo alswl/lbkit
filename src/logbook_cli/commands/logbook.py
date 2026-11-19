@@ -109,6 +109,7 @@ def register(app: click.Group) -> None:
         state_set,
         recover,
         init_state,
+        migrate_state,
         sync_state,
         route,
         record_readiness,
@@ -135,6 +136,33 @@ def init_state(root, log, name, document, dry_run, json):
     base = root_path(resolve_root(root))
     finish(
         Result(unified.initialize(base, safe_path(base, log), name, document, dry_run)),
+        json,
+    )
+
+
+@click.command("migrate-state", help="Preview, apply or roll back a legacy run conversion.")
+@options(
+    ROOT,
+    LOG,
+    click.option("--name", required=True),
+    click.option("--document", multiple=True),
+    click.option("--apply", "apply", is_flag=True, help="Execute the reviewed plan."),
+    click.option("--rollback", is_flag=True, help="Select rollback of an applied plan."),
+    click.option("--expect-plan", help="Token from the corresponding dry-run."),
+    DRY_RUN,
+    JSON,
+)
+def migrate_state(root, log, name, document, apply, rollback, expect_plan, dry_run, json):
+    from logbook_cli import legacy_migration
+    from logbook_cli.document import EXIT_USAGE, LbError
+
+    if apply == dry_run or bool(expect_plan) != apply:
+        raise LbError("Choose --dry-run or --apply --expect-plan TOKEN.", EXIT_USAGE)
+    finish(
+        legacy_migration.run(
+            resolve_root(root), log, name, document,
+            dry_run=dry_run, is_rollback=rollback, token=expect_plan,
+        ),
         json,
     )
 

@@ -9,6 +9,20 @@ from logbook_cli.adapters import herdr
 from logbook_cli.document import EXIT_REFUSED, LbError
 from logbook_cli.services.common import Result
 
+DISPATCH_PACKAGE_FIELDS = (
+    "task_id", "owner", "scope", "exclusions", "inputs",
+    "completion", "escalation",
+)
+DISPATCH_BINDING_FIELDS = (
+    "machine", "workspace_id", "tab_id", "pane_id", "agent_id", "session_id",
+)
+
+
+def legacy_digest(value, fields):
+    return hashlib.sha256(
+        json.dumps({key: value[key] for key in fields}, sort_keys=True).encode()
+    ).hexdigest()
+
 
 def send(
     doc,
@@ -31,42 +45,13 @@ def send(
     if expected_session != binding["session_id"]:
         raise LbError("expected session differs from recipient binding", EXIT_REFUSED)
     # Exclude lifecycle/history and transient observation tokens from package identity.
-    package = {
-        key: dispatch[key]
-        for key in (
-            "task_id",
-            "owner",
-            "scope",
-            "exclusions",
-            "inputs",
-            "completion",
-            "escalation",
-        )
-    }
     request = {
         "dispatch_id": dispatch["id"],
         "recipient": dispatch["owner"],
         "session_id": binding["session_id"],
-        "binding_digest": hashlib.sha256(
-            json.dumps(
-                {
-                    key: binding[key]
-                    for key in (
-                        "machine",
-                        "workspace_id",
-                        "tab_id",
-                        "pane_id",
-                        "agent_id",
-                        "session_id",
-                    )
-                },
-                sort_keys=True,
-            ).encode()
-        ).hexdigest(),
+        "binding_digest": legacy_digest(binding, DISPATCH_BINDING_FIELDS),
         "message_digest": hashlib.sha256(message.encode()).hexdigest(),
-        "package_digest": hashlib.sha256(
-            json.dumps(package, sort_keys=True).encode()
-        ).hexdigest(),
+        "package_digest": legacy_digest(dispatch, DISPATCH_PACKAGE_FIELDS),
     }
     existing = next(
         (op for op in state["operations"] if op["id"] == operation_id), None
@@ -224,10 +209,12 @@ def delivery_started(ex, task_id, request):
     started = False
     for operation_id, op in ex["operations"].items():
         prior = op["request"]
-        if prior.get("task_id") != task_id or op["outcome"] != "submitted":
+        if execution.operation_task(op) != task_id or op["outcome"] != "submitted":
             continue
         if op.get("provenance") == "takeover":
             raise LbError("Captain already started this Task", EXIT_REFUSED)
+        if op.get("legacy_attempt_ids"):
+            raise LbError("Legacy terminal Attempt already started this Task", EXIT_REFUSED)
         outcome = outcomes.get(operation_id)
         if outcome is None:
             raise LbError(
@@ -235,6 +222,8 @@ def delivery_started(ex, task_id, request):
                 EXIT_REFUSED,
             )
         if outcome == "started":
+            if "legacy_task_id" in op:
+                raise LbError("Legacy delivery already started this Task", EXIT_REFUSED)
             if prior == request:
                 raise LbError("Use the original operation ID to replay", EXIT_REFUSED)
             started |= prior.get("binding_id") == request.get("binding_id")

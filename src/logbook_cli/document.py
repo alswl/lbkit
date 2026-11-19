@@ -75,6 +75,8 @@ class Document:
 
     markdown_authority: bool = False
     sync_status: str = "missing"
+    migration_plan: str | None = None
+    legacy_history: dict = field(default_factory=dict)
 
     @property
     def locale(self) -> str:

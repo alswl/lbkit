@@ -97,14 +97,6 @@ def control(
     dispatches.guard(doc, target, token, False, dispatch_id, dispatch["owner"])
     if action == "close":
         records.single_line(basis, "basis")
-    item = binding(doc, target, dispatch_id)
-    if action == "close" and (
-        dispatch["status"] not in {"returned", "closed", "cancelled"}
-        or any(a["status"] == "started" for a in dispatch["attempts"])
-    ):
-        raise LbError(
-            "close requires handed-back results and no running attempt", EXIT_REFUSED
-        )
     message = safe_path(doc.root, message_file).read_text() if message_file else None
     if action == "send" and (not message or not message.strip()):
         raise LbError("send requires a nonempty --message-file", EXIT_USAGE)
@@ -129,8 +121,19 @@ def control(
                 expected_observation,
                 dry_run,
             )
-    return Result(
-        herdr.control(
-            item, action, expected_session, expected_observation, message, dry_run
+    with execution.writer(doc, dry_run):
+        doc, target = dispatches.documents(root, log, thinking)
+        dispatch = dispatches.read(doc, target, dispatch_id)
+        dispatches.guard(doc, target, token, False, dispatch_id, dispatch["owner"])
+        item = binding(doc, target, dispatch_id)
+        if dispatch["status"] not in {"returned", "closed", "cancelled"} or any(
+            a["status"] == "started" for a in dispatch["attempts"]
+        ):
+            raise LbError(
+                "close requires handed-back results and no running attempt", EXIT_REFUSED
+            )
+        return Result(
+            herdr.control(
+                item, action, expected_session, expected_observation, message, dry_run
+            )
         )
-    )

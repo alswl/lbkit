@@ -52,7 +52,85 @@ New Task flows do not use Dispatch/Attempt or record-result/accept. Legacy domai
 writers are refused in the new document mode, rather than silently storing a second
 Task state. Configuration and template tokens are unchanged. The historical command
 reference below describes older layouts where specifically named; it does not
-restore old sidecar/CAS obligations for new document runs or provide migration.
+restore old sidecar/CAS obligations for new document runs.
+
+### Legacy run migration
+
+```sh
+lb log migrate-state docs/delivery.md --name delivery --dry-run --json
+lb log migrate-state docs/delivery.md --name delivery --apply --expect-plan PLAN_TOKEN --json
+lb log migrate-state docs/delivery.md --name delivery --rollback --dry-run --json
+lb log migrate-state docs/delivery.md --name delivery --rollback --apply --expect-plan ROLLBACK_TOKEN --json
+```
+
+Use the same `LOG`, `--name` and repeated `--document PATH` options for preview
+and apply. A bound legacy execution record supplies its Thinking path. Preview
+reports source ownership, destination, checksums, identities, old sends, and
+unresolved Events and Answers. A plan token is issued only for an applicable
+preview. Neither preview, apply nor rollback contacts a runtime or sends a
+message. Stop older clients and quiesce the affected runtime workflows before
+cutover or rollback. Current clients also refuse cooperating writer and listener
+lock conflicts.
+
+A supported run has a valid, unique Logbook UUID, document policy represented
+equivalently in Markdown, and an unused unified destination. The command refuses
+unselected sections in a shared sidecar, unsupported document records or
+unverified Dispatch attempts, unresolved ownership, old release or handoff facts, legacy
+write journals and saved active listeners. Observation ownership comes from the
+Logbook's sidecar UUID. Path-keyed or separate associated-document monitoring
+stores require reconciliation before migration.
+
+Migration retains legacy link verifications and Task archives under
+`legacy_history` in `log context`. Historical link observations preserve their
+original scope and never count as current verification or authorization. Archived
+Task IDs remain reserved throughout the run. Migration refuses an archived ID
+also used by current work, an ambiguous replacement path, or a second Markdown
+archive for the same ID. Legacy Task basis, history and source disposition are
+retained under `legacy_history.task` by stable Task ID. They confer no current
+effect or permission. Markdown determines current Task state and dependencies.
+A saved legacy disposition must match the readable Markdown Resolution and
+current Task text. Missing, stale or conflicting dispositions refuse migration.
+
+Run events and skill returns from the bound legacy Thinking are historical
+evidence. They establish no current skill effect, authorization or runtime
+binding. Migration retains a finished, failed or interrupted Attempt only
+with a complete Dispatch closeout, consistent timestamps, and one matched
+submitted delivery. That Attempt keeps the duplicate-start guard in effect.
+A still-open Dispatch with an Attempt, a started Attempt, or contradictions
+between closeout and delivery require reconciliation before migration.
+
+Old sends require an independently attributable Dispatch, stable Task ID,
+recipient and saved binding matching the recorded package and binding digests.
+A verified closed Dispatch may retain an archived Task ID. Its history stays
+with that ID and is never reassigned to a replacement Task.
+Migration keeps the original requests, outcomes, receipt provenance and
+Dispatch-to-Task association. An unknown delivery blocks further dispatch and
+retains evidence-based reconciliation by operation ID. Submitted delivery blocks
+another start for the mapped Task until attributed business-action evidence is
+recorded. Evidence that the task already started keeps the legacy start guard in
+effect. Migration records no new assignment, binding or authorization. Read
+fresh execution and monitoring contexts after cutover.
+
+Apply rechecks the reviewed plan under writer exclusion. It writes a private
+`lb/<name>.migration-backup` with original bytes and their checksums, then
+publishes the unified state and its durable authority receipt. Legacy files remain
+in place. Current clients fence both paths if publication stops before the
+receipt or if a published destination disappears. Repeating the same applied
+plan returns its original receipt. After exit 3, inspect the authority and retry
+the same reviewed command. Verified prepared state can finish an interrupted
+publication without repeating runtime effects.
+
+Rollback requires its own preview token. It verifies the original sources and
+requires unchanged Markdown and unchanged unified state since cutover. It
+atomically replaces the unified state with a rollback receipt and resumes legacy
+authority from the original files. Repeating rollback returns its receipt. A
+retired apply token cannot republish the old plan. Changes after cutover require
+explicit reconciliation rather than automatic rollback.
+
+Usage errors exit 2. Persistence or access failure during apply or rollback exits
+3. An unsupported, unsafe, conflicting or stale plan exits 4. Existing
+`log recover` handles interrupted legacy document transactions while legacy
+authority is active.
 
 
 `bin/lb` uses Python 3.11+ and Click, with a uv-locked environment, built for structured reading of this repo's Markdown conventions and minimal-scope edits. Skills own scheduling, authorization and evidence judgment. The CLI records atomic transitions and reports; explicit agent transport commands can contact the configured runtime after identity checks. A recorded acceptance is an attributed decision, not a CLI business verdict.
