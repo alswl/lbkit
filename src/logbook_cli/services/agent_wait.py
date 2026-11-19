@@ -6,12 +6,14 @@ import json
 import math
 import signal
 import time
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timezone
 
 from logbook_cli import wait_state
 from logbook_cli.adapters import claude_questions, herdr
 from logbook_cli.document import EXIT_USAGE, LbError, root_path, safe_path
 from logbook_cli.services.common import Result
+from logbook_cli.storage import WriterBusy
 
 LIMIT = 1024 * 1024
 KEYS = {
@@ -178,11 +180,56 @@ def validate(value, *, allow_empty=False):
     return targets, contexts, pending, unresolved
 
 
-async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample=None):
+class Interruption:
+    def __init__(self):
+        self.signum = 0
+        self.requested = asyncio.Event()
+
+    def interrupt(self, signum):
+        self.signum = signum
+        self.requested.set()
+
+
+@contextmanager
+def wait_signals():
+    interruption = Interruption()
+    loop = asyncio.get_running_loop()
+    signums = (signal.SIGINT, signal.SIGTERM)
+    previous = {signum: signal.getsignal(signum) for signum in signums}
+    try:
+        for signum in signums:
+            loop.add_signal_handler(signum, interruption.interrupt, signum)
+        yield interruption
+    finally:
+        for signum in signums:
+            if loop.remove_signal_handler(signum) and previous[signum] is not None:
+                signal.signal(signum, previous[signum])
+
+
+async def observe_all(
+    targets,
+    contexts,
+    pending,
+    unresolved,
+    timeout,
+    on_sample=None,
+    *,
+    interruption=None,
+):
+    with wait_signals() if interruption is None else nullcontext(interruption) as signs:
+        return await observe_batch(
+            targets, contexts, pending, unresolved, timeout, on_sample, signs
+        )
+
+
+async def observe_batch(
+    targets, contexts, pending, unresolved, timeout, on_sample, interruption
+):
     deadline = time.monotonic() + timeout
     semaphore = asyncio.Semaphore(8)
     wake = asyncio.Event()
-    interrupted = 0
+    stopping = False
+    committing: set[asyncio.Task] = set()
     errors = set()
     scopes = {}
 
@@ -193,13 +240,19 @@ async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample
                     machine, *args, deadline=deadline, output_limit=256 * 1024
                 )
 
-    def notify(index, events):
-        if on_sample is not None:
-            try:
-                on_sample(index, contexts[index], events)
-            except Exception:
-                wake.set()
-                raise
+    async def notify(index, events):
+        if on_sample is None:
+            return
+        worker = asyncio.current_task()
+        assert worker is not None
+        committing.add(worker)
+        try:
+            await on_sample(index, contexts[index], events)
+        except Exception:
+            wake.set()
+            raise
+        finally:
+            committing.remove(worker)
 
     async def worker(index, target):
         binding = target["binding"]
@@ -230,10 +283,11 @@ async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample
                 contexts[index], events = wait_state.observe(
                     contexts[index], observation
                 )
-                notify(index, events)
+                await notify(index, events)
                 if events:
                     pending.extend(events)
                     wake.set()
+                if events or stopping:
                     return
                 if observation["state"] == "working":
                     remaining = min(2, deadline - time.monotonic())
@@ -273,37 +327,35 @@ async def observe_all(targets, contexts, pending, unresolved, timeout, on_sample
                     "observed_at": datetime.now(timezone.utc).isoformat(),
                 }
             )
-            notify(index, [pending[-1]])
+            await notify(index, [pending[-1]])
             wake.set()
 
-    loop = asyncio.get_running_loop()
-
-    def interrupt(signum=signal.SIGINT):
-        nonlocal interrupted
-        interrupted = signum
-        wake.set()
-
-    for signum in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(signum, interrupt, signum)
     workers = []
+    notices = []
     try:
-        if not pending:
+        if not pending and not interruption.requested.is_set():
             order = sorted(
                 range(len(targets)), key=lambda i: contexts[i]["reported"] is not None
             )
             workers = [asyncio.create_task(worker(i, targets[i])) for i in order]
-            try:
-                await asyncio.wait_for(wake.wait(), max(0, deadline - time.monotonic()))
-            except TimeoutError:
-                pass
+            notices = [
+                asyncio.create_task(event.wait())
+                for event in (wake, interruption.requested)
+            ]
+            await asyncio.wait(
+                notices,
+                timeout=max(0, deadline - time.monotonic()),
+                return_when=asyncio.FIRST_COMPLETED,
+            )
     finally:
-        for task in [*workers, *scopes.values()]:
-            task.cancel()
-        outcomes = await asyncio.gather(
-            *workers, *scopes.values(), return_exceptions=True
-        )
-        for signum in (signal.SIGINT, signal.SIGTERM):
-            loop.remove_signal_handler(signum)
+        stopping = True
+        tasks = [*workers, *scopes.values(), *notices]
+        # A sampled delta must finish its bounded commit before the listener can end.
+        for task in tasks:
+            if task not in committing:
+                task.cancel()
+        outcomes = await asyncio.gather(*tasks, return_exceptions=True)
+    interrupted = interruption.signum
     cleanup_errors = [
         str(outcome) for outcome in outcomes if isinstance(outcome, Exception)
     ]
@@ -385,6 +437,32 @@ def wait(
     return asyncio.run(observe_all(targets, contexts, pending, unresolved, timeout))
 
 
+async def commit_with_retry(commit, deadline, interruption, failure):
+    while True:
+        try:
+            return commit()
+        except WriterBusy as exc:
+            remaining = deadline - time.monotonic()
+            if remaining > 0 and not interruption.requested.is_set():
+                try:
+                    await asyncio.wait_for(
+                        interruption.requested.wait(), min(0.025, remaining)
+                    )
+                except TimeoutError:
+                    if (
+                        time.monotonic() < deadline
+                        and not interruption.requested.is_set()
+                    ):
+                        continue
+            boundary = (
+                "interrupted" if interruption.requested.is_set() else "deadline elapsed"
+            )
+            raise LbError(
+                f"{exc.message}; {failure} ({boundary}); reread monitoring context",
+                exc.code,
+            ) from exc
+
+
 def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
     import copy
     import hashlib
@@ -405,8 +483,6 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
     if current != token:
         raise LbError("version_conflict: reread observation context", EXIT_REFUSED)
     if not initial["targets"]:
-        from contextlib import nullcontext
-
         with nullcontext() if dry_run else observation.listener_lock(doc, create=True):
             value, latest = observation.read(doc)
             if latest != token or value is None or value["targets"]:
@@ -477,17 +553,24 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
             "generation": value.get("listener", {}).get("generation", 0) + 1,
         }
 
-    def sample(index, cursor, events):
+    commit_failed = False
+
+    def require_listener(value):
+        if value.get("listener") != started["listener"] or value["targets"] != targets:
+            raise LbError(
+                "invalid_transition: listener generation changed", EXIT_REFUSED
+            )
+
+    async def sample(index, cursor, events):
+        nonlocal commit_failed
+        cursor, events = copy.deepcopy((cursor, events))
+        added = []
+
         def merge(value):
-            if (
-                value.get("listener", {}).get("invocation_id") != invocation
-                or value["targets"] != targets
-            ):
-                raise LbError(
-                    "invalid_transition: listener generation changed", EXIT_REFUSED
-                )
+            require_listener(value)
             value["cursors"][index] = copy.deepcopy(cursor)
             existing = {event["id"] for event in value["events"]}
+            added.clear()
             for event in events:
                 binding = hashlib.sha256(encoded(event["binding"])).hexdigest()
                 key = value["id"] + ":" + binding + ":" + event["event_id"]
@@ -500,43 +583,57 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
                     }
                     value["events"].append(saved)
                     existing.add(key)
+                    added.append(saved)
 
         try:
-            value, committed_token = observation._change(doc, None, merge)
-            seen = {event["id"] for event in new_events}
-            added = [
-                copy.deepcopy(event)
-                for event in value["events"]
-                if event["id"] not in seen and event["observation"] in events
-            ]
-            new_events.extend(added)
+            value, committed_token = await commit_with_retry(
+                lambda: observation._change(doc, None, merge),
+                deadline,
+                interruption,
+                "sampled cursor or event was not saved",
+            )
+        except Exception as exc:
+            commit_failed = True
+            failures.append(exc)
+            raise RuntimeError("observation commit failed") from exc
+        try:
+            new_events.extend(copy.deepcopy(added))
             if stream:
                 for event in added:
-                    emit_jsonl(
-                        {
-                            "type": "event",
-                            "observation_id": value["id"],
-                            "invocation_id": invocation,
-                            "event_key": event["id"],
-                            "kind": event["observation"]["kind"],
-                            "target_key": hashlib.sha256(
-                                encoded(event["observation"]["binding"])
-                            ).hexdigest(),
-                            "version_token": committed_token,
-                        }
-                    )
+                    emit_event(value, event, committed_token)
         except Exception as exc:
             failures.append(exc)
-            raise RuntimeError("observation commit/output failed") from exc
+            raise RuntimeError("observation output failed") from exc
+
+    def emit_event(value, event, version):
+        emit_jsonl(
+            {
+                "type": "event",
+                "observation_id": value["id"],
+                "invocation_id": invocation,
+                "event_key": event["id"],
+                "kind": event["observation"]["kind"],
+                "target_key": hashlib.sha256(
+                    encoded(event["observation"]["binding"])
+                ).hexdigest(),
+                "version_token": version,
+            }
+        )
 
     def finish(value):
-        if value.get("listener", {}).get("invocation_id") == invocation:
-            value["listener"]["status"] = "ended"
+        require_listener(value)
+        value["listener"]["status"] = "ended"
 
-    async def run_listener():
+    async def observe():
         while True:
             result = await observe_all(
-                targets, contexts, [], [], max(0, deadline - time.monotonic()), sample
+                targets,
+                contexts,
+                [],
+                [],
+                max(0, deadline - time.monotonic()),
+                sample,
+                interruption=interruption,
             )
             if failures:
                 raise failures[0]
@@ -547,27 +644,43 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
             ):
                 return result
 
+    async def finish_listener():
+        return await commit_with_retry(
+            lambda: observation._change(doc, None, finish),
+            deadline,
+            interruption,
+            "listener end was not saved",
+        )
+
+    async def run_listener():
+        nonlocal started, interruption
+        with wait_signals() as interruption:
+            started, started_token = observation._change(
+                doc, token, start, new_work=True
+            )
+            try:
+                if stream:
+                    for event in new_events:
+                        emit_event(started, event, started_token)
+                result = await observe()
+            except Exception as exc:
+                # An unsaved sample leaves an active marker for abandoned-gap recovery.
+                if not commit_failed:
+                    try:
+                        await finish_listener()
+                    except Exception as end_error:
+                        raise exc from end_error
+                raise
+            value, current = await finish_listener()
+            if interruption.signum:
+                result.value["reason"] = "interrupted"
+                result.code = 128 + interruption.signum
+            return result, value, current
+
+    started = None
+    interruption = None
     with observation.listener_lock(doc, create=True):
-        started, started_token = observation._change(doc, token, start, new_work=True)
-        try:
-            if stream:
-                for event in new_events:
-                    emit_jsonl(
-                        {
-                            "type": "event",
-                            "observation_id": started["id"],
-                            "invocation_id": invocation,
-                            "event_key": event["id"],
-                            "kind": event["observation"]["kind"],
-                            "target_key": hashlib.sha256(
-                                encoded(event["observation"]["binding"])
-                            ).hexdigest(),
-                            "version_token": started_token,
-                        }
-                    )
-            result = asyncio.run(run_listener())
-        finally:
-            value, current = observation._change(doc, None, finish)
+        result, value, current = asyncio.run(run_listener())
     if stream:
         emit_jsonl(
             {

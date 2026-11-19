@@ -629,6 +629,14 @@ Already-reported unresolved work does not retrigger notifications. Another liste
 refuses while the real lock is held. SIGINT/SIGTERM clean only owned waiting children;
 a later exclusive admission records an abandoned gap after forced loss.
 
+A busy cooperating writer lock during a sample commit or listener end is retried
+within the same wait deadline. The listener retains the original sampled cursor
+and Events and checks its saved generation and targets on every attempt. A
+signal stops waiting for a busy writer. If contention persists, exit 4 identifies
+whether the sample or the listener end remains unsaved. Read fresh context for
+durable Events. An unsaved sample leaves the listener marked active so the next
+exclusive admission records a gap.
+
 Live --stream emits compact flushed JSONL locators after commit: type=event,
 observation_id, invocation_id, event_key, kind, target_key and version_token. There
 are no heartbeat snapshots or transcripts and no trailing pretty-JSON result.

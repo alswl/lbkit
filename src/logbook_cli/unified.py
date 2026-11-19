@@ -241,6 +241,8 @@ def writer(root, log, dry_run=False):
         return
     import fcntl
 
+    from logbook_cli.storage import WriterBusy
+
     directory = state.directory(log, root)
     directory.mkdir(exist_ok=True)
     fd = os.open(directory / ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
@@ -248,9 +250,7 @@ def writer(root, log, dry_run=False):
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise LbError(
-                "writer_busy: another run writer is active", EXIT_REFUSED
-            ) from exc
+            raise WriterBusy("writer_busy: another run writer is active") from exc
         yield
     finally:
         os.close(fd)
