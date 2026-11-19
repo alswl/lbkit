@@ -334,7 +334,6 @@ def send_task(
                 raise LbError("execution changed before send", EXIT_REFUSED)
             if value.get("documents") != envelope.get("documents"):
                 raise LbError("document evidence changed before send", EXIT_REFUSED)
-            task_send_guard(value["execution"], task_id, operation_id, request)
             if not delivery_started(value["execution"], task_id, request):
                 require_ready(current, value, task_id, binding["subject"]["subject_id"])
             value["execution"]["operations"][operation_id] = {

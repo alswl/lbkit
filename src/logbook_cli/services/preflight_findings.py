@@ -15,7 +15,6 @@ def missing_skills(task, applicable):
 
 
 def summarize(observations):
-    """Keep unresolved observations and their attributed recovery information."""
     return [
         observation
         for observation in observations
