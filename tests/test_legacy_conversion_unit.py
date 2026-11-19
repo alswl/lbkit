@@ -136,6 +136,50 @@ class LegacyConversionTest(TestCase):
     def unified(self):
         return unified.read(self.root / TARGET, self.root)
 
+    def test_migrates_bound_dispatch_cancelled_before_send_as_history(self):
+        self.dispatch.update(
+            status="cancelled",
+            history=[
+                {
+                    "from": "prepared",
+                    "to": "cancelled",
+                    "basis": "cancelled before dispatch",
+                    "at": "2025-01-01T00:01:00Z",
+                }
+            ],
+        )
+        self.dump(SIDE, {"format": "lb-document-state", "documents": self.metadata})
+        self.dump("lb/old.json", self.old | {"operations": []})
+        preview = self.run_migration()
+        self.assertEqual(preview.code, 0, preview.value)
+        self.assertEqual(preview.value["send_task_mapping"], {})
+        self.assertEqual(self.run_migration(token=preview.value["plan_token"]).code, 0)
+        value = self.unified()
+        self.assertEqual(value["execution"]["operations"], {})
+        self.assertEqual(value["execution"]["tasks"], {})
+        self.assertEqual(
+            value["legacy_history"][THINKING]["dispatch"]["dispatch-1"], self.dispatch
+        )
+        self.assertEqual(
+            value["legacy_history"][THINKING]["agent"],
+            self.metadata[THINKING]["agent"],
+        )
+
+    def test_presend_cancellation_conflicting_with_delivery_is_refused(self):
+        self.dispatch.update(
+            status="cancelled",
+            history=[
+                {
+                    "from": "prepared",
+                    "to": "cancelled",
+                    "basis": "cancelled before dispatch",
+                    "at": "2025-01-01T00:01:00Z",
+                }
+            ],
+        )
+        self.dump(SIDE, {"format": "lb-document-state", "documents": self.metadata})
+        self.assertEqual(self.run_migration().code, 4)
+
     def test_preserves_original_sources_and_imports_operational_send_guard(self):
         original = {
             p: (self.root / p).read_bytes()
