@@ -47,7 +47,7 @@ def markdown_document(data, path, root):
     return doc
 
 
-def project_document(data, path, root):
+def project_document(data, path, root, *, reserved_archive_ids=()):
     from logbook_cli.task_identity import bindings, dependencies
 
     doc = markdown_document(data, path, root)
@@ -56,7 +56,7 @@ def project_document(data, path, root):
     if h1_count(doc) != 1 or any(stage.unknown_task_lines for stage in doc.stages):
         raise LbError('invalid document structure or task marker', EXIT_REFUSED)
     known = bindings(doc)
-    if set(known).intersection(doc.metadata.get('task-archive', {})):
+    if set(known).intersection(set(doc.metadata.get("task-archive", {})) | set(reserved_archive_ids)):
         raise LbError('archived Task ID cannot be reused', EXIT_REFUSED)
     all_tasks = [t for s in doc.stages for t in s.tasks]
     if len(all_tasks) != len(known):
@@ -137,6 +137,13 @@ def sync_status(doc, value):
     )
 
 
+
+def imported_archive_ids(value):
+    return {
+        key for groups in value.get("legacy_history", {}).values()
+        for key in groups.get("task-archive", {})
+    }
+
 def read_document(root, log):
     base = root_path(str(root))
     path = safe_path(base, str(log))
@@ -144,6 +151,12 @@ def read_document(root, log):
     _, value = unified.locate(base, path)
     doc.sync_status = sync_status(doc, value)
     if value:
+        if "legacy_migration" in value:
+            doc.migration_plan = value["legacy_migration"]["plan_token"]
+            doc.legacy_history = value.get("legacy_history", {}).get(state.section(path, base), {})
+            doc.metadata["task-archive"].update(
+                (key, {"id": key}) for key in imported_archive_ids(value)
+            )
         doc.metadata["document"] = {
             "identity": {"id": "identity", "uuid": value["identity"]["run_id"]}
         }
@@ -156,7 +169,9 @@ def sync_document(root, log, dry_run=False):
     with unified.writer(base, path, dry_run):
         target, value = unified.locate(base, path, required=True)
         data = path.read_bytes()
-        candidate = project_document(data, path, base)
+        candidate = project_document(
+            data, path, base, reserved_archive_ids=imported_archive_ids(value)
+        )
         key = state.section(path, base)
         prior = value["documents"].get(key, {})
         before_ids = set(prior.get("tasks", {}))
@@ -206,9 +221,15 @@ def edit_document(doc, changed, dry_run=False):
     from logbook_cli.storage import replace_bytes_at
 
     candidate = markdown_document(changed.encode(), doc.path, doc.root)
-    records.anchors(candidate, require_closed=True)
+    active_ids = {key for _, key in records.anchors(candidate, require_closed=True)}
+    if active_ids.intersection(doc.metadata.get("task-archive", {})):
+        raise LbError("archived Task ID cannot be reused", EXIT_REFUSED)
     if not dry_run and changed.encode() != doc.data:
         with unified.writer(doc.root, doc.path):
+            if doc.migration_plan is not None:
+                _, current = unified.locate(doc.root, doc.path, required=True)
+                if current.get("legacy_migration", {}).get("plan_token") != doc.migration_plan:
+                    raise LbError("document authority changed; reread before editing", EXIT_REFUSED)
             if doc.path.read_bytes() != doc.data:
                 raise LbError(
                     "document changed during edit; reread before applying semantic change",

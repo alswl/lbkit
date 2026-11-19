@@ -98,28 +98,32 @@ def usage(root, log, thinking):
     )
 
 
+def validate_usage_payload(data):
+    keys = {"id", "task_id", "skill", "state", "outcome", "basis", "at"}
+    if not isinstance(data, dict) or set(data) != keys:
+        raise ValueError(
+            "usage input requires one JSON object with exactly: "
+            + ", ".join(sorted(keys))
+            + "; arrays/wrappers are not accepted. Record each return separately "
+            "with the current Thinking token, then read back skill usage."
+        )
+    for key in keys:
+        records.single_line(data[key], key)
+    records.observed(data["at"])
+    if data["state"] not in {"declared", "invoked", "observed"}:
+        raise ValueError("usage state must be declared, invoked or observed")
+    if data["outcome"] not in {"unknown", "effective", "ineffective", "failed"}:
+        raise ValueError("invalid usage outcome")
+    if data["state"] != "observed" and data["outcome"] != "unknown":
+        raise ValueError("only an observed return can claim an outcome")
+
+
 def record_usage(root, log, thinking, input_file, token, dry_run):
     doc, target = dispatches.documents(root, log, thinking)
     dispatches.guard(doc, target, token, False)
     try:
         data = json.loads(safe_path(doc.root, input_file).read_text())
-        keys = {"id", "task_id", "skill", "state", "outcome", "basis", "at"}
-        if not isinstance(data, dict) or set(data) != keys:
-            raise ValueError(
-                "usage input requires one JSON object with exactly: "
-                + ", ".join(sorted(keys))
-                + "; arrays/wrappers are not accepted. Record each return separately "
-                "with the current Thinking token, then read back skill usage."
-            )
-        for key in keys:
-            records.single_line(data[key], key)
-        records.observed(data["at"])
-        if data["state"] not in {"declared", "invoked", "observed"}:
-            raise ValueError("usage state must be declared, invoked or observed")
-        if data["outcome"] not in {"unknown", "effective", "ineffective", "failed"}:
-            raise ValueError("invalid usage outcome")
-        if data["state"] != "observed" and data["outcome"] != "unknown":
-            raise ValueError("only an observed return can claim an outcome")
+        validate_usage_payload(data)
     except (ValueError, TypeError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
     task_identity.lookup(doc, data["task_id"])

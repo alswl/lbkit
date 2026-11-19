@@ -18,9 +18,12 @@ lb log sync-state docs/delivery.md --json
 
 Optional repeated `--document PATH` associates other existing project documents
 at initialization. Those paths are fixed at initialization. A run has one Logbook.
-Old layouts conflict and are refused; there is no conversion or migration.
+Initialization refuses legacy execution records bound to the Logbook regardless
+of the requested filename. Legacy sidecars and observation layouts also refuse
+initialization. Use [explicit legacy migration](lb-cli.md#legacy-run-migration)
+for eligible old runs.
 
-The sole structured file is `lb/<name>.json`, format
+The authoritative structured file is `lb/<name>.json`, format
 `task-document-projection`. Its sections are:
 
 - identity: run ID and explicit document paths.
@@ -29,6 +32,10 @@ The sole structured file is `lb/<name>.json`, format
   facts and send operations; independent facts, never erased by sync.
 - monitoring: targets, cursors, retired targets, events, answers and revision; null means
   unconfigured, configured empty targets is valid.
+
+A migrated run retains a private backup and keeps the verified legacy files in
+place for rollback. They serve as historical evidence during unified authority.
+Use the migration commands for authority changes.
 
 Track Markdown and independent run facts together under host Git authorization.
 Sync replaces only the selected document projection. It never copies or clears

@@ -75,6 +75,14 @@ def record(root, log, input_file, token, dry_run):
                     None,
                 )
                 if (
+                    op
+                    and op.get("legacy_attempt_ids")
+                    and fact["outcome"] == "not_started"
+                ):
+                    execution_facts.refuse(
+                        "no-start evidence conflicts with a retained terminal Attempt"
+                    )
+                if (
                     op is None
                     or op["provenance"] == "takeover"
                     or op["outcome"] != "submitted"

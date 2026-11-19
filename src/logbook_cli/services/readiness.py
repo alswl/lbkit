@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from logbook_cli import execution as execution_records
 from logbook_cli import task_identity
 from logbook_cli.document import EXIT_REFUSED, LbError, require_preflight_clear
 from logbook_cli.services.preflight_findings import missing_skills, summarize
@@ -15,18 +16,22 @@ from logbook_cli.services.route_scope import route_scope
 
 def unresolved_operation(execution, task_id, *, across_tasks=False):
     observed = {
-        fact["operation_id"]
+        fact["operation_id"]: fact["outcome"]
         for fact in execution.get("facts", ())
         if fact["kind"] == "business-action"
     }
     return any(
         op["outcome"] == "unknown"
-        and (across_tasks or op["request"].get("task_id") == task_id)
+        and (across_tasks or execution_records.operation_task(op) == task_id)
         or (
             op["outcome"] == "submitted"
-            and op["request"].get("task_id") == task_id
+            and execution_records.operation_task(op) == task_id
             and op.get("provenance") != "takeover"
-            and operation_id not in observed
+            and (
+                op.get("legacy_attempt_ids")
+                or operation_id not in observed
+                or "legacy_task_id" in op and observed[operation_id] == "started"
+            )
         )
         for operation_id, op in execution["operations"].items()
     )

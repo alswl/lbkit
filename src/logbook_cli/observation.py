@@ -13,11 +13,13 @@ from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError
 
 
 def scope(doc):
-    if getattr(doc, "markdown_authority", False):
-        from logbook_cli import unified
+    from logbook_cli import unified
 
+    if getattr(doc, "markdown_authority", False):
         path, _ = unified.locate(doc.root, doc.path, required=True)
         return path
+    if unified.locate(doc.root, doc.path)[0] is not None:
+        raise LbError("monitoring authority changed; reread context", EXIT_REFUSED)
     identity = doc.metadata.get("document", {}).get("identity", {}).get("uuid")
     name = identity or str(doc.path.relative_to(doc.root))
     path = state.directory(doc.path, doc.root) / "observations" / (name + ".json")
@@ -34,6 +36,10 @@ def validate(value):
 
     if not isinstance(value, dict) or value.get("format") != "lb-observation":
         raise ValueError("unsupported observation format")
+    if {"contexts", "target_revision"} & value.keys():
+        raise ValueError("legacy observation fields require explicit migration")
+    if type(value.get("revision")) is not int or value["revision"] < 0:
+        raise ValueError("invalid observation revision")
     if (
         not isinstance(value.get("id"), str)
         or len(value["id"]) != 32
@@ -57,6 +63,27 @@ def validate(value):
         value.get("answers"), list
     ):
         raise ValueError("invalid event/answer collections")
+
+
+def decode_for_migration(data):
+    """Normalize the historical standalone field pair before canonical validation."""
+    if len(data) > STATE_LIMIT:
+        raise ValueError("oversized observation")
+    value = json.loads(data, object_pairs_hook=state.unique_object)
+    if isinstance(value, dict):
+        aliases = {"contexts": "cursors", "target_revision": "revision"}
+        legacy = aliases.keys() & value.keys()
+        if legacy:
+            if any(field in value for field in aliases.values()):
+                raise ValueError(
+                    "ambiguous observation schema: legacy and current fields coexist"
+                )
+            if legacy != aliases.keys():
+                raise ValueError("incomplete legacy observation field pair")
+            for old, current in aliases.items():
+                value[current] = value.pop(old)
+    validate(value)
+    return value
 
 
 @contextmanager

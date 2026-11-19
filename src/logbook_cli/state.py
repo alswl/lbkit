@@ -8,6 +8,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
+from contextlib import contextmanager
 from pathlib import Path
 
 from logbook_cli.document import EXIT_REFUSED, LbError
@@ -87,14 +90,52 @@ def validate(groups) -> None:
                 raise ValueError("run event key and identity disagree")
 
 
-def read_file(target: Path) -> tuple[bytes | None, dict]:
+@contextmanager
+def open_directory(root: Path, directory: Path):
+    parts = directory.relative_to(root).parts
+    if ".." in parts:
+        raise OSError("invalid root-relative directory")
+    fd = os.open(root, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
+    try:
+        for part in parts:
+            child = os.open(
+                part, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY, dir_fd=fd
+            )
+            os.close(fd)
+            fd = child
+        yield fd
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def open_regular(root: Path, path: Path):
+    """Open a regular file without following links or waiting on a FIFO."""
+    if not path.is_relative_to(root) or path == root or path.name in {".", ".."}:
+        raise OSError("invalid root-relative file path")
+    with open_directory(root, path.parent) as fd:
+        source = os.open(
+            path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd
+        )
+        with os.fdopen(source, "rb") as handle:
+            if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                raise OSError("expected a regular file")
+            yield handle
+
+
+def read_regular(root: Path, path: Path, limit: int | None = None) -> bytes:
+    with open_regular(root, path) as handle:
+        return handle.read() if limit is None else handle.read(limit + 1)
+
+
+def read_file(target: Path, *, root: Path | None = None) -> tuple[bytes | None, dict]:
     """Return raw bytes and the validated document sections of one state file."""
     if target.is_symlink():
         raise LbError("state file cannot be a symlink: " + str(target), EXIT_REFUSED)
     if not target.exists():
         return None, {}
     try:
-        data = target.read_bytes()
+        data = read_regular(target.parent if root is None else root, target)
         value = json.loads(data, object_pairs_hook=unique_object)
         if (
             not isinstance(value, dict)

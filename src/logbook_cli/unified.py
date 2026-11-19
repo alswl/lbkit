@@ -16,6 +16,11 @@ from logbook_cli.document import EXIT_REFUSED, LbError
 FORMAT = "task-document-projection"
 
 
+def validate_name(name):
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", name):
+        raise LbError("name must be a safe filename component", EXIT_REFUSED)
+
+
 def encode(value):
     return (
         json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
@@ -26,14 +31,17 @@ def digest(value):
     return hashlib.sha256(encode(value)).hexdigest()
 
 
-def read(path):
+def read(path, root=None):
     if path.is_symlink():
         raise LbError("unsafe unified state symlink", EXIT_REFUSED)
     try:
-        value = json.loads(path.read_bytes(), object_pairs_hook=state.unique_object)
+        value = json.loads(
+            state.read_regular(path.parent if root is None else root, path),
+            object_pairs_hook=state.unique_object,
+        )
         if (
             not isinstance(value, dict)
-            or set(value)
+            or set(value) - {"legacy_migration", "legacy_history"}
             != {"format", "identity", "documents", "execution", "monitoring"}
             or value["format"] != FORMAT
         ):
@@ -105,12 +113,67 @@ def read(path):
                 or operation.get("outcome")
                 not in {"unknown", "submitted", "not_submitted"}
                 or not isinstance(operation.get("request"), dict)
+                or (
+                    "legacy_task_id" in operation
+                    and (
+                        "legacy_migration" not in value
+                        or not isinstance(operation["legacy_task_id"], str)
+                        or not operation["legacy_task_id"].strip()
+                        or "dispatch_id" not in operation["request"]
+                        or operation["request"].get(
+                            "task_id", operation["legacy_task_id"]
+                        ) != operation["legacy_task_id"]
+                    )
+                )
             ):
                 raise ValueError("invalid send operation")
-        if value["monitoring"] is not None and not isinstance(
-            value["monitoring"], dict
+        if "legacy_migration" in value:
+            from logbook_cli.legacy_migration import validate_manifest
+
+            validate_manifest(value["legacy_migration"])
+        migration = value.get("legacy_migration", {})
+        attempts = migration.get("send_attempt_mapping", {})
+        expected_attempts = {
+            key: operation["legacy_attempt_ids"]
+            for key, operation in ex["operations"].items()
+            if "legacy_attempt_ids" in operation
+        }
+        if expected_attempts != attempts or any(
+            ex["operations"][key]["outcome"] != "submitted"
+            or "legacy_task_id" not in ex["operations"][key]
+            for key in attempts
         ):
-            raise ValueError("invalid monitoring")
+            raise ValueError("invalid retained legacy Attempt mapping")
+        if "legacy_history" in value or "history_sha256" in migration:
+            history = value.get("legacy_history")
+            if (
+                not isinstance(history, dict)
+                or not history
+                or set(history) - set(identity["document_paths"])
+                or any(
+                    not isinstance(groups, dict)
+                    or not groups
+                    or set(groups) - {
+                        "link-verification", "task-archive", "dispatch",
+                        "agent", "run-event", "skill-usage", "task",
+                    }
+                    or any(
+                        not isinstance(rows, dict) or not rows
+                        or any(not isinstance(row, dict) for row in rows.values())
+                        for rows in groups.values()
+                    )
+                    for groups in history.values()
+                )
+                or digest(history) != migration.get("history_sha256")
+            ):
+                raise ValueError("invalid retained legacy history")
+        if value["monitoring"] is not None:
+            from logbook_cli import observation
+
+            try:
+                observation.validate(value["monitoring"])
+            except LbError as exc:
+                raise ValueError(exc.message) from exc
         return value
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise LbError(
@@ -118,10 +181,7 @@ def read(path):
         ) from exc
 
 
-def locate(root, log, *, required=False):
-    directory = state.directory(log, root)
-    relative = state.section(log, root)
-    matches = []
+def runs(root, directory):
     for path in sorted(directory.glob("*.json")):
         if path.is_symlink():
             raise LbError("unsafe state symlink", EXIT_REFUSED)
@@ -129,19 +189,46 @@ def locate(root, log, *, required=False):
         if path.name.endswith(".md.json"):
             continue
         try:
-            raw = json.loads(path.read_bytes(), object_pairs_hook=state.unique_object)
+            raw = json.loads(
+                state.read_regular(root, path), object_pairs_hook=state.unique_object
+            )
         except (OSError, ValueError) as exc:
             raise LbError(f"invalid state {path.name}", EXIT_REFUSED) from exc
         if isinstance(raw, dict) and raw.get("format") == FORMAT:
-            value = read(path)
-            if relative in value["identity"]["document_paths"]:
-                matches.append((path, value))
+            yield path, read(path, root)
+
+
+def locate(root, log, *, required=False):
+    directory = state.directory(log, root)
+    relative = state.section(log, root)
+    matches = [
+        (path, value)
+        for path, value in runs(root, directory)
+        if relative in value["identity"]["document_paths"]
+    ]
     if len(matches) > 1:
         raise LbError("multiple run identities bind this document", EXIT_REFUSED)
+    if (matches and "legacy_migration" in matches[0][1]) or any(
+        directory.glob("*.migration-done")
+    ):
+        from logbook_cli.legacy_migration import assert_authority
+
+        assert_authority(root, directory, relative, matches[0] if matches else None)
     if matches:
-        if state.path_for(log, root).exists() or state.journal_for(log, root).exists():
+        path, value = matches[0]
+        old_sidecar = state.path_for(log, root)
+        journal = state.journal_for(log, root)
+        migration = value.get("legacy_migration")
+        accepted_sidecar = migration and old_sidecar.relative_to(root).as_posix() in migration["sources"]
+        if (
+            (old_sidecar.exists() or old_sidecar.is_symlink()) and not accepted_sidecar
+        ) or journal.exists() or journal.is_symlink():
             raise LbError("old document layout conflicts with unified run", EXIT_REFUSED)
-        return matches[0]
+        if migration:
+            from logbook_cli.legacy_migration import verify_legacy_sources
+
+            verify_legacy_sources(root, directory, migration, value["execution"])
+        return path, value
     if required:
         raise LbError("initialization_required: run log init-state", EXIT_REFUSED)
     return None, None
@@ -185,10 +272,10 @@ def publish(path, value):
 
 
 def initialize(root, log, name, documents, dry_run=False):
+    from logbook_cli import execution
     from logbook_cli.document import safe_path
 
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", name):
-        raise LbError("name must be a safe filename component", EXIT_REFUSED)
+    validate_name(name)
     base = state.project(log, root)
     paths = sorted(
         {
@@ -200,9 +287,9 @@ def initialize(root, log, name, documents, dry_run=False):
         target = safe_path(base, relative)
         if not target.is_file():
             raise LbError("associated document must exist", EXIT_REFUSED)
-        if (
-            state.path_for(target, root).exists()
-            or state.journal_for(target, root).exists()
+        if any(
+            path.exists() or path.is_symlink()
+            for path in (state.path_for(target, root), state.journal_for(target, root))
         ):
             raise LbError("old layout conflict; no migration", EXIT_REFUSED)
     target = state.directory(log, root) / (name + ".json")
@@ -211,11 +298,16 @@ def initialize(root, log, name, documents, dry_run=False):
     ).is_symlink():
         raise LbError("old observations layout conflict; no migration", EXIT_REFUSED)
     with writer(root, log, dry_run):
-        found, prior = locate(root, log)
+        found, _ = locate(root, log)
         if found is not None and found != target:
             raise LbError("document already associated with another run", EXIT_REFUSED)
+        if execution.find_legacy(root, log)[0] is not None:
+            raise LbError(
+                "old execution layout conflict; use log migrate-state --dry-run",
+                EXIT_REFUSED,
+            )
         if target.exists():
-            prior = read(target)
+            prior = read(target, root)
             if prior["identity"]["document_paths"] != paths or prior["identity"][
                 "log_path"
             ] != state.section(log, root):
@@ -230,6 +322,13 @@ def initialize(root, log, name, documents, dry_run=False):
             if found:
                 raise LbError(
                     "document already associated with another run", EXIT_REFUSED
+                )
+            if base / relative != log and execution.find_legacy(
+                root, base / relative, include_thinking=True
+            )[0] is not None:
+                raise LbError(
+                    "associated document is bound to an old execution layout",
+                    EXIT_REFUSED,
                 )
         value = {
             "format": FORMAT,

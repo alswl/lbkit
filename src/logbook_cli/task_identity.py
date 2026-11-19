@@ -53,6 +53,8 @@ def bindings(doc):
             v[0].line == owners[0].line for v in result.values()
         ):
             raise LbError("duplicate task identity", EXIT_REFUSED)
+        if doc.markdown_authority and item["id"] in doc.metadata.get("task-archive", {}):
+            raise LbError("archived Task ID cannot be reused", EXIT_REFUSED)
         if "status" in item and item["status"] not in TASK_STATES:
             raise LbError("invalid task lifecycle", EXIT_REFUSED)
         result[item["id"]] = (owners[0], index, item)

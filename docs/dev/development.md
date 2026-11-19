@@ -84,7 +84,10 @@ The consuming repository owns its Logbook, AGENTS.md, configuration, document
 bindings and runtime setup. Shared skills and contracts define reusable behavior;
 installation does not authorize business work or migration of consumer records.
 Keep template additions limited to verified local conventions and scope. Consumer
-decisions and incidents stay in their own records.
+decisions and incidents stay in their own records. Explicit legacy migration
+requires the consumer to quiesce affected runtime workflows and older clients
+during cutover or rollback. Current clients select one authority through atomic
+publication. Retain the verified legacy files and private backup for rollback.
 
 The installer merges instruction-template changes against a verified adoption
 baseline stored in the worktree Git directory. It preserves consumer additions,

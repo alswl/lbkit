@@ -99,6 +99,11 @@ def write_bytes(
             fcntl.flock(directory, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
             raise LbError("another document writer is active", EXIT_REFUSED) from exc
+        if doc.path.suffix == ".md":
+            from logbook_cli import unified
+
+            if unified.locate(doc.root, doc.path)[0] is not None:
+                raise LbError("document authority changed; reread before writing", EXIT_REFUSED)
         if journal.exists() or journal.is_symlink():
             raise LbError(
                 "unfinished metadata transaction; use log recover", EXIT_REFUSED
@@ -191,6 +196,10 @@ def recover(root: Path, path: Path, expected: str | None, dry_run: bool) -> dict
             fcntl.flock(directory, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
             raise LbError("another document writer is active", EXIT_REFUSED) from exc
+        from logbook_cli import unified
+
+        if unified.locate(root, path)[0] is not None:
+            raise LbError("legacy recovery requires legacy document authority", EXIT_REFUSED)
         journal = journal_for(path, root)
         state = path_for(path, root)
         if journal.is_symlink() or not journal.is_file():

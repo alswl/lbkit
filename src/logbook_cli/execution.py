@@ -53,9 +53,11 @@ def validate(value, path):
         ):
             facts.refuse("invalid transport operation record")
         seen.add(op["id"])
+        request = op["request"]
+        optional = " task_id" if isinstance(request, dict) and "task_id" in request else ""
         facts.fields(
-            op["request"],
-            "dispatch_id recipient session_id binding_digest message_digest package_digest",
+            request,
+            "dispatch_id recipient session_id binding_digest message_digest package_digest" + optional,
         )
         for v in op["request"].values():
             facts.text(v)
@@ -92,46 +94,75 @@ def read(doc):
         }
         raw = unified.encode({"identity": identity, "execution": ex})
         return path, raw, value
-    base = project(doc)
-    log = str(doc.path.relative_to(base))
-    matches = []
-    for path in sorted(directory(doc).glob("*.json")):
-        if path.is_symlink():
-            raise LbError(
-                f"execution state must not be a symlink: {path.name}", EXIT_REFUSED
-            )
+    return find_legacy(doc.root, doc.path, strict=False)
+
+
+def matches_binding(base, binding, document):
+    if not isinstance(binding, str) or not binding or "\0" in binding:
+        return False
+    candidate = Path(os.path.normpath(base / binding))
+    if candidate == document:
+        return True
+    if candidate.is_relative_to(base):
         try:
-            data = path.read_bytes()
+            return candidate.resolve() == document
+        except (OSError, RuntimeError):
+            return False
+    return False
+
+
+def find_legacy(root, document, *, include_thinking=False, strict=True):
+    """Find the legacy execution record by document binding, independent of name."""
+    base = state.project(document, root)
+    fields = ("log", "thinking") if include_thinking else ("log",)
+    matches = []
+    for path in sorted(state.directory(document, root).glob("*.json")):
+        if path.name.endswith(".md.json"):
+            continue
+        try:
+            data = state.read_regular(root, path)
             value = json.loads(data, object_pairs_hook=unique_keys)
         except (ValueError, OSError) as exc:
             raise LbError(
-                f"invalid execution state: {path.name}", EXIT_REFUSED
+                f"invalid or unsafe execution state: {path.name}", EXIT_REFUSED
             ) from exc
-        # Records bound to other Logbooks, or unrelated JSON, never block this one.
-        if not isinstance(value, dict) or value.get("log") != log:
+        if not isinstance(value, dict):
+            continue
+        if strict:
+            if not any(matches_binding(base, value.get(key), document) for key in fields):
+                continue
+        elif value.get("log") != document.relative_to(base).as_posix():
             continue
         try:
             validate(value, path)
             for key in ("log", "thinking"):
                 relative = Path(value[key])
                 bound = base / relative
-                if (
-                    relative.is_absolute()
-                    or ".." in relative.parts
-                    or not bound.is_file()
-                    or not bound.resolve().is_relative_to(base)
-                ):
+                if relative.is_absolute() or ".." in relative.parts:
+                    raise LbError("invalid execution document binding", EXIT_REFUSED)
+                if strict:
+                    if (
+                        value[key] != relative.as_posix()
+                        or state.project(bound, root) != base
+                        or value["thinking"] == value["log"]
+                    ):
+                        raise LbError("invalid execution document binding", EXIT_REFUSED)
+                    with state.open_regular(root, bound):
+                        pass
+                elif not bound.is_file() or not bound.resolve().is_relative_to(base):
                     raise LbError(
                         "execution document binding is missing or outside project; reconcile binding",
                         EXIT_REFUSED,
                     )
-        except LbError as exc:
+        except (LbError, OSError, ValueError) as exc:
+            detail = exc.message if isinstance(exc, LbError) else str(exc)
             raise LbError(
-                f"invalid execution state {path.name}: {exc.message}", EXIT_REFUSED
+                f"invalid execution state {path.name}: {detail}", EXIT_REFUSED
             ) from exc
         matches.append((path, data, value))
     if len(matches) > 1:
-        raise LbError("multiple execution states bind this Logbook", EXIT_REFUSED)
+        kind = "document" if include_thinking else "Logbook"
+        raise LbError(f"multiple execution states bind this {kind}", EXIT_REFUSED)
     return matches[0] if matches else (None, b"", None)
 
 
@@ -194,6 +225,10 @@ def view(doc):
         "fact_assurance": "caller-reported sources; not independently verified by CLI",
         "runtime_transfer_verified": False,
     }
+
+
+def operation_task(operation):
+    return operation.get("legacy_task_id", operation["request"].get("task_id"))
 
 
 def require_delegation(doc, dispatch_id=None, owner=None):
@@ -348,6 +383,10 @@ def writer(doc, dry_run=False):
             raise LbError(
                 "execution writer busy; reread context and retry later", EXIT_REFUSED
             ) from exc
+        from logbook_cli import unified
+
+        if bool(unified.locate(doc.root, doc.path)[0]) != doc.markdown_authority:
+            raise LbError("execution authority changed; reread context", EXIT_REFUSED)
         yield
     finally:
         os.close(fd)
