@@ -103,6 +103,8 @@ Old sends require an independently attributable Dispatch, stable Task ID,
 recipient and saved binding matching the recorded package and binding digests.
 A verified closed Dispatch may retain an archived Task ID. Its history stays
 with that ID and is never reassigned to a replacement Task.
+A Dispatch cancelled directly from prepared with no Attempt or send operation
+keeps its cancellation and any verified binding as history only.
 Migration keeps the original requests, outcomes, receipt provenance and
 Dispatch-to-Task association. An unknown delivery blocks further dispatch and
 retains evidence-based reconciliation by operation ID. Submitted delivery blocks

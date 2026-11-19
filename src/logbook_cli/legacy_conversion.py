@@ -451,6 +451,28 @@ def runtime_records(log, run_id, tasks, archived_tasks, old, groups):
             f"legacy terminal Attempt has no matched submitted delivery: {min(set(attempts) - attempted_dispatches)}"
         )
     for key, row in by_id.items():
+        history = row["history"]
+        transition = history[0] if history else None
+        if (
+            row["status"] == "cancelled"
+            and isinstance(transition, dict)
+            and (transition.get("from"), transition.get("to"))
+            == ("prepared", "cancelled")
+        ):
+            if (
+                len(history) != 1
+                or set(transition) != {"from", "to", "basis", "at"}
+                or key in represented
+            ):
+                refuse(f"conflicting pre-send cancellation history: {key}")
+            try:
+                records.single_line(transition["basis"], "basis")
+                historical_time(transition["at"])
+            except (LbError, ValueError, TypeError) as exc:
+                raise LbError(
+                    f"invalid pre-send cancellation history: {key}", EXIT_REFUSED
+                ) from exc
+            continue
         if key in delivered or (row["status"] == "prepared" and key in represented):
             continue
         if (
