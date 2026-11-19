@@ -38,7 +38,9 @@ lbkit provides cross-repository reusable `lb-*` collaboration skills, Markdown c
 - [docs/dev/development.md](docs/dev/development.md) — required reading before changing contracts, skills, or the installer: link rules, install manifest, version evolution.
 - [docs/installable/lb-cli.md](docs/installable/lb-cli.md) — when changing CLI behavior: command contracts and the `version_token` write rules.
 
-<!-- SPECKIT START -->
-Current feature plan: [Markdown SSOT and Task coordination — Issues #8/#9](specs/008-return-observation-closeout/plan.md).
-For this feature, follow the plan's Red → Green → Refactor workflow; keep unit tests separate from external CLI and real-host acceptance. Human design review confirmed; no automatic commit, push or version change.
-<!-- SPECKIT END -->
+## Feature planning and verification
+
+For Spec Kit work, use the plan for the active feature branch or the directory
+explicitly selected with `SPECIFY_FEATURE_DIRECTORY`. Follow the active plan's
+verification workflow and keep unit tests separate from external CLI and
+real-host acceptance.
