@@ -21,7 +21,8 @@ Execution tokens come from `log execution context LOG --json`. Assignment payloa
 is `{subject:{kind,subject_id},basis}`; unassign uses `{basis}`. Binding requires
 id, assignment_revision, machine, session_id, adapter=herdr, runtime_locator
 (workspace_id, tab_id, pane_id, agent_id, server), work_context (repository_ref or
-null, working_directory), input_ref, basis and observed_at. Bindings are immutable.
+null, working_directory, and optional cli_launcher), input_ref, basis and
+observed_at. Bindings are immutable.
 For Herdr bindings, `machine` selects the transport host (`local` or a configured
 machine profile); `server` is the selected server session scope, not the machine
 name. For `local`, inspect `herdr status --json` and require a running compatible
@@ -317,6 +318,13 @@ The tool only detects markers and does not verify a 🔮's provenance; write and
 Manage status emoji through this script first; do not hand-edit H2 emoji or the machine-readable status segment. `log state --json` gives a structured snapshot: overall counts (delivery stages done/in_flight/not_started), `summary` (the derived machine-readable string), `next_task`, the 🔮 gate, and the `owned` attribution of every `> 状态：` line.
 
 The CLI creates a missing compact status line; lifecycle-managed pages use the one-line renderer described in [lifecycle operations](lifecycle-operations.md). Legacy human commentary and free-text status remain protected; explicit migration is required before lifecycle takeover. Existing un-migrated owned legacy lines retain their former rendering for compatibility. `log state` reports lifecycle, generated_status, actionable and inconsistency fields. `log state-set` records lifecycle plus the generated line atomically using the current token. Normal writes stop while paused/completed/terminated. Only lifecycle pause/termination may preserve an unresolved 🔮 while recording that terminal control decision; it cannot clear the gate or advance tasks.
+
+For managed active logs, the generated status selects the first delivery Stage
+in route order with an active or blocked task. If that Stage only has blocked
+work, the status shows the blocked marker. With no such Stage it falls back to
+the candidate. The whole-log 🔮 gate retains display priority. `next_task` still
+reports the scheduling candidate and can point to a later Stage. Execution
+continues to enforce dependencies and the other admission gates.
 
 Running tests:
 
@@ -755,10 +763,18 @@ saved Thinking document. The input carries `run_ref` (the run ID) and arrays
 `confirmations`, `observations` and `grants`. Preserve each existing array as a
 prefix of the updated array.
 
-All records carry `source` and `route_ref`. A confirmation uses status
+All readiness records carry a nonempty string `source` and a `route_ref`.
+`record-readiness` refuses newly added records whose source is missing, blank
+or a different JSON type, including in dry-run. Previously saved rows remain
+readable as history, subject to the existing readiness applicability checks.
+Execution facts use their own source schema. A confirmation uses status
 `confirmed`. A ready observation uses `task_id`, status `ready`,
 `criteria_digest` and `skills` (verified applicable names, or an empty list
-for built-in work). Blocked observations can supply `object`, `owner`,
+for built-in work). A task observation may specify `action` as `dispatch` or
+`takeover`. Omit it to apply the observation to both actions. A record can
+supersede an observation only within the same action scope. Common blockers
+apply to both actions and a ready observation for one action cannot make the
+other ready. Route-wide observations omit `action`. Blocked observations can supply `object`, `owner`,
 `clear_when` and `human_action`. An authorization uses `task_id`, `actor`
 (the executor subject ID), `action` (`dispatch` or `takeover`) and status
 `granted` or `revoked`. Record decisions and observations from their actual
@@ -776,8 +792,37 @@ Record an observed action through `lb log execution record` using a
 `runtime_observation` referencing the actual evidence. A submitted receipt
 with no action evidence requires reconciliation before a new send to the
 task. Replaying the same operation still returns its saved receipt.
-Follow-up instructions on the same binding use the existing live identity and
-delegation guards. Sending on a replacement binding rechecks readiness.
+Follow-up instructions on the same binding after an observed first action
+use the existing live identity, delegation and delivery guards. The first-start
+readiness and build checks apply again on a replacement binding.
+
+Before a first-start delegation handshake, the sender compares its CLI version
+and implementation digest with the recipient's. `lb --build-identity` reports
+both in JSON. The implementation digest covers the installed CLI Python
+sources. It distinguishes CLI implementations that share a development version.
+Keep the skills and contracts pinned to the intended candidate separately.
+
+For a new first send, verify the launcher's absolute executable path in the
+recipient's actual work context and record it as `work_context.cli_launcher`
+in the Task binding. Use the same launcher on the recipient. A compatible
+local Dispatch uses `cli_launcher` in its agent binding. Existing records
+without the path remain readable and replayable. Supply a current binding
+with the path for a new first send. The CLI invokes the recorded executable
+directly, with the verified work directory, and checks its response.
+A version string alone cannot prove the implementation. A missing or
+different version or digest blocks the handshake, intent write and business
+send. The refusal includes known versions and implementation digests.
+
+A remote Task uses the enabled Herdr machine profile with a matching server
+scope. The probe uses that profile's saved SSH target with noninteractive
+authentication and a known host key. Identity inspection and control use its
+stable profile ID. After updating from a label-based observation, inspect
+again for a current token. Remote legacy bindings without a verified server
+scope use a current Task binding for a new send.
+
+Before writing action-specific observations in a shared run, compare
+`--build-identity` from the actual launchers that can start work there. Older
+clients read action-specific observations as common evidence.
 
 Readiness evidence can include stable `id` and an explicit `supersedes` for a
 same-scope record. Observations can supply an `inputs` map from repository
@@ -797,5 +842,19 @@ operation with `--transition started` or `--transition not_started` and
 The route query also returns `source_digest` for auditing and `task_scopes`
 for an explicitly reviewed Task scope. An evidence row with `scope` equal to
 its Task ID uses the corresponding task scope digest as its `route_ref`.
+Authorized directories contribute their contents and order. Their line numbers
+locate source text. Explicit Stage goals contribute to the route and relevant
+task scopes. Top-level label spacing and list markers are normalized for goal
+comparison, including up to three leading spaces on a top-level goal.
+Indented notes inside Tasks and ordinary list items do not supply Stage goals.
+A column-zero HTML comment or fenced block ends an indented Task body.
+Hidden comment and code contents do not supply goals. A Markdown thematic
+break takes precedence over a list marker, so a following top-level goal
+remains in scope. A list goal can follow one to four columns of whitespace
+after the marker. Indented code inside a list item does not supply a goal. Recheck affected confirmations after a scope change. When the
+original reviewed text proves the decision covers the current scope, an
+authorized operator can record it against the new reference with its original
+decision source. When coverage is unclear, obtain confirmation of the
+affected scope. Preserve previous decisions and revocations.
 A whole-route decision uses the output's top-level `route_ref`. A Task scope
 includes its position, preceding work and transitive dependencies.

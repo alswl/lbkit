@@ -1,0 +1,12 @@
+{
+  "files_override": {
+    "log.md": "# Sample workflow\n\n## Overview\n\nThinking: [Preparation](records/thinking.md)\n\n## 🛫 Stage 1\n\nGoal: Produce a report and an independent count.\n\n- [ ] A — Verify the pinned sample report\n    <!-- lb-task a -->\n- [ ] B — Count the Markdown headings using built-in tools\n    <!-- lb-task b -->\n\n## 🛫 Stage 2\n\nGoal: Close the report package.\n\n- [ ] C — Archive the verified report\n    <!-- lb-task c -->\n",
+    "records/thinking.md": "# Preparation\n\nTask A candidate is inputs/report.txt with SHA-256 e49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee.\nThe test revision is tests/test_report.py with SHA-256 24df81fdb6dffc9a62e398afc01fbe8c61eac7a979060e60b8cdd798ece0b534.\nUse Python 3 and its standard library from the fixture root. No build or cache is needed. Capture execution output in the runner's normal stdout and compare the two selected cases with the report.\n\nUse `python3 collect_cases.py tests.test_report` for module preview. Collect the approved first pass separately by passing tests.test_report.ReportTests.test_has_alpha and tests.test_report.ReportTests.test_has_beta to the collector. Use `python3 -m unittest` with the same two selectors when execution is authorized.\n\nFor delegation, the receiving seat is still unassigned. The fixture operator is authorized to select a seat and verify the approved Python environment and model before handoff. No human decision is pending.\n",
+    "inputs/report.txt": "alpha\nbeta\n",
+    "tests/__init__.py": "",
+    "tests/test_report.py": "import unittest\n\nfrom pathlib import Path\n\n\nclass ReportTests(unittest.TestCase):\n    def test_has_alpha(self):\n        self.assertIn(\"alpha\", Path(\"inputs/report.txt\").read_text())\n\n    def test_has_beta(self):\n        self.assertIn(\"beta\", Path(\"inputs/report.txt\").read_text())\n\n    def test_smoke(self):\n        self.assertTrue(Path(\"inputs/report.txt\").exists())\n",
+    "collect_cases.py": "import sys\nimport unittest\n\nsuite = unittest.defaultTestLoader.loadTestsFromNames(sys.argv[1:])\nif unittest.defaultTestLoader.errors:\n    raise SystemExit(\"\\n\".join(unittest.defaultTestLoader.errors))\nfor entry in suite:\n    for group in entry:\n        for test in group if isinstance(group, unittest.TestSuite) else [group]:\n            print(test.id())\n",
+    "lbkit.yaml": "version: 0.2.0\nsettings: {}\nagents: {}\n",
+    "lbkit-skills.yaml": "version: 0.2.0\nrecipes: {}\n"
+  }
+}

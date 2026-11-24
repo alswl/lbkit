@@ -91,9 +91,12 @@ supply human confirmation for task state changes, or expand commit/push/publicat
 
 ## Check readiness before the first business action
 
-Run `lb log readiness LOG --task-id ID --actor ACTOR --action dispatch --json`
-for delegation, or select `--action takeover` for Captain execution. Use the
-actual executor's subject identifier. If blocked, report the missing evidence
+Run `lb log readiness LOG --task-id ID --actor ACTOR --action takeover --json`
+using the actual Captain's subject identifier. Apply current direct-execution
+authorization and shared and takeover-specific preflight. Record
+delegation-only handoff gaps with `action: dispatch` after checking the CLI
+versions and implementation digests of all launchers sharing the run. Keep the delegation version blocker,
+test rerun details and the Captain's actual first action as distinct evidence. If blocked, report the missing evidence
 and recovery entry. If reconciliation is required, resolve the existing
 operation before taking another business action. Ready permits proceeding
 through the existing ownership, authorization and live identity checks.

@@ -12,6 +12,22 @@ NEXT_HEADING = re.compile(r"(?m)^#{1,2} ")
 FIELDS = {"run_ref", "confirmations", "observations", "grants"}
 
 
+def _validate_observation(row):
+    if "action" not in row:
+        return
+    task_id = row.get("task_id")
+    if (
+        row["action"] not in ("dispatch", "takeover")
+        or not isinstance(task_id, str)
+        or not task_id.strip()
+        or row.get("scope") == "route"
+    ):
+        raise LbError(
+            "observation action must be dispatch or takeover on a task observation",
+            EXIT_REFUSED,
+        )
+
+
 def _section(text):
     lines = text.splitlines(keepends=True)
     offsets = [0]
@@ -50,6 +66,8 @@ def _validate(value):
         for item in value[key]
     ):
         raise LbError("route evidence records must be objects", EXIT_REFUSED)
+    for observation in value["observations"]:
+        _validate_observation(observation)
 
 
 def parse_evidence(text):
@@ -104,7 +122,16 @@ def merge_evidence(previous, proposed, run_id):
         raise LbError(
             "route evidence history changed; reread before updating", EXIT_REFUSED
         )
-    for key in FIELDS - {"run_ref"}:
+    for key in ("confirmations", "observations", "grants"):
+        # Preserve previously saved history, including sources older writers accepted.
+        first_new = len(previous[key]) if previous is not None else 0
+        for index, row in enumerate(proposed[key][first_new:], start=first_new + 1):
+            source = row.get("source")
+            if not isinstance(source, str) or not source.strip():
+                raise LbError(
+                    f"route evidence {key} record {index} source must be a nonempty string",
+                    EXIT_REFUSED,
+                )
         active_records(key, proposed[key])
     return proposed
 
@@ -139,13 +166,15 @@ def update_evidence(doc, thinking, proposed, dry_run=False):
 def active_records(kind, records):
     scope_keys = {
         "confirmations": ("scope",),
-        "observations": ("scope", "task_id", "object"),
+        "observations": ("scope", "task_id", "object", "action"),
         "grants": ("scope", "task_id", "actor", "action"),
     }[kind]
     active = []
     by_id = {}
     replaced = set()
     for row in records:
+        if kind == "observations":
+            _validate_observation(row)
         identity = row.get("id")
         predecessor = row.get("supersedes")
         if "id" in row and (not isinstance(identity, str) or not identity.strip()):

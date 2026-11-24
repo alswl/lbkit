@@ -124,7 +124,20 @@ actual executor's subject identifier. If blocked, report the missing evidence
 and recovery entry. If reconciliation is required, resolve the existing
 operation before taking another business action. Ready permits proceeding
 through the existing ownership, authorization and live identity checks.
-Keep transport, receipt, and the first business action as separate evidence.
+Before a first-start delegation handshake, verify the absolute executable
+path the recipient will actually use and record it as `work_context.cli_launcher`
+in the binding. Read `--build-identity` from both launchers. Unknown or
+different versions or implementation digests block the handshake and business
+send. Report the observed identities and recovery step. On a same-machine seat
+change, reuse applicable handoff evidence and recheck current identity,
+authorization and build. An observed first action on the same binding permits
+follow-up under the existing identity, delegation and delivery guards.
+Record delegation-only gaps as `action: dispatch` after checking the build
+identities of the launchers sharing the run. A Captain who is
+authorized to execute directly checks `--action takeover` against their own
+identity and prerequisites before taking the lb-takeover path.
+Keep version checks, transport, receipt and the first business action as separate
+evidence.
 When the runtime shows the action or establishes that it did not occur,
 record a `business-action` fact for the original operation with the observed
 source. If the outcome remains unknown, keep the operation pending

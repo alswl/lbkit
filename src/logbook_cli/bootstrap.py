@@ -2,10 +2,40 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 import os
 import sys
+from importlib.metadata import version
 from pathlib import Path
+from typing import NamedTuple
+
+
+def cli_version() -> str:
+    checkout_version = Path(__file__).resolve().parents[2] / "VERSION"
+    if checkout_version.is_file():
+        return checkout_version.read_text().strip()
+    return version("lbkit").replace(".dev0", "-dev")
+
+
+class CliIdentity(NamedTuple):
+    version: str | None
+    implementation: str | None
+
+
+def cli_identity() -> CliIdentity:
+    package = Path(__file__).resolve().parent
+    files = {
+        path.relative_to(package).as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in sorted(package.rglob("*.py"))
+    }
+    implementation = hashlib.sha256(
+        json.dumps(files, sort_keys=True).encode()
+    ).hexdigest()
+    return CliIdentity(cli_version(), implementation)
 
 
 def activate(entry: str) -> None:

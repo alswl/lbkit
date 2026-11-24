@@ -95,18 +95,31 @@ def compact(doc: Document) -> str:
         return line + (" · Inconsistent" if english else " · 状态不一致")
     if value in {"draft", "ready", "active", "unknown"}:
         task = next_task(doc)
-        if task:
-            match = re.search(r"Stage\s+\d+[a-z]?", task.stage, re.I)
+        stage_name = task.stage if task else ""
+        blocked = bool(task and any("🚨" in a.value for a in task.annotations))
+        if value == "active":
+            for stage in doc.stages:
+                if not stage.is_delivery:
+                    continue
+                active = next(
+                    (t for t in stage.tasks if t.effective_state == "active"), None
+                )
+                has_blocked = any(t.effective_state == "blocked" for t in stage.tasks)
+                if active or has_blocked:
+                    task = active
+                    stage_name = stage.title
+                    blocked = has_blocked and active is None
+                    break
+        if stage_name:
+            match = re.search(r"Stage\s+\d+[a-z]?", stage_name, re.I)
             if match:
                 line += " · " + match[0]
         if doc.preflight:
             line += " · 🔮"
         elif task and task.human:
             line += " · " + ("Awaiting human" if english else "待人工")
-        elif task:
-            # Only the current task's status/blocker annotation can qualify it.
-            if any("🚨" in a.value for a in task.annotations):
-                line += " · " + ("Blocked" if english else "受阻")
+        elif blocked:
+            line += " · " + ("Blocked" if english else "受阻")
     from logbook_cli.execution import view as execution_view
 
     execution = execution_view(doc)

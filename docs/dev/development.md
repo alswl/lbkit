@@ -277,3 +277,22 @@ Task sends require the recorded scope, preflight and execution authorization.
 A previously initialized run may need to record verifiable decisions and current
 observations before its next dispatch. Preserve the existing run and operation
 history when adopting the readiness checks.
+
+Route fingerprints include authorized directory contents and Stage goals in
+the applicable review scope. For an old fingerprint, recover the original
+reviewed text and authorization before recording a decision against the current
+reference. Retain old evidence and re-confirm the affected scope when historical
+coverage is unclear. A managed active status points to the earliest Stage with
+active or blocked work. Candidate selection and Task admission have their own
+rules.
+
+Before enabling action-scoped evidence, compare CLI build identities from
+the actual launchers that can start work in the shared run. Older launchers
+interpret these observations as common evidence. Use the same pinned candidate
+to align the installed skills, contracts and CLI. First-start delegation
+requires matching version and CLI implementation digest; the binding records
+the verified absolute recipient launcher. Existing operation records remain
+readable and replayable. Same-binding follow-up after an observed start
+continues under the existing guards. A remote recipient needs a matching enabled
+Herdr profile, a known SSH host key and noninteractive SSH access to the bound
+launcher. Pin remote identity and control to the resolved profile ID.

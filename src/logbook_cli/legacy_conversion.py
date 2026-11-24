@@ -22,8 +22,8 @@ from logbook_cli.repository import markdown_document, project_document
 from logbook_cli.run_metrics import calculate
 from logbook_cli.services import closeout, dispatches, skill_capabilities
 from logbook_cli.services.transport import (
-    DISPATCH_BINDING_FIELDS,
     DISPATCH_PACKAGE_FIELDS,
+    legacy_binding_digest,
     legacy_digest,
 )
 from logbook_cli.task_records import hydrate, valid_resolution
@@ -417,8 +417,7 @@ def runtime_records(log, run_id, tasks, archived_tasks, old, groups):
             or row["owner"] != request["recipient"]
             or binding.get("session_id") != request["session_id"]
             or legacy_digest(row, DISPATCH_PACKAGE_FIELDS) != request["package_digest"]
-            or legacy_digest(binding, DISPATCH_BINDING_FIELDS)
-            != request["binding_digest"]
+            or legacy_binding_digest(binding) != request["binding_digest"]
         ):
             refuse(f"unverified Dispatch/Task mapping for send {op['id']}: {key}")
         represented.add(key)

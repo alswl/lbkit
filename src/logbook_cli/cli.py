@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import sys
-from importlib.metadata import version
-from pathlib import Path
 
 import click
 
+from logbook_cli.bootstrap import cli_identity, cli_version
 from logbook_cli.commands import domains, tasks, workflows
 from logbook_cli.commands.common import ROOT
 from logbook_cli.commands.herdr_proxy import herdr
@@ -19,16 +19,18 @@ from logbook_cli.document import EXIT_PATH, LbError
     invoke_without_command=True,
 )
 @ROOT
-@click.version_option(
-    (Path(__file__).resolve().parents[2] / "VERSION").read_text().strip()
-    if (Path(__file__).resolve().parents[2] / "VERSION").is_file()
-    else version("lbkit").replace(".dev0", "-dev"),
-    message="%(version)s",
+@click.version_option(cli_version(), message="%(version)s")
+@click.option(
+    "--build-identity", is_flag=True, help="Show CLI version and implementation digest."
 )
 @click.pass_context
-def app(ctx: click.Context, root: str | None) -> None:
+def app(ctx: click.Context, root: str | None, build_identity: bool) -> None:
     """Read and safely update collaboration logbooks."""
-    if ctx.invoked_subcommand is None:
+    if build_identity:
+        if ctx.invoked_subcommand is not None:
+            raise click.UsageError("--build-identity must be used without a subcommand")
+        click.echo(json.dumps(cli_identity()._asdict()))
+    elif ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
 
