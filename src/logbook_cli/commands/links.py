@@ -129,7 +129,7 @@ def verify(
 
 
 @link.command(
-    "audit", help="Inventory artifact links and their current offline observations."
+    "audit", help="Inventory links and show current and historical offline observations."
 )
 @options(ROOT, LOG, JSON)
 def audit(root, log, json):

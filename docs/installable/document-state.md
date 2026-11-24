@@ -38,8 +38,12 @@ place for rollback. They serve as historical evidence during unified authority.
 Use the migration commands for authority changes.
 
 Track Markdown and independent run facts together under host Git authorization.
-Sync replaces only the selected document projection. It never copies or clears
-runtime facts. Do not edit JSON as a substitute for the supported CLI.
+Sync rebuilds the selected document's Markdown projection and preserves any
+existing `documents[path].legacy_metadata` in place, including historical Task
+dispositions, archives and link observations. A migrated run's top-level
+`legacy_history` stays in place with its migration checksum. Other documents,
+identity, execution and monitoring remain unchanged. Use the supported CLI for
+state changes.
 
 ## Read and edit
 

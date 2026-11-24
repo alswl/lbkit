@@ -137,26 +137,38 @@ def sync_status(doc, value):
     )
 
 
-
 def imported_archive_ids(value):
+    history = list(value.get("legacy_history", {}).values())
+    history.extend(
+        projection.get("legacy_metadata", {})
+        for projection in value["documents"].values()
+        if isinstance(projection, dict)
+    )
     return {
-        key for groups in value.get("legacy_history", {}).values()
-        for key in groups.get("task-archive", {})
+        key
+        for groups in history
+        if isinstance(groups, dict) and isinstance(groups.get("task-archive"), dict)
+        for key in groups["task-archive"]
     }
+
 
 def read_document(root, log):
     base = root_path(str(root))
     path = safe_path(base, str(log))
     doc = markdown_document(path.read_bytes(), path, base)
-    _, value = unified.locate(base, path)
+    target, value = unified.locate(base, path)
     doc.sync_status = sync_status(doc, value)
     if value:
+        key = state.section(path, base)
+        doc.unified_state_path = target
+        doc.legacy_metadata = value["documents"].get(key, {}).get("legacy_metadata", {})
+        doc.legacy_history = value.get("legacy_history", {}).get(key, {})
         if "legacy_migration" in value:
             doc.migration_plan = value["legacy_migration"]["plan_token"]
-            doc.legacy_history = value.get("legacy_history", {}).get(state.section(path, base), {})
-            doc.metadata["task-archive"].update(
-                (key, {"id": key}) for key in imported_archive_ids(value)
-            )
+        doc.metadata["task-archive"].update(
+            (archive_id, {"id": archive_id})
+            for archive_id in imported_archive_ids(value)
+        )
         doc.metadata["document"] = {
             "identity": {"id": "identity", "uuid": value["identity"]["run_id"]}
         }
@@ -174,11 +186,13 @@ def sync_document(root, log, dry_run=False):
         )
         key = state.section(path, base)
         prior = value["documents"].get(key, {})
+        if "legacy_metadata" in prior:
+            candidate["legacy_metadata"] = prior["legacy_metadata"]
         before_ids = set(prior.get("tasks", {}))
         after_ids = set(candidate["tasks"])
         changed = prior != candidate
-        value["documents"][key] = candidate
         if changed and not dry_run:
+            value["documents"][key] = candidate
             unified.publish(target, value)
         current = path.read_bytes()
         status = (

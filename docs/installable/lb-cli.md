@@ -83,8 +83,10 @@ stores require reconciliation before migration.
 
 Migration retains legacy link verifications and Task archives under
 `legacy_history` in `log context`. Historical link observations preserve their
-original scope and never count as current verification or authorization. Archived
-Task IDs remain reserved throughout the run. Migration refuses an archived ID
+original scope and never count as current verification or authorization. Older
+unified files may also retain history under `documents[path].legacy_metadata`.
+Context exposes that section as `legacy_metadata` alongside any `legacy_history`.
+Archived Task IDs remain reserved throughout the run. Migration refuses an archived ID
 also used by current work, an ambiguous replacement path, or a second Markdown
 archive for the same ID. Legacy Task basis, history and source disposition are
 retained under `legacy_history.task` by stable Task ID. They confer no current
@@ -299,9 +301,23 @@ Paths resolve symlinks on both read and write, and targets must still lie inside
 
 ## Checks, Status, and Limits
 
-`log check` reports issues in the format `路径:行号:代码:说明`, with `--json` returning the equivalent structure. Exit codes: 0 no deterministic issues (there may still be `LINK_UNVERIFIED` notices), 1 deterministic issues found, 2 command parameter error, 3 path/read refusal, 4 concurrency or write-protection refusal. HTTP(S) links are only reported as `LINK_UNVERIFIED` — the network is never touched; local links are checked only for existence within the root. The tool parses no arbitrary YAML and validates nothing about external files, remote links, or mind-forge metadata.
+Each `log check` diagnostic includes `path`, `line`, `code`, `message`, `category`
+and `severity` in JSON. Text output also shows the category and severity. Exit 1
+means at least one `error` and exit 0 allows any number of `notice` diagnostics.
+Exit 2 is a command parameter error, 3 is path/read refusal, and 4 is concurrency
+or write-protection refusal.
 
-External URLs (such as Forgejo PR links) report `LINK_UNVERIFIED` by design — a deterministic notice, not a structural error; a PR link is the run instance's identity notation, so keep it and never downgrade the link to plain text just to clear the notice.
+| Category | Severity | Examples |
+| --- | --- | --- |
+| `structural_error` | `error` | `EMPTY_STAGE`, `INVALID_STAGE_PLACEHOLDER`, `UNKNOWN_TASK_STATE` |
+| `status` | `error` | `STAGE_EMOJI`, `SKIPPED_EXPLICIT`, `PREFLIGHT_BLOCKER` |
+| `broken_link` | `error` | `LOCAL_LINK_MISSING` for an in-root path confirmed missing |
+| `verification_limit` | `notice` | `LINK_UNVERIFIED` for external links without an applicable verified observation, `LOCAL_LINK_UNVERIFIED` for out-of-root or unreadable paths |
+| `stage_placeholder` | `notice` | `STAGE_PLACEHOLDER` for a [declared empty delivery Stage](logbook-format.md#status-and-links) |
+
+Checks run offline. Local link checks cover path existence within the root.
+External and out-of-root link notices leave availability unknown. Keep run
+identity links in the Logbook even when they have no applicable verification.
 
 ## The 🔮 preflight gate
 
@@ -383,9 +399,36 @@ Machine groups accept `- ` followed by a backticked explicit machine name, along
 bin/lb log links record-check log.md --line 18 --target 'https://sources.example.com/reference/12' --label 'Primary reference' --observed-at '2026-10-14T08:00:00+08:00' --observer sailor-a --basis 'Read with the host tool' --outcome verified --expect-version TOKEN --dry-run --json
 ```
 
-`log links record-check` registers an offline observation of one visible HTTP(S) link selected by current line, target and label. Overview, Source, Stage and protected human links are eligible; no task, Artifact or sidecar is required. Optional --bind-stage/--bind-task are paired for an outside-task result link; --result-identity records a supplied revision. Task-contained links bind automatically and cannot redirect to another task. Use --outcome verified/unavailable/revoked. The CLI records supplied facts; Sailor performs actual observations and Captain aligns the return. It never fetches, authenticates or certifies permanent availability.
+`log links record-check` registers an offline observation of one visible link
+selected by current line, target and label. Overview, Source, Stage and protected
+human links are eligible alongside Artifact links. For a link outside a Task,
+use `--bind-stage` and `--bind-task` together to supply its binding. A link inside
+a Task binds to its owning Task. `--result-identity` records a supplied revision.
+Use `--outcome verified|unavailable|revoked`. Sailor performs the observation,
+Captain aligns the return, and the CLI records the supplied facts.
 
-Metadata lives in the document's `lb/` state section under `link-verification`. The semantic occurrence excludes checkbox state and physical line number; Source/Acceptance/Artifact snapshots bind task applicability. Changed target/label/context or bound values invalidate old observations without deleting history. Latest failure/revocation or equal-time conflicting observations remain unverified. Check suppresses only the eligible occurrence's LINK_UNVERIFIED; other occurrences and structural/local-link checks are preserved. Malformed records yield LINK_VERIFICATION_INVALID; context exposes observations/applicability. Arguments/time use exit 2, path errors 3 and stale/ambiguous/unsafe writes 4. Writes carry CAS and dry-run writes zero bytes.
+The observation write command applies to legacy document sidecars only. The
+semantic occurrence excludes checkbox state and physical line number.
+Source/Acceptance/Artifact snapshots bind task applicability. Changed
+target, label, context or bound values invalidate old observations. Latest
+failure, revocation or equal-time conflicting observations leave the link
+unverified. Check suppresses `LINK_UNVERIFIED` only for the eligible occurrence.
+Arguments and time use exit 2, path errors 3, and stale, ambiguous or unsafe
+writes 4. Legacy writes carry CAS and dry-run writes zero bytes.
+
+`log context` and `log links audit` both return `link_verifications`, including
+observations with no current matching link. An empty array means no decoded
+observations. Malformed records appear separately in context's
+`link_verification_errors` and audit's `errors`, and yield
+`LINK_VERIFICATION_INVALID` in check. Each observation includes `source`
+(`sidecar`, `legacy_metadata` or `legacy_history`), its original outcome and
+binding, the matching current line when unique, `applicable` and
+`invalidation_reason`. `target_status` reports the offline inspection result
+(`ok`, `missing`, `outside`, `unreadable` or `external`). The two unified
+history sources are read-only evidence. Their observations always have
+`applicable: false`, even when the original link still matches. Audit uses
+current observations and in-root existence checks for its current link rows
+and delivery readiness.
 
 ## Lifecycle and maintenance command groups
 

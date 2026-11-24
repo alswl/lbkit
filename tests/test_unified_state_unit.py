@@ -53,3 +53,67 @@ class UnifiedTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 unified.publish(path, value)
         self.assertEqual(before, path.read_bytes())
+
+    def test_sync_replaces_projection_without_discarding_nested_history(self):
+        from contextlib import nullcontext
+        from copy import deepcopy
+
+        from logbook_cli.repository import sync_document
+
+        prior = {
+            "documents": {
+                "work.md": {
+                    "source_digest": "old",
+                    "stages": ["Old"],
+                    "tasks": {},
+                    "legacy_metadata": {
+                        "task": {"old": {"decision": "Earlier decision"}},
+                        "task-archive": {"archived": {"id": "archived"}},
+                        "link-verification": {"observation": {"outcome": "verified"}},
+                    },
+                },
+                "other.md": {"source_digest": "other"},
+            },
+            "identity": {"run_id": "sample"},
+            "execution": {"facts": [{"kind": "submission"}]},
+            "monitoring": {"targets": {"target": {"cursor": 10}}},
+        }
+        value = deepcopy(prior)
+        with (
+            patch("logbook_cli.unified.writer", return_value=nullcontext()),
+            patch(
+                "logbook_cli.unified.locate",
+                return_value=(self.root / "lb/work.json", value),
+            ),
+            patch("logbook_cli.unified.publish") as publish,
+        ):
+            self.assertTrue(sync_document(self.root, self.log, dry_run=True)["changed"])
+            publish.assert_not_called()
+            self.assertEqual(value, prior)
+            self.assertTrue(sync_document(self.root, self.log)["changed"])
+            publish.assert_called_once()
+            self.assertFalse(sync_document(self.root, self.log)["changed"])
+        self.assertEqual(value["documents"]["work.md"]["stages"], ["Stage 1"])
+        value["documents"]["work.md"]["stages"] = ["Old"]
+        value["documents"]["work.md"]["source_digest"] = "old"
+        self.assertEqual(value, prior)
+
+    def test_read_document_loads_nested_history_for_its_own_path(self):
+        from logbook_cli.repository import read_document
+
+        retained = {"task-archive": {"retired": {"id": "retired"}}}
+        value = {
+            "documents": {
+                "work.md": {"legacy_metadata": retained},
+                "other.md": {
+                    "legacy_metadata": {"task": {"another": {"decision": "Other"}}}
+                },
+            },
+            "identity": {"run_id": "sample"},
+        }
+        target = self.root / "lb/work.json"
+        with patch("logbook_cli.unified.locate", return_value=(target, value)):
+            doc = read_document(self.root, self.log)
+        self.assertEqual(doc.legacy_metadata, retained)
+        self.assertEqual(doc.metadata["task-archive"], retained["task-archive"])
+        self.assertEqual(doc.state_path, target)

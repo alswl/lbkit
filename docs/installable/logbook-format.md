@@ -60,6 +60,13 @@ Items not started are `[ ]`; items an executor agent has taken but that have not
 
 ## Status and Links
 
+A delivery Stage intentionally held empty may declare one visible, unindented
+line `Stage placeholder: <reason>` or `阶段占位：<reason>` in its H2 section.
+The reason must be nonempty and the Stage must have no Tasks. Omit the
+declaration when authorized work is added. The declaration produces a check
+notice and leaves Stage status under the usual rules for an empty Stage.
+Authorization for later work follows the existing route and execution rules.
+
 Stage headings use `🛫` not started, `🚧` in progress, and `✅` closed. All `[x]` means accepted completion. A stage containing `[-]` may close only when every such item has a valid, task-bound disposition with actor/source attribution and every other item is `[x]`; display “closed with cancelled/not-applicable items” rather than claiming all criteria passed. Unresolved `[-]` never implies a pass, and it is not a pending human job either: when finding the next item, skip it and continue in document order; it does not block advancement. Unstarted items remain 🛫; active or partially completed work remains 🚧. Unknown states are not inferred.
 
 Use `task resolve --as human-cancelled|not-applicable --decision <source> --note <reason>` for an existing `[-]` after an explicit applicable human ruling. The CLI stores a readable `处置：` sub-line and a task-bound structured disposition in the owning mind’s `lb/` document state, adding a short task ID if needed. This records a ruling, not authenticated human identity; the calling skill must verify the ruling. Changing the task text invalidates the disposition. The CLI has no force-close flag. Stage status is based on explicit todos, not incidental links to other unfinished work.

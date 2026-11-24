@@ -33,8 +33,6 @@ def inspect(root: str, log: str, view: str = "context") -> Result:
 
     result = state_snapshot(doc) if view == "state" else context(doc)
     result["execution"] = execution_view(doc)
-    if view == "context" and doc.legacy_history:
-        result["legacy_history"] = doc.legacy_history
     if doc.markdown_authority:
         result["sync_status"] = doc.sync_status
     return Result(result)
@@ -69,7 +67,7 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
             identities[identity] = str(doc.path.relative_to(base))
     return Result(
         problems,
-        EXIT_ISSUES if any(p["code"] != "LINK_UNVERIFIED" for p in problems) else 0,
+        EXIT_ISSUES if any(p["severity"] == "error" for p in problems) else 0,
     )
 
 
