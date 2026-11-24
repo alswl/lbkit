@@ -169,7 +169,8 @@ def _evaluate_evidence(
     observations = [
         row
         for row in current(active_records("observations", value["observations"]))
-        if row.get("task_id") == task_id or row.get("scope") == "route"
+        if (row.get("task_id") == task_id or row.get("scope") == "route")
+        and row.get("action") in (None, action)
     ]
     unresolved = summarize(observations)
     if not unresolved and not any(

@@ -86,22 +86,46 @@ explicit human ruling; existing markers retain their human-only resolution rule.
 No preview claim substitutes for design confirmation, human acceptance or execution
 permission. Return to the authorized calling flow when preparation is sufficient.
 
-Compare verified applicable primary and companion skills directly with the saved
-task annotations. For each required annotation missing from the Logbook, identify
-the task and the missing skill. A skill recorded only in Thinking still needs a
-task annotation when applicable. Mark built-in-only work accordingly.
-Read the applicable workflow and registry entries, then open the primary and
-conditional companion definitions that apply to the task. Verify availability
-where execution will occur. If the user authorizes an annotation repair, use
-`lb task note` on that task's Skills sub-line, explicitly run
-`lb log sync-state` on the Logbook, and read the saved body back. Refresh
-the affected preflight observation against the current task criteria.
+Read the saved todo list, the applicable workflow and registry, and the actual
+primary and companion skill definitions. Compare each applicable skill with the
+saved Skills sub-line, including skills for newly added and close-out tasks.
+For each missing annotation, show the exact task and skill, even if Thinking
+already mentions it. Record built-in-only work as such when its needs are
+covered by built-in capability. When authorized to repair a missing annotation,
+use `lb task note`, run `lb log sync-state` on the Logbook, and read back the
+saved todo and annotation before refreshing the affected observation.
 
-For each blocking observation, report the prerequisite, affected step, evidence,
-owner and clearance condition. State whether the user needs to act now, including
-when the named technical owner can resolve the gap under existing authorization.
-For a decision that requires the user, state the available choices, their
-effects and the step by which a decision is needed.
+Report these findings for the selected step:
+
+- **Test selection.** Record a module-level preview if available. Then use the
+  test runner's exact selectors to collect the planned cases. Give the exact
+  selectors, observed count and copyable rerun command with the working
+  directory. Record discovery and actual run status separately. If selection
+  remains open, give the missing input or unsupported capability.
+- **Candidate readiness.** Identify the pinned candidate and test version, the
+  checked environment, tools and input, and the available build, log, cache
+  and acceptance paths. Mark each check as verified, missing, unverified or
+  unnecessary for this step. Cite actual run output when execution occurred.
+- **Delegation handoff.** When delegating, verify the current recipient, the
+  authorized transfer scope, the execution environment and the approved model.
+  If the actual model is observable only after launch, record the approved
+  deployment and verify the actual model after launch. Recheck identity,
+  authorization and CLI build identity on seat change, even when existing handoff
+  evidence still applies on the same machine.
+
+For each blocking observation, report the affected step, prerequisite, evidence,
+responsible owner and clearance condition. State what the user needs to do now
+or that the technical owner can proceed under existing authorization. When a
+decision is required, give the choices, impact and latest deciding step.
+
+Before adopting action-specific observations on a shared run, read back the
+CLI version and implementation digest from `--build-identity` on each
+actual participating launcher. Use `action: dispatch`
+for delegation-only handoff gaps and `action: takeover` for Captain-only gaps.
+Omit `action` for shared evidence. Record the checked versions or version gap,
+the test rerun command and any actual first action as distinct evidence. If
+delegation is blocked and Captain execution is authorized, check takeover
+readiness with the actual Captain identity and its own execution conditions.
 
 Record task readiness in the bound Thinking document with
 `lb log record-readiness LOG --thinking PATH --input-file FILE --dry-run --json`.

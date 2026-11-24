@@ -40,9 +40,13 @@ def bind(root, log, thinking, dispatch_id, input_file, token, dry_run):
             "observed_at",
             "basis",
         }
-        if not isinstance(item, dict) or set(item) != keys:
+        if not isinstance(item, dict) or set(item) - {"cli_launcher"} != keys:
             raise ValueError("binding requires: " + ", ".join(sorted(keys)))
-        herdr.validate_binding(item)
+        herdr.validate_binding({key: item[key] for key in keys})
+        if "cli_launcher" in item:
+            from logbook_cli.services.task_coordination import validate_cli_launcher
+
+            validate_cli_launcher(item["cli_launcher"])
     except (ValueError, TypeError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
     value = {

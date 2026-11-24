@@ -6,6 +6,45 @@ from logbook_cli.services.readiness import _evaluate_evidence, evaluate
 
 
 class FirstStartReadinessTests(unittest.TestCase):
+    def test_ready_and_blocked_observations_only_apply_to_their_action(self):
+        basis = {"source": "observed evidence", "route_ref": "route"}
+        ready = {**basis, "task_id": "A", "status": "ready"}
+        missing = {**basis, "task_id": "A", "status": "missing", "object": "handoff"}
+        value = {
+            "confirmations": [{**basis, "status": "confirmed"}],
+            "grants": [
+                {
+                    **basis,
+                    "task_id": "A",
+                    "actor": "runner",
+                    "action": action,
+                    "status": "granted",
+                }
+                for action in ("dispatch", "takeover")
+            ],
+        }
+        for observations, action, expected in (
+            ([ready], "dispatch", []),
+            ([ready], "takeover", []),
+            ([{**ready, "action": "dispatch"}], "takeover", ["preflight"]),
+            ([{**ready, "action": "takeover"}], "dispatch", ["preflight"]),
+            ([ready, {**missing, "action": "dispatch"}], "dispatch", ["preflight"]),
+            ([ready, {**missing, "action": "dispatch"}], "takeover", []),
+            ([ready, missing], "dispatch", ["preflight"]),
+            ([ready, missing], "takeover", ["preflight"]),
+        ):
+            with self.subTest(observations=observations, action=action):
+                gaps = []
+                _evaluate_evidence(
+                    {**value, "observations": observations},
+                    "route",
+                    "A",
+                    "runner",
+                    action,
+                    lambda kind, message, *_: gaps.append(kind),
+                )
+                self.assertEqual(gaps, expected)
+
     def test_missing_prerequisites_are_independently_recoverable(self):
         basis = {"source": "observed evidence", "route_ref": "route"}
         valid = {

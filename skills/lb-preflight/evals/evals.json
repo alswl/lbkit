@@ -532,6 +532,63 @@
         }
       ],
       "id": 22
+    },
+    {
+      "id": 23,
+      "axis": "Find companion annotations across new and close-out tasks",
+      "prompt": "Use lb-preflight to inspect the saved plan and its local workflow, registry, available skill definitions and linked Thinking. Report applicability for each saved task. Work read-only.",
+      "expected_output": "Locate the missing output-check annotation on A and archive-report on C. Report B as built-in only.",
+      "files": [
+        "fixtures/23.json"
+      ],
+      "assertions": [
+        {
+          "name": "definitions_and_saved_tasks",
+          "type": "contains",
+          "check": "Actually reads the saved plan, Thinking, workflow, registry and both applicable companion definitions. Locates missing output-check on new task A and archive-report on close-out task C."
+        },
+        {
+          "name": "built_in_task",
+          "type": "contains",
+          "check": "Cites the actual saved title-count requirement as the basis for built-in-only B."
+        },
+        {
+          "name": "no_unauthorized_change",
+          "type": "not_contains",
+          "check": "Writes plan or Thinking, requests installation for B, dispatches or starts business work."
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "axis": "Discover two exact cases and assess a pinned candidate",
+      "prompt": "Use lb-preflight on Task A. Read the saved plan and linked Thinking. You may use the supplied read-only test collection commands and check local files. The business tests must wait. Explain whether the pinned candidate can run and whether it can be handed off.",
+      "expected_output": "Report module preview, the two exact cases and reproducible rerun command, candidate readiness and the outstanding delegation gap. Tests remain unrun.",
+      "files": [
+        "fixtures/24.json"
+      ],
+      "assertions": [
+        {
+          "name": "separate_collection_steps",
+          "type": "contains",
+          "check": "Tool trace shows a module preview and separate exact collection. Report cites the two selected case names and observed count of two, with the concrete working directory and rerun command."
+        },
+        {
+          "name": "candidate_can_run",
+          "type": "contains",
+          "check": "Actually verifies the candidate file, pinned test inputs and tool and reports verified local readiness with tests still unrun."
+        },
+        {
+          "name": "handoff_gap",
+          "type": "contains",
+          "check": "For the unassigned receiving seat gives owner, evidence, clearance condition and whether the user must act now."
+        },
+        {
+          "name": "no_execution",
+          "type": "not_contains",
+          "check": "Uses collection output as test pass evidence, runs business tests, writes a result or attempts a handshake or send."
+        }
+      ]
     }
   ]
 }

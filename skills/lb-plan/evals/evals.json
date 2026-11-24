@@ -882,14 +882,14 @@
     {
       "id": 54,
       "axis": "Stage overview and reviewed scope",
-      "prompt": "The saved route has Stage 1 deliverable a rendered report (task A, Captain, acceptance: matching source digest) and Stage 2 deliverable a release review (task B depends on A, human decision). Present the saved route for review in read-only mode. No confirmation has been given.",
+      "prompt": "Read the saved log.md and present the route for review in read-only mode. Explain how you would handle a still-current confirmation, an older fingerprint with preserved reviewed text, and an old decision whose coverage is unclear. No new confirmation has been given.",
       "expected_output": "Show ordered Stage deliverables, dependency, owner, acceptance and the human review gate. Name the scope awaiting confirmation.",
-      "files": [],
+      "files": ["fixtures/54.json"],
       "assertions": [
         {
           "name": "route_review_matches_scope",
           "type": "contains",
-          "check": "Show ordered Stage deliverables, dependency, owner, acceptance and the human review gate. Name the scope awaiting confirmation."
+          "check": "Shows ordered Stage goals and deliverables, dependency, owner, acceptance, human review gate and authorized directory. Identifies scope being reviewed. Reuses a same-fingerprint confirmation when applicable, compares source and reviewed text before authorized backfill, and seeks scoped confirmation when coverage is unclear. Preserves history and revocations."
         }
       ]
     },

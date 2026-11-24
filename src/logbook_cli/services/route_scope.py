@@ -3,8 +3,54 @@
 import re
 
 from logbook_cli import repository, task_identity, unified
-from logbook_cli.document import EXIT_REFUSED, LbError, visible_lines, workdirs
+from logbook_cli.document import EXIT_REFUSED, TASK_RE, LbError, visible_lines, workdirs
 from logbook_cli.models import Field
+
+THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*")
+LIST_MARKER = r"(?:[-+*]|[0-9]{1,9}[.)])"
+LIST_ITEM = re.compile(rf"^( {{0,3}}{LIST_MARKER})(?:[ \t]+|(?=\r?$))")
+GOAL = re.compile(
+    r"^ {0,3}(目标|Goal)[ \t]*[:：][ \t]*(\S.*)",
+    re.IGNORECASE,
+)
+
+
+def _goals(lines):
+    goals = []
+    visible_by_index = dict(visible_lines(lines))
+    child_indent = 0
+    for index, raw in enumerate(lines):
+        if not raw.strip():
+            continue
+        expanded = raw.expandtabs(4)
+        indent = len(expanded) - len(expanded.lstrip(" "))
+        if indent < child_indent:
+            child_indent = 0
+        visible = visible_by_index.get(index)
+        # Physical outdents end a list item even when visibility hides the line.
+        if child_indent or visible is None:
+            continue
+        # Markdown gives a thematic break precedence over a list marker.
+        if THEMATIC_BREAK.fullmatch(raw.rstrip("\r\n")):
+            continue
+        # A task owns all following indented lines in the Logbook parser.
+        if indent == 0 and TASK_RE.match(visible):
+            child_indent = 1
+            continue
+        if item := LIST_ITEM.match(visible):
+            marker_width = len(item[1])
+            padding = len(item[0].expandtabs(4)) - marker_width
+            # Five or more columns after the marker start indented code.
+            if not 1 <= padding <= 4:
+                child_indent = marker_width + 1
+                continue
+            child_indent = marker_width + padding
+            visible = visible[item.end() :]
+        if match := GOAL.match(visible):
+            label, text = match.groups()
+            prefix = "目标：" if label == "目标" else "Goal:"
+            goals.append(f"{prefix} {text.rstrip()}")
+    return goals
 
 
 def route_scope(doc):
@@ -12,7 +58,8 @@ def route_scope(doc):
         task.line: key for key, (task, _, _) in task_identity.bindings(doc).items()
     }
     stages = []
-    for stage in doc.stages:
+    delivery_goals = {}
+    for index, stage in enumerate(doc.stages):
         tasks = []
         for task in stage.tasks:
             key = anchors.get(task.line)
@@ -38,18 +85,38 @@ def route_scope(doc):
                 }
             )
         if stage.is_delivery or tasks:
-            stages.append({"stage": stage.title, "tasks": tasks})
+            entry = {"stage": stage.title, "tasks": tasks}
+            if stage.is_delivery:
+                end = (
+                    doc.stages[index + 1].line - 1
+                    if index + 1 < len(doc.stages)
+                    else len(doc.lines)
+                )
+                goals = _goals(doc.lines[stage.line : end])
+                if goals:
+                    entry["goals"] = goals
+                    delivery_goals.update((task["task_id"], goals) for task in tasks)
+            stages.append(entry)
     overview_end = next(
         (s.line - 1 for s in doc.stages if s.is_delivery), len(doc.lines)
     )
-    goals = [
-        visible.strip()
-        for _, visible in visible_lines(doc.lines[:overview_end])
-        if visible and re.match(r"^\s*(?:[-*]\s+)?(?:目标|Goal)\s*[:：]", visible, re.I)
+    goals = _goals(doc.lines[:overview_end])
+    directories = workdirs(doc)
+    reviewed_directories = [
+        {
+            **{
+                key: value
+                for key, value in group.items()
+                if key not in {"line", "paths"}
+            },
+            "paths": [path["path"] for path in group["paths"]],
+        }
+        for group in directories
     ]
-    scope = {"goals": goals, "directories": workdirs(doc), "stages": stages}
+    scope = {"goals": goals, "directories": directories, "stages": stages}
     review = {
         **scope,
+        "directories": reviewed_directories,
         "stages": [
             {
                 **stage,
@@ -86,9 +153,15 @@ def route_scope(doc):
         task_scopes[key] = unified.digest(
             {
                 "goals": goals,
-                "directories": scope["directories"],
+                "directories": reviewed_directories,
                 "tasks": [
-                    item for identity, item in ordered.items() if identity in relevant
+                    (
+                        {**item, "stage_goals": delivery_goals[identity]}
+                        if identity in delivery_goals
+                        else item
+                    )
+                    for identity, item in ordered.items()
+                    if identity in relevant
                 ],
             }
         )

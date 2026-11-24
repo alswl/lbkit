@@ -1,0 +1,5 @@
+{
+  "files_override": {
+    "log.md": "# Sample report route\n\nGoal: Deliver a reproducible report for a release decision.\nWorking directories:\n- `local`\n  - `/example/work/report`\n\n## 🛫 Stage 01 Report\n\nGoal: Produce a reproducible report.\n\n- [ ] A — Render the report\n    <!-- lb-task a -->\n    - Owner: Captain\n    - Acceptance: Match the source digest.\n\n## 🛫 Stage 02 Decision\n\nGoal: Record an accountable release decision.\n\n- [ ] 👱 B — Review the release\n    <!-- lb-task b -->\n    - Depends: a\n    - Acceptance: Record the human release decision.\n"
+  }
+}

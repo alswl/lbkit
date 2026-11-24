@@ -24,6 +24,42 @@ def legacy_digest(value, fields):
     ).hexdigest()
 
 
+def legacy_binding_digest(binding):
+    fields = DISPATCH_BINDING_FIELDS
+    if "cli_launcher" in binding:
+        fields += ("cli_launcher",)
+    return legacy_digest(binding, fields)
+
+
+def require_matching_versions(
+    binding,
+    expected_observation,
+    *,
+    working_directory=None,
+    cli_launcher=None,
+    ssh_target=None,
+):
+    from logbook_cli.services.task_coordination import launcher_versions
+
+    sender, recipient = launcher_versions(
+        binding,
+        expected_observation,
+        working_directory=working_directory,
+        cli_launcher=cli_launcher,
+        ssh_target=ssh_target,
+    )
+    if not sender.version or not sender.implementation or sender != recipient:
+
+        def describe(identity):
+            return f"{identity.version or 'unknown'} (implementation {identity.implementation or 'unknown'})"
+
+        raise LbError(
+            f"Delegation blocked: sender CLI {describe(sender)}, "
+            f"recipient CLI {describe(recipient)}. Verify the bound launcher and CLI build.",
+            EXIT_REFUSED,
+        )
+
+
 def send(
     doc,
     thinking,
@@ -49,7 +85,7 @@ def send(
         "dispatch_id": dispatch["id"],
         "recipient": dispatch["owner"],
         "session_id": binding["session_id"],
-        "binding_digest": legacy_digest(binding, DISPATCH_BINDING_FIELDS),
+        "binding_digest": legacy_binding_digest(binding),
         "message_digest": hashlib.sha256(message.encode()).hexdigest(),
         "package_digest": legacy_digest(dispatch, DISPATCH_PACKAGE_FIELDS),
     }
@@ -140,9 +176,16 @@ def send(
             "version_token"
         ]
 
+    native, ssh_target = herdr.resolve_binding_scope(binding)
+    require_matching_versions(
+        native,
+        expected_observation,
+        cli_launcher=binding.get("cli_launcher"),
+        ssh_target=ssh_target,
+    )
     # The adapter calls persist_intent after live preconditions, before transport.
     result = herdr.control(
-        binding,
+        native,
         "send",
         expected_session,
         expected_observation,
@@ -305,7 +348,8 @@ def send_task(
         if get(doc)["value"] != "active":
             raise LbError("new send requires active Logbook", EXIT_REFUSED)
         execution.require_delegation(doc, task_id, binding["subject"]["subject_id"])
-        if not delivery_started(ex, task_id, request):
+        first_start = not delivery_started(ex, task_id, request)
+        if first_start:
             require_ready(doc, envelope, task_id, binding["subject"]["subject_id"])
     intent_saved = False
 
@@ -339,8 +383,18 @@ def send_task(
     from contextlib import nullcontext
 
     with nullcontext() if dry_run else observation.action_lock(doc, native):
+        pinned, ssh_target = herdr.resolve_binding_scope(native)
+        if first_start:
+            work_context = binding.get("work_context", {})
+            require_matching_versions(
+                pinned,
+                expected_observation,
+                working_directory=work_context.get("working_directory"),
+                cli_launcher=work_context.get("cli_launcher"),
+                ssh_target=ssh_target,
+            )
         result = herdr.control(
-            native,
+            pinned,
             "send",
             expected_session,
             expected_observation,

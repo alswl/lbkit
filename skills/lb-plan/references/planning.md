@@ -76,10 +76,20 @@ Item by item, confirm goal coverage, conflict-free dependencies, clear ownership
 Ordinary execution also requires the confirmed core design described above; an authorized POC has only its bounded exception. Before exit, confirm the three essentials — working directories, Stage division, and the todo list — are written into the logbook and manually confirmed by the user (the user writing or revising the plan personally counts as confirmation); plans short of confirmation must not enter lb-push execution.
 
 After saving the route, use `lb log route LOG --json` to read back stage order,
-tasks, dependencies and the reviewed scope. Show the deliverables, owners,
-acceptance criteria and human gates. Record a genuine confirmation from its
-source, using the whole route reference or the applicable task scope reference.
-When a confirmation still applies, reuse it.
+tasks, dependencies and the reviewed scope. In the first Stage overview, show
+the saved goal of each delivery stage beside its deliverables, owners,
+acceptance criteria and human gates. Show the authorized directories and the
+route or task scope the decision would cover. Keep directory line numbers as
+locators. Record a genuine confirmation from its source, using the whole route
+reference or the applicable task scope reference.
+
+Reuse an applicable confirmation with the same fingerprint. If the fingerprint
+changed, identify the affected scope. For a prior fingerprint, compare the
+actual reviewed text and decision source with the current scope. With evidence
+that the decision covers the current scope, use the authorized evidence update
+to record that decision against the current reference. If the reviewed text or
+coverage is unclear, ask for confirmation of the affected scope. Preserve the
+original records and honor existing revocations.
 
 Use the [route readiness CLI contract](../../../docs/installable/lb-cli.md#route-confirmation-and-task-readiness)
 for the evidence format and protected update.

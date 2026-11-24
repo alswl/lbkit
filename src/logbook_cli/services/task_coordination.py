@@ -1,6 +1,7 @@
 """Task responsibility and execution facts, independent of document projections."""
 
 import copy
+from pathlib import PurePosixPath
 
 from logbook_cli import records, unified
 from logbook_cli.document import EXIT_REFUSED, LbError
@@ -74,12 +75,14 @@ def bind_value(runtime, payload):
         records.single_line(payload[key], key)
     records.observed(payload["observed_at"])
     context = payload["work_context"]
-    if not isinstance(context, dict) or set(context) != {
+    if not isinstance(context, dict) or set(context) - {"cli_launcher"} != {
         "repository_ref",
         "working_directory",
     }:
         raise LbError("invalid work_context", EXIT_REFUSED)
     records.single_line(context["working_directory"], "working_directory")
+    if "cli_launcher" in context:
+        validate_cli_launcher(context["cli_launcher"])
     if context["repository_ref"] is not None:
         records.single_line(context["repository_ref"], "repository_ref")
     if payload["adapter"] != "herdr" or not isinstance(
@@ -116,6 +119,123 @@ def native_binding(binding):
     )
     records.single_line(item["server"], "server")
     return item
+
+
+def validate_cli_launcher(path):
+    records.single_line(path, "cli_launcher")
+    if "\x00" in path or not PurePosixPath(path).is_absolute():
+        raise LbError(
+            "cli_launcher must be the verified absolute executable path", EXIT_REFUSED
+        )
+
+
+def launcher_versions(
+    binding,
+    expected_observation,
+    *,
+    working_directory=None,
+    cli_launcher=None,
+    ssh_target=None,
+):
+    import subprocess
+    from importlib.metadata import PackageNotFoundError
+
+    from logbook_cli.bootstrap import CliIdentity, cli_identity
+
+    unknown = CliIdentity(None, None)
+    try:
+        sender = cli_identity()
+    except (OSError, UnicodeError, PackageNotFoundError):
+        sender = unknown
+    try:
+        recipient = recipient_launcher_version(
+            binding, expected_observation, working_directory, cli_launcher, ssh_target
+        )
+    except (LbError, OSError, ValueError, subprocess.TimeoutExpired):
+        recipient = unknown
+    return sender, recipient
+
+
+def recipient_launcher_version(
+    binding, expected_observation, working_directory, cli_launcher, ssh_target
+):
+    """Read the exact bound launcher without entering input into the recipient pane."""
+    import json
+    import re
+    import shlex
+    import subprocess
+
+    from logbook_cli.adapters import herdr
+    from logbook_cli.bootstrap import CliIdentity
+
+    unknown = CliIdentity(None, None)
+    if cli_launcher is None:
+        return unknown
+    validate_cli_launcher(cli_launcher)
+    remote = binding["machine"] != "local"
+    if remote and (not isinstance(ssh_target, str) or not ssh_target.strip()):
+        return unknown
+
+    current = herdr.inspect(binding)
+    if (
+        not current["live_verified"]
+        or current["observation_token"] != expected_observation
+    ):
+        return unknown
+    cwd = current["observation"].get("cwd")
+    if not isinstance(cwd, str) or not PurePosixPath(cwd).is_absolute():
+        return unknown
+    if working_directory is not None and PurePosixPath(cwd) != PurePosixPath(
+        working_directory
+    ):
+        return unknown
+
+    def read(option):
+        command = [cli_launcher, option]
+        if remote:
+            command = [
+                "ssh",
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "ConnectTimeout=5",
+                "-o",
+                "StrictHostKeyChecking=yes",
+                "-o",
+                "UpdateHostKeys=no",
+                "--",
+                ssh_target,
+                f"cd {shlex.quote(cwd)} && exec {shlex.join(command)}",
+            ]
+        result = subprocess.run(
+            command,
+            cwd=None if remote else cwd,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.stdout.strip() if result.returncode == 0 else ""
+
+    def version_valid(version):
+        return isinstance(version, str) and re.fullmatch(
+            r"[0-9]+\.[0-9]+\.[0-9]+(?:[-+.][a-zA-Z0-9.-]+)?", version
+        )
+
+    output = read("--build-identity")
+    if output:
+        try:
+            identity = json.loads(output)
+        except ValueError:
+            identity = None
+        if isinstance(identity, dict) and version_valid(identity.get("version")):
+            implementation = identity.get("implementation")
+            if isinstance(implementation, str) and re.fullmatch(
+                r"[0-9a-f]{64}", implementation
+            ):
+                return CliIdentity(identity["version"], implementation)
+    # Old launchers can report a version for diagnostics without proving compatibility.
+    version = read("--version")
+    return CliIdentity(version, None) if version_valid(version) else unknown
 
 
 def result_value(runtime, refs, payload):
@@ -259,8 +379,9 @@ def inspect(root, log, task_id, binding_id):
     binding = view["runtime"]["execution_bindings"].get(binding_id)
     if binding is None:
         raise LbError("binding not found", EXIT_REFUSED)
+    native, _ = herdr.resolve_binding_scope(native_binding(binding))
     return {
         "binding": binding,
-        "observation": herdr.inspect(native_binding(binding)),
+        "observation": herdr.inspect(native),
         "sync_status": view["sync_status"],
     }

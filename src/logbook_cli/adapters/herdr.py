@@ -67,6 +67,21 @@ def scope_machine(machine, server, value):
     return identity
 
 
+def resolve_binding_scope(binding):
+    """Select one stable machine for all runtime calls in this operation."""
+    machine = binding["machine"]
+    if machine == "local" and "server" not in binding:
+        return binding, None
+    profiles = invoke("local", *scope_command(machine))
+    pinned = scope_machine(machine, binding.get("server"), profiles)
+    if pinned == "local":
+        return binding, None
+    target = next(profile for profile in profiles if profile["id"] == pinned).get(
+        "target"
+    )
+    return {**binding, "machine": pinned}, target
+
+
 def structured_output(stdout, args):
     value = json.loads(stdout)
     expected = list if args == ("machine", "list", "--json") else dict

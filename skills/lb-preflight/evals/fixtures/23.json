@@ -1,0 +1,12 @@
+{
+  "files_override": {
+    "log.md": "# Sample workflow\n\n## Overview\n\nThinking: [Preparation](records/thinking.md)\n\n## 🛫 Stage 1\n\nGoal: Produce a report and an independent count.\n\n- [ ] A — Render the newly requested sample report\n    <!-- lb-task a -->\n  - Skills: report-render\n- [ ] B — Count the Markdown headings using built-in tools\n    <!-- lb-task b -->\n\n## 🛫 Stage 2\n\nGoal: Close the report package.\n\n- [ ] C — Archive the verified report\n    <!-- lb-task c -->\n",
+    "records/thinking.md": "# Preparation\n\nTask A preparation: report-render and output-check (required companion) definitions were inspected. Task B needs built-in reading only.\n\nClose-out C uses archive-report.\n",
+    "skills/report-render/SKILL.md": "---\nname: report-render\ndescription: Prepare example report\n---\nRead-only inspection supported. No preview command.\n",
+    "skills/output-check/SKILL.md": "---\nname: output-check\ndescription: Prepare example report\n---\nRead-only inspection supported. No preview command.\n",
+    "lbkit-skills.yaml": "version: 0.2.0\nrecipes:\n  report-package:\n    status: available\n    applies_to: [rendering and closing sample report packages]\n    excludes: [counting Markdown headings]\n    steps: [report-render]\n    companions:\n      - skill: output-check\n        when: a newly rendered report needs validation\n      - skill: archive-report\n        when: the verified report is ready for close-out\n",
+    "skills/archive-report/SKILL.md": "---\nname: archive-report\ndescription: Archive a verified fictional report\n---\nCheck that the report was verified before archiving.\n",
+    "lbkit.yaml": "version: 0.2.0\nsettings: {}\nagents: {}\n",
+    "workflows/report/docs/report.md": "# Report workflow\n\nFor rendering pair report-render with output-check. Archive the verified report using archive-report. Count titles with built-in tools.\n\n## Run-instance template\n\nTitle: Sample report <DATE>\nGoal: Validate and archive a reproducible sample report.\n\nSlot 1: Target date\nSlot 2: Working directories\nSlot 3: Established rulings\n\n- [ ] Render report\n\n## Established rulings\n\nUse the registered companions for the applicable step.\n"
+  }
+}
