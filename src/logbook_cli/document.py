@@ -6,9 +6,10 @@ import json
 import os
 import re
 import shlex
+import stat
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from logbook_cli.format import (
     LABELS,
@@ -45,6 +46,7 @@ H1_RE = re.compile(r"^#(?!#)\s+")
 FENCE_RE = re.compile(r"^[ \t]*([`~])\1{2,}")
 EMOJI_RE = MARKER_RE
 STAGE_RE = re.compile(r"^Stage\s+\d+[a-z]?\b", re.IGNORECASE)
+PLACEHOLDER_RE = re.compile(r"^(?:Stage placeholder[:：]|阶段占位[:：])(.*)")
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 
@@ -77,6 +79,14 @@ class Document:
     sync_status: str = "missing"
     migration_plan: str | None = None
     legacy_history: dict = field(default_factory=dict)
+    legacy_metadata: dict = field(default_factory=dict)
+    unified_state_path: Path | None = None
+
+    @property
+    def state_path(self) -> Path:
+        from logbook_cli.state import path_for
+
+        return self.unified_state_path or path_for(self.path, self.root)
 
     @property
     def locale(self) -> str:
@@ -238,6 +248,9 @@ def parse_text(
             current.marker_style = style
             headings.append((index + 1, title))
             continue
+        placeholder = PLACEHOLDER_RE.match(visible)
+        if current and placeholder:
+            current.placeholder_declarations.append((index + 1, placeholder[1].strip()))
         task = TASK_RE.match(line) if TASK_RE.match(visible) else None
         if task and PREFLIGHT_MARKER in task.group("text"):
             preflight.append(
@@ -318,7 +331,11 @@ def parse_text(
     if source is not None and source.markdown_authority:
         from logbook_cli.repository import markdown_document
 
-        return markdown_document(data, path, root)
+        candidate = markdown_document(data, path, root)
+        candidate.legacy_history = source.legacy_history
+        candidate.legacy_metadata = source.legacy_metadata
+        candidate.unified_state_path = source.unified_state_path
+        return candidate
     if source is not None:
         from logbook_cli.task_records import hydrate
 
@@ -481,7 +498,6 @@ def links_for(doc: Document, stage: Stage | None = None) -> list[dict]:
 
 def context(doc: Document) -> dict:
     from logbook_cli.link_records import observations
-    from logbook_cli.state import path_for as state_path_for
     from logbook_cli.task_identity import bindings, snapshot
 
     verification_records, verification_errors = observations(doc, links_for(doc))
@@ -503,8 +519,10 @@ def context(doc: Document) -> dict:
         "sync_status": doc.sync_status,
         "path": str(doc.path.relative_to(doc.root)),
         "version_token": doc.token,
-        "state_path": str(state_path_for(doc.path, doc.root).relative_to(doc.root)),
+        "state_path": str(doc.state_path.relative_to(doc.root)),
         "metadata": doc.metadata,
+        **({"legacy_history": doc.legacy_history} if doc.legacy_history else {}),
+        **({"legacy_metadata": doc.legacy_metadata} if doc.legacy_metadata else {}),
         "task_identity_errors": identity_errors,
         "stages": [
             {
@@ -513,6 +531,7 @@ def context(doc: Document) -> dict:
                 "emoji": s.emoji,
                 "derived_emoji": stage_state(s),
                 "delivery_stage": s.is_delivery,
+                "placeholder_reason": s.placeholder_reason,
                 "tasks": [
                     {
                         "text": task.text,
@@ -645,35 +664,56 @@ def contained_directory(root: Path, candidate: Path) -> Path | None:
     return resolved
 
 
-def local_target(root: Path, document: Path, target: str) -> str:
-    parsed = urlparse(target)
-    if parsed.scheme in ("http", "https"):
-        return "external"
-    if parsed.scheme == "file":
-        candidate = Path(parsed.path)
-    elif parsed.scheme:
-        return "external"
-    else:
-        raw = target.split("#", 1)[0]
-        if raw.startswith("~"):
-            candidate = Path(os.path.expanduser(raw))
+def resolve_link_target(
+    root: Path, document: Path, target: str
+) -> tuple[str, Path | None]:
+    """Inspect only local path components inside root, including symlink hops."""
+    try:
+        parsed = urlparse(target)
+        if parsed.scheme not in {"", "file"}:
+            return "external", None
+        if parsed.netloc:
+            return "outside", None
+        if parsed.scheme == "file" and not parsed.path:
+            return "unreadable", None
+        raw = Path(unquote(parsed.path)).expanduser()
+    except (ValueError, RuntimeError):
+        return "unreadable", None
+    candidate = document.parent / raw if not raw.is_absolute() else raw
+    if not parsed.path:
+        candidate = document
+
+    remaining = candidate
+    hops = 0
+    while True:
+        if not remaining.is_relative_to(root) or not Path(
+            os.path.normpath(remaining)
+        ).is_relative_to(root):
+            return "outside", None
+        parts = remaining.relative_to(root).parts
+        current = root
+        for index, part in enumerate(parts):
+            if part == "..":
+                if current == root:
+                    return "outside", None
+                current = current.parent
+                continue
+            current /= part
+            try:
+                if stat.S_ISLNK(current.lstat().st_mode):
+                    remaining = (
+                        current.parent / current.readlink() / Path(*parts[index + 1 :])
+                    )
+                    hops += 1
+                    if hops > 40:
+                        return "unreadable", None
+                    break
+            except (FileNotFoundError, NotADirectoryError):
+                return "missing", None
+            except (OSError, ValueError):
+                return "unreadable", None
         else:
-            candidate = document.parent / raw
-    # Reject lexical escapes before resolving a symlink or probing a target.
-    lexical = Path(os.path.normpath(str(candidate)))
-    try:
-        lexical.relative_to(root)
-    except ValueError:
-        return "outside"
-    try:
-        resolved = candidate.resolve(strict=True)
-        resolved.relative_to(root)
-        return "ok"
-    except (OSError, RuntimeError, ValueError):
-        try:
-            return "outside" if candidate.exists() else "missing"
-        except (OSError, RuntimeError):
-            return "outside"
+            return "ok", current
 
 
 def check(doc: Document) -> list[dict]:
@@ -688,7 +728,25 @@ def check(doc: Document) -> list[dict]:
             )
         )
     for stage in doc.stages:
-        if stage.is_delivery and not stage.tasks:
+        if stage.placeholder_reason:
+            issues.append(
+                issue(
+                    doc,
+                    stage.placeholder_declarations[0][0],
+                    "STAGE_PLACEHOLDER",
+                    stage.placeholder_reason,
+                )
+            )
+        elif stage.placeholder_declarations:
+            issues.append(
+                issue(
+                    doc,
+                    stage.placeholder_declarations[0][0],
+                    "INVALID_STAGE_PLACEHOLDER",
+                    "declare one nonempty placeholder reason in a delivery stage with no tasks",
+                )
+            )
+        if stage.is_delivery and not stage.tasks and not stage.placeholder_reason:
             issues.append(
                 issue(
                     doc,
@@ -781,12 +839,9 @@ def check(doc: Document) -> list[dict]:
     from logbook_cli.link_records import observations, verified_lines
 
     all_links = links_for(doc)
-    verified_links = verified_lines(doc, all_links)
-    _, metadata_errors = observations(doc, all_links)
-    # Observations live in the sidecar, so locate their errors there.
-    from logbook_cli.state import path_for as state_path_for
-
-    state_path = str(state_path_for(doc.path, doc.root).relative_to(doc.root))
+    verification_records, metadata_errors = observations(doc, all_links)
+    verified_links = verified_lines(verification_records)
+    state_path = str(doc.state_path.relative_to(doc.root))
     issues.extend(
         {
             **issue(doc, 1, "LINK_VERIFICATION_INVALID", error["reason"]),
@@ -794,22 +849,28 @@ def check(doc: Document) -> list[dict]:
         }
         for error in metadata_errors
     )
-    for link in links_for(doc):
-        state = local_target(doc.root, doc.path, link["target"])
+    for link in all_links:
+        state, _ = resolve_link_target(doc.root, doc.path, link["target"])
         if (
             state == "external"
             and (link["line"], link["label"], link["target"]) not in verified_links
         ):
             issues.append(
-                issue(doc, link["line"], "LINK_UNVERIFIED", "external link not fetched")
+                issue(
+                    doc,
+                    link["line"],
+                    "LINK_UNVERIFIED",
+                    f"external link has no applicable verified observation: {link['target']}",
+                )
             )
-        elif state == "outside":
+        elif state in {"outside", "unreadable"}:
+            reason = "outside root" if state == "outside" else "could not be inspected"
             issues.append(
                 issue(
                     doc,
                     link["line"],
                     "LOCAL_LINK_UNVERIFIED",
-                    f"local link outside root: {link['target']}",
+                    f"local link {reason}: {link['target']}",
                 )
             )
         elif state == "missing":
@@ -878,11 +939,22 @@ def directory_issues(doc: Document) -> list[dict]:
 
 
 def issue(doc: Document, line: int, code: str, message: str) -> dict:
+    category, severity = {
+        "STAGE_PLACEHOLDER": ("stage_placeholder", "notice"),
+        "LINK_UNVERIFIED": ("verification_limit", "notice"),
+        "LOCAL_LINK_UNVERIFIED": ("verification_limit", "notice"),
+        "LOCAL_LINK_MISSING": ("broken_link", "error"),
+        "STAGE_EMOJI": ("status", "error"),
+        "SKIPPED_EXPLICIT": ("status", "error"),
+        "PREFLIGHT_BLOCKER": ("status", "error"),
+    }.get(code, ("structural_error", "error"))
     return {
         "path": str(doc.path.relative_to(doc.root)),
         "line": line,
         "code": code,
         "message": message,
+        "category": category,
+        "severity": severity,
     }
 
 

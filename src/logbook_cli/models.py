@@ -123,6 +123,18 @@ class Stage:
     tasks: list[Task]
     unknown_task_lines: list[int]
     marker_style: str = "emoji"
+    placeholder_declarations: list[tuple[int, str]] = field(default_factory=list)
+
+    @property
+    def placeholder_reason(self) -> str | None:
+        if (
+            self.is_delivery
+            and not self.tasks
+            and not self.unknown_task_lines
+            and len(self.placeholder_declarations) == 1
+        ):
+            return self.placeholder_declarations[0][1] or None
+        return None
 
 
 def derive_stage_status(stage: Stage) -> StageStatus | None:

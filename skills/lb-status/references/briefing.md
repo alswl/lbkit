@@ -77,11 +77,10 @@ this fictional example. Use the user's language and actual route in real replies
   blockers and gates; compress other Stages before folding them into a labelled
   remainder. Keep folded and visible counts reconcilable. Do not print a wide
   table, microscopic labels or a full inventory to satisfy a nominal one-page rule.
-- **Git and check limits:** local ahead/behind is not proof of remote freshness;
-  do not fetch. An aggregate check failure may contain only notices; separate
-  structural errors from unverified link occurrences using actual codes. PR links
-  do not prove current merge or draft/WIP state. Do not add these fields as unknown
-  clutter when they do not help answer a narrow question.
+- **Git and check limits:** report ahead/behind from local tracking data and state
+  the freshness limit. Use check categories, or codes for older outputs, to
+  identify structural errors, broken links, placeholder notices and unverified
+  link occurrences. Report merge and draft/WIP state only from applicable evidence.
 
 ## beautiful-mermaid rendering
 

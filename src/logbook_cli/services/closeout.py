@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from urllib.parse import unquote, urlparse
 
 from logbook_cli import records
 from logbook_cli.document import (
@@ -14,6 +12,7 @@ from logbook_cli.document import (
     links_for,
     require_preflight_clear,
     require_token,
+    resolve_link_target,
     safe_path,
 )
 from logbook_cli.link_records import observations, occurrence, timestamp
@@ -50,17 +49,16 @@ def audit_links(doc):
             if len({(r["outcome"], r["result_identity"]) for r in current}) == 1:
                 outcome = current[0]["outcome"]
                 basis = current[0]["basis"]
-        target = urlparse(link["target"])
-        existence = "unobserved"
-        if target.scheme in {"", "file"} and not target.netloc:
-            raw = Path(unquote(target.path)).expanduser()
-            path = (raw if raw.is_absolute() else doc.path.parent / raw).resolve()
-            if path.is_relative_to(doc.root):
-                existence = "exists" if path.exists() else "missing"
-                if existence == "missing":
-                    outcome = "unavailable"
-            else:
-                existence = "outside-root"
+        target_status, _ = resolve_link_target(doc.root, doc.path, link["target"])
+        existence = {
+            "ok": "exists",
+            "missing": "missing",
+            "outside": "outside-root",
+            "unreadable": "unreadable",
+            "external": "unobserved",
+        }[target_status]
+        if existence == "missing":
+            outcome = "unavailable"
         rows.append(
             {
                 **link,
@@ -73,6 +71,7 @@ def audit_links(doc):
         )
     return {
         "links": rows,
+        "link_verifications": obs,
         "errors": errors,
         "coverage": "artifact annotations only; other links are references",
         "delivery_ready": not errors

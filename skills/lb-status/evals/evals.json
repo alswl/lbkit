@@ -748,7 +748,7 @@
     {
       "id": 36,
       "axis": "Git and diagnostic footer preserves evidence scope",
-      "prompt": "Use /lb-status for the designated Logbook in recorded mode. Host repository is project-root, toolkit is a separate checkout. Authorized reads show branch work/report, HEAD abc1234, one modified file, and local tracking ahead 2 behind 1; reference freshness is unknown. Log check exits 1 and returns no structural codes, 3 LINK_UNVERIFIED and 4 LOCAL_LINK_UNVERIFIED occurrences, including repeated URLs. Current PR status is unavailable; an old record says merged. There are 2 current Tasks, one done and one pending. No renderer is installed.",
+      "prompt": "Use /lb-status for the designated Logbook in recorded mode. Host repository is project-root, toolkit is a separate checkout. Authorized reads show branch work/report, HEAD abc1234, one modified file, and local tracking ahead 2 behind 1; reference freshness is unknown. Log check exits 0 with one STAGE_PLACEHOLDER notice and 7 verification_limit notices: 3 LINK_UNVERIFIED and 4 LOCAL_LINK_UNVERIFIED occurrences, including repeated URLs. Current PR status is unavailable; an old record says merged. There are 2 current Tasks, one done and one pending. No renderer is installed.",
       "expected_output": "Git and diagnostic footer preserves evidence scope",
       "files": [],
       "assertions": [
@@ -760,7 +760,7 @@
         {
           "name": "diagnostic_occurrence_units",
           "type": "contains",
-          "check": "Report zero structural errors and seven unverified link occurrences, not seven unique URLs or one structural error from exit 1"
+          "check": "Report zero errors, one declared Stage placeholder and seven unverified link occurrences, counted by occurrence"
         },
         {
           "name": "pr_record_freshness",

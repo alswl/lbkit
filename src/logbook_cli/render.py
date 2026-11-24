@@ -19,7 +19,10 @@ def render(result: Result, as_json: bool, view: str = "default") -> None:
     elif view == "check":
         assert isinstance(value, list)
         for item in value:
-            print(f"{item['path']}:{item['line']}: {item['code']}: {item['message']}")
+            print(
+                f"{item['path']}:{item['line']}: {item['code']}: "
+                f"[{item['severity']}/{item['category']}] {item['message']}"
+            )
     elif view == "tasks":
         assert isinstance(value, list)
         for row in value:

@@ -63,6 +63,7 @@ def state_snapshot(doc: Document) -> dict:
                 "emoji": s.emoji,
                 "derived_emoji": stage_state(s),
                 "delivery": s.is_delivery,
+                "placeholder_reason": s.placeholder_reason,
                 "tasks": {
                     "todo": sum(1 for t in s.tasks if t.state == " "),
                     "doing": sum(1 for t in s.tasks if t.state == "/"),

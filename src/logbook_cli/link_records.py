@@ -114,7 +114,6 @@ def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
     from logbook_cli import records as store
     from logbook_cli.document import LbError
 
-    rows, errors = [], []
     safe_end = True
     try:
         store.anchors(doc, require_closed=True)
@@ -122,7 +121,18 @@ def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
         if not exc.message.startswith("unclosed fence/comment"):
             raise
         safe_end = False
-    for _, record in store.read(doc, "link-verification"):
+    rows, errors = decode_observations(doc.metadata, "sidecar")
+    return rows, errors, safe_end
+
+
+def decode_observations(groups: dict, source: str) -> tuple[list[dict], list[dict]]:
+    rows, errors = [], []
+    records = groups.get("link-verification", {}) if isinstance(groups, dict) else None
+    if not isinstance(records, dict):
+        return [], [
+            {"line": None, "source": source, "reason": "invalid observation group"}
+        ]
+    for key, record in records.items():
         try:
             required = {
                 "record_id",
@@ -143,6 +153,13 @@ def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
                 or set(record) - required - {"local_digest"}
             ):
                 raise ValueError("invalid observation fields")
+            if record["record_id"] != key:
+                raise ValueError("state record key and identity disagree")
+            if "local_digest" in record and not (
+                isinstance(record["local_digest"], str)
+                and re.fullmatch(r"[0-9a-f]{64}", record["local_digest"])
+            ):
+                raise ValueError("invalid observation local digest")
             if record["outcome"] not in OUTCOMES:
                 raise ValueError("invalid observation outcome")
             if any(
@@ -176,14 +193,27 @@ def comment_records(doc: Document) -> tuple[list[dict], list[dict], bool]:
                 {k: v for k, v in record.items() if k != "record_id"}
             ):
                 raise ValueError("observation digest mismatch")
-            rows.append({**record, "metadata_line": None})
+            rows.append({**record, "metadata_line": None, "source": source})
         except (ValueError, TypeError, KeyError) as exc:
-            errors.append({"line": None, "reason": str(exc)})
-    return rows, errors, safe_end
+            errors.append(
+                {"line": None, "source": source, "record_id": key, "reason": str(exc)}
+            )
+    return rows, errors
 
 
 def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dict]]:
+    from logbook_cli.document import resolve_link_target
+
     records, errors, _ = comment_records(doc)
+    for source, groups in (
+        ("legacy_metadata", doc.legacy_metadata),
+        ("legacy_history", doc.legacy_history),
+    ):
+        retained, invalid = decode_observations(groups, source)
+        records.extend(retained)
+        errors.extend(invalid)
+    if not records:
+        return [], errors
     located = [(link, occurrence(doc, link)) for link in links]
     result = []
     for record in records:
@@ -195,8 +225,18 @@ def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dic
             and link["label"] == record["label"]
         ]
         reason = None
-        if len(matches) != 1:
-            reason = "occurrence missing or ambiguous"
+        if not matches:
+            reason = (
+                "link context changed"
+                if any(
+                    link["target"] == record["target"]
+                    and link["label"] == record["label"]
+                    for link in links
+                )
+                else "recorded link target or label no longer present"
+            )
+        elif len(matches) > 1:
+            reason = "recorded link occurrence is ambiguous"
         elif record["bound_task"]:
             try:
                 expected = task_binding(
@@ -206,12 +246,23 @@ def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dic
                     reason = "task inputs or result changed"
             except ValueError:
                 reason = "bound task missing or ambiguous"
-        if reason is None and record.get("local_digest"):
+        historical = record["source"] != "sidecar"
+        target_status, _ = resolve_link_target(doc.root, doc.path, record["target"])
+        if reason is None:
+            reason = {
+                "missing": "local target missing",
+                "outside": "local target is outside root",
+                "unreadable": "local target could not be inspected",
+            }.get(target_status)
+        if reason is None and not historical and record.get("local_digest"):
             if local_digest(doc, record["target"]) != record["local_digest"]:
                 reason = "local delivery bytes changed or disappeared"
+        if reason is None and historical:
+            reason = "retained legacy observation is historical evidence only"
         result.append(
             {
                 **record,
+                "target_status": target_status,
                 "applicable": reason is None,
                 "invalidation_reason": reason,
                 "line": matches[0]["line"] if len(matches) == 1 else None,
@@ -220,8 +271,7 @@ def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dic
     return result, errors
 
 
-def verified_lines(doc: Document, links: list[dict]) -> set[tuple[int, str, str]]:
-    records, _ = observations(doc, links)
+def verified_lines(records: list[dict]) -> set[tuple[int, str, str]]:
     grouped: dict[tuple[int, str, str], list[dict]] = {}
     for record in records:
         if record["applicable"]:
@@ -241,15 +291,13 @@ def verified_lines(doc: Document, links: list[dict]) -> set[tuple[int, str, str]
 
 def local_digest(doc: Document, target: str) -> str | None:
     """Only fingerprint regular local files inside the permitted root."""
-    from pathlib import Path
-    from urllib.parse import unquote, urlparse
+    from logbook_cli.document import resolve_link_target
 
-    parsed = urlparse(target)
-    if parsed.scheme not in {"", "file"} or parsed.netloc:
+    status, path = resolve_link_target(doc.root, doc.path, target)
+    if status != "ok" or path is None or not path.is_file():
         return None
-    raw = Path(unquote(parsed.path)).expanduser()
-    path = (raw if raw.is_absolute() else doc.path.parent / raw).resolve()
-    if not path.is_relative_to(doc.root) or not path.is_file():
+    try:
+        with path.open("rb") as handle:
+            return hashlib.file_digest(handle, "sha256").hexdigest()
+    except OSError:
         return None
-    with path.open("rb") as handle:
-        return hashlib.file_digest(handle, "sha256").hexdigest()

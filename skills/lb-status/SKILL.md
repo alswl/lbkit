@@ -117,12 +117,11 @@ the display. Inspect only relevant PRs through already authorized read-only tool
 If unavailable, label PR state and draft/WIP status unverified or recorded; do not
 infer them from a link, completed Task or old merge report.
 
-Separate deterministic structural errors from notices and unverified links using
-the documented diagnostic codes, not just the check exit status. Count the returned
-link occurrences and label that unit; do not imply they are unique URLs. Unknown
-or unreadable check output is not zero errors. Missing fields may be omitted or
-marked unknown; never repair records, fetch, broaden repository access or install
-tools to complete the footer.
+Use the [check categories and severities](../../docs/installable/lb-cli.md#checks-status-and-limits)
+to report structural errors, broken links, Stage placeholders and verification
+limits. For older output, read the diagnostic codes. Count and label link
+occurrences. Mark missing or unreadable check output as unknown. Keep the footer
+within the available read-only evidence and repository scope.
 
 ### Counting rules
 
