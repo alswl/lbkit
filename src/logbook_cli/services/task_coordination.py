@@ -93,8 +93,12 @@ def bind_value(runtime, payload):
     value = copy.deepcopy(payload) | {"subject": copy.deepcopy(runtime["assignee"])}
     bindings = runtime.setdefault("execution_bindings", {})
     prior = bindings.get(payload["id"])
-    if prior is not None and prior != value:
-        raise LbError("binding ID is immutable", EXIT_REFUSED)
+    if prior is not None:
+        if prior != value:
+            raise LbError("binding ID is immutable", EXIT_REFUSED)
+        if runtime.get("current_binding_id") != payload["id"]:
+            raise LbError("replacing a Task binding requires a new binding ID", EXIT_REFUSED)
+        return
     bindings[payload["id"]] = value
     runtime["current_binding_id"] = payload["id"]
 

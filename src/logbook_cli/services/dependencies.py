@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 from collections import deque
 from pathlib import Path
 
@@ -101,8 +100,6 @@ def load(doc: Document, run_path: Path, run: dict) -> Graph:
     if "dependency_source" not in run:
         return from_markdown(doc)
     path = sidecar(run_path)
-    if run["dependency_source"] != path.name:
-        raise LbError("invalid Run dependency source", EXIT_REFUSED)
     try:
         data = state.read_regular(doc.root, path)
     except OSError as exc:
@@ -111,7 +108,7 @@ def load(doc: Document, run_path: Path, run: dict) -> Graph:
 
 
 def stage_cutover(doc: Document, run_path: Path, run: dict) -> None:
-    """Stage split-task-dependencies while the caller holds the Run writer."""
+    """Stage the sidecar before the caller commits authority through the Run."""
     if "dependency_source" in run:
         return
     path = sidecar(run_path)
@@ -129,12 +126,11 @@ def stage_cutover(doc: Document, run_path: Path, run: dict) -> None:
     if prior is not None and decode(prior, run_id, set(graph)) != graph:
         raise LbError("staged dependency file conflicts with current Logbook", EXIT_REFUSED)
     if prior is None:
-        fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-        try:
+        with state.open_directory(doc.root, path.parent) as fd:
             replace_bytes_at(fd, path.name, data, None)
-        finally:
-            os.close(fd)
-    # The caller publishes this marker with the actual Run update.
+    projection = run["documents"].get(run["identity"]["log_path"], {})
+    for task in projection.get("tasks", {}).values():
+        task.pop("dependencies", None)
     run["dependency_source"] = path.name
 
 
@@ -143,8 +139,5 @@ def replace_graph(doc: Document, run_path: Path, run: dict, graph: Graph) -> Non
     path = sidecar(run_path)
     prior = state.read_regular(doc.root, path)
     data = unified.encode(envelope(run["identity"]["run_id"], graph))
-    fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
+    with state.open_directory(doc.root, path.parent) as fd:
         replace_bytes_at(fd, path.name, data, prior)
-    finally:
-        os.close(fd)

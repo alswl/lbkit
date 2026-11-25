@@ -44,12 +44,14 @@ class Observation:
     status: str
     checked_at: str
     expires_at: str
+    evidence: str = ""
 
     def __post_init__(self) -> None:
         if any(
             not isinstance(value, str) or not value.strip()
-            for value in vars(self).values()
-        ):
+            for field, value in vars(self).items()
+            if field != "evidence"
+        ) or not isinstance(self.evidence, str):
             raise ValueError("self-check observation fields must be nonempty strings")
         if self.status not in {"passed", "failed"}:
             raise ValueError("invalid self-check status")

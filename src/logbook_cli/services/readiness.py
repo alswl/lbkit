@@ -53,7 +53,7 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
                 "object": observation.get("object", kind),
                 "step": task_id,
                 "status": observation.get("status", "unverified"),
-                "evidence": observation.get("source"),
+                "evidence": observation.get("evidence") or observation.get("source"),
                 "owner": observation.get("owner"),
                 "clear_when": message,
                 "human_action": observation.get("human_action"),
@@ -331,7 +331,9 @@ def record_takeover(
             },
         )
         if may_start:
-            owner = execution_facts.project(ex["facts"], ex)["reported_owner"]
+            owner = execution_facts.project(ex["facts"], ex, task_id=task_id)[
+                "reported_owner"
+            ]
             if owner != actor or get(doc)["value"] != "active":
                 raise LbError(
                     "takeover requires active Logbook and observed sole ownership",

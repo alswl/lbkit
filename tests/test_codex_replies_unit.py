@@ -62,7 +62,9 @@ class CodexReplyTests(TestCase):
     def test_only_correlated_final_assistant_reply_counts(self):
         user = self.message("user", self.prompt)
         reply = self.message("assistant", self.response)
-        self.assertEqual(self.lookup(user, reply).status, "passed")
+        observed = self.lookup(user, reply)
+        self.assertEqual(observed.status, "passed")
+        self.assertEqual(observed.evidence, "input exists")
         for events in (
             (reply,),
             (user, self.message("user", self.response)),
@@ -81,3 +83,12 @@ class CodexReplyTests(TestCase):
         self.session_meta["payload"]["cwd"] = str(self.root / "another-repo")
         with self.assertRaisesRegex(LbError, "directory changed"):
             self.lookup(self.message("user", self.prompt))
+
+    def test_channel_requires_session_metadata_even_before_a_reply_exists(self):
+        self.journal.touch()
+        with self.assertRaisesRegex(LbError, "session metadata"):
+            read_reply(
+                self.session, self.cwd, "example", "digest", self.time,
+                journal_root=self.root,
+            )
+        self.assertIsNone(self.lookup())

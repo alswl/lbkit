@@ -476,7 +476,7 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
     if not math.isfinite(timeout) or timeout <= 0:
         raise LbError("timeout must be finite and positive", EXIT_USAGE)
     deadline = time.monotonic() + timeout
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     initial, current = observation.read(doc)
     if initial is None:
         raise LbError("observation_not_configured: configure before wait", EXIT_REFUSED)

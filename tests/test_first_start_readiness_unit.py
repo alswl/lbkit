@@ -81,7 +81,14 @@ class FirstStartReadinessTests(unittest.TestCase):
         empty = {**plan, "checks": []}
         with self.assertRaisesRegex(LbError, "exact preflight check set"):
             grant_source(evidence, scope, "A", empty)
-        evidence["grants"][0]["checks"] = []
+        grant = evidence["grants"][0]
+        grant["id"] = "original"
+        replacement = {**grant, "id": "replacement", "checks": []}
+        evidence["grants"].append(replacement)
+        for disputed in (plan, empty):
+            with self.assertRaisesRegex(LbError, "exact preflight check set"):
+                grant_source(evidence, scope, "A", disputed)
+        replacement["supersedes"] = "original"
         managed["plans"]["A"] = {**empty, "source": "approved checks"}
         self.assertEqual(
             current_plan({"preflight": managed}, "A", evidence, scope), managed["plans"]["A"]

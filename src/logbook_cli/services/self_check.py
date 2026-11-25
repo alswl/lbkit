@@ -102,6 +102,32 @@ def _prompt(check, correlation):
     )
 
 
+def _require_no_pending_reply(operations, request, cwd, now):
+    for operation in operations.values():
+        recorded = operation["request"]
+        if operation["outcome"] != "submitted" or any(
+            recorded.get(key) != value for key, value in request.items()
+        ):
+            continue
+        sent_at = datetime.fromisoformat(recorded["intent_at"])
+        retry_at = sent_at + RESULT_LIFETIME
+        if now >= retry_at:
+            continue
+        reply = codex_replies.read_reply(
+            request["session_id"],
+            cwd,
+            recorded["correlation"],
+            recorded["message_digest"],
+            sent_at,
+        )
+        if reply is None:
+            raise LbError(
+                "inspect the original submitted self-check before sending another. "
+                f"If its reply is unavailable, retry after {retry_at.isoformat()}",
+                EXIT_REFUSED,
+            )
+
+
 def send(root, log, input_file, execution_token, dry_run=False):
     data = _input(load(root, log), input_file)
     if not isinstance(data, dict) or set(data) != {
@@ -136,10 +162,6 @@ def send(root, log, input_file, execution_token, dry_run=False):
         "recipient": check["subject_id"],
         "session_id": recipient.native["session_id"],
         "binding_digest": recipient.digest,
-        "recipient_environment": {
-            "binding": recipient.native,
-            "working_directory": str(recipient.cwd),
-        },
         "plan_digest": unified.digest(plan),
     }
     prior = operations.get(operation_id)
@@ -163,32 +185,19 @@ def send(root, log, input_file, execution_token, dry_run=False):
         message = _prompt(check, correlation)
         sent_at = datetime.now(timezone.utc)
         prompt_digest = hashlib.sha256(message.encode()).hexdigest()
-        # Verify that this recipient has an attributable reply channel before sending.
+        # A missing reply is expected. A missing channel must stop the send.
         codex_replies.read_reply(
             request["session_id"], cwd, correlation, prompt_digest, sent_at
         )
-        for previous in operations.values():
-            recorded = previous["request"]
-            if previous["outcome"] != "submitted" or any(
-                recorded.get(key) != value for key, value in request.items()
-            ):
-                continue
-            reply = codex_replies.read_reply(
-                request["session_id"],
-                cwd,
-                recorded["correlation"],
-                recorded["message_digest"],
-                datetime.fromisoformat(recorded["intent_at"]),
-            )
-            if reply is None:
-                raise LbError(
-                    "inspect the original submitted self-check before sending another",
-                    EXIT_REFUSED,
-                )
+        _require_no_pending_reply(operations, request, cwd, sent_at)
         request.update(
             correlation=correlation,
             message_digest=prompt_digest,
             intent_at=sent_at.isoformat(),
+            recipient_environment={
+                "binding": recipient.native,
+                "working_directory": str(cwd),
+            },
         )
         intent = {
             "id": operation_id,
@@ -200,7 +209,7 @@ def send(root, log, input_file, execution_token, dry_run=False):
 
         def persist():
             with unified.writer(doc.root, doc.path):
-                latest, latest_task = require_synced(root, log, task_id)
+                latest, _ = require_synced(root, log, task_id)
                 target, current_run = unified.locate(
                     latest.root, latest.path, required=True
                 )
@@ -208,8 +217,6 @@ def send(root, log, input_file, execution_token, dry_run=False):
                     latest.data != doc.data
                     or unified.section_token(current_run, "execution")
                     != execution_token
-                    or operation_id in current_run["execution"]["operations"]
-                    or latest_task.human
                 ):
                     raise LbError(
                         "Task or execution changed before preparation send",
@@ -302,6 +309,7 @@ def collect(root, log, input_file, dry_run=False):
         response_ref=op_id,
         source=reply.digest,
         status=reply.status,
+        evidence=reply.evidence,
         checked_at=reply.observed_at,
         expires_at=(
             datetime.fromisoformat(reply.observed_at) + RESULT_LIFETIME
@@ -319,7 +327,10 @@ def collect(root, log, input_file, dry_run=False):
         {
             "task_id": task_id,
             "check_id": check_id,
+            "subject_id": row.subject_id,
+            "environment_ref": row.environment_ref,
             "status": row.status,
+            "evidence": row.evidence,
             "expires_at": row.expires_at,
             "changed": changed,
             "dry_run": dry_run,
@@ -362,5 +373,6 @@ def verify(doc, run, task_id, plan, gap):
                     "owner": owner,
                     "status": row.status,
                     "source": row.source,
+                    "evidence": row.evidence,
                 },
             )

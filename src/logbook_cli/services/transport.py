@@ -126,7 +126,7 @@ def send(
     if get(doc)["value"] != "active":
         raise LbError("new send requires active Logbook", EXIT_REFUSED)
     execution.require_delegation(doc, dispatch["id"], dispatch["owner"])
-    projected = execution.projection(state)
+    projected = execution.projection(state, dispatch_id=dispatch["id"])
     if projected["takeover"] and projected["reported_owner"] == "unknown":
         raise LbError(
             "ownership is unknown or conflicting; observe a safe boundary before send, not new permission",
@@ -273,7 +273,10 @@ def delivery_started(ex, task_id, request, *, released=False):
         if outcome == "started":
             if "legacy_task_id" in op:
                 raise LbError("Legacy delivery already started this Task", EXIT_REFUSED)
-            if prior == request:
+            previous_send = prior
+            if "release_id" not in request and "release_id" in prior:
+                previous_send = {key: value for key, value in prior.items() if key != "release_id"}
+            if previous_send == request:
                 raise LbError("Use the original operation ID to replay", EXIT_REFUSED)
             started |= prior.get("binding_id") == request.get("binding_id")
     return started
@@ -364,8 +367,13 @@ def send_task(
         if released:
             from logbook_cli.execution_facts import project
 
-            handoff = project(ex.get("facts", ()), ex)
+            handoff = project(ex.get("facts", ()), ex, task_id=task_id)
             if not handoff["handoff_reported_complete"]:
+                if handoff["reported_owner"] == "unknown":
+                    raise LbError(
+                        "ownership is unknown or conflicting; observe a safe boundary before handoff",
+                        EXIT_REFUSED,
+                    )
                 if any(
                     op["outcome"] != "not_submitted"
                     and op["request"].get("release_id") == release["id"]
@@ -379,6 +387,13 @@ def send_task(
         if first_start:
             require_ready(doc, envelope, task_id, binding["subject"]["subject_id"])
     intent_saved = False
+    intent = {
+        "id": operation_id,
+        "request": request,
+        "outcome": "unknown",
+        "receipt": None,
+        "provenance": "adapter",
+    }
 
     def persist():
         nonlocal intent_saved
@@ -399,15 +414,11 @@ def send_task(
                 raise LbError("execution changed before send", EXIT_REFUSED)
             if value.get("documents") != envelope.get("documents"):
                 raise LbError("document evidence changed before send", EXIT_REFUSED)
-            if not delivery_started(value["execution"], task_id, request):
+            if not delivery_started(
+                value["execution"], task_id, request, released=released
+            ):
                 require_ready(current, value, task_id, binding["subject"]["subject_id"])
-            value["execution"]["operations"][operation_id] = {
-                "id": operation_id,
-                "request": request,
-                "outcome": "unknown",
-                "receipt": None,
-                "provenance": "adapter",
-            }
+            value["execution"]["operations"][operation_id] = intent
             unified.publish_run(doc.root, target, value)
             intent_saved = True
 
@@ -443,8 +454,11 @@ def send_task(
         try:
             with unified.writer(doc.root, doc.path):
                 target, value = unified.locate(doc.root, doc.path, required=True)
-                op = value["execution"]["operations"][operation_id]
-                op.update(outcome="submitted", receipt=result["receipt"])
+                operations = value["execution"]["operations"]
+                if operations.get(operation_id) != intent:
+                    raise LbError("send intent changed before recording receipt", EXIT_REFUSED)
+                op = {**intent, "outcome": "submitted", "receipt": result["receipt"]}
+                operations[operation_id] = op
                 unified.publish_run(doc.root, target, value)
                 token = unified.section_token(value, "execution")
         except (OSError, LbError):

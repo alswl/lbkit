@@ -21,14 +21,11 @@ def present(run):
     return journal.is_symlink() or journal.exists()
 
 
-def replace_file(path, after, before):
+def replace_file(root, path, after, before):
     if before == after:
         return
-    fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
+    with state.open_directory(root, path.parent) as fd:
         replace_bytes_at(fd, path.name, after, before)
-    finally:
-        os.close(fd)
 
 
 def _changes(root, log, run, data, run_id):
@@ -61,15 +58,12 @@ def _changes(root, log, run, data, run_id):
     return changes
 
 
-def _finish(journal, changes):
+def _finish(root, journal, changes):
     for target, after, before in changes:
-        replace_file(target, after, before)
-    directory = os.open(journal.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
+        replace_file(root, target, after, before)
+    with state.open_directory(root, journal.parent) as directory:
         os.unlink(journal.name, dir_fd=directory)
         os.fsync(directory)
-    finally:
-        os.close(directory)
 
 
 def publish(doc, run, run_id, changed, graph):
@@ -87,8 +81,8 @@ def publish(doc, run, run_id, changed, graph):
         }
     )
     changes = _changes(doc.root, doc.path, run, data, run_id)
-    replace_file(journal, data, None)
-    _finish(journal, changes)
+    replace_file(doc.root, journal, data, None)
+    _finish(doc.root, journal, changes)
 
 
 def recover(root, log, expected, dry_run):
@@ -113,7 +107,7 @@ def recover(root, log, expected, dry_run):
                 raise LbError(
                     "use log recover --dry-run and its version_token", EXIT_REFUSED
                 )
-            _finish(journal, changes)
+            _finish(root, journal, changes)
         return {
             "version_token": token,
             "dry_run": dry_run,

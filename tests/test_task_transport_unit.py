@@ -2,7 +2,7 @@ import hashlib
 import json
 import unittest
 from contextlib import nullcontext
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
@@ -58,7 +58,7 @@ class TaskTransportTests(unittest.TestCase):
             "intent_at": "2026-01-01T00:00:00Z",
         }}
         run = {"execution": {"operations": {"check-op": op}}}
-        reply = Mock(status="passed", digest="authentic-reply",
+        reply = Mock(status="passed", digest="authentic-reply", evidence="build inputs present",
                      observed_at=datetime.now(timezone.utc).isoformat())
         with (
             patch.object(self_check, "load", return_value=doc),
@@ -75,9 +75,29 @@ class TaskTransportTests(unittest.TestCase):
             op["outcome"] = "submitted"
             result = self_check.collect(root, "log.md", "observe.json")
             self.assertEqual(result.value["status"], "passed")
+            self.assertEqual(result.value["evidence"], "build inputs present")
+            self.assertEqual(result.value["subject_id"], "worker")
             actual = cache.return_value.record.call_args.args[0]
             self.assertEqual(actual.response_ref, "check-op")
             self.assertEqual(actual.source, "authentic-reply")
+
+    def test_unanswered_submitted_self_check_can_be_retried_after_expiry(self):
+        sent = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        request = {"task_id": "work", "session_id": "native"}
+        operations = {"check": {"outcome": "submitted", "request": {
+            **request, "intent_at": sent.isoformat(),
+            "correlation": "correlation", "message_digest": "prompt",
+        }}}
+        path = Path("/example")
+        with patch.object(self_check.codex_replies, "read_reply", return_value=None) as read:
+            with self.assertRaisesRegex(LbError, "original submitted self-check"):
+                self_check._require_no_pending_reply(operations, request, path, sent)
+            read.assert_called_once_with("native", path, "correlation", "prompt", sent)
+            read.reset_mock()
+            self_check._require_no_pending_reply(
+                operations, request, path, sent + timedelta(minutes=30)
+            )
+            read.assert_not_called()
 
     def test_approved_preparation_environment_is_stable_until_identity_changes(self):
         native = {
@@ -182,6 +202,24 @@ class TaskTransportTests(unittest.TestCase):
         facts = [takeover, owner, release, handoff]
         execution_facts.validate_fact(handoff, facts[:-1])
         self.assertEqual(execution_facts.project(facts, runtime)["reported_owner"], "sailor")
+        self.assertEqual(
+            execution_facts.project(facts, runtime, task_id="work")["reported_owner"],
+            "sailor",
+        )
+        self.assertEqual(
+            execution_facts.project(facts, runtime, task_id="next")["reported_owner"],
+            "captain",
+        )
+        self.assertFalse(execution_facts.project(facts)["handoff_reported_complete"])
+        other_release = {**release, "id": "other-release", "task_id": "next"}
+        separate = [*facts[:-1], other_release]
+        execution_facts.validate_fact(handoff, separate)
+        self.assertEqual(
+            execution_facts.project([*separate, handoff], runtime, task_id="work")[
+                "reported_owner"
+            ],
+            "sailor",
+        )
         for field in ("receipt", "execution_ready", "monitor_ready", "ownership"):
             for evidence in (
                 {"status": "unknown", "source": source},
@@ -356,6 +394,28 @@ class TaskTransportTests(unittest.TestCase):
     def test_followup_permission_refusal_blocks_transport(self):
         self.assert_first_send_stops_before_host("", followup=True, denied=True)
 
+    def test_task_release_allows_actual_send_after_captain_takeover(self):
+        self.assert_first_send_stops_before_host("", released_takeover=True)
+
+    def test_task_release_with_conflicting_ownership_blocks_send(self):
+        self.assert_first_send_stops_before_host(
+            "", released_takeover=True, ownership_conflict=True
+        )
+
+    def test_completed_handoff_cannot_resend_the_same_message_with_new_id(self):
+        request = {"task_id": "task", "binding_id": "binding", "message_digest": "digest"}
+        ex = {
+            "operations": {"first": {
+                "outcome": "submitted", "request": {**request, "release_id": "release"},
+            }},
+            "facts": [{"kind": "business-action", "operation_id": "first", "outcome": "started"}],
+        }
+        with self.assertRaisesRegex(LbError, "original operation ID"):
+            task_send_guard(ex, "task", "duplicate", request, released=True)
+        self.assertIsNone(task_send_guard(
+            ex, "task", "new-release", {**request, "release_id": "later"}, released=True
+        ))
+
     def test_remote_probe_and_transport_share_one_resolved_machine(self):
         self.assert_first_send_stops_before_host(
             "", versions=("1.2.3", "1.2.3"), replacement=True, remote=True
@@ -378,6 +438,8 @@ class TaskTransportTests(unittest.TestCase):
         followup=False,
         remote=False,
         denied=False,
+        released_takeover=False,
+        ownership_conflict=False,
     ):
         root = Path("/example")
         markdown = "# Work\n\n## Stage 1\n\n- [ ] Prepare fixture\n" + later_task
@@ -430,6 +492,19 @@ class TaskTransportTests(unittest.TestCase):
                     "outcome": "started",
                 }
             ]
+        if released_takeover:
+            envelope["execution"]["operations"]["captain"] = {
+                "request": {"task_id": "task"},
+                "outcome": "submitted",
+                "provenance": "takeover",
+            }
+            envelope["execution"]["facts"] = [{
+                "id": "owner", "kind": "ownership", "owner": "captain",
+                "source": {"kind": "runtime_observation", "ref": "observed owner"},
+                "conflicts": ownership_conflict, "settled": True,
+            }]
+        release = {"scope": "task", "id": "release"} if released_takeover else None
+        expect_submission = replacement or (released_takeover and not ownership_conflict) or (followup and not denied)
         if prior_outcome:
             envelope["execution"]["operations"]["operation"] = {
                 "id": "operation",
@@ -479,6 +554,7 @@ class TaskTransportTests(unittest.TestCase):
             patch(
                 "logbook_cli.execution.require_delegation",
                 side_effect=LbError("delegation restricted") if denied else None,
+                return_value=release,
             ) as delegation,
             patch(
                 "logbook_cli.services.task_coordination.launcher_versions",
@@ -513,11 +589,14 @@ class TaskTransportTests(unittest.TestCase):
 
             with patch(
                 "logbook_cli.services.readiness.require_ready",
-                wraps=None if change_before_intent or versions else require_ready,
+                wraps=(
+                    None if change_before_intent or versions or released_takeover
+                    else require_ready
+                ),
             ) as ready:
                 if change_before_intent:
                     host.side_effect = attempt_transport
-                elif replacement or followup:
+                elif expect_submission:
 
                     def submit(*args, before_mutation):
                         before_mutation()
@@ -543,7 +622,10 @@ class TaskTransportTests(unittest.TestCase):
                 elif denied:
                     with self.assertRaisesRegex(LbError, "delegation restricted"):
                         send()
-                elif replacement or followup:
+                elif ownership_conflict:
+                    with self.assertRaisesRegex(LbError, "ownership is unknown or conflicting"):
+                        send()
+                elif expect_submission:
                     self.assertEqual(send().value["operation"]["outcome"], "submitted")
                 elif versions:
                     sender, recipient = versions
@@ -555,13 +637,13 @@ class TaskTransportTests(unittest.TestCase):
                 else:
                     with self.assertRaises(LbError):
                         send()
-            if change_before_intent or replacement or (followup and not denied):
+            if change_before_intent or expect_submission:
                 host.assert_called_once()
                 expected_machine = "profile-id" if remote else "local"
                 self.assertEqual(host.call_args.args[0]["machine"], expected_machine)
             else:
                 host.assert_not_called()
-            if versions or change_before_intent:
+            if versions or change_before_intent or (released_takeover and not ownership_conflict):
                 read_versions.assert_called_once_with(
                     {**binding, "machine": "profile-id"} if remote else binding,
                     "observation",
@@ -575,13 +657,15 @@ class TaskTransportTests(unittest.TestCase):
             if followup:
                 ready.assert_not_called()
                 delegation.assert_called_once_with(doc, owner="worker", task_id="task")
+            if released_takeover and not ownership_conflict:
+                self.assertEqual(ready.call_count, 2)
+                submitted = envelope["execution"]["operations"]["operation"]
+                self.assertEqual(submitted["request"]["release_id"], "release")
             if remote:
                 resolve.assert_called_once_with("local", "machine", "list", "--json")
             else:
                 resolve.assert_not_called()
-            self.assertEqual(
-                publish.call_count, 2 if replacement or (followup and not denied) else 0
-            )
+            self.assertEqual(publish.call_count, 2 if expect_submission else 0)
 
 
 class RecipientLauncherVersionTests(unittest.TestCase):

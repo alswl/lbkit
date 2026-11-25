@@ -96,18 +96,25 @@ def grant_source(evidence, scope, task_id, plan):
         and row.get("actor") == plan["actor"]
         and row.get("action") == "preflight-plan"
     ]
-    approved = {
-        row["source"]
+    approved = [
+        row
         for row in current_records(grant_rows, task_id, route_ref, scope_ref)
         if row.get("status") == "granted"
-        and row.get("candidate_ref") == plan["candidate_ref"]
-        and row.get("checks") == plan["checks"]
-    }
-    if len(approved) != 1 or any(row.get("status") == "revoked" for row in grant_rows):
+    ]
+    sources = {row["source"] for row in approved}
+    if (
+        len(sources) != 1
+        or any(
+            row.get("candidate_ref") != plan["candidate_ref"]
+            or row.get("checks") != plan["checks"]
+            for row in approved
+        )
+        or any(row.get("status") == "revoked" for row in grant_rows)
+    ):
         raise LbError(
             "record authorization for this exact preflight check set", EXIT_REFUSED
         )
-    return approved.pop()
+    return sources.pop()
 
 
 def current_plan(run, task_id, evidence, scope):

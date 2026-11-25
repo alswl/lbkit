@@ -19,7 +19,7 @@ def _input(doc, input_file):
 
 
 def context(root, log):
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     value, token = observation.read(doc)
     from logbook_cli.adapters import herdr
 
@@ -49,7 +49,7 @@ def configure(root, log, input_file, token, dry_run):
     from logbook_cli.services.agent_wait import validate
 
     try:
-        doc = load(root, log)
+        doc = load(root, log, load_dependencies=False)
     except LbError as exc:
         if exc.message == "another document writer is active":
             raise LbError(
@@ -69,7 +69,7 @@ def configure(root, log, input_file, token, dry_run):
 def event_action(root, log, event_id, action_id, input_file, token, dry_run, action):
     from contextlib import nullcontext
 
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     payload = _input(doc, input_file)
     try:
         required = (
@@ -163,7 +163,7 @@ def answer_submit(root, log, event_id, operation_id, input_file, token, dry_run,
     from logbook_cli.adapters import herdr
 
     _operation_id(operation_id)
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     payload = _input(doc, input_file)
     if not isinstance(payload, dict):
         raise LbError("Answer input must be an object", EXIT_USAGE)
@@ -318,7 +318,7 @@ def answer_reconcile(root, log, operation_id, input_file, token, dry_run):
 
     from logbook_cli.adapters import herdr
 
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     value = _answer_context(doc, token)
     answer = next((row for row in value["answers"] if row["id"] == operation_id), None)
     if answer is None:

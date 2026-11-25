@@ -91,10 +91,11 @@ def project_document(data, path, root, *, reserved_archive_ids=(), dependency_gr
             "conditions": [
                 a.value for a in task.annotations if a.kind is Field.ACCEPTANCE
             ],
-            "dependencies": graph[key],
             "artifact_refs": artifact_refs(task),
             "line": task.line,
         }
+        if dependency_graph is None:
+            tasks[key]["dependencies"] = graph[key]
     return {
         "source_digest": source_digest(data),
         "stages": [s.title for s in doc.stages],
@@ -143,7 +144,7 @@ def imported_archive_ids(value):
     }
 
 
-def read_document(root, log):
+def read_document(root, log, *, load_dependencies=True):
     base = root_path(str(root))
     path = safe_path(base, str(log))
     doc = markdown_document(path.read_bytes(), path, base)
@@ -152,7 +153,7 @@ def read_document(root, log):
     if value:
         key = state.section(path, base)
         doc.unified_state_path = target
-        if "dependency_source" in value and key == value["identity"]["log_path"]:
+        if load_dependencies and "dependency_source" in value and key == value["identity"]["log_path"]:
             from logbook_cli.services.dependencies import load
 
             doc.task_dependency_graph = load(doc, target, value)
@@ -273,7 +274,9 @@ def edit_document(doc, changed, dry_run=False, *, dependency_graph=None):
                 if dependency_graph is None:
                     validate_retained_graph(graph, active_ids)
             if dependency_graph is None:
-                dependency_transaction.replace_file(doc.path, changed.encode(), doc.data)
+                dependency_transaction.replace_file(
+                    doc.root, doc.path, changed.encode(), doc.data
+                )
             else:
                 from logbook_cli.services.readiness import unresolved_operation
 

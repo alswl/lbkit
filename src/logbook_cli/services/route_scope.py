@@ -5,6 +5,7 @@ import re
 from logbook_cli import repository, task_identity, unified
 from logbook_cli.document import EXIT_REFUSED, TASK_RE, LbError, visible_lines, workdirs
 from logbook_cli.models import Field
+from logbook_cli.services.dependencies import validate
 
 THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*")
 LIST_MARKER = r"(?:[-+*]|[0-9]{1,9}[.)])"
@@ -134,6 +135,7 @@ def route_scope(doc):
         for stage in review["stages"]
         for task in stage["tasks"]
     }
+    validate({key: task["dependencies"] for key, task in ordered.items()})
     task_scopes = {}
     preceding: set[str] = set()
     for key, task in ordered.items():
@@ -144,10 +146,6 @@ def route_scope(doc):
         pending = list(relevant)
         while pending:
             for dependency in ordered[pending.pop()]["dependencies"]:
-                if dependency not in ordered:
-                    raise LbError(
-                        f"unknown route dependency: {dependency}", EXIT_REFUSED
-                    )
                 if dependency not in relevant:
                     relevant.add(dependency)
                     pending.append(dependency)

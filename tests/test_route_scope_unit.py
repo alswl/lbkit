@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 
+from logbook_cli.document import LbError
 from logbook_cli.repository import markdown_document
 from logbook_cli.services.route_scope import route_scope
 
@@ -35,6 +36,15 @@ class RouteScopeTests(unittest.TestCase):
 
     def scope(self, body):
         return self.reviewed(body)["route_ref"]
+
+    def test_legacy_route_rejects_dependency_cycles_and_missing_endpoints(self):
+        cycle = TWO_STAGE_ROUTE.replace(
+            "<!-- lb-task a -->", "<!-- lb-task a -->\n    - Depends: b"
+        )
+        missing = TWO_STAGE_ROUTE.replace("- Depends: a", "- Depends: missing")
+        for body, error in ((cycle, "cycle"), (missing, "missing")):
+            with self.subTest(error=error), self.assertRaisesRegex(LbError, error):
+                self.scope(body)
 
     def test_directory_line_positions_stay_visible_without_changing_scope(self):
         before = self.reviewed(TWO_STAGE_ROUTE)

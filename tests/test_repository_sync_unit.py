@@ -35,6 +35,21 @@ class SyncTests(unittest.TestCase):
             self.assertFalse(repository.sync_document("/repo", "work.md")["changed"])
             publish.assert_not_called()
 
+    def test_projection_does_not_duplicate_authoritative_dependencies(self):
+        root = Path("/repo")
+        data = (
+            self.data
+            + b"- [ ] Next\n    <!-- lb-task next -->\n    - Depends: a\n"
+        )
+        projected = repository.project_document(
+            data, root / "work.md", root, dependency_graph={"a": [], "next": ["a"]}
+        )
+        changed = repository.project_document(
+            data, root / "work.md", root, dependency_graph={"a": [], "next": []}
+        )
+        self.assertNotIn("dependencies", projected["tasks"]["next"])
+        self.assertEqual(projected, changed)
+
     def test_failure_does_not_publish_or_remove_runtime(self):
         with (
             patch.object(repository, "root_path", return_value=Path("/repo")),

@@ -32,7 +32,8 @@ is `{subject:{kind,subject_id},basis}`; unassign uses `{basis}`. Binding require
 id, assignment_revision, machine, session_id, adapter=herdr, runtime_locator
 (workspace_id, tab_id, pane_id, agent_id, server), work_context (repository_ref or
 null, working_directory, and optional cli_launcher), input_ref, basis and
-observed_at. Bindings are immutable.
+observed_at. Bindings are immutable. Replaying the current Binding is idempotent.
+Replacing it requires a new Binding ID.
 For Herdr bindings, `machine` selects the transport host (`local` or a configured
 machine profile); `server` is the selected server session scope, not the machine
 name. For `local`, inspect `herdr status --json` and require a running compatible
@@ -554,6 +555,8 @@ operation. Cite that operation ID when recording acceptance, readiness and
 ownership. Its send must belong to the same Task, recipient and current Binding.
 Verify unknown delivery before recording acceptance or transfer. Replacing a
 release or Binding invalidates the prior handoff as evidence of current ownership.
+For a Task release, the execution context's reported handoff owner applies to
+`release.task_id`. A release for another Task preserves ownership of this Task.
 Legacy Dispatch releases retain their recorded target and apply to Dispatch commands.
 
 Task completion, skill changes and recovery do not clear the restriction. A
@@ -850,7 +853,8 @@ The input carries `actor`, `scope_ref`, `candidate_ref` and `checks`. Each check
 lists a unique `check_id` and a `subject_id`, which may be null while selection
 is pending. A current sourced `preflight-plan` grant for that Task and actor
 must match the candidate and the complete check list in check-ID order. An
-authorized empty list explicitly records that no Sailor checks apply. Preview
+authorized empty list explicitly records that no Sailor checks apply. Resolve
+conflicting current grants before saving or using a declaration. Preview
 with `--dry-run` and use the current execution token when saving.
 
 An approved runnable check includes its `instruction` and can name a
@@ -868,7 +872,11 @@ Keep the same operation ID when inspecting an uncertain result.
 `lb log preflight-observe LOG --input-file FILE` reads a reply using an input
 containing `operation_id`. The current reply adapter checks the owned local
 Codex session journal against the live binding or approved environment. It accepts a
-completed assistant message for the exact preparation prompt. The cache expires after 30 minutes.
+completed assistant message for the exact preparation prompt and returns the
+Sailor's checked condition alongside the result. The cache expires after 30
+minutes. A known submitted check with no usable reply can be sent with a new
+operation ID 30 minutes after the original intent. An unknown delivery still
+requires reconciliation.
 An unsupported host leaves the check unverified. The send journal and temporary
 cache have separate lifetimes.
 

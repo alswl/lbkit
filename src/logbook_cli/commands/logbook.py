@@ -85,27 +85,9 @@ def state_set(root, log, token, dry_run, json, lifecycle, basis):
 )
 @options(ROOT, LOG, DRY_RUN, JSON, click.option("--expect-version"))
 def recover(root, log, dry_run, json, expect_version):
-    from pathlib import Path
+    from logbook_cli.services.common import recover as recover_document
 
-    from logbook_cli import unified
-    from logbook_cli.document import LbError, root_path
-    from logbook_cli.services import dependency_transaction
-    from logbook_cli.services.common import Result
-    from logbook_cli.storage import recover as recover_state
-
-    base = root_path(resolve_root(root))
-    raw = Path(log)
-    path = raw if raw.is_absolute() else base / raw
-    if path.is_symlink() or not path.resolve().is_relative_to(base):
-        raise LbError("recovery path must be inside root and not a symlink")
-    path = path.resolve()
-    run, _ = unified.locate(base, path, recovering_dependencies=True)
-    recover = (
-        dependency_transaction.recover
-        if run is not None and dependency_transaction.present(run)
-        else recover_state
-    )
-    finish(Result(recover(base, path, expect_version, dry_run)), json)
+    finish(recover_document(resolve_root(root), log, expect_version, dry_run), json)
 
 
 def register(app: click.Group) -> None:

@@ -20,6 +20,7 @@ class Reply:
     status: str
     observed_at: str
     digest: str
+    evidence: str
 
 
 def _text(payload, kind):
@@ -121,6 +122,8 @@ def read_reply(
                 and payload.get("status") == "completed"
             ):
                 return _result(_text(payload, "output_text"), request_id, when)
+    if not verified:
+        raise LbError("native Codex session metadata unavailable", EXIT_REFUSED)
     return None
 
 
@@ -138,4 +141,4 @@ def _result(message: str, request_id: str, when: datetime) -> Reply | None:
         or not value["evidence"].strip()
     ):
         return None
-    return Reply(value["status"], when.isoformat(), _digest(message))
+    return Reply(value["status"], when.isoformat(), _digest(message), value["evidence"].strip())

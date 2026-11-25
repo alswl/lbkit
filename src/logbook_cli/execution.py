@@ -190,10 +190,12 @@ def initial(doc, thinking, name=None, advancement=None, captain=None):
     }
 
 
-def projection(value, runtime=None):
+def projection(value, runtime=None, *, task_id=None, dispatch_id=None):
     from logbook_cli.execution_facts import project
 
-    result = project(value["facts"] if value else [], runtime)
+    result = project(
+        value["facts"] if value else [], runtime, task_id=task_id, dispatch_id=dispatch_id
+    )
     result["unresolved_operations"] = (
         [op["id"] for op in value["operations"] if op["outcome"] == "unknown"]
         if value
@@ -259,7 +261,7 @@ def require_delegation(doc, dispatch_id=None, owner=None, *, task_id=None):
                 EXIT_REFUSED,
             )
         return
-    result = projection(value)
+    result = projection(value, task_id=task_id, dispatch_id=dispatch_id)
     release = result["release"]
     if result["unresolved_operations"]:
         raise LbError(
@@ -321,7 +323,7 @@ def write(doc, name, value, token, dry_run):
                 ex[key] = value[key]
         changed = value != old
         if changed and not dry_run:
-            unified.publish_run(doc.root, target, envelope)
+            unified.publish_run(doc.root, target, envelope, requires_dependencies=False)
         return {
             "path": str(target.relative_to(doc.root)),
             "state": value,

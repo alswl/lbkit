@@ -294,19 +294,23 @@ def publish(path, value):
     return True
 
 
-def publish_run(root, path, value):
+def publish_run(root, path, value, *, requires_dependencies=True):
     """Publish an actual Run mutation under its writer lock, staging cutover if eligible."""
     from logbook_cli.repository import markdown_document
     from logbook_cli.services import dependencies
     from logbook_cli.task_identity import bindings
 
     if "dependency_source" not in value:
-        log = path.parent.parent / value["identity"]["log_path"]
-        doc = markdown_document(state.read_regular(root, log), log, root)
-        if not any(stage.unknown_task_lines for stage in doc.stages) and len(
-            bindings(doc)
-        ) == sum(len(stage.tasks) for stage in doc.stages):
-            dependencies.stage_cutover(doc, path, value)
+        try:
+            log = path.parent.parent / value["identity"]["log_path"]
+            doc = markdown_document(state.read_regular(root, log), log, root)
+            if not any(stage.unknown_task_lines for stage in doc.stages) and len(
+                bindings(doc)
+            ) == sum(len(stage.tasks) for stage in doc.stages):
+                dependencies.stage_cutover(doc, path, value)
+        except LbError:
+            if requires_dependencies:
+                raise
     return publish(path, value)
 
 

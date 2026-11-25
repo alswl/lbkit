@@ -186,7 +186,9 @@ def validate_fact(fact, prior):
                 refuse("direct human release does not require a condition check")
     elif kind == "handoff":
         release = referenced(prior, fact["release_id"], "delegation-release")
-        current = project(prior)
+        current = project(
+            prior, task_id=release.get("task_id"), dispatch_id=release.get("dispatch_id")
+        )
         if current["release"] is None or current["release"]["id"] != release["id"]:
             refuse("handoff refers to a superseded release")
         if release["scope"] == "task":
@@ -213,7 +215,7 @@ def validate_fact(fact, prior):
             refuse("transport reconciliation requires a definite observed outcome")
 
 
-def project(facts, execution=None):
+def project(facts, execution=None, *, task_id=None, dispatch_id=None):
     takeover = ownership = release = handoff = None
     for fact in facts:
         kind = fact["kind"]
@@ -222,14 +224,24 @@ def project(facts, execution=None):
         elif kind == "ownership":
             ownership, handoff = fact, None
         elif kind == "delegation-release":
+            scope = fact["scope"]
+            if (task_id is not None or dispatch_id is not None) and not (
+                scope == "advancement"
+                or (scope == "task" and fact["task_id"] == task_id)
+                or (scope == "dispatch" and dispatch_id is not None)
+            ):
+                continue
             release, handoff = fact, None
-        elif kind == "handoff":
+        elif kind == "handoff" and release and fact.get("release_id") == release.get("id"):
             handoff = fact
-    if handoff and release and release["scope"] == "task" and execution is not None:
-        try:
-            validate_handoff_operation(handoff, release, execution)
-        except LbError:
+    if handoff and release["scope"] == "task":
+        if execution is None:
             handoff = None
+        else:
+            try:
+                validate_handoff_operation(handoff, release, execution)
+            except LbError:
+                handoff = None
     complete = bool(
         handoff
         and all(
