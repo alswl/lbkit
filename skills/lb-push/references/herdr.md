@@ -16,6 +16,11 @@ Use host-approved runtime/model/wrapper, workspace and cwd. Preserve explicit
 wrapper requirements: the native `agent herdr open` convenience route supports selected
 native runtimes only; it is not permission to substitute a generic executable for
 a required wrapper. Consult current Herdr guidance for authorized wrappers.
+Resolve the wrapper in the actual launch shell and mode, including functions
+and aliases defined by an interactive shell. Check its version through that
+shell when supported. A lookup from another shell is only evidence about that
+shell. Record the wrapper and configured model identifier separately, and
+confirm the actual model and native session after launch.
 
 ## Open, close and correlate
 

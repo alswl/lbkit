@@ -150,6 +150,14 @@ Report these findings for the selected step:
   authorization and CLI build identity on seat change, even when existing handoff
   evidence still applies on the same machine.
 
+Base blockers on observed evidence. Check any claimed mismatch in a structured
+value with a deterministic read-only check when possible. For hashes, compare
+the observed and expected values and validate the format mechanically before
+reporting a length or content mismatch. Carry forward a successful recorded
+collection when it covers the exact selectors and there is no observed
+incompatibility with the planned runner. If compatibility is an explicit
+requirement and the record leaves it unresolved, state what remains unverified.
+
 For each blocking observation, report the affected step, prerequisite, evidence,
 responsible owner and clearance condition. State what the user needs to do now
 or that the technical owner can proceed under existing authorization. When a
