@@ -10,6 +10,8 @@ from logbook_cli.document import EXIT_REFUSED, LbError, root_path
 from logbook_cli.services.common import Result
 
 PREVIEW_ONLY = "Migration apply is unavailable. This preview cannot be executed."
+SIDECAR_SUFFIXES = tuple(suffix + ".json" for suffix in state.MARKDOWN_SUFFIXES)
+MISPLACED_SIDECAR = "legacy document section is in the wrong sidecar"
 
 
 def document(root, raw):
@@ -47,9 +49,7 @@ def sidecar_sources(root, directory, paths):
                     raise LbError("noncanonical legacy document section", EXIT_REFUSED)
                 continue
             if path != state.path_for(expected[relative], root):
-                raise LbError(
-                    "legacy document section is in the wrong sidecar", EXIT_REFUSED
-                )
+                raise LbError(MISPLACED_SIDECAR, EXIT_REFUSED)
             if not re.fullmatch(r"[0-9a-f]{32}", identity):
                 raise LbError("invalid legacy document UUID", EXIT_REFUSED)
             selected[relative] = identity
@@ -75,6 +75,10 @@ def sidecar_sources(root, directory, paths):
     for identity in selected.values():
         if owners[identity] != 1:
             raise LbError("legacy document UUID has multiple owners", EXIT_REFUSED)
+    disjoint_sidecar_sections(
+        root, directory, paths, MISPLACED_SIDECAR,
+        retained={root / row["path"] for row in sources},
+    )
     return sources, dict(sorted(selected.items()))
 
 
@@ -88,6 +92,144 @@ def is_present(root, path):
         raise LbError(
             f"unsafe migration path: {path.relative_to(root)}", EXIT_REFUSED
         ) from exc
+
+
+def check_sidecar_section_path(root, sidecar, relative, message):
+    if not state.is_filesystem_path(relative):
+        raise LbError(f"{message}: unsafe legacy document section path", EXIT_REFUSED)
+    project = sidecar.parent.parent
+    owner = project / relative
+    if (
+        not owner.is_relative_to(project)
+        or ".." in owner.parts
+        or owner.relative_to(project).as_posix() != relative
+        or owner.suffix not in state.MARKDOWN_SUFFIXES
+        or state.path_for(owner, root) != sidecar
+    ):
+        raise LbError(message, EXIT_REFUSED)
+    # A sidecar can outlive its Markdown. If present, the path must be safe.
+    is_present(root, owner)
+
+
+def project_json_paths(root, directory):
+    try:
+        with state.open_directory(root, directory) as fd:
+            return {directory / name for name in os.listdir(fd) if name.endswith(".json")}
+    except FileNotFoundError:
+        return set()
+
+
+def check_selected_sections(project, sections, documents, message):
+    if any(
+        execution.matches_binding(project, relative, document)
+        for relative in sections
+        for document in documents
+    ):
+        raise LbError(message, EXIT_REFUSED)
+
+
+def disjoint_sidecars(
+    root, directory, documents, message, *, retained=frozenset(), initializing=False
+):
+    if any(is_present(root, state.journal_for(path, root)) for path in documents):
+        raise LbError(message, EXIT_REFUSED)
+    return disjoint_sidecar_sections(
+        root, directory, documents, message, retained=retained, initializing=initializing
+    )
+
+
+def disjoint_sidecar_sections(
+    root, directory, documents, message, *, retained=frozenset(), initializing=False
+):
+    """Inventory recognizable sections and reject conflicts with bound documents."""
+    expected = {state.path_for(path, root) for path in documents}
+    paths = project_json_paths(root, directory)
+    named = {path for path in paths if path.name.endswith(SIDECAR_SUFFIXES)}
+    if any(is_present(root, path) for path in expected - named - retained):
+        raise LbError(message, EXIT_REFUSED)
+
+    project = directory.parent
+    sections = []
+    for sidecar in sorted(paths - retained):
+        required = sidecar in expected or (initializing and sidecar in named)
+        try:
+            raw, value = state.read_envelope(sidecar, root=root)
+        except LbError:
+            if required:
+                raise
+            continue
+        if raw is None:
+            if required:
+                raise LbError(message, EXIT_REFUSED)
+            continue
+        if sidecar.name.endswith(".markdown.json") and isinstance(value, dict):
+            # This suffix also occurs on Run and legacy execution files.
+            if value.get("format") == unified.FORMAT:
+                continue
+            if (
+                sidecar not in expected
+                and not {"format", "documents"} & value.keys()
+                and value.get("name") == sidecar.stem
+                and isinstance(value.get("log"), str)
+                and isinstance(value.get("thinking"), str)
+            ):
+                continue
+        try:
+            records = state.document_sections(value)
+        except ValueError as exc:
+            if required:
+                raise LbError(f"{message}: {exc}", EXIT_REFUSED) from exc
+            continue
+        check_selected_sections(project, records, documents, message)
+        for relative, groups in records.items():
+            if sidecar in expected:
+                check_sidecar_section_path(root, sidecar, relative, message)
+            sections.append((sidecar, relative, groups))
+    return sections
+
+
+def require_disjoint_observations(root, directory, sections):
+    """Require each legacy observation entry to have a distinct document owner."""
+    folder = directory / "observations"
+    message = "old observations layout conflict; no migration"
+    try:
+        with state.open_directory(root, folder) as fd:
+            entries = os.listdir(fd)
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise LbError(message, EXIT_REFUSED) from exc
+
+    identities = set()
+    for name in entries:
+        match = re.fullmatch(
+            r"([0-9a-f]{32})\.(?:json|listener|action-[0-9a-f]{64})", name
+        )
+        if match is None or not is_present(root, folder / name):
+            raise LbError(message, EXIT_REFUSED)
+        identities.add(match[1])
+    if not identities:
+        raise LbError(message, EXIT_REFUSED)
+
+    claims = {identity: [] for identity in identities}
+    for sidecar, relative, groups in sections:
+        declared = state.document_identity(groups).get("uuid")
+        key = declared.lower() if isinstance(declared, str) else None
+        if key not in claims and not sidecar.name.endswith(SIDECAR_SUFFIXES):
+            continue
+        try:
+            identity = state.validate_identity(groups)
+        except ValueError as exc:
+            raise LbError(f"{message}: {exc}", EXIT_REFUSED) from exc
+        if key in claims:
+            claims[key].append((sidecar, relative, identity))
+    for key, owners in claims.items():
+        if len(owners) != 1:
+            raise LbError(message, EXIT_REFUSED)
+        sidecar, relative, identity = owners[0]
+        if identity != key:
+            raise LbError(message, EXIT_REFUSED)
+        check_sidecar_section_path(root, sidecar, relative, message)
 
 
 def exclusive_lock_held(fd):
@@ -279,12 +421,13 @@ def preview(root, log, name, documents, *, writers_locked=False):
 
     conflicts = []
     if not writers_locked:
-        fd = os.open(base, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
-        try:
-            if exclusive_lock_held(fd):
-                conflicts.append({"code": "legacy_writer_busy", "path": "."})
-        finally:
-            os.close(fd)
+        for location in dict.fromkeys((base, project)):
+            with state.open_directory(base, location) as fd:
+                if exclusive_lock_held(fd):
+                    conflicts.append({
+                        "code": "legacy_writer_busy",
+                        "path": location.relative_to(base).as_posix(),
+                    })
         writer_lock = directory / ".lock"
         if lock_busy(base, writer_lock):
             conflicts.append(

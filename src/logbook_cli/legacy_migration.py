@@ -2,7 +2,6 @@
 
 import base64
 import fcntl
-import json
 import os
 import re
 import stat
@@ -12,7 +11,7 @@ from pathlib import Path
 from logbook_cli import legacy_conversion, legacy_run, state, unified
 from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError, root_path
 from logbook_cli.services.common import Result
-from logbook_cli.storage import replace_bytes_at
+from logbook_cli.storage import legacy_document_lock, replace_bytes_at
 
 ARCHIVE = "lb-legacy-migration-backup-v1"
 ROLLED_BACK = "lb-legacy-migration-rolled-back-v1"
@@ -274,7 +273,7 @@ def load_json(data):
     if data is None:
         return None
     try:
-        value = json.loads(data, object_pairs_hook=state.unique_object)
+        value = state.decode_json(data)
     except (ValueError, TypeError) as exc:
         raise LbError("invalid migration state", EXIT_REFUSED) from exc
     if not isinstance(value, dict):
@@ -349,10 +348,9 @@ def transaction(base, directory, dry_run):
             yield fd
         return
     with (
-        state.open_directory(base, base) as root_fd,
+        legacy_document_lock(base, directory.parent, busy="migration_busy: legacy document writer"),
         state.open_directory(base, directory) as fd,
     ):
-        lock(root_fd, "legacy document writer")
         project_lock = os.open(
             ".lock",
             os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
@@ -500,9 +498,10 @@ def check_token(expected, current):
 
 
 def inspect_rollback_writers(base, directory):
-    with state.open_directory(base, base) as root_fd:
-        if legacy_run.exclusive_lock_held(root_fd):
-            refuse("migration_busy: legacy document writer")
+    for location in dict.fromkeys((base, directory.parent)):
+        with state.open_directory(base, location) as fd:
+            if legacy_run.exclusive_lock_held(fd):
+                refuse("migration_busy: legacy document writer")
     if legacy_run.lock_busy(base, directory / ".lock"):
         refuse("migration_busy: project writer")
 
@@ -612,6 +611,14 @@ def run(root, log, name, documents, *, dry_run, is_rollback, token):
                 verify_legacy_sources(
                     base, directory, verified["legacy_migration"], verified["execution"]
                 )
+                if published is None:
+                    legacy_run.disjoint_sidecar_sections(
+                        base,
+                        directory,
+                        [project / path for path in verified["identity"]["document_paths"]],
+                        legacy_run.MISPLACED_SIDECAR,
+                        retained={base / path for path in archive["legacy_sources"]},
+                    )
                 changed = finish_publication(fd, target, archive)
                 return Result(receipt(archive, changed=changed))
             if read_at(fd, done_name(target)) is not None:

@@ -16,6 +16,7 @@ from pathlib import Path
 from logbook_cli.document import EXIT_REFUSED, LbError
 
 FORMAT = "lb-document-state"
+MARKDOWN_SUFFIXES = (".md", ".markdown")
 
 
 def project(path: Path, root: Path) -> Path:
@@ -64,14 +65,21 @@ def unique_object(pairs):
     return value
 
 
-def validate(groups) -> None:
-    if not isinstance(groups, dict) or any(
-        not isinstance(rows, dict)
-        or any(not isinstance(row, dict) for row in rows.values())
-        for rows in groups.values()
-    ):
-        raise ValueError("records must map kinds and IDs to objects")
-    identity = groups.get("document", {}).get("identity", {})
+def decode_json(data: bytes):
+    try:
+        return json.loads(data, object_pairs_hook=unique_object)
+    except RecursionError as exc:
+        raise ValueError("JSON nesting is too deep") from exc
+
+
+def document_identity(groups) -> dict:
+    document = groups.get("document") if isinstance(groups, dict) else None
+    identity = document.get("identity") if isinstance(document, dict) else None
+    return identity if isinstance(identity, dict) else {}
+
+
+def validate_identity(groups) -> str:
+    identity = document_identity(groups)
     if (
         set(identity) != {"id", "uuid"}
         or identity["id"] != "identity"
@@ -79,6 +87,17 @@ def validate(groups) -> None:
         or len(identity["uuid"]) != 32
     ):
         raise ValueError("missing or invalid document identity")
+    return identity["uuid"]
+
+
+def validate(groups) -> None:
+    if not isinstance(groups, dict) or any(
+        not isinstance(rows, dict)
+        or any(not isinstance(row, dict) for row in rows.values())
+        for rows in groups.values()
+    ):
+        raise ValueError("records must map kinds and IDs to objects")
+    validate_identity(groups)
     for kind, rows in groups.items():
         for key, row in rows.items():
             record_id = row.get("id") or row.get("record_id")
@@ -108,6 +127,17 @@ def open_directory(root: Path, directory: Path):
         os.close(fd)
 
 
+def is_filesystem_path(value) -> bool:
+    """Return whether a textual path can be passed to filesystem calls."""
+    if not isinstance(value, str) or not value or "\0" in value:
+        return False
+    try:
+        os.fsencode(value)
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 @contextmanager
 def open_regular(root: Path, path: Path):
     """Open a regular file without following links or waiting on a FIFO."""
@@ -128,27 +158,42 @@ def read_regular(root: Path, path: Path, limit: int | None = None) -> bytes:
         return handle.read() if limit is None else handle.read(limit + 1)
 
 
-def read_file(target: Path, *, root: Path | None = None) -> tuple[bytes | None, dict]:
-    """Return raw bytes and the validated document sections of one state file."""
+def read_envelope(target: Path, *, root: Path | None = None):
+    """Read a state file without interpreting its individual records."""
     if target.is_symlink():
         raise LbError("state file cannot be a symlink: " + str(target), EXIT_REFUSED)
     if not target.exists():
-        return None, {}
+        return None, None
     try:
         data = read_regular(target.parent if root is None else root, target)
-        value = json.loads(data, object_pairs_hook=unique_object)
-        if (
-            not isinstance(value, dict)
-            or set(value) != {"format", "documents"}
-            or value["format"] != FORMAT
-            or not isinstance(value["documents"], dict)
-            or not value["documents"]
-        ):
-            raise ValueError("invalid state envelope")
-        for groups in value["documents"].values():
-            validate(groups)
-        return data, value["documents"]
+        return data, decode_json(data)
     except (OSError, ValueError, TypeError) as exc:
+        raise LbError(f"invalid state file {target}: {exc}", EXIT_REFUSED) from exc
+
+
+def document_sections(value) -> dict:
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"format", "documents"}
+        or value["format"] != FORMAT
+        or not isinstance(value["documents"], dict)
+        or not value["documents"]
+    ):
+        raise ValueError("invalid state envelope")
+    return value["documents"]
+
+
+def read_file(target: Path, *, root: Path | None = None) -> tuple[bytes | None, dict]:
+    """Return raw bytes and the validated document sections of one state file."""
+    data, value = read_envelope(target, root=root)
+    if data is None:
+        return None, {}
+    try:
+        sections = document_sections(value)
+        for groups in sections.values():
+            validate(groups)
+        return data, sections
+    except (ValueError, TypeError) as exc:
         raise LbError(f"invalid state file {target}: {exc}", EXIT_REFUSED) from exc
 
 

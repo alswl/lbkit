@@ -1,7 +1,6 @@
 """Build a unified candidate from a verified legacy inventory."""
 
 import hashlib
-import json
 import re
 from graphlib import CycleError, TopologicalSorter
 
@@ -520,7 +519,7 @@ def candidate(root, project, inventory, snapshot):
     if source["execution"]:
         name = source["execution"]["path"]
         old = execution.validate(
-            json.loads(snapshot[name], object_pairs_hook=state.unique_object),
+            state.decode_json(snapshot[name]),
             root / name,
         )
     metadata = {}
@@ -528,9 +527,7 @@ def candidate(root, project, inventory, snapshot):
     for row in source["sidecars"]:
         if row["unselected_sections"]:
             refuse("migration cannot switch a sidecar shared with unselected documents")
-        sections = json.loads(
-            snapshot[row["path"]], object_pairs_hook=state.unique_object
-        )["documents"]
+        sections = state.decode_json(snapshot[row["path"]])["documents"]
         for relative, groups in sections.items():
             state.validate(groups)
             if (

@@ -299,6 +299,53 @@ class LegacyConversionTest(TestCase):
         self.assertTrue(self.run_migration(token=token).value["changed"])
         self.assertTrue(load(str(self.root), LOG).markdown_authority)
 
+    def test_migration_state_decoder_refuses_malformed_and_overdeep_json(self):
+        for data in (b'{"duplicate":0,"duplicate":1}', b"\xff", b"[" * 100_000 + b"]" * 100_000):
+            with self.subTest(sample=data[:24]):
+                with self.assertRaisesRegex(LbError, "invalid migration state") as refusal:
+                    legacy_migration.load_json(data)
+                self.assertEqual(refusal.exception.code, 4)
+
+    def test_apply_rechecks_renamed_sidecar_before_publication(self):
+        base, project, _, request = legacy_migration.scope(str(self.root), LOG, "migrated", [])
+        result, archive = legacy_migration.prepare(base, project, "migrated", request)
+        self.assertEqual(result.code, 0)
+        retained = self.dump(
+            "lb/retained.json",
+            {"format": "lb-document-state", "documents": {
+                THINKING: {"document": self.identity("4" * 32)}
+            }},
+        )
+        sources = {path: path.read_bytes() for path in (
+            self.root / LOG, self.root / THINKING, self.root / SIDE, self.root / "lb/old.json",
+            retained,
+        )}
+        with self.assertRaisesRegex(LbError, "wrong sidecar"):
+            self.run_migration(token=archive["plan_token"])
+        for path in (TARGET, ARCHIVE, "lb/migrated.migration-done"):
+            self.assertFalse((self.root / path).exists())
+        self.assertEqual(sources, {path: path.read_bytes() for path in sources})
+
+    def test_unpublished_migration_rechecks_renamed_sidecar_before_receipt(self):
+        base, project, _, request = legacy_migration.scope(str(self.root), LOG, "migrated", [])
+        result, archive = legacy_migration.prepare(base, project, "migrated", request)
+        self.assertEqual(result.code, 0)
+        target = self.root / TARGET
+        backup = self.root / ARCHIVE
+        target.write_bytes(unified.encode(legacy_migration.initial_candidate(archive)))
+        backup.write_bytes(unified.encode(archive))
+        retained = self.dump(
+            "lb/retained.json",
+            {"format": "lb-document-state", "documents": {
+                LOG: {"document": self.identity("4" * 32)}
+            }},
+        )
+        sources = {path: path.read_bytes() for path in (target, backup, retained)}
+        with self.assertRaisesRegex(LbError, "wrong sidecar"):
+            self.run_migration(token=archive["plan_token"])
+        self.assertFalse(target.with_suffix(".migration-done").exists())
+        self.assertEqual(sources, {path: path.read_bytes() for path in sources})
+
     def test_held_writer_and_stale_legacy_document_refuse_changes(self):
         token = self.run_migration().value["plan_token"]
         stale = load(str(self.root), LOG)
