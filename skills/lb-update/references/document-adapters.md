@@ -32,11 +32,13 @@ Structured reads, checks, and supported writes in this repository use [bin/lb](.
 Run the following commands from the logbooks root directory; if the current directory differs, use the absolute path of `bin/lb` and pass `--root <approved logbook root>` explicitly. The root is a path-protection boundary, not a source of authorization, and must not be widened to parent directories to bypass access denial.
 
 ```sh
+bin/lb log list --json
+bin/lb log list --projects-dir '<project-root-relative-path>' --json
 bin/lb log context '<logbook-relative-path>' --json
 bin/lb log check '<logbook-relative-path>' --json
 ```
 
-- When the user has already specified the logbook, call `log context` directly; use `list --json` only when the logbook is not yet located and discovering the host project is allowed, passing a non-default `settings.documents.project_root` via `--projects-dir`. Never pick one of several candidates yourself. A specified path need not be discovered first.
+- When the user has already specified the logbook path, call `log context` directly. Use `log list` only when the logbook is not yet located and discovering the host project is allowed. Use the first discovery command for the default project root. For a non-default root, replace `<project-root-relative-path>` with the host's `settings.documents.project_root` relative to the approved logbooks root. Never pick one of several candidates yourself.
 - Read the logbook source and the authorization basis alongside. `log context` returns stages, task original text, line numbers, directories, and `version_token`; it does not contain full goals or authorization. `next_task` is only a parsed candidate — unknown states, skip records, or ambiguity must be verified against the source; never auto-skip items based on it. `bound_records` are body links only and cannot replace mind-forge metadata bindings.
 - `log check` is used for plan review, status verification, and post-write validation, targeting this round's logbook — not `--all` by default. On exit 1, read the problem details and distinguish structural errors from unverified links; it neither proves completion nor grants permission to fix or add tasks, and unrelated historical problems need not block the current task.
 
