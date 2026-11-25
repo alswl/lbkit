@@ -64,7 +64,7 @@ Preserve running work outside the authorized handoff.
    - **Work remains and execution plus delegation are authorized:** continue with steps 4–6.
 4. With the lb CLI, read [execution context](../../docs/installable/lb-cli.md#execution-state-in-project-json)
    and record the existing release instruction, or the authorized condition with
-   its check result, naming the receiving dispatch/recipient and scope; recording
+   its check result, naming the Task or receiving Dispatch, recipient and scope; recording
    is not a new approval request, and a matching release is reused on recovery.
    Prepare the remaining package with result, permissions, constraints, input
    snapshot, acceptance criteria and report-back entry. Required independent checks
@@ -84,14 +84,18 @@ Preserve running work outside the authorized handoff.
    dispatch/run/counter identities, reconcile saved bindings with the live
    recipient, and use full Herdr IDs or a verified unique name, never list indexes.
    Send the complete package and verify receipt plus execution/monitoring
-   readiness; a chat summary or created tab is insufficient. `lb agent send` needs
-   a stable operation ID and current Thinking and execution tokens; an unknown
+   readiness; a chat summary or created tab is insufficient. Use `lb task agent send`
+   with the current Task Binding for Task scope, or the existing `lb agent send`
+   path for Dispatch scope. Use a stable operation ID and current command tokens. An unknown
    outcome requires reconciliation, never a new ID or resend. On failure keep the
    handoff open, avoid concurrent writes, repair only the missing step and reuse a
    verified receipt. Keep `👨‍✈️` with the pending handoff fact while Captain still
    owns execution, using protected note replacement.
 6. Record receipt, execution readiness, monitor readiness and ownership as separate
    sourced observations through `log execution record`, including unknown values.
+   For Task scope include the send's `operation_id`. Check that these observations apply to the same release, send and recipient
+   binding as the pending transfer. Preserve current responsibility and reuse
+   the existing managed listener while any of these remain unverified.
    A submitted message is not readiness or review. Once evidence supports
    completion, sync the page projection, replace the task note through protected
    writes and read back; repair JSON/Markdown disagreement without another handoff.

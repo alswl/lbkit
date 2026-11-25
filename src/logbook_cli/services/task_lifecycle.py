@@ -63,44 +63,23 @@ def show(root, log, task_id):
 
         return Result(show_current(root, log, task_id))
     task, _, item = identity.lookup(doc, task_id)
-    return Result({"task": identity.snapshot(task, item), "version_token": doc.token})
+    return Result({"task": identity.snapshot(task, item, doc), "version_token": doc.token})
 
 
 def migrate(root, log, token, dry_run):
     from logbook_cli.edit import task_content_end
+    from logbook_cli.services.dependencies import effective, validate
 
     doc = writable(root, log, token)
     known = identity.bindings(doc)
-    graph = {
-        key: identity.dependencies(task, item) for key, (task, _, item) in known.items()
-    }
-    visiting, visited = set(), set()
-
-    def visit(key):
-        if key in visiting:
-            raise LbError("legacy dependency cycle", EXIT_REFUSED)
-        if key not in graph:
-            raise LbError("missing legacy dependency: " + key, EXIT_REFUSED)
-        if key in visited:
-            return
-        deps = graph[key]
-        if not isinstance(deps, list) or any(not isinstance(d, str) for d in deps):
-            raise LbError("invalid legacy dependencies", EXIT_REFUSED)
-        visiting.add(key)
-        for dependency in deps:
-            visit(dependency)
-        visiting.remove(key)
-        visited.add(key)
-
-    for key in graph:
-        visit(key)
+    validate(effective(doc))
     mappings = []
     edits = []
-    for task, _, item in identity.bindings(doc).values():
+    for task, _, item in known.values():
         if not ({"status"} | identity.LEGACY_REFERENCES).intersection(item):
             continue
         if (
-            not identity.snapshot(task, item)["consistent"]
+            not identity.snapshot(task, item, doc)["consistent"]
             or task.effective_state == "unknown"
         ):
             raise LbError(
@@ -186,7 +165,7 @@ def semantic_transition(
     if (
         "status" in old
         and task.state != "!"
-        and not identity.snapshot(task, old)["consistent"]
+        and not identity.snapshot(task, old, doc)["consistent"]
     ):
         raise LbError(
             "conflicting legacy state requires explicit migration", EXIT_REFUSED
@@ -228,7 +207,7 @@ def semantic_transition(
     if state not in allowed[action]:
         raise LbError(f"cannot {action} a {state} task", EXIT_REFUSED)
     if action in {"start", "complete"}:
-        for dep in identity.dependencies(task, old):
+        for dep in identity.task_dependencies(doc, task, old):
             predecessor, _, _ = identity.lookup(doc, dep)
             if predecessor.effective_state != "done":
                 raise LbError("hard dependency is not done: " + dep, EXIT_REFUSED)
@@ -365,11 +344,11 @@ def transition(
     if action == "start":
         if task.effective_state != "pending":
             raise LbError("task is not pending", EXIT_REFUSED)
-        for dep in identity.dependencies(task, old):
+        for dep in identity.task_dependencies(doc, task, old):
             predecessor, _, _ = identity.lookup(doc, dep)
             if predecessor.effective_state != "done":
                 raise LbError("hard dependency is not done: " + dep, EXIT_REFUSED)
-    view = identity.snapshot(task, old)
+    view = identity.snapshot(task, old, doc)
     if not view["consistent"]:
         raise LbError(
             "task metadata and checkbox disagree; reconcile human edits first",

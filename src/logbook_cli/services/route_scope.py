@@ -55,19 +55,20 @@ def _goals(lines):
 
 def route_scope(doc):
     anchors = {
-        task.line: key for key, (task, _, _) in task_identity.bindings(doc).items()
+        task.line: (key, record)
+        for key, (task, _, record) in task_identity.bindings(doc).items()
     }
     stages = []
     delivery_goals = {}
     for index, stage in enumerate(doc.stages):
         tasks = []
         for task in stage.tasks:
-            key = anchors.get(task.line)
-            if not key:
+            if task.line not in anchors:
                 raise LbError(
                     f"identify task at line {task.line} before confirming route",
                     EXIT_REFUSED,
                 )
+            key, record = anchors[task.line]
             tasks.append(
                 {
                     "task_id": key,
@@ -75,7 +76,7 @@ def route_scope(doc):
                     "criteria_digest": task_identity.criteria(task),
                     "human": task.human,
                     "repositories": task.repositories,
-                    "dependencies": task_identity.dependencies(task),
+                    "dependencies": task_identity.task_dependencies(doc, task, record),
                     "criteria": [
                         (annotation.kind.value, annotation.value.strip())
                         for annotation in task.annotations

@@ -44,6 +44,51 @@ def referenced(facts, identity, kind):
     return matches[0]
 
 
+def target_key(record):
+    return (
+        "task_id" if isinstance(record, dict) and record.get("scope") == "task"
+        else "dispatch_id"
+    )
+
+
+def validate_handoff_operation(fact, release, execution):
+    """Validate a current Task handoff against its persisted transport and binding."""
+    if release["scope"] != "task":
+        return
+    from logbook_cli.unified import digest
+
+    task_id = release["task_id"]
+    op = execution["operations"].get(fact.get("operation_id"))
+    request = op["request"] if op else {}
+    runtime = execution["tasks"].get(task_id, {})
+    binding_id = runtime.get("current_binding_id")
+    binding = runtime.get("execution_bindings", {}).get(binding_id)
+    if (
+        op is None
+        or op["outcome"] == "not_submitted"
+        or request.get("release_id") != release["id"]
+        or request.get("task_id") != task_id
+        or request.get("recipient") != release["recipient"]
+        or binding is None
+        or request.get("binding_id") != binding_id
+        or request.get("session_id") != binding["session_id"]
+        or request.get("binding_digest") != digest(binding)
+        or any(
+            other["outcome"] != "not_submitted"
+            and other["request"].get("release_id") == release["id"]
+            and other["request"].get("binding_id") == binding_id
+            for key, other in execution["operations"].items()
+            if key != op["id"]
+        )
+    ):
+        refuse("handoff must match the effective release, send and current recipient binding")
+    if op["outcome"] != "submitted" and (
+        fact["receipt"]["status"] == "accepted"
+        or fact["ownership"]["status"] == "recipient"
+    ):
+        refuse("reconcile unknown handoff delivery before recording acceptance or ownership")
+
+
 def validate_fact(fact, prior):
     if not isinstance(fact, dict):
         refuse("execution fact must be an object")
@@ -53,7 +98,8 @@ def validate_fact(fact, prior):
             "takeover": "id kind source origin release_condition",
             "ownership": "id kind source takeover_id owner conflicts settled",
             "condition-result": "id kind source takeover_id condition_id satisfied",
-            "delegation-release": "id kind source takeover_id dispatch_id recipient scope condition_result_id",
+            "delegation-release": "id kind source takeover_id " + target_key(fact)
+            + " recipient scope condition_result_id",
             "handoff": "id kind release_id receipt execution_ready monitor_ready ownership",
             "transport-resolution": "id kind source operation_id outcome",
             "business-action": "id kind source operation_id outcome",
@@ -63,6 +109,10 @@ def validate_fact(fact, prior):
     )
     if not shape:
         refuse("unsupported execution fact kind")
+    if kind == "handoff":
+        release = referenced(prior, fact.get("release_id"), "delegation-release")
+        if release["scope"] == "task":
+            shape += " operation_id"
     fields(fact, shape)
     text(fact["id"])
     if kind == "takeover":
@@ -76,18 +126,19 @@ def validate_fact(fact, prior):
         )
         condition = fact["release_condition"]
         if condition is not None:
-            fields(condition, "id source dispatch_id recipient scope")
+            key = target_key(condition)
+            fields(condition, "id source " + key + " recipient scope")
             source(
                 condition["source"],
                 ("human_instruction",)
                 if fact["origin"] == "explicit"
                 else ("human_instruction", "caller_judgment"),
             )
-            if fact["origin"] == "automatic" and condition["scope"] != "dispatch":
+            if fact["origin"] == "automatic" and condition["scope"] == "advancement":
                 refuse("automatic exit cannot release the whole advancement")
-            for key in ("id", "dispatch_id", "recipient"):
-                text(condition[key])
-            if condition["scope"] not in ("dispatch", "advancement"):
+            for field in ("id", key, "recipient"):
+                text(condition[field])
+            if condition["scope"] not in ("dispatch", "advancement", "task"):
                 refuse("invalid authorized condition scope")
         current = project(prior)
         if fact["origin"] == "automatic" and current["restricted"]:
@@ -112,9 +163,9 @@ def validate_fact(fact, prior):
                 refuse("check does not match a previously authorized condition")
         else:
             source(fact["source"], ("human_instruction", "caller_judgment"))
-            for key in ("dispatch_id", "recipient"):
+            for key in (target_key(fact), "recipient"):
                 text(fact[key])
-            if fact["scope"] not in ("dispatch", "advancement"):
+            if fact["scope"] not in ("dispatch", "advancement", "task"):
                 refuse("invalid delegation scope")
             if fact["source"]["kind"] != "human_instruction":
                 check = referenced(
@@ -126,8 +177,8 @@ def validate_fact(fact, prior):
                     or check["takeover_id"] != takeover["id"]
                     or condition is None
                     or any(
-                        fact[k] != condition[k]
-                        for k in ("dispatch_id", "recipient", "scope")
+                        fact[k] != condition.get(k)
+                        for k in (target_key(fact), "recipient", "scope")
                     )
                 ):
                     refuse("release exceeds the satisfied human-authorized condition")
@@ -138,6 +189,8 @@ def validate_fact(fact, prior):
         current = project(prior)
         if current["release"] is None or current["release"]["id"] != release["id"]:
             refuse("handoff refers to a superseded release")
+        if release["scope"] == "task":
+            text(fact["operation_id"])
         for key, values in {
             "receipt": ("accepted", "unknown", "rejected"),
             "execution_ready": ("ready", "unknown", "not_ready"),
@@ -160,7 +213,7 @@ def validate_fact(fact, prior):
             refuse("transport reconciliation requires a definite observed outcome")
 
 
-def project(facts):
+def project(facts, execution=None):
     takeover = ownership = release = handoff = None
     for fact in facts:
         kind = fact["kind"]
@@ -172,6 +225,11 @@ def project(facts):
             release, handoff = fact, None
         elif kind == "handoff":
             handoff = fact
+    if handoff and release and release["scope"] == "task" and execution is not None:
+        try:
+            validate_handoff_operation(handoff, release, execution)
+        except LbError:
+            handoff = None
     complete = bool(
         handoff
         and all(
@@ -191,8 +249,12 @@ def project(facts):
         and not ownership["conflicts"]
         and ownership["settled"]
     )
-    if handoff and not complete and handoff["ownership"]["status"] != "captain":
-        safe = False
+    if handoff and not complete:
+        ownership_status = handoff["ownership"]["status"]
+        if ownership_status == "conflict" or (
+            release["scope"] != "task" and ownership_status != "captain"
+        ):
+            safe = False
     return {
         "takeover": takeover,
         "ownership": ownership,

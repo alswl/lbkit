@@ -38,6 +38,9 @@ Use lifecycle and canonical Task facts, not heading emoji or stale prose, to rep
 progress. Distinguish done, cancelled, blocked, pause and unknown; unknown/pause
 items remain visible but are not schedulable. Hard dependencies and human gates
 still govern the next action. Do not dispatch merely because work appears ready.
+Resolve the current result entry from the Task and candidate's evidence. If an
+entry was moved or removed, show the verified replacement or report that none
+could be verified. State who owns the next action and whether it needs user input.
 
 Use records only when requested. Otherwise inspect an identifiable executor
 through authorized read-only Herdr observations when available. Distinguish live

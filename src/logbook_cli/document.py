@@ -81,6 +81,7 @@ class Document:
     legacy_history: dict = field(default_factory=dict)
     legacy_metadata: dict = field(default_factory=dict)
     unified_state_path: Path | None = None
+    task_dependency_graph: dict[str, list[str]] | None = None
 
     @property
     def state_path(self) -> Path:
@@ -504,7 +505,7 @@ def context(doc: Document) -> dict:
     identity_errors = []
     try:
         managed = {
-            task.line: snapshot(task, item) for task, _, item in bindings(doc).values()
+            task.line: snapshot(task, item, doc) for task, _, item in bindings(doc).values()
         }
     except LbError as exc:
         managed = {}

@@ -74,6 +74,11 @@ def unique_keys(pairs):
 
 
 def read(doc):
+    path, data, value, _ = _read(doc)
+    return path, data, value
+
+
+def _read(doc):
     if doc.markdown_authority:
         from logbook_cli import unified
 
@@ -92,9 +97,9 @@ def read(doc):
             "facts": ex["facts"],
             "operations": list(ex["operations"].values()),
         }
-        raw = unified.encode({"identity": identity, "execution": ex})
-        return path, raw, value
-    return find_legacy(doc.root, doc.path, strict=False)
+        raw = unified.section_content(envelope, "execution")
+        return path, raw, value, ex
+    return (*find_legacy(doc.root, doc.path, strict=False), None)
 
 
 def matches_binding(base, binding, document):
@@ -185,19 +190,28 @@ def initial(doc, thinking, name=None, advancement=None, captain=None):
     }
 
 
-def projection(value):
+def projection(value, runtime=None):
     from logbook_cli.execution_facts import project
 
-    result = project(value["facts"] if value else [])
+    result = project(value["facts"] if value else [], runtime)
     result["unresolved_operations"] = (
         [op["id"] for op in value["operations"] if op["outcome"] == "unknown"]
         if value
         else []
     )
     if result["unresolved_operations"]:
-        result.update(
-            handoff_reported_complete=False, restricted=True, reported_owner="unknown"
+        release = result["release"]
+        pending_task_handoff = (
+            release and release["scope"] == "task"
+            and result["reported_owner"] == value["captain"]
+            and all(
+                op["request"].get("release_id") == release["id"]
+                for op in value["operations"] if op["outcome"] == "unknown"
+            )
         )
+        result.update(handoff_reported_complete=False, restricted=True)
+        if not pending_task_handoff:
+            result["reported_owner"] = "unknown"
     result["reply_prefix"] = (
         "👨‍✈️" if value and result["reported_owner"] == value["captain"] else ""
     )
@@ -207,8 +221,8 @@ def projection(value):
 def view(doc):
     from logbook_cli.document import summary_lines
 
-    path, data, value = read(doc)
-    result = projection(value)
+    path, data, value, runtime = _read(doc)
+    result = projection(value, runtime)
     markers = ["👨‍✈️" in row["raw"] for row in summary_lines(doc)]
     return {
         "path": str(path.relative_to(doc.root)) if path else None,
@@ -231,7 +245,7 @@ def operation_task(operation):
     return operation.get("legacy_task_id", operation["request"].get("task_id"))
 
 
-def require_delegation(doc, dispatch_id=None, owner=None):
+def require_delegation(doc, dispatch_id=None, owner=None, *, task_id=None):
     _, _, value = read(doc)
     if value is None:
         if any(
@@ -256,10 +270,13 @@ def require_delegation(doc, dispatch_id=None, owner=None):
         return
     if (
         release
-        and release["dispatch_id"] == dispatch_id
         and release["recipient"] == owner
+        and (
+            release["scope"] == "task" and release["task_id"] == task_id
+            or release["scope"] != "task" and release["dispatch_id"] == dispatch_id
+        )
     ):
-        return
+        return release
     raise LbError(
         "Captain takeover restricts delegation across tasks; keep independent review pending until recorded release applies",
         EXIT_REFUSED,
@@ -304,7 +321,7 @@ def write(doc, name, value, token, dry_run):
                 ex[key] = value[key]
         changed = value != old
         if changed and not dry_run:
-            unified.publish(target, envelope)
+            unified.publish_run(doc.root, target, envelope)
         return {
             "path": str(target.relative_to(doc.root)),
             "state": value,
@@ -314,7 +331,7 @@ def write(doc, name, value, token, dry_run):
             "changed": changed,
             "dry_run": dry_run,
             "record_saved": not dry_run,
-            "projection": projection(value),
+            "projection": projection(value, ex),
         }
     path, data, old = read(doc)
     require_token(doc, path, data, token)

@@ -1,8 +1,8 @@
 # Markdown authority and explicit synchronization
 
-Markdown is the SSOT for document content, Task identity, state, conditions,
-dependencies and readable artifact references. Current Markdown wins; JSON never
-writes document state back. The nearest ancestor with `mind.yaml` is the project,
+Markdown is the SSOT for document content, Task identity, state, conditions and
+readable artifact references. The Run's dependency file owns Task relationships
+after cutover. The nearest ancestor with `mind.yaml` is the project,
 otherwise `--root`. Consumers own these files and choose when to adopt the new
 contract; installation does not initialize or rewrite their records.
 
@@ -45,6 +45,22 @@ dispositions, archives and link observations. A migrated run's top-level
 identity, execution and monitoring remain unchanged. Use the supported CLI for
 state changes.
 
+## Task dependencies
+
+`lb/<name>.dependencies.json` stores the Run ID and an ordered set of Task
+relationships. The main Run's `dependency_source` marks the authoritative file.
+The first eligible Run write publishes the dependency file and then the marker
+under the Run lock. This migration preserves the Markdown bytes and the effective
+graph used for route confirmation. Queries and previews continue to read the
+legacy annotations until the marker is published. New dependency edits use
+`lb task depends` with the current `log route` reference. The CLI rejects missing
+or invalid authoritative files, unknown Task IDs, duplicate edges and cycles.
+
+Before deploying this change, drain already-started old CLI writers across the
+project's `lb/` directory. Older CLI versions reject the new marker and can refuse
+other Runs in the same directory. Keep the matching CLI, skills and contracts in
+use across the project after cutover.
+
 ## Read and edit
 
 Queries read current Markdown and expose missing/stale/synced. They never sync
@@ -86,7 +102,12 @@ The source digest detects projection freshness; it is not a caller write token.
 Short local locks serialize cooperating writers and atomic replacement prevents
 partial files. Arbitrary editors do not join those locks: last Markdown save wins,
 and the CLI cannot guarantee removal of every external-editor overwrite window.
-No paired Markdown/JSON journal or global pending transaction is required.
+When a Task replacement changes both Markdown and the dependency graph, the Run
+uses a recoverable transaction. An interrupted transaction blocks Run operations
+until `lb log recover LOG --dry-run --json` has supplied a token and
+`lb log recover LOG --expect-version TOKEN --json` has completed the changes.
+Recovery preserves later edits by refusing unexpected file contents. Ordinary
+Markdown edits and projection sync remain separate operations.
 
 Execution and monitoring writes retain their own context tokens and unknown-send
 safety. A fresh token is not authorization to resend. Preserve unknown intent until

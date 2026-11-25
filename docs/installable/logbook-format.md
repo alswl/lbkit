@@ -148,7 +148,10 @@ without it the caller must explicitly choose a destination. Legacy
 marker. Pause retains the blocker; resume does not resolve it. Unknown checkbox
 markers stay visible with diagnostics and are never selected as next work.
 
-`- Depends: ID, ID` names hard dependencies; only done satisfies them. Cancellation
+Hard dependencies require a done predecessor. Use `lb task depends` to manage
+them for a Run. Older formats may have `- Depends: ID, ID` annotations. After the
+Run switches to its dependency file, those annotations remain historical text.
+Cancellation
 uses `[-]` plus readable Resolution prose; the task record in `lb/` holds
 `as: cancelled`, task digest, decision, note, actor and source. Existing `human-cancelled` provenance remains valid; legacy
 not-applicable or unexplained skips are not silently reclassified.

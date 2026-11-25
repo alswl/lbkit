@@ -13,7 +13,7 @@ BLOCKER = "    - Blocker: Baseline input unavailable\n"
 class StageSummaryTests(unittest.TestCase):
     def setUp(self):
         execution_read = patch(
-            "logbook_cli.execution.read", return_value=(None, b"", None)
+            "logbook_cli.execution._read", return_value=(None, b"", None, None)
         )
         execution_read.start()
         self.addCleanup(execution_read.stop)

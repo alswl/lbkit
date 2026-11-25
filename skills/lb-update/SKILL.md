@@ -63,6 +63,11 @@ Choose the entry from the user's intent before choosing a write mode:
 
 Reread human edits first and discard stale assumptions. Already-saved human route changes remain authoritative; acknowledging them does not authorize further route edits. When the request also asks to change the route, compose lb-plan for that part, read back the resulting route and current token, then use lb-update for the requested progress against its current criteria. Reassess affected evidence; a new token alone does not establish applicability. Keep undecided route changes as proposals and update unaffected authorized facts when possible. A plain status query belongs to lb-status.
 
+When the usable result entry changes, verify its replacement against the current
+Task and candidate before replacing the stale current summary. Keep prior entries
+as history with the existing human decisions. If cleanup is separately authorized,
+verify the replacement before cleanup and read back the final entry afterward.
+
 For authorized writes, mode is format (document maintenance), progress (result updates), or close (recording project wrap-up). These modes are internal write operations, not substitutes for the two user intents. Any new completion conclusion must align an applicable executor result (Sailor return or attributed Captain takeover result); it cannot be smuggled through format mode.
 
 ## Direct execution results

@@ -4,6 +4,9 @@ Terms for observing cooperating agents and handling their requests.
 
 ## Language
 
+**Task（任务）**:
+A unit of planned work with its own acceptance criteria and current responsibility.
+
 **Sailor**:
 The collaborating agent responsible for executing an accepted work instruction and returning its results.
 _Avoid_: Pane, tab, Herdr agent (execution resources or backend-specific identities)
@@ -21,10 +24,27 @@ The current Human or Agent assigned to a Task. Admiral/Captain/Sailor describe
 logical roles; Human/Agent describe engineering subjects. Assignment alone does
 not start work, stop old work or authorize runtime control.
 
+**Handoff（交回）**:
+The transfer of responsibility for remaining work from the current owner to an
+authorized recipient whose acceptance and readiness have been verified.
+
 **Execution binding**:
 An immutable snapshot locating a Task's actual subject, machine, native session,
 repository/work directory and instruction input. A Task can retain historical
 bindings; its current binding is only a reference.
+
+**Preflight（预检）**:
+Preparation for planned work that checks applicable prerequisites and records current evidence and gaps. It operates within existing authorization.
+
+**Seat Requirement（席位需求）**:
+A prerequisite in a route that calls for a Sailor to support one or more Tasks.
+It can exist before a Sailor is selected or assigned responsibility for a Task.
+
+**Self-Check Request（自检请求）**:
+A request for a selected Sailor to check a prerequisite in the intended execution environment.
+
+**Self-Check Evidence（自检证据）**:
+A Sailor's attributable result for a specific Self-Check Request and execution environment.
 
 **Document projection**:
 Rebuildable structured data generated explicitly from Markdown by sync-state.

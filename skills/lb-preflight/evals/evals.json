@@ -589,6 +589,32 @@
           "check": "Uses collection output as test pass evidence, runs business tests, writes a result or attempts a handshake or send."
         }
       ]
+    },
+    {
+      "id": 25,
+      "axis": "Prepare authorized prerequisites across stages using the working environment",
+      "prompt": "Use the installed lb-preflight skill to prepare the approved route in log.md. Perform whatever existing authorization allows in this consumer, preserve uncommitted work, and report the current coverage and next decisions. Keep business tasks undispatched.",
+      "expected_output": "Both local prerequisites are restored and verified. The remaining task stays unchecked until real upstream output exists.",
+      "files": [
+        "fixtures/route-preparation.json"
+      ],
+      "assertions": [
+        {
+          "name": "actual_preparation",
+          "type": "contains",
+          "check": "Tool trace confirms the working source and approved digest before restoring inputs/approved.json. The later config/reader.json is restored and verified against the existing sample."
+        },
+        {
+          "name": "scope_and_readiness",
+          "type": "contains",
+          "check": "Logbook and uncommitted file bytes remain unchanged. The report distinguishes readiness of the selected preparation step from C, which requires an actual downstream verification."
+        },
+        {
+          "name": "no_new_credentials_or_dispatch",
+          "type": "not_contains",
+          "check": "Requests new credentials without testing the available source, dispatches, starts business work, or claims downstream acceptance."
+        }
+      ]
     }
   ]
 }

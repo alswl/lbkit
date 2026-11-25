@@ -8,9 +8,9 @@ description: "Check the current logbook route step by step against actual skill 
 
 ## Purpose and inputs
 
-Take the saved route one concrete preparation step forward: inspect the actual
-selected capability and obtain supported preview/dry-run findings. Inputs are
-current Logbook/context, next Task, relevant design and existing authorization.
+Prepare the next Task and the known prerequisites of the confirmed route.
+Inputs are the current Logbook/context, relevant design, existing authorization,
+and earlier preparation evidence.
 Preflight reports preparation; it does not grant execution authority.
 
 Read the installed [configuration](../../docs/installable/configuration.md),
@@ -28,11 +28,13 @@ specification and prior preparation. Select the actual next authorized step;
 Existing human gates remain binding. Unconfirmed design does not prohibit useful
 read-only preparation, but green does not confirm design or authorize implementation.
 
-Inspect only the selected step and its real dependencies. Compare expected result,
-actual skill definition, inputs, execution location and verification method.
-Distinguish control entry, source and destination; do not scan unrelated future
-environments. Reuse unaffected findings. A changed route, skill, environment or
-criterion invalidates the relevant preparation, not automatically the whole route.
+Inspect the selected operation in detail. For each confirmed stage, inventory
+the prerequisites that affect its Tasks: authorization, work locations, skills,
+repository synchronization, authentication and assigned executors. Record
+the affected Task, evidence, owner and clearance condition. Check only relevant
+environments. If a prerequisite can be verified only later, name the step that
+makes it verifiable and keep it pending. Reuse applicable evidence and repeat
+checks only where their inputs or scope changed.
 
 Independent read-only analyses may be useful within existing authorization; there
 is no fixed delegation quota. Gather any delegated findings before concluding.
@@ -47,10 +49,12 @@ replacement, missing prerequisites and recovery needs. A skill name or inferred
 outcome is not a preview. If preview is unsupported, state that fact and the
 available read-only evidence. Never perform an actual mutation to fake a preview.
 
-Perform routine preparation within existing authority. Apply actual human limits
-and review counting; do not invent a universal approval gate. For a material new
-choice, ask a focused question with consequences. An unchanged obstacle becomes
-an explicit blocker instead of endless identical retries.
+Perform and read back routine preparation across the confirmed route where
+existing authority permits it. Compare the current setup with known working
+configurations before asking for credentials or replacing a worktree. Preserve
+uncommitted work and respect protected access and human limits. Continue other
+authorized preparation when a prerequisite needs a human decision. Consolidate
+new decisions and inputs with their effects on the affected Tasks.
 
 Feed actual discrepancies back into lb-plan and save the revised affected route.
 Then inspect the revised concrete next step. Built-in-only work is valid and needs
@@ -66,6 +70,25 @@ or a relevant capability change, validate the affected path using the
 Full host acceptance is not a prerequisite for work using an already verified path.
 Provided setup records are controlled observations, not live environment checks.
 
+For a managed Task, derive the complete self-check list from the confirmed route
+and approved work package. Preserve each Sailor's Task, role, and check. Record
+only the exact authorized list with `lb log preflight-plan`. Use an empty list
+only when the confirmed scope calls for no Sailor checks. An unresolved
+assignment or unreadable declaration leaves the affected checks unverified.
+Use the assigned Sailor's current Binding when available. For preparation
+before business binding, use an environment named in the approved declaration
+and verify its machine, native session and work directory. A changed environment
+requires current approval and a new check.
+
+Use `lb agent self-check` for authorized preparation and
+`lb log preflight-observe` to read back the actual reply. Match each reply to
+the original operation, subject, current session, work directory and approved
+candidate before using it. A submitted receipt or idle session establishes no
+result. Reconcile unknown delivery before sending again. Keep valid results in
+the temporary cache and repeat only affected checks after a session or scope
+change. Report unsupported reply channels as unverified. Business dispatch and
+Task ownership changes follow their normal authorized workflow.
+
 
 For coordinated waiting, verify managed Observation setup and stable document/native
 bindings. Claude Code prefers native Monitor with managed wait --stream when
@@ -80,8 +103,9 @@ source/version, actual preview result, risks, gaps and next action. Preserve
 historical evidence but do not duplicate the current Task list. Explicitly mark
 uninspected future work as not checked; no blanket route-wide green from one preview.
 
-Report ready / needs input / blocked for the inspected scope, with current
-Logbook line locators and a link to details. Record a new 🔮 marker only on an
+Report ready, confirmed missing, unverified, or not applicable for applicable
+prerequisites, with current Logbook line locators and a link to details. Give
+the selected Task and the broader route their own readiness statements. Record a new 🔮 marker only on an
 explicit human ruling; existing markers retain their human-only resolution rule.
 No preview claim substitutes for design confirmation, human acceptance or execution
 permission. Return to the authorized calling flow when preparation is sufficient.

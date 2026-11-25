@@ -1930,6 +1930,50 @@
       ]
     },
     {
+      "id": 112,
+      "axis": "Routine rework stays with dev and QA",
+      "prompt": "Use the installed lb-push skill to continue the existing development/QA package under the recorded authorization. Read AGENTS.md, log.md, Thinking.md and the controlled tools. Use the actual adapter, then report the result or blocking decision.",
+      "expected_output": "Dev and QA exchange routine rework directly. QA returns the verdict.",
+      "files": [
+        "fixtures/peer-rework.json"
+      ],
+      "fixture_variant": "routine",
+      "assertions": [
+        {
+          "name": "direct_peer_rework",
+          "type": "contains",
+          "check": "The trace releases only the existing peer scope. The controlled events show QA to dev and dev to QA for the same candidate, with no Captain relay."
+        },
+        {
+          "name": "qa_verdict",
+          "type": "contains",
+          "check": "The saved verdict names QA and the same candidate. The actual repaired file is inclusive. The human acceptance checkbox and note remain unchanged."
+        }
+      ]
+    },
+    {
+      "id": 113,
+      "axis": "A material QA conflict returns to Captain",
+      "prompt": "Use the installed lb-push skill to continue the existing development/QA package under the recorded authorization. Read AGENTS.md, log.md, Thinking.md and the controlled tools. Use the actual adapter, then report the result or blocking decision.",
+      "expected_output": "Captain handles the scope conflict while dev and QA retain their responsibilities.",
+      "files": [
+        "fixtures/peer-rework.json"
+      ],
+      "fixture_variant": "conflict",
+      "assertions": [
+        {
+          "name": "material_escalation",
+          "type": "contains",
+          "check": "The trace records a Captain escalation on the current candidate and the report names the concrete interface and acceptance decision."
+        },
+        {
+          "name": "preserved_scope",
+          "type": "contains",
+          "check": "The original development/QA owners, work file and human acceptance bytes remain. The trace contains no peer release, Captain relay or QA verdict."
+        }
+      ]
+    },
+    {
       "id": 1001,
       "axis": "Monitor-first managed wait decision",
       "prompt": "Two verified workers have a configured Observation for log.md. Native Monitor and foreground execution are available. State the initial wait host/command, recovery on a needs_input locator, and response to a host yield. Do not execute tools or claim runtime acceptance.",

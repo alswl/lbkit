@@ -41,11 +41,16 @@ def read(path, root=None):
         )
         if (
             not isinstance(value, dict)
-            or set(value) - {"legacy_migration", "legacy_history"}
+            or set(value)
+            - {"legacy_migration", "legacy_history", "preflight", "dependency_source"}
             != {"format", "identity", "documents", "execution", "monitoring"}
             or value["format"] != FORMAT
         ):
             raise ValueError("unsupported state format")
+        if "dependency_source" in value and value["dependency_source"] != path.with_suffix(
+            ".dependencies.json"
+        ).name:
+            raise ValueError("invalid dependency source")
         identity = value["identity"]
         if (
             set(identity) != {"run_id", "log_path", "document_paths"}
@@ -73,6 +78,20 @@ def read(path, root=None):
             raise ValueError("invalid execution")
         if not re.fullmatch(r"[0-9a-f]{32}", identity["run_id"]):
             raise ValueError("invalid run ID")
+        if "preflight" in value:
+            preflight = value["preflight"]
+            if (
+                not isinstance(preflight, dict)
+                or set(preflight) != {"enrolled", "plans"}
+                or not isinstance(preflight["enrolled"], list)
+                or not all(
+                    isinstance(item, str) and item for item in preflight["enrolled"]
+                )
+                or len(set(preflight["enrolled"])) != len(preflight["enrolled"])
+                or not isinstance(preflight["plans"], dict)
+                or set(preflight["plans"]) - set(preflight["enrolled"])
+            ):
+                raise ValueError("invalid managed preflight state")
         required_runtime = {
             "assignee",
             "assignment_revision",
@@ -186,7 +205,7 @@ def runs(root, directory):
         if path.is_symlink():
             raise LbError("unsafe state symlink", EXIT_REFUSED)
         # Old document sidecars never become new-run inputs.
-        if path.name.endswith(".md.json"):
+        if path.name.endswith((".md.json", ".dependencies.json", ".dependencies-transaction.json")):
             continue
         try:
             raw = json.loads(
@@ -198,7 +217,7 @@ def runs(root, directory):
             yield path, read(path, root)
 
 
-def locate(root, log, *, required=False):
+def locate(root, log, *, required=False, recovering_dependencies=False):
     directory = state.directory(log, root)
     relative = state.section(log, root)
     matches = [
@@ -216,6 +235,10 @@ def locate(root, log, *, required=False):
         assert_authority(root, directory, relative, matches[0] if matches else None)
     if matches:
         path, value = matches[0]
+        from logbook_cli.services.dependency_transaction import present
+
+        if not recovering_dependencies and present(path):
+            raise LbError("unfinished dependency transaction; use log recover on its Logbook", EXIT_REFUSED)
         old_sidecar = state.path_for(log, root)
         journal = state.journal_for(log, root)
         migration = value.get("legacy_migration")
@@ -269,6 +292,22 @@ def publish(path, value):
     finally:
         os.close(fd)
     return True
+
+
+def publish_run(root, path, value):
+    """Publish an actual Run mutation under its writer lock, staging cutover if eligible."""
+    from logbook_cli.repository import markdown_document
+    from logbook_cli.services import dependencies
+    from logbook_cli.task_identity import bindings
+
+    if "dependency_source" not in value:
+        log = path.parent.parent / value["identity"]["log_path"]
+        doc = markdown_document(state.read_regular(root, log), log, root)
+        if not any(stage.unknown_task_lines for stage in doc.stages) and len(
+            bindings(doc)
+        ) == sum(len(stage.tasks) for stage in doc.stages):
+            dependencies.stage_cutover(doc, path, value)
+    return publish(path, value)
 
 
 def initialize(root, log, name, documents, dry_run=False):
@@ -351,5 +390,12 @@ def initialize(root, log, name, documents, dry_run=False):
         }
 
 
+def section_content(value, section):
+    data = {"identity": value["identity"], section: value[section]}
+    if section == "execution" and "preflight" in value:
+        data["preflight"] = value["preflight"]
+    return encode(data)
+
+
 def section_token(value, section):
-    return digest({"identity": value["identity"], section: value[section]})
+    return hashlib.sha256(section_content(value, section)).hexdigest()

@@ -254,6 +254,8 @@ route(execution_commands, "record", execution.record, LOG, INPUT, TOKEN, DRY_RUN
 
 
 def register(app):
+    from logbook_cli.services import tasks as task_service
+
     app.add_command(log)
     app.add_command(dispatch)
     app.add_command(agent)
@@ -274,6 +276,11 @@ def register(app):
         DRY_RUN,
     )
     route(tasks.task, "show", task_lifecycle.show, LOG, click.argument("task_id"))
+    route(
+        tasks.task, "depends", task_service.depends, LOG,
+        click.option("--task-id", required=True), INPUT,
+        click.option("--expect-route", required=True), DRY_RUN,
+    )
     route(tasks.task, "migrate", task_lifecycle.migrate, LOG, DOCUMENT_TOKEN, DRY_RUN)
     for action in ("complete", "pause", "resume", "block", "unblock"):
         route(
@@ -441,8 +448,10 @@ EXECUTION_TOKEN = click.option(
 
 
 def register_task_coordination():
+    from logbook_cli.services import self_check, transport
     from logbook_cli.services import task_coordination as service
-    from logbook_cli.services import transport
+
+    route(agent, "self-check", self_check.send, LOG, INPUT, EXECUTION_TOKEN, DRY_RUN)
 
     for name, action in [
         ("assign", "assign"),

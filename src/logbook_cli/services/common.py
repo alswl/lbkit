@@ -48,7 +48,7 @@ def writable(root: str, log: str, token: str) -> Document:
     return doc
 
 
-def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Result:
+def save(doc: Document, changed: str, dry_run: bool, *, dependency_graph=None, **details: object) -> Result:
     from logbook_cli.state import encode, path_for, section, token
 
     if doc.markdown_authority:
@@ -86,7 +86,10 @@ def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Resul
                     + nl
                 )
         require_valid_candidate(doc, changed)
-        return Result({**edit_document(doc, changed, dry_run), **details})
+        return Result({
+            **edit_document(doc, changed, dry_run, dependency_graph=dependency_graph),
+            **details,
+        })
     require_valid_candidate(doc, changed)
     write_bytes(doc, changed.encode("utf-8"), dry_run)
     path = str(doc.path.relative_to(doc.root))

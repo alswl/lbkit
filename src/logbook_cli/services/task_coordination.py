@@ -326,7 +326,7 @@ def mutate(root, log, task_id, input_file, execution_token, dry_run, action):
         changed = prior != runtime
         value["execution"]["tasks"][task_id] = runtime
         if changed and not dry_run:
-            unified.publish(path, value)
+            unified.publish_run(doc.root, path, value)
         return {
             "changed": changed,
             "task_id": task_id,
@@ -356,7 +356,7 @@ def show(root, log, task_id):
             "sync_status": doc.sync_status,
         }
     return {
-        "task": snapshot(task, item),
+        "task": snapshot(task, item, doc),
         "runtime": runtime,
         "sync_status": doc.sync_status,
         "results": [

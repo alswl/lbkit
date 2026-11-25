@@ -53,6 +53,56 @@ def next_task(root: str, log: str) -> Result:
     return Result(context(load(root, log))["next_task"])
 
 
+def depends(root, log, task_id, input_file, expect_route, dry_run=False):
+    from dataclasses import replace
+
+    from logbook_cli import state, unified
+    from logbook_cli.services import dependencies
+    from logbook_cli.services.agent_observation import _input
+    from logbook_cli.services.route_scope import route_scope
+
+    doc = load(root, log)
+    if not doc.markdown_authority:
+        raise LbError("dependency editing requires an initialized Run", EXIT_REFUSED)
+    request = _input(doc, input_file)
+    if not isinstance(request, dict) or set(request) != {"depends_on"}:
+        raise LbError("dependency input requires depends_on", EXIT_USAGE)
+    edges = request["depends_on"]
+    if not isinstance(edges, list) or any(not isinstance(edge, str) for edge in edges):
+        raise LbError("depends_on must be a list of Task IDs", EXIT_USAGE)
+    with unified.writer(doc.root, doc.path, dry_run):
+        doc = writable(root, log, None)
+        target, run = unified.locate(doc.root, doc.path, required=True)
+        if state.section(doc.path, doc.root) != run["identity"]["log_path"]:
+            raise LbError("edit dependencies on the Run Logbook", EXIT_REFUSED)
+        before = route_scope(doc)
+        if before["route_ref"] != expect_route:
+            raise LbError("route changed; reread before editing dependencies", EXIT_REFUSED)
+        graph = dict(dependencies.effective(doc))
+        if task_id not in graph:
+            raise LbError("unknown dependency Task: " + task_id, EXIT_REFUSED)
+        changed = graph[task_id] != edges
+        graph[task_id] = edges
+        dependencies.validate(graph)
+        after = route_scope(replace(doc, task_dependency_graph=graph))
+        if changed and not dry_run:
+            if "dependency_source" not in run:
+                dependencies.stage_cutover(doc, target, run)
+                unified.publish(target, run)
+            dependencies.replace_graph(doc, target, run, graph)
+    return Result({
+        "task_id": task_id,
+        "dependencies": graph,
+        "route_ref": after["route_ref"],
+        "affected_task_scopes": sorted(
+            key for key, scope in after["task_scopes"].items()
+            if scope != before["task_scopes"].get(key)
+        ),
+        "changed": changed,
+        "dry_run": dry_run,
+    })
+
+
 def add(
     root: str,
     log: str,
@@ -230,6 +280,7 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
     from logbook_cli.document import parse_text, safe_path
     from logbook_cli.edit import task_content_end
     from logbook_cli.models import Field
+    from logbook_cli.services import dependencies
 
     doc = writable(root, log, token)
     records.single_line(decision, "decision")
@@ -268,7 +319,7 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
     for _, _, row in known.values():
         task_identity.require_migrated_references(row)
     identified_lines = {t.line for t, _, _ in known.values()}
-    if any(
+    if doc.task_dependency_graph is None and any(
         t.line not in identified_lines and record["id"] in task_identity.dependencies(t)
         for stage in doc.stages
         for t in stage.tasks
@@ -286,22 +337,16 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
                 raise LbError(
                     "resolve in-flight binding before replacement", EXIT_REFUSED
                 )
-    affected = {
-        i
-        for i, (t, _, _) in known.items()
-        if record["id"] in task_identity.dependencies(t)
-    }
+    original_graph = dependencies.effective(doc)
+    affected = {key for key, edges in original_graph.items() if record["id"] in edges}
     if set(mapping) != affected:
         raise LbError(
             "reference map must name every affected live task exactly once",
             EXIT_REFUSED,
         )
-    graph = {
-        i: task_identity.dependencies(t)
-        for i, (t, _, _) in known.items()
-        if i != record["id"]
-    }
-    graph.update({i: task_identity.dependencies(old) for i in ids})
+    graph = dict(original_graph)
+    predecessors = graph.pop(record["id"])
+    graph.update({i: predecessors for i in ids})
     for i, deps in mapping.items():
         if (
             not isinstance(deps, list)
@@ -309,31 +354,13 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
             or any(not isinstance(d, str) or d not in graph for d in deps)
         ):
             raise LbError("invalid replacement dependency mapping", EXIT_REFUSED)
-        if not set(task_identity.dependencies(known[i][0])) - {record["id"]} <= set(
-            deps
-        ):
+        if not set(original_graph[i]) - {record["id"]} <= set(deps):
             raise LbError("mapping must preserve unrelated dependencies", EXIT_REFUSED)
         graph[i] = deps
-    visiting, visited = set(), set()
-
-    def visit(i):
-        if i in visiting:
-            raise LbError("dependency cycle", EXIT_REFUSED)
-        if i not in graph:
-            raise LbError("missing dependency: " + i, EXIT_REFUSED)
-        if i in visited:
-            return
-        visiting.add(i)
-        for dep in graph[i]:
-            visit(dep)
-        visiting.remove(i)
-        visited.add(i)
-
-    for i in graph:
-        visit(i)
+    dependencies.validate(graph)
     nl = "\r\n" if b"\r\n" in doc.data else "\n"
     edits = []
-    for i in affected:
+    for i in affected if not doc.markdown_authority else ():
         t = known[i][0]
         for a in t.annotations:
             if a.kind is Field.DEPENDS:
@@ -351,7 +378,7 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
             f"    - Source: Split from {record['id']}: {old.text}; "
             f"decision: {decision}; verify acceptance separately.{nl}"
         )
-        if graph[r["id"]]:
+        if graph[r["id"]] and not doc.markdown_authority:
             additions += "    - Depends: " + ", ".join(graph[r["id"]]) + nl
     edits.append((old.start, stop, additions))
     changed = doc.text
@@ -373,7 +400,11 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
         records.put(doc, "task", {"id": r["id"]})
     candidate = parse_text(changed.encode(), doc.path, doc.root, source=doc)
     task_identity.bindings(candidate)
-    return save(doc, changed, dry_run, replacement_ids=ids, reference_changes=mapping)
+    return save(
+        doc, changed, dry_run,
+        dependency_graph=graph if doc.markdown_authority else None,
+        replacement_ids=ids, reference_changes=mapping,
+    )
 
 
 def resolve(
