@@ -105,10 +105,23 @@ uninspected future work as not checked; no blanket route-wide green from one pre
 
 Report ready, confirmed missing, unverified, or not applicable for applicable
 prerequisites, with current Logbook line locators and a link to details. Give
-the selected Task and the broader route their own readiness statements. Record a new 🔮 marker only on an
-explicit human ruling; existing markers retain their human-only resolution rule.
-No preview claim substitutes for design confirmation, human acceptance or execution
-permission. Return to the authorized calling flow when preparation is sufficient.
+the selected Task and the broader route their own readiness statements. Record
+a new 🔮 marker only on an explicit human ruling and leave resolution of existing
+markers to the human.
+
+Include `🛫 请求起飞` in the user-facing reply only when current evidence confirms
+every applicable prerequisite in the requested preflight scope is ready. Name
+the Tasks and checks actually verified, distinguish preview and collection from
+execution and acceptance, and give the concrete next action. If any applicable
+check is unverified, failed, or blocked, or coverage is incomplete, omit both
+`🛫` and `请求起飞`. Report the verified scope, the specific gaps and the next
+action, even when the selected Task is ready within a partially checked route.
+
+Carry forward existing execution authorization for the covered action without
+asking again. Name any outstanding authorization and the action it gates, and
+keep it open when it is an applicable prerequisite for that action.
+Design confirmation, human acceptance and execution permission retain their
+own gates. Return to the authorized calling flow when preparation is sufficient.
 
 Read the saved todo list, the applicable workflow and registry, and the actual
 primary and companion skill definitions. Compare each applicable skill with the
