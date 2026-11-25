@@ -51,6 +51,10 @@ The authoritative structured file is `lb/<name>.json`, format
   facts and send operations; independent facts, never erased by sync.
 - monitoring: targets, cursors, retired targets, events, answers and revision; null means
   unconfigured, configured empty targets is valid.
+- run_events: optional run-metric streams keyed by bound companion path. Sync
+  preserves them. Update all CLI clients that access the project before
+  recording the first native event. Older builds refuse files with this section
+  while looking up any Run in the same project.
 
 A migrated run retains a private backup and keeps the verified legacy files in
 place for rollback. They serve as historical evidence during unified authority.

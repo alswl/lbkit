@@ -13,6 +13,7 @@ from pathlib import Path
 
 from logbook_cli import state
 from logbook_cli.document import EXIT_REFUSED, LbError
+from logbook_cli.run_metrics import event_rows
 
 FORMAT = "task-document-projection"
 
@@ -42,7 +43,10 @@ def read(path, root=None):
         if (
             not isinstance(value, dict)
             or set(value)
-            - {"legacy_migration", "legacy_history", "preflight", "dependency_source"}
+            - {
+                "legacy_migration", "legacy_history", "preflight",
+                "dependency_source", "run_events",
+            }
             != {"format", "identity", "documents", "execution", "monitoring"}
             or value["format"] != FORMAT
         ):
@@ -186,6 +190,18 @@ def read(path, root=None):
                 or digest(history) != migration.get("history_sha256")
             ):
                 raise ValueError("invalid retained legacy history")
+        streams = value.get("run_events", {})
+        if not isinstance(streams, dict) or set(streams) - (
+            set(identity["document_paths"]) - {identity["log_path"]}
+        ):
+            raise ValueError("invalid run-event document associations")
+        for rows in streams.values():
+            if (
+                not isinstance(rows, list)
+                or not rows
+                or len(event_rows(rows, allow_future=True)) != len(rows)
+            ):
+                raise ValueError("invalid run-event stream")
         if value["monitoring"] is not None:
             from logbook_cli import observation
 

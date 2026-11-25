@@ -2,22 +2,23 @@
 
 from __future__ import annotations
 
-import json
+import difflib
 
-from logbook_cli import records
+from logbook_cli import records, state, unified
 from logbook_cli.document import (
     EXIT_REFUSED,
     EXIT_USAGE,
     LbError,
     links_for,
     require_preflight_clear,
-    require_token,
+    require_version_token,
     resolve_link_target,
     safe_path,
 )
 from logbook_cli.link_records import observations, occurrence, timestamp
 from logbook_cli.models import Field
-from logbook_cli.run_metrics import calculate, events
+from logbook_cli.repository import event_context
+from logbook_cli.run_metrics import calculate, event_rows
 from logbook_cli.services.common import Result, load, save
 from logbook_cli.views import state_snapshot
 
@@ -80,23 +81,37 @@ def audit_links(doc):
 
 
 def thinking_path(doc, value):
-    # Caller supplies the adapter-resolved binding; never guess from filenames.
+    # The caller supplies the adapter-resolved companion, never a guessed name.
     path = safe_path(doc.root, value)
     if path == doc.path:
         raise LbError("Thinking cannot be the Logbook", EXIT_REFUSED)
-    return str(path.relative_to(doc.root))
+    return path
+
+
+def bound_companion(doc, path, run):
+    identity = run["identity"]
+    if (
+        state.section(doc.path, doc.root) != identity["log_path"]
+        or state.project(path, doc.root) != state.project(doc.path, doc.root)
+    ):
+        raise LbError(
+            "expected the Logbook and a companion in its project", EXIT_REFUSED
+        )
+    key = state.section(path, doc.root)
+    if key not in identity["document_paths"] or key == identity["log_path"]:
+        raise LbError("Thinking must be a companion bound to this run", EXIT_REFUSED)
+    return key
 
 
 def state_events(doc):
-    rows = [row for _, row in records.read(doc, "run-event")]
-    return (
-        events(
-            "\n```lb-run-events\n"
-            + "\n".join(json.dumps(row) for row in rows)
-            + "\n```\n"
-        )
-        if rows
-        else []
+    if not doc.markdown_authority:
+        return event_rows(row for _, row in records.read(doc, "run-event"))
+    return event_rows(
+        [
+            *doc.legacy_history.get("run-event", {}).values(),
+            *doc.legacy_metadata.get("run-event", {}).values(),
+            *doc.run_events,
+        ]
     )
 
 
@@ -107,7 +122,15 @@ def metrics(root, log, thinking, run_id, scope):
             "coverage": "unknown",
             "reason": "adapter-resolved --thinking not supplied",
         }
-    record = load(root, thinking_path(doc, thinking))
+    path = thinking_path(doc, thinking)
+    if doc.markdown_authority:
+        _, run = unified.locate(doc.root, doc.path, required=True)
+        bound_companion(doc, path, run)
+    record = load(root, str(path))
+    if record.markdown_authority != doc.markdown_authority:
+        raise LbError(
+            "Thinking must use the same run authority as the Logbook", EXIT_REFUSED
+        )
     try:
         items = state_events(record)
         ids = sorted({e["run_id"] for e in items})
@@ -124,41 +147,87 @@ def metrics(root, log, thinking, run_id, scope):
         raise LbError(f"invalid run events: {exc}", EXIT_USAGE) from exc
 
 
+def check_event(record, item, token):
+    require_version_token(record, token)
+    records.anchors(record, require_closed=True)
+    try:
+        event_rows([item])
+        old = state_events(record)
+        all_events = event_rows([*old, item])
+        scopes = {}
+        for event in all_events:
+            scopes.setdefault(event["run_id"], {"logbook"}).add(event["scope"])
+        for run_id, names in scopes.items():
+            for name in names:
+                calculate(all_events, run_id, name)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise LbError(f"invalid run event: {exc}", EXIT_USAGE) from exc
+    return len(old) == len(all_events)
+
+
+def record_unified_event(doc, path, item, token, dry_run):
+    with unified.writer(doc.root, doc.path, dry_run):
+        doc = load(str(doc.root), str(doc.path))
+        require_preflight_clear(doc)
+        target, run = unified.locate(doc.root, doc.path, required=True)
+        key = bound_companion(doc, path, run)
+        record = load(str(doc.root), str(path))
+        replay = check_event(record, item, token)
+        prior = run.get("run_events", {}).get(key, [])
+        current = prior if replay else [*prior, item]
+        result = {
+            "path": path.relative_to(doc.root).as_posix(),
+            "dry_run": dry_run,
+            "changed": not replay,
+            "event_id": item["event_id"],
+            "replay": replay,
+            "version_token": record.token,
+        }
+        diff = None
+        if dry_run:
+            label = f"{target.relative_to(doc.root)}#run_events/{key}"
+            diff = "".join(
+                difflib.unified_diff(
+                    unified.encode(prior).decode().splitlines(keepends=True),
+                    unified.encode(current).decode().splitlines(keepends=True),
+                    fromfile=label,
+                    tofile=label,
+                )
+            )
+            result["diff"] = diff
+        elif not replay:
+            if (
+                state.read_regular(doc.root, doc.path) != doc.data
+                or state.read_regular(doc.root, path) != record.data
+            ):
+                raise LbError(
+                    "document changed during event recording; reread", EXIT_REFUSED
+                )
+            run.setdefault("run_events", {})[key] = current
+            unified.publish_run(doc.root, target, run, requires_dependencies=False)
+            result["version_token"] = state.token(record.data, event_context(run, key))
+        return Result(result, text=diff)
+
+
 def record_event(root, log, thinking, event_file, token, dry_run):
     doc = load(root, log)
     require_preflight_clear(doc)
-    record = load(root, thinking_path(doc, thinking))
-    require_token(record, token)
-    records.read(record, "runtime", require_closed=True)
+    path = thinking_path(doc, thinking)
     try:
-        item = json.loads(safe_path(doc.root, event_file).read_text())
-        if not isinstance(item, dict):
-            raise ValueError("event must be an object")
-        body = "\n```lb-run-events\n" + json.dumps(item, ensure_ascii=False) + "\n```\n"
-        # Parse the input alone to reject wrong shapes even for an idempotent retry.
-        events(body)
-        old = state_events(record)
-        matches = [
-            e
-            for e in old
-            if (e["run_id"], e["event_id"]) == (item["run_id"], item["event_id"])
-        ]
-        if matches and matches[0] != item:
-            raise ValueError("conflicting event identity")
-        if not matches:
-            records.put(record, "run-event", item)
-        changed = record.text
-        all_events = state_events(record)
-        for run in {e["run_id"] for e in all_events}:
-            for scope in {"logbook"} | {
-                e["scope"] for e in all_events if e["run_id"] == run
-            }:
-                calculate(all_events, run, scope)
-    except (ValueError, TypeError, KeyError) as exc:
+        item = state.decode_json(safe_path(doc.root, event_file).read_bytes())
+    except (ValueError, TypeError) as exc:
         raise LbError(f"invalid run event: {exc}", EXIT_USAGE) from exc
-    return save(
-        record, changed, dry_run, event_id=item["event_id"], replay=bool(matches)
-    )
+    if doc.markdown_authority:
+        return record_unified_event(doc, path, item, token, dry_run)
+    record = load(root, str(path))
+    if record.markdown_authority:
+        raise LbError(
+            "Thinking must use the same run authority as the Logbook", EXIT_REFUSED
+        )
+    replay = check_event(record, item, token)
+    if not replay:
+        records.put(record, "run-event", item)
+    return save(record, record.text, dry_run, event_id=item["event_id"], replay=replay)
 
 
 def closeout(root, log, thinking, run_id, scope):

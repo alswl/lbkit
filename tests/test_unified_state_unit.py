@@ -731,6 +731,7 @@ class UnifiedTests(unittest.TestCase):
             },
             "identity": {"run_id": "sample"},
             "execution": {"facts": [{"kind": "submission"}]},
+            "run_events": {"other.md": [{"event_id": "start"}]},
             "monitoring": {"targets": {"target": {"cursor": 10}}},
         }
         value = deepcopy(prior)
@@ -764,7 +765,7 @@ class UnifiedTests(unittest.TestCase):
                     "legacy_metadata": {"task": {"another": {"decision": "Other"}}}
                 },
             },
-            "identity": {"run_id": "sample"},
+            "identity": {"run_id": "sample", "log_path": "work.md"},
         }
         target = self.root / "lb/work.json"
         with patch("logbook_cli.unified.locate", return_value=(target, value)):

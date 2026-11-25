@@ -24,19 +24,51 @@ TYPES = {
 OUTCOMES = {"passed", "failed", "incomplete", "unknown"}
 
 
-def time(value):
+def time(value, *, allow_future=False):
     if value is None:
         return None
     if not isinstance(value, str):
         raise ValueError("event time must be a string or null")
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    if parsed.utcoffset() is None or parsed > datetime.now(timezone.utc):
+    if parsed.utcoffset() is None or (
+        not allow_future and parsed > datetime.now(timezone.utc)
+    ):
         raise ValueError("event time must be timezone-qualified and not in the future")
     return parsed.timestamp()
 
 
-def events(text):
+def event_rows(rows, *, allow_future=False):
+    """Validate and deduplicate events from one or more state sources."""
     result = {}
+    for item in rows:
+        if not isinstance(item, dict) or any(
+            not isinstance(item.get(key), str) or not item[key].strip()
+            for key in ("run_id", "event_id", "type", "scope")
+        ):
+            raise ValueError("events require nonempty run/event/type/scope identity")
+        if (
+            "at" not in item
+            or item["type"] not in TYPES
+            or not any(
+                isinstance(item.get(key), str) and item[key].strip()
+                for key in ("origin", "reference")
+            )
+        ):
+            raise ValueError("event requires valid type, at and origin/reference")
+        time(item["at"], allow_future=allow_future)
+        if item.get("coverage", "unknown") not in ("complete", "partial", "unknown"):
+            raise ValueError("invalid coverage")
+        key = (item["run_id"], item["event_id"])
+        if key in result and json.dumps(result[key], sort_keys=True) != json.dumps(
+            item, sort_keys=True
+        ):
+            raise ValueError("conflicting replay of event identity")
+        result[key] = item
+    return list(result.values())
+
+
+def events(text):
+    rows = []
     fence = None
     active = False
     comment = False
@@ -69,40 +101,13 @@ def events(text):
                 continue
             if not active or not line.strip():
                 continue
-            item = json.loads(line)
-            if not isinstance(item, dict) or any(
-                not isinstance(item.get(k), str) or not item[k].strip()
-                for k in ("run_id", "event_id", "type", "scope")
-            ):
-                raise ValueError(
-                    "events require nonempty run/event/type/scope identity"
-                )
-            if (
-                "at" not in item
-                or item["type"] not in TYPES
-                or not any(
-                    isinstance(item.get(k), str) and item[k].strip()
-                    for k in ("origin", "reference")
-                )
-            ):
-                raise ValueError("event requires valid type, at and origin/reference")
-            time(item["at"])
-            if item.get("coverage", "unknown") not in (
-                "complete",
-                "partial",
-                "unknown",
-            ):
-                raise ValueError("invalid coverage")
-            key = (item["run_id"], item["event_id"])
-            if key in result and result[key] != item:
-                raise ValueError("conflicting replay of event identity")
-            result[key] = item
+            rows.append(json.loads(line))
         elif marker:
             fence = (marker[1][0], len(marker[1]))
             active = marker[2].strip() == "lb-run-events"
     if fence and active:
         raise ValueError("unterminated lb-run-events section")
-    return list(result.values())
+    return event_rows(rows)
 
 
 def union(intervals):
