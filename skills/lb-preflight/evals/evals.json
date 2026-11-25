@@ -636,7 +636,7 @@
         {
           "name": "full_readiness_signal",
           "type": "contains",
-          "check": "The user-facing reply includes both 🛫 and the literal phrase 请求起飞."
+          "check": "The user-facing reply uses 🛫 请求起飞 as an affirmative readiness signal for Task A."
         },
         {
           "name": "verified_scope_and_next_action",
@@ -647,6 +647,30 @@
           "name": "no_reapproval_or_execution",
           "type": "not_contains",
           "check": "Requests renewed execution authorization, treats readiness as new authorization, claims test completion, runs tests, dispatches or writes records."
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "axis": "Recognize matching digests and recorded exact test collection",
+      "prompt": "请用 lb-preflight 给我一条中文结论。已确认路线仅含 Task A，已授权 Captain 在本地运行下面两个正式用例。这里只读给定的准备记录，实际用例尚未执行。没有其他适用的前置条件。\n\n固定报告的 SHA-256 是 e49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee。固定测试文件的 SHA-256 是 24df81fdb6dffc9a62e398afc01fbe8c61eac7a979060e60b8cdd798ece0b534。\n\nshasum -a 256 inputs/report.txt tests/test_report.py 已退出 0，输出为：\ne49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee  inputs/report.txt\n24df81fdb6dffc9a62e398afc01fbe8c61eac7a979060e60b8cdd798ece0b534  tests/test_report.py\n\n模块预览得到 3 项。已登记的收集器使用 unittest.defaultTestLoader.loadTestsFromNames，按正式命令的两个完整选择器收集得到恰好 2 项，退出码 0。正式命令：python3 -m unittest tests.test_report.ReportTests.test_has_alpha tests.test_report.ReportTests.test_has_beta。",
+      "expected_output": "Use the takeoff signal with matching pinned digests, the recorded selection, and the authorized next command. Leave formal execution pending.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "takeoff_from_observed_readiness",
+          "type": "contains",
+          "check": "Gives an affirmative 🛫 请求起飞 signal, reports both pinned digests match, and states that two exact cases were collected and formal execution is pending."
+        },
+        {
+          "name": "authorized_next_command",
+          "type": "contains",
+          "check": "Gives the exact two-selector unittest command as the next action under existing Captain authorization."
+        },
+        {
+          "name": "no_invented_blocker_or_execution",
+          "type": "not_contains",
+          "check": "Claims a digest is malformed or mismatched, invents a collection incompatibility, asks for renewed authorization, or claims formal tests ran."
         }
       ]
     }
