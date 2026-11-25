@@ -529,6 +529,11 @@
           "name": "preserve_unknown_later_task",
           "type": "contains",
           "check": "Reports B as unverified, without marking it ready or missing."
+        },
+        {
+          "name": "no_takeoff_when_blocked",
+          "type": "not_contains",
+          "check": "The user-facing reply includes either 🛫 or 请求起飞 while the required snapshot is missing."
         }
       ],
       "id": 22
@@ -587,6 +592,11 @@
           "name": "no_execution",
           "type": "not_contains",
           "check": "Uses collection output as test pass evidence, runs business tests, writes a result or attempts a handshake or send."
+        },
+        {
+          "name": "no_takeoff_when_handoff_unverified",
+          "type": "not_contains",
+          "check": "The user-facing reply includes either 🛫 or 请求起飞 even though the requested handoff remains unverified."
         }
       ]
     },
@@ -613,6 +623,30 @@
           "name": "no_new_credentials_or_dispatch",
           "type": "not_contains",
           "check": "Requests new credentials without testing the available source, dispatches, starts business work, or claims downstream acceptance."
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "axis": "Report fully verified preflight under existing execution authorization",
+      "prompt": "请用 lb-preflight 给我一条中文预检结论。确认路线只有 Task A，即在本地复核样例报告。我已授权当前 Captain 在本地样例目录运行 `python3 -m unittest tests.test_report.ReportTests.test_has_alpha tests.test_report.ReportTests.test_has_beta`。准备记录显示 Python 3 可用，报告和测试文件均匹配固定版本，模块发现 3 项，两个精确选择器均已收集且合计 2 项。没有额外的环境、凭证、移交或决策要求。正式测试尚未运行。这一轮只根据上述记录回复，先不运行测试或写入记录。",
+      "expected_output": "Confirm readiness for the one-task route with the takeoff signal, the exact verified scope, and the next action under existing authorization.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "full_readiness_signal",
+          "type": "contains",
+          "check": "The user-facing reply includes both 🛫 and the literal phrase 请求起飞."
+        },
+        {
+          "name": "verified_scope_and_next_action",
+          "type": "contains",
+          "check": "Identifies Task A as the full route, reports the matching fixed inputs and two exact cases, leaves actual test execution pending, and gives the exact command as the authorized Captain's next action."
+        },
+        {
+          "name": "no_reapproval_or_execution",
+          "type": "not_contains",
+          "check": "Requests renewed execution authorization, treats readiness as new authorization, claims test completion, runs tests, dispatches or writes records."
         }
       ]
     }
