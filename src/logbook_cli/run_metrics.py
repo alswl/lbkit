@@ -24,18 +24,20 @@ TYPES = {
 OUTCOMES = {"passed", "failed", "incomplete", "unknown"}
 
 
-def time(value):
+def time(value, *, allow_future=False):
     if value is None:
         return None
     if not isinstance(value, str):
         raise ValueError("event time must be a string or null")
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    if parsed.utcoffset() is None or parsed > datetime.now(timezone.utc):
+    if parsed.utcoffset() is None or (
+        not allow_future and parsed > datetime.now(timezone.utc)
+    ):
         raise ValueError("event time must be timezone-qualified and not in the future")
     return parsed.timestamp()
 
 
-def event_rows(rows):
+def event_rows(rows, *, allow_future=False):
     """Validate and deduplicate events from one or more state sources."""
     result = {}
     for item in rows:
@@ -53,11 +55,13 @@ def event_rows(rows):
             )
         ):
             raise ValueError("event requires valid type, at and origin/reference")
-        time(item["at"])
+        time(item["at"], allow_future=allow_future)
         if item.get("coverage", "unknown") not in ("complete", "partial", "unknown"):
             raise ValueError("invalid coverage")
         key = (item["run_id"], item["event_id"])
-        if key in result and result[key] != item:
+        if key in result and json.dumps(result[key], sort_keys=True) != json.dumps(
+            item, sort_keys=True
+        ):
             raise ValueError("conflicting replay of event identity")
         result[key] = item
     return list(result.values())

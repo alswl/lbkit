@@ -204,7 +204,7 @@ def record_unified_event(doc, path, item, token, dry_run):
                     "document changed during event recording; reread", EXIT_REFUSED
                 )
             run.setdefault("run_events", {})[key] = current
-            unified.publish(target, run)
+            unified.publish_run(doc.root, target, run, requires_dependencies=False)
             result["version_token"] = state.token(record.data, event_context(run, key))
         return Result(result, text=diff)
 

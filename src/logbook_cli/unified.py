@@ -196,7 +196,11 @@ def read(path, root=None):
         ):
             raise ValueError("invalid run-event document associations")
         for rows in streams.values():
-            if not isinstance(rows, list) or not rows or len(event_rows(rows)) != len(rows):
+            if (
+                not isinstance(rows, list)
+                or not rows
+                or len(event_rows(rows, allow_future=True)) != len(rows)
+            ):
                 raise ValueError("invalid run-event stream")
         if value["monitoring"] is not None:
             from logbook_cli import observation
