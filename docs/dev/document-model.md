@@ -1,5 +1,42 @@
 # Document model and CLI layers
 
+## Model management principles
+
+Use the Logbook as the single human-facing view of Tasks. Keep Task descriptions,
+acceptance criteria, progress, and explanations readable in Markdown. The CLI
+can consume Markdown where the document contract defines a stable, validated
+format. Keep machine-only metadata out of Task text.
+
+Extend the Task model with established concepts such as Assignee and Dependency.
+Represent a dependency on work with a Task-to-Task relationship. Record the result
+of an environment check as an Observation. Give a supporting record its own
+identity only when the CLI needs to reference or manage it independently.
+
+Store machine-managed records under `lb/`. Use the existing run file for data
+that shares its lifecycle. A record type with a distinct write or validation
+boundary can have its own run-scoped file. Task dependencies use
+`lb/<name>.dependencies.json`. Reuse stable Task IDs across
+files and let the CLI validate references.
+
+Give each fact one authoritative source. The CLI rebuilds the Markdown
+projection with `sync-state` and preserves independent runtime facts. When an
+existing record type changes authority, define a compatibility rule and an
+explicit cutover. Preserve route confirmation when a format change leaves the
+reviewed content unchanged. Evaluate changes to dependency relationships as
+route changes.
+
+Before cutover, the Logbook still supplies the effective legacy dependencies.
+Drain in-flight old CLI writers before installing this change. The first eligible
+Run write publishes the typed dependency file and marks it authoritative. Read
+and preview commands preserve the current source. A task replacement guards both
+the Logbook and dependency file with a recoverable Run transaction. See the
+[document-state contract](../installable/document-state.md#task-dependencies).
+
+Managed self-check declarations are scoped to a confirmed Task and candidate.
+The CLI validates the recorded authorization before saving a declaration in
+the Run. The execution token covers the declaration. See the
+[route readiness contract](../installable/lb-cli.md#route-confirmation-and-task-readiness).
+
 ## Authority and representation
 
 Markdown is the editable source of truth for document and Task facts. Semantic

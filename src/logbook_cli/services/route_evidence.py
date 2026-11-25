@@ -148,6 +148,39 @@ def bound_thinking(doc, identity, thinking):
     return path
 
 
+def read_bound_evidence(doc, identity):
+    evidence = []
+    for name in identity.get("document_paths", ()):
+        if name != identity.get("log_path"):
+            path = bound_thinking(doc, identity, name)
+            value = parse_evidence(path.read_bytes().decode())
+            if value is not None:
+                evidence.append(value)
+    if len(evidence) == 1 and evidence[0]["run_ref"] == identity["run_id"]:
+        return evidence[0]
+    return None
+
+
+def current_records(records, task_id, route_ref, scope_ref):
+    return [
+        row
+        for row in records
+        if (
+            (
+                row.get("scope") == task_id
+                and scope_ref is not None
+                and row.get("route_ref") == scope_ref
+            )
+            or (
+                row.get("scope") in (None, "route")
+                and row.get("route_ref") == route_ref
+            )
+        )
+        and isinstance(row.get("source"), str)
+        and row["source"].strip()
+    ]
+
+
 def update_evidence(doc, thinking, proposed, dry_run=False):
     from logbook_cli import unified
     from logbook_cli.repository import edit_document, markdown_document, sync_status

@@ -4,7 +4,7 @@ Start with the [development guide](development.md) before changing skills, share
 
 ## Architecture references
 
-- [Document model and CLI layers](document-model.md): semantic types, parsed annotations, representation and module responsibilities.
+- [Document model and CLI layers](document-model.md): model management, storage authority, parsed annotations, and module responsibilities.
 - [Coordination and lifecycle](coordination-lifecycle-design.md): route ownership, delivery, workflow provenance and run metrics.
 - [Execution records](execution-records.md): attributed facts, runtime effects and uncertain delivery.
 - [Observation recovery](observation-recovery-design.md): cursor/event persistence, listener ownership and question-delivery boundaries.

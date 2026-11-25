@@ -9,11 +9,11 @@ from logbook_cli.services.common import Result, load
 
 
 def context(root, log):
-    return Result(execution.view(load(root, log)))
+    return Result(execution.view(load(root, log, load_dependencies=False)))
 
 
 def record(root, log, input_file, token, dry_run):
-    doc = load(root, log)
+    doc = load(root, log, load_dependencies=False)
     try:
         payload = json.loads(
             safe_path(doc.root, input_file).read_text(),
@@ -65,6 +65,30 @@ def record(root, log, input_file, token, dry_run):
                     )
                 continue
             execution_facts.validate_fact(fact, value["facts"])
+            if fact["kind"] == "handoff":
+                release = execution_facts.referenced(
+                    value["facts"], fact["release_id"], "delegation-release"
+                )
+                if release["scope"] == "task":
+                    if not doc.markdown_authority:
+                        execution_facts.refuse("Task handoff requires a Run")
+                    from logbook_cli import unified
+
+                    _, run = unified.locate(doc.root, doc.path, required=True)
+                    execution_facts.validate_handoff_operation(
+                        fact,
+                        release,
+                        {
+                            "tasks": run["execution"]["tasks"],
+                            "operations": {op["id"]: op for op in value["operations"]},
+                        },
+                    )
+            if fact["kind"] == "delegation-release" and fact["scope"] == "task":
+                if not doc.markdown_authority:
+                    execution_facts.refuse("Task release requires a Run")
+                from logbook_cli.task_identity import lookup
+
+                lookup(doc, fact["task_id"])
             if fact["kind"] == "business-action":
                 op = next(
                     (
@@ -85,6 +109,7 @@ def record(root, log, input_file, token, dry_run):
                 if (
                     op is None
                     or op["provenance"] == "takeover"
+                    or op["request"].get("action") == "self-check"
                     or op["outcome"] != "submitted"
                     or any(
                         previous["kind"] == "business-action"

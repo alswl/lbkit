@@ -368,7 +368,7 @@ def _publish(doc, data, before, *, create=False):
             value["monitoring"] = json.loads(
                 data, object_pairs_hook=state.unique_object
             )
-            unified.publish(target, value)
+            unified.publish_run(doc.root, target, value, requires_dependencies=False)
         return
     from logbook_cli.storage import replace_bytes_at
 

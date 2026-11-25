@@ -1,0 +1,16 @@
+{
+  "description": "Authorized preparation across two stages with an existing working source.",
+  "setup": [
+    "Materialize files in an isolated consumer and create empty inputs and config directories. Link the pinned CLI and install its skills. Grade tool and file evidence outside the consumer."
+  ],
+  "files_override": {
+    "AGENTS.md": "# Isolated consumer\nOnly this fictional local consumer is authorized. No network, credentials, business execution, dispatch or edits outside this consumer. Preserve existing uncommitted business files.\n",
+    "log.md": "# Sample workflow\n\n## Overview\n\nThinking: [Preparation](records/thinking.md)\n\n## Stage 01 Input\n\n- [ ] A — Verify the approved snapshot\n## Stage 02 Read\n\n- [ ] B — Count the Markdown headings using built-in tools\n\n- [ ] C — Review material after the task output exists\n",
+    "records/last-success.txt": "Prior successful preparation used the read-only synthetic source samples/approved.json. It is still allowed and accessible in this workspace. Earlier worktree used inputs/prep.json and is obsolete. No service credentials were needed.\n",
+    "records/candidate.txt": "sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "samples/approved.json": "",
+    "samples/reader.json": "{\"format\":\"markdown\",\"strict\":true}\n",
+    "work-uncommitted.txt": "unfinished draft; preserve exactly\n",
+    "records/thinking.md": "# Preparation\n\nExecution proposal: A uses inputs/approved.json. Responsible owner: fixture-operator. The owner may obtain the snapshot under the current authorization. When the file arrives compare its SHA-256 to the approved candidate digest recorded in records/candidate.txt before use. There are no pending route decisions.\n\nThe authorized Captain may prepare Stage 01 by restoring inputs/approved.json from the already working source, once its exact SHA-256 matches records/candidate.txt. Stage 02 requires an existing local headings-reader configuration in config/reader.json. Restoring it by copying the verified working samples/reader.json is an authorized preparation step. It is independent of Stage 01 and needs no business execution. C requires an actual Task output that does not exist before execution. Direct file restore and read-only verification are authorized; keep unrelated or uncommitted work.\n"
+  }
+}

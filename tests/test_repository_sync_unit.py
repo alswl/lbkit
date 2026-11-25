@@ -25,7 +25,7 @@ class SyncTests(unittest.TestCase):
                 return_value=(Path("/repo/lb/work.json"), self.value),
             ),
             patch.object(Path, "read_bytes", return_value=self.data),
-            patch.object(repository.unified, "publish") as publish,
+            patch.object(repository.unified, "publish_run") as publish,
         ):
             result = repository.sync_document("/repo", "work.md")
             self.assertEqual(result["sync_status"], "synced")
@@ -34,6 +34,21 @@ class SyncTests(unittest.TestCase):
             publish.reset_mock()
             self.assertFalse(repository.sync_document("/repo", "work.md")["changed"])
             publish.assert_not_called()
+
+    def test_projection_does_not_duplicate_authoritative_dependencies(self):
+        root = Path("/repo")
+        data = (
+            self.data
+            + b"- [ ] Next\n    <!-- lb-task next -->\n    - Depends: a\n"
+        )
+        projected = repository.project_document(
+            data, root / "work.md", root, dependency_graph={"a": [], "next": ["a"]}
+        )
+        changed = repository.project_document(
+            data, root / "work.md", root, dependency_graph={"a": [], "next": []}
+        )
+        self.assertNotIn("dependencies", projected["tasks"]["next"])
+        self.assertEqual(projected, changed)
 
     def test_failure_does_not_publish_or_remove_runtime(self):
         with (
@@ -48,7 +63,7 @@ class SyncTests(unittest.TestCase):
             patch.object(
                 Path, "read_bytes", return_value=b"# Work\n## Stage 1\n- [ ] No ID\n"
             ),
-            patch.object(repository.unified, "publish") as publish,
+            patch.object(repository.unified, "publish_run") as publish,
         ):
             with self.assertRaises(LbError):
                 repository.sync_document("/repo", "work.md")
@@ -68,7 +83,7 @@ class SyncTests(unittest.TestCase):
             patch.object(
                 Path, "read_bytes", side_effect=[self.data, self.data + b"changed"]
             ),
-            patch.object(repository.unified, "publish"),
+            patch.object(repository.unified, "publish_run"),
         ):
             self.assertEqual(
                 repository.sync_document("/repo", "work.md")["sync_status"], "stale"

@@ -2,9 +2,11 @@
 
 import difflib
 from dataclasses import dataclass
+from pathlib import Path
 
 from logbook_cli.document import (
     Document,
+    LbError,
     parse,
     require_preflight_clear,
     require_token,
@@ -22,14 +24,34 @@ class Result:
     text: str | None = None
 
 
-def load(root: str, log: str) -> Document:
+def load(root: str, log: str, *, load_dependencies: bool = True) -> Document:
     base = root_path(root)
     from logbook_cli import unified
     from logbook_cli.repository import read_document
 
     path = safe_path(base, log)
     _, value = unified.locate(base, path)
-    return read_document(base, path) if value else parse(path, base)
+    return (
+        read_document(base, path, load_dependencies=load_dependencies)
+        if value
+        else parse(path, base)
+    )
+
+
+def recover(root: str, log: str, expected: str | None, dry_run: bool) -> Result:
+    from logbook_cli import unified
+    from logbook_cli.services import dependency_transaction
+    from logbook_cli.storage import recover as recover_state
+
+    base = root_path(root)
+    path = base / Path(log)
+    if path.is_symlink() or not path.resolve().is_relative_to(base):
+        raise LbError("recovery path must be inside root and not a symlink")
+    path = path.resolve()
+    run, _ = unified.locate(base, path, recovering_dependencies=True)
+    if run is not None and dependency_transaction.present(run):
+        return Result(dependency_transaction.recover(base, path, expected, dry_run))
+    return Result(recover_state(base, path, expected, dry_run))
 
 
 def writable(root: str, log: str, token: str) -> Document:
@@ -48,7 +70,7 @@ def writable(root: str, log: str, token: str) -> Document:
     return doc
 
 
-def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Result:
+def save(doc: Document, changed: str, dry_run: bool, *, dependency_graph=None, **details: object) -> Result:
     from logbook_cli.state import encode, path_for, section, token
 
     if doc.markdown_authority:
@@ -86,7 +108,10 @@ def save(doc: Document, changed: str, dry_run: bool, **details: object) -> Resul
                     + nl
                 )
         require_valid_candidate(doc, changed)
-        return Result({**edit_document(doc, changed, dry_run), **details})
+        return Result({
+            **edit_document(doc, changed, dry_run, dependency_graph=dependency_graph),
+            **details,
+        })
     require_valid_candidate(doc, changed)
     write_bytes(doc, changed.encode("utf-8"), dry_run)
     path = str(doc.path.relative_to(doc.root))

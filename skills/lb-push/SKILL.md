@@ -47,7 +47,10 @@ an executor returned or the user asked for status.
    plan/preflight cycles or unrelated environment sweeps. A real material choice,
    human gate or unavailable dependency is a specific stopping reason.
 3. Execute within the established mode. Honor an explicit Captain takeover across
-   its authorized scope and preserve pending handoff ownership. Ordinary delegation
+   its authorized scope and preserve pending handoff ownership. When advancing a
+   takeover, check for an applicable release, executable work and an authorized
+   available recipient. When all apply, enter [lb-handback](../lb-handback/SKILL.md).
+   A direction to retain control keeps Captain responsible. Ordinary delegation
    uses the current Herdr skill and [collaboration reference](references/herdr.md).
    Do not add an executor or independent reviewer merely to complete a small
    authorized task; required independent checks still remain independent.
@@ -59,7 +62,11 @@ an executor returned or the user asked for status.
    Delivery, readiness, silence and idle do not establish acceptance. An accepted
    already-authorized instruction may execute immediately without another approval.
    A superseded reply cannot transfer responsibility for the replacement instruction.
-6. While Sailors run, read Observation context and configure verified targets only
+   In an established development and QA work package, keep routine repair and
+   retest between the assigned participants on the fixed candidate. QA returns
+   the quality verdict. Escalate a material disagreement or authorization conflict
+   to Captain with the candidate, both responsibilities and the decision needed.
+6. While Sailors run, read monitoring context and configure verified targets only
    when absent or changed. In Claude Code prefer native Monitor with managed wait
    --stream; foreground managed wait is the fallback. Reuse its listener across
    host yields. On notification read fresh context, then event defer/resolve or
@@ -82,8 +89,11 @@ an executor returned or the user asked for status.
    owner or in-flight work; a checked Task must not hide those obligations.
 8. Continue with the next authorized action until the endpoint, explicit pause,
    real blocker or human gate. Answer an intervening status question read-only,
-   then actually continue; a promise to continue is not the next action. A standalone
-   status request authorizes no execution. Explicit stop/read-only steering wins.
+   then check the current facts and take the next action within the existing
+   authorization. Reuse an already-cleared gate while its scope and evidence
+   still apply. Resolve any new gate before its affected
+   action. A standalone status request authorizes no execution. Explicit
+   stop/read-only steering wins.
 
 ## Runtime and lifecycle judgment
 

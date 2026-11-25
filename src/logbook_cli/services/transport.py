@@ -126,7 +126,7 @@ def send(
     if get(doc)["value"] != "active":
         raise LbError("new send requires active Logbook", EXIT_REFUSED)
     execution.require_delegation(doc, dispatch["id"], dispatch["owner"])
-    projected = execution.projection(state)
+    projected = execution.projection(state, dispatch_id=dispatch["id"])
     if projected["takeover"] and projected["reported_owner"] == "unknown":
         raise LbError(
             "ownership is unknown or conflicting; observe a safe boundary before send, not new permission",
@@ -226,7 +226,7 @@ def send(
     )
 
 
-def task_send_guard(ex, task_id, operation_id, request):
+def task_send_guard(ex, task_id, operation_id, request, *, released=False):
     existing = ex["operations"].get(operation_id)
     if existing:
         if existing["request"] != request:
@@ -238,11 +238,11 @@ def task_send_guard(ex, task_id, operation_id, request):
         )
     if any(op["outcome"] == "unknown" for op in ex["operations"].values()):
         raise LbError("unknown delivery blocks further delegation", EXIT_REFUSED)
-    delivery_started(ex, task_id, request)
+    delivery_started(ex, task_id, request, released=released)
     return None
 
 
-def delivery_started(ex, task_id, request):
+def delivery_started(ex, task_id, request, *, released=False):
     """Establish first action separately from transport and protect replay."""
     outcomes = {
         fact["operation_id"]: fact["outcome"]
@@ -252,9 +252,15 @@ def delivery_started(ex, task_id, request):
     started = False
     for operation_id, op in ex["operations"].items():
         prior = op["request"]
-        if execution.operation_task(op) != task_id or op["outcome"] != "submitted":
+        if (
+            execution.operation_task(op) != task_id
+            or op["outcome"] != "submitted"
+            or prior.get("action") == "self-check"
+        ):
             continue
         if op.get("provenance") == "takeover":
+            if released:
+                continue
             raise LbError("Captain already started this Task", EXIT_REFUSED)
         if op.get("legacy_attempt_ids"):
             raise LbError("Legacy terminal Attempt already started this Task", EXIT_REFUSED)
@@ -267,7 +273,10 @@ def delivery_started(ex, task_id, request):
         if outcome == "started":
             if "legacy_task_id" in op:
                 raise LbError("Legacy delivery already started this Task", EXIT_REFUSED)
-            if prior == request:
+            previous_send = prior
+            if "release_id" not in request and "release_id" in prior:
+                previous_send = {key: value for key, value in prior.items() if key != "release_id"}
+            if previous_send == request:
                 raise LbError("Use the original operation ID to replay", EXIT_REFUSED)
             started |= prior.get("binding_id") == request.get("binding_id")
     return started
@@ -288,9 +297,10 @@ def send_task(
     from logbook_cli import observation, unified
     from logbook_cli.document import safe_path
     from logbook_cli.repository import require_synced
+    from logbook_cli.services.dependencies import effective
     from logbook_cli.services.readiness import require_ready
     from logbook_cli.services.task_coordination import native_binding
-    from logbook_cli.task_identity import dependencies, lookup
+    from logbook_cli.task_identity import lookup, task_dependencies
 
     records.single_line(operation_id, "operation_id")
     doc, task = require_synced(root, log, task_id)
@@ -319,8 +329,11 @@ def send_task(
             "binding_digest": unified.digest(binding),
             "message_digest": hashlib.sha256(message.encode()).hexdigest(),
         }
-        existing = task_send_guard(ex, task_id, operation_id, request)
-        if existing:
+        previous = ex["operations"].get(operation_id)
+        if previous is not None:
+            if "release_id" in previous["request"]:
+                request["release_id"] = previous["request"]["release_id"]
+            existing = task_send_guard(ex, task_id, operation_id, request)
             return Result(
                 {
                     "operation": existing,
@@ -338,7 +351,7 @@ def send_task(
             raise LbError(
                 "Task cannot be delegated in current state/ownership", EXIT_REFUSED
             )
-        for dep in dependencies(task):
+        for dep in task_dependencies(doc, task, {"id": task_id}):
             if lookup(doc, dep)[0].effective_state != "done":
                 raise LbError("hard dependency is not done: " + dep, EXIT_REFUSED)
         from logbook_cli.document import require_preflight_clear
@@ -347,11 +360,40 @@ def send_task(
         require_preflight_clear(doc)
         if get(doc)["value"] != "active":
             raise LbError("new send requires active Logbook", EXIT_REFUSED)
-        execution.require_delegation(doc, task_id, binding["subject"]["subject_id"])
-        first_start = not delivery_started(ex, task_id, request)
+        release = execution.require_delegation(
+            doc, owner=binding["subject"]["subject_id"], task_id=task_id
+        )
+        released = bool(release and release["scope"] == "task")
+        if released:
+            from logbook_cli.execution_facts import project
+
+            handoff = project(ex.get("facts", ()), ex, task_id=task_id)
+            if not handoff["handoff_reported_complete"]:
+                if handoff["reported_owner"] == "unknown":
+                    raise LbError(
+                        "ownership is unknown or conflicting; observe a safe boundary before handoff",
+                        EXIT_REFUSED,
+                    )
+                if any(
+                    op["outcome"] != "not_submitted"
+                    and op["request"].get("release_id") == release["id"]
+                    and op["request"].get("binding_id") == binding_id
+                    for op in ex["operations"].values()
+                ):
+                    raise LbError("Task handoff is already pending on this binding", EXIT_REFUSED)
+                request["release_id"] = release["id"]
+        task_send_guard(ex, task_id, operation_id, request, released=released)
+        first_start = not delivery_started(ex, task_id, request, released=released)
         if first_start:
             require_ready(doc, envelope, task_id, binding["subject"]["subject_id"])
     intent_saved = False
+    intent = {
+        "id": operation_id,
+        "request": request,
+        "outcome": "unknown",
+        "receipt": None,
+        "provenance": "adapter",
+    }
 
     def persist():
         nonlocal intent_saved
@@ -362,21 +404,22 @@ def send_task(
                     "document changed before send; inspect current instruction",
                     EXIT_REFUSED,
                 )
+            if effective(current) != effective(doc):
+                raise LbError(
+                    "Task dependencies changed before send; reread route",
+                    EXIT_REFUSED,
+                )
             target, value = unified.locate(current.root, current.path, required=True)
             if unified.section_token(value, "execution") != execution_token:
                 raise LbError("execution changed before send", EXIT_REFUSED)
             if value.get("documents") != envelope.get("documents"):
                 raise LbError("document evidence changed before send", EXIT_REFUSED)
-            if not delivery_started(value["execution"], task_id, request):
+            if not delivery_started(
+                value["execution"], task_id, request, released=released
+            ):
                 require_ready(current, value, task_id, binding["subject"]["subject_id"])
-            value["execution"]["operations"][operation_id] = {
-                "id": operation_id,
-                "request": request,
-                "outcome": "unknown",
-                "receipt": None,
-                "provenance": "adapter",
-            }
-            unified.publish(target, value)
+            value["execution"]["operations"][operation_id] = intent
+            unified.publish_run(doc.root, target, value)
             intent_saved = True
 
     # The session action lock spans transport; the run writer only spans local writes.
@@ -411,9 +454,12 @@ def send_task(
         try:
             with unified.writer(doc.root, doc.path):
                 target, value = unified.locate(doc.root, doc.path, required=True)
-                op = value["execution"]["operations"][operation_id]
-                op.update(outcome="submitted", receipt=result["receipt"])
-                unified.publish(target, value)
+                operations = value["execution"]["operations"]
+                if operations.get(operation_id) != intent:
+                    raise LbError("send intent changed before recording receipt", EXIT_REFUSED)
+                op = {**intent, "outcome": "submitted", "receipt": result["receipt"]}
+                operations[operation_id] = op
+                unified.publish_run(doc.root, target, value)
                 token = unified.section_token(value, "execution")
         except (OSError, LbError):
             return Result(

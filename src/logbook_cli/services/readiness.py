@@ -6,10 +6,11 @@ from logbook_cli import execution as execution_records
 from logbook_cli import task_identity
 from logbook_cli.document import EXIT_REFUSED, LbError, require_preflight_clear
 from logbook_cli.services.preflight_findings import missing_skills, summarize
+from logbook_cli.services.preflight_plan import current_plan
 from logbook_cli.services.route_evidence import (
     active_records,
-    bound_thinking,
-    parse_evidence,
+    current_records,
+    read_bound_evidence,
 )
 from logbook_cli.services.route_scope import route_scope
 
@@ -27,10 +28,12 @@ def unresolved_operation(execution, task_id, *, across_tasks=False):
             op["outcome"] == "submitted"
             and execution_records.operation_task(op) == task_id
             and op.get("provenance") != "takeover"
+            and op["request"].get("action") != "self-check"
             and (
                 op.get("legacy_attempt_ids")
                 or operation_id not in observed
-                or "legacy_task_id" in op and observed[operation_id] == "started"
+                or "legacy_task_id" in op
+                and observed[operation_id] == "started"
             )
         )
         for operation_id, op in execution["operations"].items()
@@ -50,7 +53,7 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
                 "object": observation.get("object", kind),
                 "step": task_id,
                 "status": observation.get("status", "unverified"),
-                "evidence": observation.get("source"),
+                "evidence": observation.get("evidence") or observation.get("source"),
                 "owner": observation.get("owner"),
                 "clear_when": message,
                 "human_action": observation.get("human_action"),
@@ -68,23 +71,17 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
             require_preflight_clear(doc)
             scope = route_scope(doc)
             route_ref = scope["route_ref"]
-            evidence = []
-            for name in identity.get("document_paths", ()):
-                if name != identity.get("log_path"):
-                    path = bound_thinking(doc, identity, name)
-                    value = parse_evidence(path.read_bytes().decode())
-                    if value is not None:
-                        evidence.append(value)
-            if len(evidence) != 1 or evidence[0]["run_ref"] != identity["run_id"]:
+            evidence = read_bound_evidence(doc, identity)
+            if evidence is None:
                 gap(
                     "evidence",
                     "Record current route confirmation and preflight in bound Thinking.",
                 )
             else:
-                task, _, _ = task_identity.lookup(doc, task_id)
+                task, _, task_record = task_identity.lookup(doc, task_id)
                 if task.human or task.effective_state not in {"pending", "active"}:
                     gap("task", "Select a pending or active agent task.")
-                for dependency in task_identity.dependencies(task):
+                for dependency in task_identity.task_dependencies(doc, task, task_record):
                     if (
                         task_identity.lookup(doc, dependency)[0].effective_state
                         != "done"
@@ -97,7 +94,7 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
                     runtime.get("current_binding_id"), {}
                 )
                 _evaluate_evidence(
-                    evidence[0],
+                    evidence,
                     route_ref,
                     task_id,
                     actor,
@@ -108,6 +105,15 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
                     scope_ref=scope["task_scopes"].get(task_id),
                     machine=binding.get("machine") if action == "dispatch" else "local",
                 )
+                try:
+                    plan = current_plan(run, task_id, evidence, scope)
+                except LbError as exc:
+                    gap("self_check", str(exc))
+                else:
+                    if plan is not None and plan["checks"]:
+                        from logbook_cli.services.self_check import verify
+
+                        verify(doc, run, task_id, plan, gap)
         except (LbError, OSError, UnicodeError) as exc:
             gap("route", str(exc))
         if not gaps:
@@ -139,23 +145,7 @@ def _evaluate_evidence(
     machine=None,
 ):
     def current(records):
-        return [
-            row
-            for row in records
-            if (
-                (
-                    row.get("scope") == task_id
-                    and scope_ref is not None
-                    and row.get("route_ref") == scope_ref
-                )
-                or (
-                    row.get("scope") in (None, "route")
-                    and row.get("route_ref") == route_ref
-                )
-            )
-            and isinstance(row.get("source"), str)
-            and row["source"].strip()
-        ]
+        return current_records(records, task_id, route_ref, scope_ref)
 
     confirmations = current(active_records("confirmations", value["confirmations"]))
     if not confirmations or any(
@@ -274,6 +264,7 @@ def takeover_transition(
             if operation["outcome"] == "unknown" or (
                 operation["request"].get("task_id") == request["task_id"]
                 and operation["outcome"] == "submitted"
+                and operation["request"].get("action") != "self-check"
                 and prior_id not in nonstarts
             ):
                 raise LbError(
@@ -340,7 +331,9 @@ def record_takeover(
             },
         )
         if may_start:
-            owner = execution_facts.project(ex["facts"])["reported_owner"]
+            owner = execution_facts.project(ex["facts"], ex, task_id=task_id)[
+                "reported_owner"
+            ]
             if owner != actor or get(doc)["value"] != "active":
                 raise LbError(
                     "takeover requires active Logbook and observed sole ownership",
@@ -353,7 +346,7 @@ def record_takeover(
                 )
         if ex["operations"].get(operation_id) != op:
             ex["operations"][operation_id] = op
-            unified.publish(target, run)
+            unified.publish_run(doc.root, target, run)
         return Result(
             {
                 "operation": op,

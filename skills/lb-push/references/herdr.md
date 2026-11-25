@@ -59,12 +59,12 @@ idle are not acceptance. Sailor neither reads Logbook nor writes Task state.
 
 ## Wait and continue
 
-Read `lb agent observation context LOG --json`. Configure an absent Observation
-with `lb agent observation configure LOG --input-file FILE --expect-version TOKEN`;
-input is exactly targets with verified full bindings and baselines. Missing stable
-document identity requires explicit migration. Before each mutation read fresh
-Observation context; its token is not the document/execution token. Unchanged
-targets need no reconfiguration.
+For a Run, read `lb agent monitoring context LOG --json`. Configure absent or
+changed targets with `lb agent monitoring configure LOG --input-file FILE
+--expect-version TOKEN`. Use the `agent observation context` and `configure`
+commands for legacy documents under legacy authority. Supply the complete target
+set with verified full bindings and baselines. Read a fresh monitoring token
+before each mutation. Keep unchanged targets and their listener.
 
 Claude Code prefers native Monitor running `lb agent wait --log LOG --stream
 --timeout SECONDS --expect-version TOKEN`. Without Monitor, run managed wait without

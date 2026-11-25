@@ -92,7 +92,7 @@ def task_rows(
     """Return schedulable tasks with stable source locations."""
     from logbook_cli.task_identity import bindings, snapshot
 
-    managed = {t.line: snapshot(t, item) for t, _, item in bindings(doc).values()}
+    managed = {t.line: snapshot(t, item, doc) for t, _, item in bindings(doc).values()}
     path = str(doc.path.relative_to(doc.root))
     return [
         {

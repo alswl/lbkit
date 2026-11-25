@@ -1,11 +1,113 @@
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from logbook_cli.document import parse_text
+from logbook_cli.document import LbError, parse_text
+from logbook_cli.services.preflight_plan import current_plan, declaration, grant_source
 from logbook_cli.services.readiness import _evaluate_evidence, evaluate
 
 
 class FirstStartReadinessTests(unittest.TestCase):
+    def test_readiness_uses_cutover_graph_and_invalidates_old_task_scope(self):
+        from logbook_cli.repository import markdown_document
+        from logbook_cli.services.route_scope import route_scope
+
+        root = Path("/example")
+        doc = markdown_document(
+            b"# Work\n\n## Stage 1\n\n"
+            b"- [ ] First\n    <!-- lb-task A -->\n"
+            b"- [ ] Next\n    <!-- lb-task B -->\n    - Depends: A\n",
+            root / "log.md", root,
+        )
+        before = route_scope(doc)
+        evidence_row = {"source": "fixture", "scope": "B", "task_id": "B",
+                        "route_ref": before["task_scopes"]["B"]}
+        evidence = {
+            "confirmations": [{**evidence_row, "status": "confirmed"}],
+            "observations": [{**evidence_row, "status": "ready"}],
+            "grants": [{**evidence_row, "status": "granted", "action": "dispatch", "actor": "runner"}],
+        }
+        run = {"identity": {}, "execution": {"operations": {}, "tasks": {}}}
+        with patch("logbook_cli.services.readiness.read_bound_evidence", return_value=evidence):
+            self.assertEqual(evaluate(doc, run, "B", "runner")["checks"]["dependency"], "blocked")
+            doc.task_dependency_graph = {"A": [], "B": ["A"]}
+            self.assertEqual(route_scope(doc), before)
+            doc.task_dependency_graph = {"A": [], "B": []}
+            changed = evaluate(doc, run, "B", "runner")["checks"]
+            self.assertNotIn("dependency", changed)
+            self.assertEqual(changed["confirmation"], "blocked")
+
+    def test_managed_task_cannot_use_legacy_path_or_bypass_required_checks(self):
+        scope = {"route_ref": "route", "task_scopes": {"A": "task-scope"}}
+        plan = {
+            "actor": "captain",
+            "scope_ref": "task-scope",
+            "candidate_ref": "candidate",
+            "checks": [{"check_id": "qa-smoke", "subject_id": "qa"}],
+        }
+        evidence = {
+            "confirmations": [
+                {"route_ref": "route", "status": "confirmed", "source": "route review"}
+            ],
+            "grants": [
+                {
+                    "route_ref": "task-scope",
+                    "scope": "A",
+                    "task_id": "A",
+                    "actor": "captain",
+                    "action": "preflight-plan",
+                    "status": "granted",
+                    "source": "approved checks",
+                    "candidate_ref": plan["candidate_ref"],
+                    "checks": plan["checks"],
+                }
+            ],
+        }
+        managed = {"enrolled": ["A"], "plans": {}}
+        self.assertIsNone(current_plan({}, "A", evidence, scope))
+        with self.assertRaisesRegex(LbError, "required preflight checks"):
+            current_plan({"preflight": managed}, "A", evidence, scope)
+        managed["plans"]["A"] = {**plan, "source": "approved checks"}
+        self.assertEqual(
+            current_plan({"preflight": managed}, "A", evidence, scope), managed["plans"]["A"]
+        )
+        with self.assertRaisesRegex(LbError, "current confirmed Task scope"):
+            current_plan(
+                {"preflight": managed},
+                "A",
+                evidence,
+                {**scope, "task_scopes": {"A": "replacement-scope"}},
+            )
+        empty = {**plan, "checks": []}
+        with self.assertRaisesRegex(LbError, "exact preflight check set"):
+            grant_source(evidence, scope, "A", empty)
+        grant = evidence["grants"][0]
+        grant["id"] = "original"
+        replacement = {**grant, "id": "replacement", "checks": []}
+        evidence["grants"].append(replacement)
+        for disputed in (plan, empty):
+            with self.assertRaisesRegex(LbError, "exact preflight check set"):
+                grant_source(evidence, scope, "A", disputed)
+        replacement["supersedes"] = "original"
+        managed["plans"]["A"] = {**empty, "source": "approved checks"}
+        self.assertEqual(
+            current_plan({"preflight": managed}, "A", evidence, scope), managed["plans"]["A"]
+        )
+
+    def test_check_sets_have_stable_order_and_unique_ids(self):
+        plan = {
+            "actor": "captain",
+            "scope_ref": "scope",
+            "candidate_ref": "candidate",
+            "checks": [
+                {"check_id": "z", "subject_id": None},
+                {"check_id": "a", "subject_id": "developer"},
+            ],
+        }
+        self.assertEqual(declaration(plan)["checks"], plan["checks"][::-1])
+        with self.assertRaisesRegex(LbError, "duplicate"):
+            declaration({**plan, "checks": [plan["checks"][0]] * 2})
+
     def test_evidence_requires_nonempty_string_source(self):
         basis = {"source": "evidence", "route_ref": "route"}
         records = {

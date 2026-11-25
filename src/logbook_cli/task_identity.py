@@ -68,7 +68,7 @@ def lookup(doc, identity):
     return item
 
 
-def snapshot(task, item):
+def snapshot(task, item, doc=None):
     from logbook_cli.task_records import require_current
 
     require_current(task, item)
@@ -78,7 +78,7 @@ def snapshot(task, item):
         "status": task.effective_state
         if task.effective_state in {"blocked", "pause"}
         else item.get("status", task.effective_state),
-        "depends_on": dependencies(task, item),
+        "depends_on": task_dependencies(doc, task, item),
         "line": task.line,
         "stage": task.stage,
         "text": task.text,
@@ -107,7 +107,7 @@ def acceptance_issues(doc):
         for task in stage.tasks:
             require_current(task, by_line.get(task.line, {}))
     for identity, (task, _, item) in known.items():
-        view = snapshot(task, item)
+        view = snapshot(task, item, doc)
         if not view["consistent"]:
             issues.append(identity + ": checkbox and lifecycle disagree")
         elif (
@@ -144,6 +144,16 @@ def dependencies(task, item=None):
     if current and current != legacy:
         raise LbError("conflicting legacy dependencies", EXIT_REFUSED)
     return current or legacy
+
+
+def task_dependencies(doc, task, item=None):
+    graph = getattr(doc, "task_dependency_graph", None)
+    if graph is None:
+        return dependencies(task, item)
+    task_id = item.get("id") if item else task.identity
+    if task_id is None:
+        return []
+    return graph.get(task_id, [])
 
 
 def require_migrated_references(item):

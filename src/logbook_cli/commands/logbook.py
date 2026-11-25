@@ -85,18 +85,9 @@ def state_set(root, log, token, dry_run, json, lifecycle, basis):
 )
 @options(ROOT, LOG, DRY_RUN, JSON, click.option("--expect-version"))
 def recover(root, log, dry_run, json, expect_version):
-    from pathlib import Path
+    from logbook_cli.services.common import recover as recover_document
 
-    from logbook_cli.document import LbError, root_path
-    from logbook_cli.services.common import Result
-    from logbook_cli.storage import recover as recover_state
-
-    base = root_path(resolve_root(root))
-    raw = Path(log)
-    path = raw if raw.is_absolute() else base / raw
-    if path.is_symlink() or not path.resolve().is_relative_to(base):
-        raise LbError("recovery path must be inside root and not a symlink")
-    finish(Result(recover_state(base, path.resolve(), expect_version, dry_run)), json)
+    finish(recover_document(resolve_root(root), log, expect_version, dry_run), json)
 
 
 def register(app: click.Group) -> None:
@@ -113,6 +104,8 @@ def register(app: click.Group) -> None:
         sync_state,
         route,
         record_readiness,
+        preflight_plan,
+        preflight_observe,
         takeover_start,
         readiness,
     ):
@@ -201,6 +194,44 @@ def record_readiness(root, log, thinking, input_file, dry_run, json):
         ),
         json,
     )
+
+
+@click.command(
+    "preflight-plan", help="Save the approved self-check declaration for a Task."
+)
+@options(
+    ROOT,
+    LOG,
+    click.option("--task-id", required=True),
+    click.option("--input-file", required=True),
+    click.option("--expect-execution-version", required=True),
+    DRY_RUN,
+    JSON,
+)
+def preflight_plan(
+    root, log, task_id, input_file, expect_execution_version, dry_run, json
+):
+    from logbook_cli.services.preflight_plan import save
+
+    finish(
+        save(
+            resolve_root(root),
+            log,
+            task_id,
+            input_file,
+            expect_execution_version,
+            dry_run,
+        ),
+        json,
+    )
+
+
+@click.command("preflight-observe", help="Read and cache the reply to a preparation operation.")
+@options(ROOT, LOG, click.option("--input-file", required=True), DRY_RUN, JSON)
+def preflight_observe(root, log, input_file, dry_run, json):
+    from logbook_cli.services.self_check import collect
+
+    finish(collect(resolve_root(root), log, input_file, dry_run), json)
 
 
 @click.command("readiness", help="Inspect recorded evidence for a task start.")

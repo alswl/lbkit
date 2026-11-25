@@ -93,8 +93,12 @@ def bind_value(runtime, payload):
     value = copy.deepcopy(payload) | {"subject": copy.deepcopy(runtime["assignee"])}
     bindings = runtime.setdefault("execution_bindings", {})
     prior = bindings.get(payload["id"])
-    if prior is not None and prior != value:
-        raise LbError("binding ID is immutable", EXIT_REFUSED)
+    if prior is not None:
+        if prior != value:
+            raise LbError("binding ID is immutable", EXIT_REFUSED)
+        if runtime.get("current_binding_id") != payload["id"]:
+            raise LbError("replacing a Task binding requires a new binding ID", EXIT_REFUSED)
+        return
     bindings[payload["id"]] = value
     runtime["current_binding_id"] = payload["id"]
 
@@ -326,7 +330,7 @@ def mutate(root, log, task_id, input_file, execution_token, dry_run, action):
         changed = prior != runtime
         value["execution"]["tasks"][task_id] = runtime
         if changed and not dry_run:
-            unified.publish(path, value)
+            unified.publish_run(doc.root, path, value)
         return {
             "changed": changed,
             "task_id": task_id,
@@ -356,7 +360,7 @@ def show(root, log, task_id):
             "sync_status": doc.sync_status,
         }
     return {
-        "task": snapshot(task, item),
+        "task": snapshot(task, item, doc),
         "runtime": runtime,
         "sync_status": doc.sync_status,
         "results": [
