@@ -19,9 +19,28 @@ lb log sync-state docs/delivery.md --json
 Optional repeated `--document PATH` associates other existing project documents
 at initialization. Those paths are fixed at initialization. A run has one Logbook.
 Initialization refuses legacy execution records bound to the Logbook regardless
-of the requested filename. Legacy sidecars and observation layouts also refuse
-initialization. Use [explicit legacy migration](lb-cli.md#legacy-run-migration)
-for eligible old runs.
+of the requested filename. A legacy sidecar section for any selected document
+or a pending transaction for its sidecar also refuses initialization. When
+documents share a filename, their sidecar sections are identified by project
+relative path. For example, `lb/work.md.json` may retain only an archive section
+while another `work.md` is initialized and synchronized. A section for a selected
+document still conflicts in a valid sidecar renamed to a file such as
+`lb/retained.json`. When `lb/observations/` exists, each
+entry must use the UUID of a different document. The UUID needs one claim
+across recognizable sidecars, including renamed copies. The sole claim must
+come from the owner's project-relative section in its corresponding sidecar,
+such as `lb/<document>.md.json` or `lb/<document>.markdown.json`.
+This covers UUID-named JSON, listener locks and action locks. Initialization
+leaves those files and sidecars byte for byte as found. Unknown or ambiguous
+owners and unsafe paths refuse initialization. The path-keyed layout under
+`lb/observations/<root-relative-document-path>.json` and its corresponding locks
+still refuse initialization, including when the document has no sidecar. Use
+[explicit legacy migration](lb-cli.md#legacy-run-migration) for eligible old runs.
+
+For an existing run, context and synchronization still check for sidecar
+sections and unfinished transactions across all bound documents. A migrated run
+can retain the original sources verified against its published migration manifest.
+Missing or invalid UUIDs in unrelated sections do not block those operations.
 
 The authoritative structured file is `lb/<name>.json`, format
 `task-document-projection`. Its sections are:

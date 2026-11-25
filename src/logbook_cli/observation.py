@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 from logbook_cli import state
 from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError
-from logbook_cli.storage import WriterBusy
+from logbook_cli.storage import legacy_document_lock
 
 
 def scope(doc):
@@ -70,7 +70,7 @@ def decode_for_migration(data):
     """Normalize the historical standalone field pair before canonical validation."""
     if len(data) > STATE_LIMIT:
         raise ValueError("oversized observation")
-    value = json.loads(data, object_pairs_hook=state.unique_object)
+    value = state.decode_json(data)
     if isinstance(value, dict):
         aliases = {"contexts": "cursors", "target_revision": "revision"}
         legacy = aliases.keys() & value.keys()
@@ -173,6 +173,16 @@ def read(doc):
     return value, token
 
 
+def writer(doc):
+    project = (
+        doc.root if getattr(doc, "markdown_authority", False)
+        else state.project(doc.path, doc.root)
+    )
+    return legacy_document_lock(
+        doc.root, project, busy="writer_busy: another state writer is active"
+    )
+
+
 def configure(doc, targets, contexts, expected, dry_run):
     from contextlib import ExitStack
 
@@ -192,17 +202,8 @@ def configure(doc, targets, contexts, expected, dry_run):
         if not dry_run:
             for binding in sorted(affected, key=encode):
                 actions.enter_context(action_lock(doc, binding))
-        fd = os.open(doc.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-        try:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError as exc:
-                raise LbError(
-                    "writer_busy: another state writer is active", EXIT_REFUSED
-                ) from exc
+        with writer(doc):
             return _configure(doc, targets, contexts, expected, dry_run)
-        finally:
-            os.close(fd)
 
 
 def _configure(doc, targets, contexts, expected, dry_run):
@@ -427,12 +428,7 @@ def listener_lock(doc, *, create=False):
 
 def _change(doc, expected, mutate, *, new_work=False, dry_run=False):
     """Apply an owned delta to fresh protected state; never save a stale snapshot."""
-    fd = os.open(doc.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise WriterBusy("writer_busy: another state writer is active") from exc
+    with writer(doc):
         value, token, before = _snapshot(doc)
         if value is None:
             raise LbError(
@@ -449,8 +445,6 @@ def _change(doc, expected, mutate, *, new_work=False, dry_run=False):
         if not dry_run and data != before:
             _publish(doc, data, before)
         return value, token if dry_run else version_token(scope(doc), data)
-    finally:
-        os.close(fd)
 
 
 @contextmanager

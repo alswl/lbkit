@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from herdr_fixtures import target as observation_target
 
-from logbook_cli import legacy_run, unified, wait_state
+from logbook_cli import execution, legacy_run, unified, wait_state
 from logbook_cli.document import LbError
 from logbook_cli.services import agent_wait
 
@@ -52,6 +52,19 @@ class LegacyRunPreviewTest(TestCase):
             with self.subTest(name=name):
                 with self.assertRaisesRegex(LbError, "old execution layout conflict"):
                     unified.initialize(self.root, self.log, name, [], dry_run=True)
+
+    def test_execution_lookup_finds_legacy_record_named_markdown(self):
+        record = self.record | {"name": "history.markdown"}
+        source = self.write("lb/history.markdown.json", record)
+        self.sidecar({"docs/archive.markdown": OTHER_ID}, name="archive.markdown-sidecar").rename(
+            self.root / "lb/archive.markdown.json"
+        )
+
+        path, raw, found = execution.find_legacy(self.root, self.log)
+
+        self.assertEqual(path, source)
+        self.assertEqual(raw, source.read_bytes())
+        self.assertEqual(found, record)
 
     def preview(self, *documents, name="new-run"):
         return legacy_run.preview(str(self.root), "docs/delivery.md", name, documents)
@@ -321,6 +334,19 @@ class LegacyRunPreviewTest(TestCase):
         self.sidecar({"docs/other.md": DOC_ID}, name="other")
         with self.assertRaisesRegex(LbError, "UUID has multiple owners"):
             self.preview()
+
+    def test_preview_refuses_renamed_sidecar_bound_to_a_selected_document(self):
+        self.sidecar()
+        self.assertEqual(self.preview("thinking/delivery.md").code, 0)
+        for relative in ("docs/delivery.md", "thinking/delivery.md"):
+            with self.subTest(relative=relative):
+                self.sidecar({relative: OTHER_ID}, name="retained").rename(
+                    self.root / "lb/retained.json"
+                )
+                before = self.tree()
+                with self.assertRaisesRegex(LbError, "wrong sidecar"):
+                    self.preview("thinking/delivery.md")
+                self.assertEqual(self.tree(), before)
 
     def test_rejects_path_fallback_observation_and_ignores_unowned_uuid_file(self):
         self.write(f"lb/observations/{OTHER_ID}.json", self.monitoring())

@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 from logbook_cli.document import EXIT_REFUSED, Document, LbError
@@ -12,6 +13,27 @@ class WriterBusy(LbError):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, EXIT_REFUSED)
+
+
+@contextmanager
+def legacy_document_lock(
+    root: Path, project: Path, *, shared: bool = False,
+    busy: str = "another document writer is active",
+):
+    """Lock the caller root and the project shared by equivalent --root scopes."""
+    import fcntl
+
+    from logbook_cli.state import open_directory
+
+    mode = fcntl.LOCK_SH if shared else fcntl.LOCK_EX
+    with ExitStack() as locks:
+        for path in dict.fromkeys((root, project)):
+            fd = locks.enter_context(open_directory(root, path))
+            try:
+                fcntl.flock(fd, mode | fcntl.LOCK_NB)
+            except BlockingIOError as exc:
+                raise WriterBusy(busy) from exc
+        yield
 
 
 def _sync_directory(path: Path) -> None:
@@ -83,14 +105,15 @@ def write_bytes(
 ) -> None:
     """Serialize cooperating writers and journal recoverable two-file updates."""
     import base64
-    import fcntl
     import json
 
     from logbook_cli.state import (
+        MARKDOWN_SUFFIXES,
         encode,
         encode_file,
         journal_for,
         path_for,
+        project,
         read_file,
         section,
     )
@@ -100,13 +123,10 @@ def write_bytes(
     state = path_for(doc.path, doc.root)
     journal = journal_for(doc.path, doc.root)
     key = section(doc.path, doc.root)
-    directory = os.open(doc.root, os.O_RDONLY)
-    try:
-        try:
-            fcntl.flock(directory, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise LbError("another document writer is active", EXIT_REFUSED) from exc
-        if doc.path.suffix == ".md":
+    markdown = doc.path.suffix in MARKDOWN_SUFFIXES
+    scope = project(doc.path, doc.root) if markdown else doc.root
+    with legacy_document_lock(doc.root, scope):
+        if markdown:
             from logbook_cli import unified
 
             if unified.locate(doc.root, doc.path)[0] is not None:
@@ -184,25 +204,17 @@ def write_bytes(
         if len(changes) > 1:
             journal.unlink()
             _sync_directory(journal.parent)
-    finally:
-        os.close(directory)
 
 
 def recover(root: Path, path: Path, expected: str | None, dry_run: bool) -> dict:
     """Roll forward only when every file still matches a recorded before/after image."""
     import base64
-    import fcntl
     import hashlib
     import json
 
-    from logbook_cli.state import journal_for, path_for
+    from logbook_cli.state import journal_for, path_for, project
 
-    directory = os.open(root, os.O_RDONLY)
-    try:
-        try:
-            fcntl.flock(directory, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise LbError("another document writer is active", EXIT_REFUSED) from exc
+    with legacy_document_lock(root, project(path, root)):
         from logbook_cli import unified
 
         if unified.locate(root, path)[0] is not None:
@@ -268,8 +280,6 @@ def recover(root: Path, path: Path, expected: str | None, dry_run: bool) -> dict
             "recovered": not dry_run,
             "files": [str(p.relative_to(root)) for p, _, _ in changes],
         }
-    finally:
-        os.close(directory)
 
 
 def replace_bytes_at(

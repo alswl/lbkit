@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -35,9 +36,8 @@ def read(path, root=None):
     if path.is_symlink():
         raise LbError("unsafe unified state symlink", EXIT_REFUSED)
     try:
-        value = json.loads(
-            state.read_regular(path.parent if root is None else root, path),
-            object_pairs_hook=state.unique_object,
+        value = state.decode_json(
+            state.read_regular(path.parent if root is None else root, path)
         )
         if (
             not isinstance(value, dict)
@@ -200,7 +200,7 @@ def read(path, root=None):
         ) from exc
 
 
-def runs(root, directory):
+def runs(root, directory, *, undecodable_markdown=None):
     for path in sorted(directory.glob("*.json")):
         if path.is_symlink():
             raise LbError("unsafe state symlink", EXIT_REFUSED)
@@ -208,9 +208,14 @@ def runs(root, directory):
         if path.name.endswith((".md.json", ".dependencies.json", ".dependencies-transaction.json")):
             continue
         try:
-            raw = json.loads(
-                state.read_regular(root, path), object_pairs_hook=state.unique_object
-            )
+            data = state.read_regular(root, path)
+            try:
+                raw = state.decode_json(data)
+            except ValueError:
+                if undecodable_markdown is None or not path.name.endswith(".markdown.json"):
+                    raise
+                undecodable_markdown.append(path)
+                continue
         except (OSError, ValueError) as exc:
             raise LbError(f"invalid state {path.name}", EXIT_REFUSED) from exc
         if isinstance(raw, dict) and raw.get("format") == FORMAT:
@@ -220,9 +225,10 @@ def runs(root, directory):
 def locate(root, log, *, required=False, recovering_dependencies=False):
     directory = state.directory(log, root)
     relative = state.section(log, root)
+    undecodable_markdown = []
     matches = [
         (path, value)
-        for path, value in runs(root, directory)
+        for path, value in runs(root, directory, undecodable_markdown=undecodable_markdown)
         if relative in value["identity"]["document_paths"]
     ]
     if len(matches) > 1:
@@ -235,23 +241,25 @@ def locate(root, log, *, required=False, recovering_dependencies=False):
         assert_authority(root, directory, relative, matches[0] if matches else None)
     if matches:
         path, value = matches[0]
+        from logbook_cli import legacy_run
         from logbook_cli.services.dependency_transaction import present
 
         if not recovering_dependencies and present(path):
             raise LbError("unfinished dependency transaction; use log recover on its Logbook", EXIT_REFUSED)
-        old_sidecar = state.path_for(log, root)
-        journal = state.journal_for(log, root)
         migration = value.get("legacy_migration")
-        accepted_sidecar = migration and old_sidecar.relative_to(root).as_posix() in migration["sources"]
-        if (
-            (old_sidecar.exists() or old_sidecar.is_symlink()) and not accepted_sidecar
-        ) or journal.exists() or journal.is_symlink():
-            raise LbError("old document layout conflicts with unified run", EXIT_REFUSED)
+        conflict = "old document layout conflicts with unified run"
+        documents = [directory.parent / p for p in value["identity"]["document_paths"]]
+        retained = set()
         if migration:
             from logbook_cli.legacy_migration import verify_legacy_sources
 
             verify_legacy_sources(root, directory, migration, value["execution"])
+            retained = {root / source for source in migration["sources"]}
+        legacy_run.disjoint_sidecars(root, directory, documents, conflict, retained=retained)
         return path, value
+    if undecodable_markdown:
+        # Without a verified Run, an undecodable file could still hold authority.
+        raise LbError(f"invalid state {undecodable_markdown[0].name}", EXIT_REFUSED)
     if required:
         raise LbError("initialization_required: run log init-state", EXIT_REFUSED)
     return None, None
@@ -268,15 +276,21 @@ def writer(root, log, dry_run=False):
 
     directory = state.directory(log, root)
     directory.mkdir(exist_ok=True)
-    fd = os.open(directory / ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-    try:
+    with state.open_directory(root, directory) as directory_fd:
+        fd = os.open(
+            ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+            0o600, dir_fd=directory_fd,
+        )
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise WriterBusy("writer_busy: another run writer is active") from exc
-        yield
-    finally:
-        os.close(fd)
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise LbError("unsafe project writer lock", EXIT_REFUSED)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as exc:
+                raise WriterBusy("writer_busy: another run writer is active") from exc
+            yield
+        finally:
+            os.close(fd)
 
 
 def publish(path, value):
@@ -314,6 +328,26 @@ def publish_run(root, path, value, *, requires_dependencies=True):
     return publish(path, value)
 
 
+@contextmanager
+def initialization_writer(root, log, documents, dry_run):
+    from logbook_cli import legacy_run
+    from logbook_cli.storage import WriterBusy, legacy_document_lock
+
+    directory = state.directory(log, root)
+    with legacy_document_lock(
+        root, directory.parent, shared=dry_run,
+        busy="writer_busy: another legacy writer is active",
+    ):
+        sections = legacy_run.disjoint_sidecars(
+            root, directory, documents, "old layout conflict; no migration", initializing=True
+        )
+        legacy_run.require_disjoint_observations(root, directory, sections)
+        if dry_run and legacy_run.lock_busy(root, directory / ".lock"):
+            raise WriterBusy("writer_busy: another run writer is active")
+        with writer(root, log, dry_run):
+            yield directory
+
+
 def initialize(root, log, name, documents, dry_run=False):
     from logbook_cli import execution
     from logbook_cli.document import safe_path
@@ -326,21 +360,9 @@ def initialize(root, log, name, documents, dry_run=False):
             *[str(safe_path(root, p).relative_to(base)) for p in documents],
         }
     )
-    for relative in paths:
-        target = safe_path(base, relative)
-        if not target.is_file():
-            raise LbError("associated document must exist", EXIT_REFUSED)
-        if any(
-            path.exists() or path.is_symlink()
-            for path in (state.path_for(target, root), state.journal_for(target, root))
-        ):
-            raise LbError("old layout conflict; no migration", EXIT_REFUSED)
-    target = state.directory(log, root) / (name + ".json")
-    if (target.parent / "observations").exists() or (
-        target.parent / "observations"
-    ).is_symlink():
-        raise LbError("old observations layout conflict; no migration", EXIT_REFUSED)
-    with writer(root, log, dry_run):
+    selected = [safe_path(base, relative) for relative in paths]
+    with initialization_writer(root, log, selected, dry_run) as directory:
+        target = directory / (name + ".json")
         found, _ = locate(root, log)
         if found is not None and found != target:
             raise LbError("document already associated with another run", EXIT_REFUSED)

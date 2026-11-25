@@ -103,7 +103,7 @@ def _read(doc):
 
 
 def matches_binding(base, binding, document):
-    if not isinstance(binding, str) or not binding or "\0" in binding:
+    if not state.is_filesystem_path(binding):
         return False
     candidate = Path(os.path.normpath(base / binding))
     if candidate == document:
@@ -126,7 +126,7 @@ def find_legacy(root, document, *, include_thinking=False, strict=True):
             continue
         try:
             data = state.read_regular(root, path)
-            value = json.loads(data, object_pairs_hook=unique_keys)
+            value = state.decode_json(data)
         except (ValueError, OSError) as exc:
             raise LbError(
                 f"invalid or unsafe execution state: {path.name}", EXIT_REFUSED
