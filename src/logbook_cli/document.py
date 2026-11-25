@@ -80,6 +80,8 @@ class Document:
     migration_plan: str | None = None
     legacy_history: dict = field(default_factory=dict)
     legacy_metadata: dict = field(default_factory=dict)
+    run_events: list[dict] = field(default_factory=list)
+    run_event_context: bytes | None = None
     unified_state_path: Path | None = None
     task_dependency_graph: dict[str, list[str]] | None = None
 
@@ -99,7 +101,8 @@ class Document:
     def token(self) -> str:
         from logbook_cli.state import token
 
-        return token(self.data, self.state_data)
+        state_data = self.run_event_context if self.markdown_authority else self.state_data
+        return token(self.data, state_data)
 
 
 def root_path(value: str) -> Path:
@@ -988,8 +991,11 @@ def context_command(doc: Document, *, execution: bool = False) -> str:
 
 
 def require_token(doc: Document, token: str | None) -> None:
-    if doc.markdown_authority:
-        return
+    if not doc.markdown_authority:
+        require_version_token(doc, token)
+
+
+def require_version_token(doc: Document, token: str | None) -> None:
     if not token:
         raise LbError(
             f"write commands require --expect-version for {doc.path.relative_to(doc.root)}; "

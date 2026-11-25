@@ -14,7 +14,7 @@ from logbook_cli.commands.common import (
 from logbook_cli.services import closeout as service
 
 THINKING = click.option(
-    "--thinking", help="Adapter-resolved bound Thinking path inside root."
+    "--thinking", help="Adapter-resolved Thinking path bound to this Run, inside root."
 )
 RUN_ID = click.option("--run-id")
 SCOPE = click.option("--scope", default="logbook", help="logbook or exact Stage title.")

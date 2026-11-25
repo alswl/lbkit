@@ -244,7 +244,7 @@ Resolve host tools/skills actually available for runtime, review, document bindi
 
 ### Storage and helper
 
-Use the current logbook's uniquely bound Thinking via the host document adapter. Its section of the mind's `lb/<name>.md.json` stores run events under `run-event`; keep Thinking prose readable. Follow the [document state contract](document-state.md). Record only needed events; do not archive original observations to substantiate every event.
+Use the current logbook's uniquely bound Thinking via the host document adapter. A unified Run stores events in `lb/<name>.json` under `run_events` for that companion. Legacy runs use the Thinking document's sidecar section. Keep Thinking prose readable. Follow the [document state contract](document-state.md). Record only needed events; do not archive original observations to substantiate every event.
 
 Read-only helper:
 

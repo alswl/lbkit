@@ -144,6 +144,15 @@ def imported_archive_ids(value):
     }
 
 
+def event_context(run, document):
+    """Version the event stream together with its exact companion association."""
+    return unified.encode({
+        "run_id": run["identity"]["run_id"],
+        "document": document,
+        "events": run.get("run_events", {}).get(document, []),
+    })
+
+
 def read_document(root, log, *, load_dependencies=True):
     base = root_path(str(root))
     path = safe_path(base, str(log))
@@ -161,6 +170,9 @@ def read_document(root, log, *, load_dependencies=True):
                 raise LbError("Logbook changed during dependency read; reread", EXIT_REFUSED)
         doc.legacy_metadata = value["documents"].get(key, {}).get("legacy_metadata", {})
         doc.legacy_history = value.get("legacy_history", {}).get(key, {})
+        if key != value["identity"]["log_path"]:
+            doc.run_events = value.get("run_events", {}).get(key, [])
+            doc.run_event_context = event_context(value, key)
         if "legacy_migration" in value:
             doc.migration_plan = value["legacy_migration"]["plan_token"]
         doc.metadata["task-archive"].update(

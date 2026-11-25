@@ -6,9 +6,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
-from logbook_cli.document import LbError, parse
+from logbook_cli.document import LbError
 from logbook_cli.run_metrics import calculate, events  # noqa: F401 (tests)
 from logbook_cli.services.closeout import state_events
+from logbook_cli.services.common import load
 
 
 def main():
@@ -26,7 +27,7 @@ def main():
         path = (root / relative).resolve(strict=True)
         if not path.is_relative_to(root) or not path.is_file():
             raise OSError("Thinking must be a file inside root")
-        doc = parse(path, root)
+        doc = load(str(root), str(path))
     except (OSError, UnicodeError, LbError) as exc:
         print(str(exc), file=sys.stderr)
         return 3
