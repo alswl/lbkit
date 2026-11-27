@@ -9,6 +9,26 @@ from logbook_cli.document import LbError
 
 
 class RuntimeTest(unittest.TestCase):
+    def test_prompt_receipt_and_poll_expose_matching_native_sequence(self):
+        binding, pane, agent = self.native_snapshot()
+        binding["server"] = "example"
+        agent.update(state_change_seq=10, completion_seq=10)
+        receipt = {"result": {"type": "agent_prompted", "agent": agent}}
+        self.assertEqual(herdr.prompt_baseline(binding, receipt), {
+            "terminal_id": "term-example", "state_change_seq": 10,
+        })
+        observation = herdr.binding_observation(
+            binding, pane, {**agent, "state_change_seq": 12, "completion_seq": 12}
+        )
+        self.assertEqual(observation.get("completion_seq"), 12)
+        self.assertEqual(observation["state_change_seq"], 12)
+        self.assertIsNone(herdr.prompt_baseline(
+            {**binding, "pane_id": "w1:p2"}, receipt
+        ))
+        self.assertIsNone(herdr.prompt_baseline(binding, {
+            "result": {"type": "agent_prompted", "agent": {**agent, "state_change_seq": True}},
+        }))
+
     def native_snapshot(self):
         binding = dict(
             machine="local",

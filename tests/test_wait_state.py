@@ -60,11 +60,20 @@ class WaitStateTest(unittest.TestCase):
 
     def test_native_question_identity_is_preserved_in_detected_event(self):
         context = self.reducer.initial(self.target)
-        native = {"id": "native-question", "revision": "native-revision", "questions": []}
-        _, events = self.reducer.observe(context, {
-            "binding": self.target["binding"], "state": "blocked",
-            "observed_at": "2026-01-01T00:00:01Z", "question": native,
-        })
+        native = {
+            "id": "native-question",
+            "revision": "native-revision",
+            "questions": [],
+        }
+        _, events = self.reducer.observe(
+            context,
+            {
+                "binding": self.target["binding"],
+                "state": "blocked",
+                "observed_at": "2026-01-01T00:00:01Z",
+                "question": native,
+            },
+        )
         self.assertEqual(events[0]["question"], native)
         self.assertIsNot(events[0]["question"], native)
 
@@ -138,3 +147,98 @@ class WaitStateTest(unittest.TestCase):
             )
         )
         self.assertFalse(any(e["kind"] == "settled" for e in events))
+
+    def test_dispatched_completion_between_samples_survives_resume(self):
+        import json
+
+        binding = self.target["binding"]
+        context = self.reducer.initial(self.target)
+        terminal = "example-terminal"
+        first = {
+            "binding": binding,
+            "state": "done",
+            "terminal_id": terminal,
+            "state_change_seq": 10,
+            "completion_seq": 10,
+        }
+        context, events = self.reducer.observe(context, first)
+        self.assertEqual([event["kind"] for event in events], ["settled"])
+        dispatch = {
+            "operation_id": "next",
+            "baseline": {
+                "terminal_id": terminal,
+                "state_change_seq": 10,
+            },
+        }
+        context, events = self.reducer.observe(context, first, dispatch=dispatch)
+        self.assertEqual(events, [])
+        second = {**first, "state_change_seq": 12, "completion_seq": 12}
+        context, events = self.reducer.observe(context, second, dispatch=dispatch)
+        self.assertEqual([event["kind"] for event in events], ["settled"])
+        context = json.loads(json.dumps(context))
+        _, events = self.reducer.observe(context, second, dispatch=dispatch)
+        self.assertEqual(events, [])
+
+    def test_dispatched_completion_with_missing_or_discontinuous_evidence_reports_gap(
+        self,
+    ):
+        binding = self.target["binding"]
+        first = {
+            "binding": binding,
+            "state": "done",
+            "terminal_id": "example-terminal",
+            "state_change_seq": 10,
+            "completion_seq": 10,
+        }
+        context, _ = self.reducer.observe(self.reducer.initial(self.target), first)
+        baseline = {"terminal_id": first["terminal_id"], "state_change_seq": 10}
+        for receipt, sample in (
+            (None, first),
+            (
+                baseline,
+                {
+                    **first,
+                    "terminal_id": "replacement",
+                    "state_change_seq": 20,
+                    "completion_seq": 20,
+                },
+            ),
+            (baseline, {**first, "state_change_seq": 9, "completion_seq": 9}),
+            (baseline, {**first, "state_change_seq": 12, "completion_seq": 10}),
+        ):
+            with self.subTest(receipt=receipt, sample=sample):
+                dispatch = {"operation_id": "next", "baseline": receipt}
+                changed, events = self.reducer.observe(
+                    context, sample, dispatch=dispatch
+                )
+                self.assertEqual([e["kind"] for e in events], ["observation_gap"])
+                _, events = self.reducer.observe(changed, sample, dispatch=dispatch)
+                self.assertEqual(events, [])
+        _, events = self.reducer.observe(
+            context,
+            {**first, "binding": {**binding, "session_id": "replacement"}},
+            dispatch={"operation_id": "next", "baseline": baseline},
+        )
+        self.assertEqual([e["kind"] for e in events], ["identity_changed"])
+
+    def test_completion_sampled_before_receipt_publication_is_not_repeated(self):
+        binding = self.target["binding"]
+        first = {
+            "binding": binding,
+            "state": "done",
+            "terminal_id": "example-terminal",
+            "state_change_seq": 12,
+            "completion_seq": 12,
+        }
+        context, events = self.reducer.observe(self.reducer.initial(self.target), first)
+        self.assertEqual([event["kind"] for event in events], ["settled"])
+        dispatch = {
+            "operation_id": "in-flight",
+            "baseline": {
+                "terminal_id": first["terminal_id"],
+                "state_change_seq": 10,
+            },
+        }
+        context, events = self.reducer.observe(context, first, dispatch=dispatch)
+        self.assertEqual(events, [])
+        self.assertEqual(context.get("dispatch_id"), "in-flight")

@@ -705,6 +705,14 @@ Already-reported unresolved work does not retrigger notifications. Another liste
 refuses while the real lock is held. SIGINT/SIGTERM clean only owned waiting children;
 a later exclusive admission records an abandoned gap after forced loss.
 
+For a submitted `task agent send`, managed wait can detect a completion between
+samples. It compares the native completion sequence with the pre-submission
+sequence from the receipt for the verified binding and terminal. Repeated samples
+and listener resumes do not repeat that notification. An older idle snapshot
+cannot settle the new send. If continuity cannot be established, managed wait
+reports an `observation_gap` or an identity change. A `settled` event is a runtime
+notification for Captain to inspect. Task acceptance still requires its own evidence.
+
 A busy cooperating writer lock during a sample commit or listener end is retried
 within the same wait deadline. The listener retains the original sampled cursor
 and Events and checks its saved generation and targets on every attempt. A

@@ -150,6 +150,27 @@ def read(path, root=None):
                 )
             ):
                 raise ValueError("invalid send operation")
+        dispatches = ex.get("monitoring_dispatches", {})
+        if not isinstance(dispatches, dict):
+            raise ValueError("invalid monitoring dispatches")
+        from logbook_cli.wait_state import native_position
+
+        for key, dispatch in dispatches.items():
+            if (
+                not re.fullmatch(r"[0-9a-f]{64}", key)
+                or not isinstance(dispatch, dict)
+                or set(dispatch) != {"operation_id", "baseline"}
+                or not isinstance(dispatch["operation_id"], str)
+            ):
+                raise ValueError("invalid monitoring dispatch")
+            operation = ex["operations"].get(dispatch["operation_id"], {})
+            baseline = dispatch["baseline"]
+            if operation.get("outcome") != "submitted" or operation.get("provenance") != "adapter":
+                raise ValueError("monitoring dispatch lacks a submitted adapter operation")
+            if baseline is not None and (
+                not isinstance(baseline, dict) or native_position(baseline) != baseline
+            ):
+                raise ValueError("invalid monitoring dispatch baseline")
         if "legacy_migration" in value:
             from logbook_cli.legacy_migration import validate_manifest
 

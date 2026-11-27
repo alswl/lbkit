@@ -459,6 +459,12 @@ def send_task(
                     raise LbError("send intent changed before recording receipt", EXIT_REFUSED)
                 op = {**intent, "outcome": "submitted", "receipt": result["receipt"]}
                 operations[operation_id] = op
+                value["execution"].setdefault("monitoring_dispatches", {})[
+                    unified.digest(pinned)
+                ] = {
+                    "operation_id": operation_id,
+                    "baseline": herdr.prompt_baseline(pinned, result["receipt"]),
+                }
                 unified.publish_run(doc.root, target, value)
                 token = unified.section_token(value, "execution")
         except (OSError, LbError):
