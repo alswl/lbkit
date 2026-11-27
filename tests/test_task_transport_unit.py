@@ -627,6 +627,11 @@ class TaskTransportTests(unittest.TestCase):
                         send()
                 elif expect_submission:
                     self.assertEqual(send().value["operation"]["outcome"], "submitted")
+                    pinned = host.call_args.args[0]
+                    self.assertEqual(
+                        envelope["execution"].get("monitoring_dispatches"),
+                        {unified.digest(pinned): {"operation_id": "operation", "baseline": None}},
+                    )
                 elif versions:
                     sender, recipient = versions
                     with self.assertRaisesRegex(

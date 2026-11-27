@@ -127,7 +127,7 @@ def validate(value, *, allow_empty=False):
         for c, t in zip(contexts, targets):
             if (
                 not isinstance(c, dict)
-                or set(c) != set(wait_state.initial(t))
+                or not wait_state.cursor_fields_valid(c, t)
                 or c["binding"] != t["binding"]
             ):
                 raise ValueError("continuation identity differs")
@@ -215,15 +215,18 @@ async def observe_all(
     on_sample=None,
     *,
     interruption=None,
+    dispatch_for=None,
 ):
     with wait_signals() if interruption is None else nullcontext(interruption) as signs:
         return await observe_batch(
-            targets, contexts, pending, unresolved, timeout, on_sample, signs
+            targets, contexts, pending, unresolved, timeout, on_sample, signs,
+            dispatch_for=dispatch_for,
         )
 
 
 async def observe_batch(
-    targets, contexts, pending, unresolved, timeout, on_sample, interruption
+    targets, contexts, pending, unresolved, timeout, on_sample, interruption,
+    *, dispatch_for=None,
 ):
     deadline = time.monotonic() + timeout
     semaphore = asyncio.Semaphore(8)
@@ -269,6 +272,10 @@ async def observe_batch(
                 binding["machine"], binding["server"], scope
             )
             while time.monotonic() < deadline:
+                dispatch = (
+                    dispatch_for({**binding, "machine": machine})
+                    if dispatch_for is not None else None
+                )
                 agent_result, pane_result = await asyncio.gather(
                     call(machine, "agent", "get", binding["pane_id"]),
                     call(machine, "pane", "get", binding["pane_id"]),
@@ -281,7 +288,7 @@ async def observe_batch(
                     if native is not None:
                         observation.update(state="blocked", question=native)
                 contexts[index], events = wait_state.observe(
-                    contexts[index], observation
+                    contexts[index], observation, dispatch=dispatch
                 )
                 await notify(index, events)
                 if events:
@@ -468,7 +475,7 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
     import hashlib
     import uuid
 
-    from logbook_cli import observation
+    from logbook_cli import observation, unified
     from logbook_cli.document import EXIT_REFUSED
     from logbook_cli.render import emit_jsonl
     from logbook_cli.services.common import load
@@ -520,6 +527,7 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
     invocation = uuid.uuid4().hex
     targets = copy.deepcopy(initial["targets"])
     contexts = copy.deepcopy(initial["cursors"])
+    run_path = observation.scope(doc) if getattr(doc, "markdown_authority", False) else None
     new_events = []
     failures = []
 
@@ -634,6 +642,7 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
                 max(0, deadline - time.monotonic()),
                 sample,
                 interruption=interruption,
+                dispatch_for=dispatch_for if run_path is not None else None,
             )
             if failures:
                 raise failures[0]
@@ -643,6 +652,11 @@ def managed_wait(root, log, timeout, token, dry_run, *, stream=False):
                 or result.value["reason"] in {"interrupted", "unavailable"}
             ):
                 return result
+
+    def dispatch_for(binding):
+        # Read before the native probe so an older snapshot cannot settle a new send.
+        run = unified.read(run_path, doc.root)
+        return run["execution"].get("monitoring_dispatches", {}).get(unified.digest(binding))
 
     async def finish_listener():
         return await commit_with_retry(

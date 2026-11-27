@@ -33,7 +33,7 @@ def scope(doc):
 
 def validate(value):
     from logbook_cli.services.agent_wait import validate as validate_targets
-    from logbook_cli.wait_state import initial
+    from logbook_cli.wait_state import cursor_fields_valid
 
     if not isinstance(value, dict) or value.get("format") != "lb-observation":
         raise ValueError("unsupported observation format")
@@ -56,7 +56,7 @@ def validate(value):
     for cursor, target in zip(contexts, targets):
         if (
             not isinstance(cursor, dict)
-            or set(cursor) != set(initial(target))
+            or not cursor_fields_valid(cursor, target)
             or cursor.get("binding") != target["binding"]
         ):
             raise ValueError("invalid observation cursor binding")

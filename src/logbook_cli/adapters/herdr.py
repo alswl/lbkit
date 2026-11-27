@@ -328,7 +328,33 @@ def binding_observation(binding, pane, agent):
         "state": agent.get("agent_status", "unknown"),
         "observed_at": datetime.now(timezone.utc).isoformat(),
     }
+    from logbook_cli.wait_state import native_position
+
+    position = native_position(agent)
+    if position is not None:
+        result.update(position)
+        if type(agent.get("completion_seq")) is int:
+            result["completion_seq"] = agent["completion_seq"]
     return result
+
+
+def prompt_baseline(binding, receipt):
+    """Read the native pre-submission position only from a matching prompt receipt."""
+    result = receipt.get("result") if isinstance(receipt, dict) else None
+    if not isinstance(result, dict) or result.get("type") != "agent_prompted":
+        return None
+    agent = result.get("agent")
+    if not isinstance(agent, dict) or agent.get("agent_status") not in ("idle", "done"):
+        return None
+    try:
+        observed = binding_observation(binding, agent, agent)
+    except LbError:
+        return None
+    from logbook_cli.wait_state import native_position
+
+    if observed["binding"] == binding:
+        return native_position(observed)
+    return None
 
 
 def validate_session_binding(binding):

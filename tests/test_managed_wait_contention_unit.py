@@ -105,3 +105,59 @@ class ManagedWaitContentionTest(IsolatedAsyncioTestCase):
         self.assertEqual(committed, [1, 0])
         self.assertEqual(len(result.value["events"]), 2)
         self.assertEqual(result.code, 0)
+
+    async def test_poll_reads_committed_dispatch_before_sampling_native_state(self):
+        item = target()
+        binding = item["binding"]
+        context, _ = wait_state.observe(
+            wait_state.initial(item), {"binding": binding, "state": "done"}
+        )
+        pane = {key: binding[key] for key in ("workspace_id", "tab_id", "pane_id")}
+        dispatch = Mock(
+            return_value={
+                "operation_id": "next",
+                "baseline": {"terminal_id": "example-terminal", "state_change_seq": 10},
+            }
+        )
+
+        async def native(machine, *args, **kwargs):
+            if args[:2] == ("agent", "get"):
+                dispatch.assert_called_once_with(binding)
+                return {
+                    "result": {
+                        "agent": {
+                            "name": binding["agent_id"],
+                            "session_id": binding["session_id"],
+                            "agent_status": "done",
+                            "terminal_id": "example-terminal",
+                            "state_change_seq": 12,
+                            "completion_seq": 12,
+                        }
+                    }
+                }
+            if args[:2] == ("pane", "get"):
+                return {"result": {"pane": pane}}
+            return {}
+
+        with (
+            patch.object(agent_wait.herdr, "invoke_bounded", side_effect=native),
+            patch.object(agent_wait.herdr, "scope_machine", return_value="local"),
+            patch.object(
+                agent_wait.claude_questions,
+                "observe_native",
+                AsyncMock(return_value=None),
+            ),
+        ):
+            result = await agent_wait.observe_batch(
+                [item],
+                [context],
+                [],
+                [],
+                0.2,
+                None,
+                agent_wait.Interruption(),
+                dispatch_for=dispatch,
+            )
+        self.assertEqual(
+            [event["kind"] for event in result.value["events"]], ["settled"]
+        )
