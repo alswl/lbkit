@@ -57,7 +57,10 @@ class TaskTransportTests(unittest.TestCase):
             "session_id": "native", "correlation": "correlation", "message_digest": "prompt",
             "intent_at": "2026-01-01T00:00:00Z",
         }}
-        run = {"execution": {"operations": {"check-op": op}}}
+        run = {
+            "identity": {"run_id": op["request"]["run_id"]},
+            "execution": {"operations": {"check-op": op}},
+        }
         reply = Mock(status="passed", digest="authentic-reply", evidence="build inputs present",
                      observed_at=datetime.now(timezone.utc).isoformat())
         with (
@@ -80,6 +83,11 @@ class TaskTransportTests(unittest.TestCase):
             actual = cache.return_value.record.call_args.args[0]
             self.assertEqual(actual.response_ref, "check-op")
             self.assertEqual(actual.source, "authentic-reply")
+            cache.reset_mock()
+            run["identity"]["run_id"] = "b" * 32
+            with self.assertRaisesRegex(LbError, "no matching preparation operation"):
+                self_check.collect(root, "log.md", "observe.json")
+            cache.assert_not_called()
 
     def test_unanswered_submitted_self_check_can_be_retried_after_expiry(self):
         sent = datetime(2026, 1, 1, tzinfo=timezone.utc)

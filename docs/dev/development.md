@@ -278,6 +278,10 @@ A previously initialized run may need to record verifiable decisions and current
 observations before its next dispatch. Preserve the existing run and operation
 history when adopting the readiness checks.
 
+Consumers with in-flight readiness observations recorded using invocation-root
+input keys must verify the current files and record project-relative evidence
+before their next first start. Preserve the previous records as history.
+
 Route fingerprints include authorized directory contents and Stage goals in
 the applicable review scope. For an old fingerprint, recover the original
 reviewed text and authorization before recording a decision against the current

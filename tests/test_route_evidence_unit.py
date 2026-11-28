@@ -86,7 +86,10 @@ class RouteEvidenceTests(unittest.TestCase):
             original = b"# Thinking\n\nKeep this note.\n"
             thinking.write_bytes(original)
             doc = SimpleNamespace(root=root, path=root / "log.md")
-            run = {"identity": {"run_id": "run", "document_paths": ["thinking.md"]}}
+            run = {"identity": {
+                "run_id": "run", "log_path": "log.md",
+                "document_paths": ["log.md", "thinking.md"],
+            }}
             proposed = {
                 "run_ref": "run",
                 "confirmations": [
@@ -153,13 +156,118 @@ class RouteEvidenceTests(unittest.TestCase):
             for name in ("log.md", "thinking.md", "other.md"):
                 (root / name).touch()
             doc = SimpleNamespace(root=root, path=root / "log.md")
-            identity = {"document_paths": ["log.md", "thinking.md"]}
+            identity = {"log_path": "log.md", "document_paths": ["log.md", "thinking.md"]}
             self.assertEqual(
                 bound_thinking(doc, identity, "thinking.md"), root / "thinking.md"
             )
             for name in ("log.md", "other.md"):
                 with self.assertRaises(LbError):
                     bound_thinking(doc, identity, name)
+
+    def test_read_bound_evidence_uses_project_keys_without_host_fallback(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+
+        from logbook_cli.services.route_evidence import (
+            bound_thinking,
+            read_bound_evidence,
+        )
+
+        with TemporaryDirectory() as directory:
+            host = Path(directory).resolve()
+            project = host / "project"
+            records = project / "records"
+            records.mkdir(parents=True)
+            (project / "mind.yaml").touch()
+            log = project / "log.md"
+            thinking = records / "thinking.md"
+            identity = {
+                "run_id": "run", "log_path": "log.md",
+                "document_paths": ["log.md", "records/thinking.md"],
+            }
+            evidence = {"run_ref": "run", "observations": [], "confirmations": [], "grants": []}
+            body = replace_evidence("# Thinking\n", evidence)
+            thinking.write_text(body)
+            (host / "records").mkdir()
+            (host / "records/thinking.md").write_text(body)
+            for root, argument in ((host, "project/records/thinking.md"), (project, "records/thinking.md")):
+                doc = SimpleNamespace(root=root, path=log)
+                self.assertEqual(read_bound_evidence(doc, identity), evidence)
+                self.assertEqual(bound_thinking(doc, identity, argument), thinking)
+                self.assertEqual(bound_thinking(doc, identity, str(thinking)), thinking)
+            doc = SimpleNamespace(root=host, path=log)
+            with self.assertRaisesRegex(LbError, "--thinking.*outside the Logbook project"):
+                bound_thinking(doc, identity, "records/thinking.md")
+            thinking.unlink()
+            with self.assertRaisesRegex(LbError, r"identity.document_paths.*records/thinking.md.*does not exist"):
+                read_bound_evidence(doc, identity)
+            thinking.symlink_to(host / "records/thinking.md")
+            with self.assertRaisesRegex(LbError, "identity.document_paths.*escapes the root"):
+                read_bound_evidence(doc, identity)
+            thinking.unlink()
+            thinking.write_text(body)
+            (records / "mind.yaml").touch()
+            with self.assertRaisesRegex(LbError, "identity.document_paths.*outside the Logbook project"):
+                read_bound_evidence(doc, identity)
+
+    def test_update_checks_input_key_shape_without_reading_candidate_files(self):
+        import hashlib
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from logbook_cli.services.route_evidence import update_evidence
+
+        with TemporaryDirectory() as directory:
+            host = Path(directory).resolve()
+            project = host / "project"
+            project.mkdir()
+            (project / "mind.yaml").touch()
+            (project / "candidate").write_bytes(b"snapshot")
+            doc = SimpleNamespace(root=host, path=project / "log.md")
+            identity = {
+                "run_id": "run", "log_path": "log.md",
+                "document_paths": ["log.md", "thinking.md"],
+            }
+            digest = hashlib.sha256(b"snapshot").hexdigest()
+            previous = {
+                "run_ref": "run", "confirmations": [], "grants": [],
+                "observations": [{"source": "fixture", "inputs": {"project/candidate": digest}}],
+            }
+            thinking = project / "thinking.md"
+            thinking.write_text(replace_evidence("# Thinking\n", previous))
+            with (
+                patch("logbook_cli.unified.locate", return_value=(None, {"identity": identity})),
+                patch("logbook_cli.repository.sync_status", return_value="synced"),
+                patch("logbook_cli.repository.edit_document") as edit,
+            ):
+                observation = {
+                    "source": "preflight",
+                    "object": "inputs/build.txt",
+                    "clear_when": "restore the input file",
+                    "inputs": {"inputs/build.txt": digest, "candidate": "0" * 64},
+                }
+                for dry_run in (True, False):
+                    for status in ("blocked", "unverified", "not_applicable", "ready"):
+                        with self.subTest(dry_run=dry_run, status=status):
+                            proposed = {**previous, "observations": [
+                                *previous["observations"], {**observation, "status": status},
+                            ]}
+                            update_evidence(doc, "project/thinking.md", proposed, dry_run=dry_run)
+                            self.assertEqual(parse_evidence(edit.call_args.args[1]), proposed)
+                            self.assertIs(edit.call_args.args[2], dry_run)
+                edit.reset_mock()
+                for key in ("../candidate", str(project / "candidate"), "./candidate"):
+                    with self.subTest(key=key), self.assertRaises(LbError) as error:
+                        invalid = {**previous, "observations": [
+                            *previous["observations"], {**observation, "inputs": {key: digest}},
+                        ]}
+                        update_evidence(doc, "project/thinking.md", invalid, dry_run=True)
+                    for part in ("observations.inputs", key, str(project), "project-relative"):
+                        self.assertIn(part, str(error.exception))
+                edit.assert_not_called()
 
     def test_observation_action_is_optional_and_only_applies_to_task_observations(self):
         value = {

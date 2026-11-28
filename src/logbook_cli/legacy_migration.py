@@ -158,7 +158,7 @@ def scope(root, log, name, documents):
         "log": log_path.relative_to(base).as_posix(),
         "documents": sorted(
             {
-                legacy_run.document(base, path).relative_to(base).as_posix()
+                legacy_run.document(base, path, "--document").relative_to(base).as_posix()
                 for path in documents
             }
         ),

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from logbook_cli import execution, observation, unified
+from logbook_cli import execution, observation, state, unified
 from logbook_cli.adapters import codex_replies, herdr
 from logbook_cli.document import (
     EXIT_REFUSED,
@@ -28,6 +28,10 @@ from logbook_cli.services.route_scope import route_scope
 from logbook_cli.services.task_coordination import native_binding
 
 RESULT_LIFETIME = timedelta(minutes=30)
+
+
+def _cache(doc, run):
+    return Cache(state.project(doc.path, doc.root), run["identity"]["run_id"])
 
 
 @dataclass(frozen=True)
@@ -270,6 +274,7 @@ def collect(root, log, input_file, dry_run=False):
     if (
         not op
         or op["request"].get("action") != "self-check"
+        or op["request"].get("run_id") != run["identity"]["run_id"]
         or op["outcome"] == "not_submitted"
     ):
         raise LbError("no matching preparation operation", EXIT_REFUSED)
@@ -322,7 +327,7 @@ def collect(root, log, input_file, dry_run=False):
         )
     changed = False
     if not dry_run:
-        changed = Cache(doc.root, request["run_id"]).record(row, now=now)
+        changed = _cache(doc, run).record(row, now=now)
     return Result(
         {
             "task_id": task_id,
@@ -339,7 +344,7 @@ def collect(root, log, input_file, dry_run=False):
 
 
 def verify(doc, run, task_id, plan, gap):
-    cache = Cache(doc.root, run["identity"]["run_id"])
+    cache = _cache(doc, run)
     now = datetime.now(timezone.utc)
     for check in plan["checks"]:
         check_id = check["check_id"]

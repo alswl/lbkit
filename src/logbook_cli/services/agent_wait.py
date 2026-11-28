@@ -433,7 +433,7 @@ def wait(
     try:
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("timeout must be finite and positive")
-        path = safe_path(root_path(root), input_file)
+        path = safe_path(root_path(root), input_file, field="--input-file")
         with path.open("rb") as handle:
             raw = handle.read(LIMIT + 1)
         if len(raw) > LIMIT:

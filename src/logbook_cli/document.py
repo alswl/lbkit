@@ -108,28 +108,33 @@ class Document:
 def root_path(value: str) -> Path:
     try:
         return Path(value).resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise LbError(f"invalid --root: {exc}") from exc
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise LbError(f"--root {value!r}: path cannot be resolved: {exc}") from exc
 
 
-def safe_path(root: Path, value: str) -> Path:
+def path_error(
+    field: str, value: str, root: Path, reason: str, *, code: int = EXIT_PATH
+) -> LbError:
+    return LbError(f"{field} {value!r} (root {root}): {reason}", code)
+
+
+def safe_path(root: Path, value: str, *, field: str = "path") -> Path:
     raw = Path(value)
     candidate = raw if raw.is_absolute() else root / raw
     try:
         resolved = candidate.resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise LbError(
-            f"path does not exist or cannot be resolved: {value}; "
-            f"relative paths resolve from --root {root}"
-        ) from exc
+    except FileNotFoundError as exc:
+        raise path_error(field, value, root, "path does not exist") from exc
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise path_error(field, value, root, f"path cannot be resolved: {exc}") from exc
     if not resolved.is_relative_to(root):
-        raise LbError(
-            f"path escapes --root: {value}; root is {root}. "
-            "For input files, save the authorized input inside this root and pass "
-            "its relative path; do not widen --root to bypass the boundary."
-        )
-    if not resolved.is_file():
-        raise LbError(f"not a file: {value}")
+        raise path_error(field, value, root, "path escapes the root")
+    try:
+        regular = resolved.is_file()
+    except OSError as exc:
+        raise path_error(field, value, root, f"cannot check file type: {exc}") from exc
+    if not regular:
+        raise path_error(field, value, root, "not a file")
     return resolved
 
 

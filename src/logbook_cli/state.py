@@ -13,7 +13,7 @@ import stat
 from contextlib import contextmanager
 from pathlib import Path
 
-from logbook_cli.document import EXIT_REFUSED, LbError
+from logbook_cli.document import EXIT_PATH, EXIT_REFUSED, LbError, path_error, safe_path
 
 FORMAT = "lb-document-state"
 MARKDOWN_SUFFIXES = (".md", ".markdown")
@@ -46,7 +46,46 @@ def journal_for(path: Path, root: Path) -> Path:
 
 
 def section(path: Path, root: Path) -> str:
-    return str(path.relative_to(project(path, root)))
+    return path.relative_to(project(path, root)).as_posix()
+
+
+def project_key(
+    path: Path,
+    base: Path,
+    field: str,
+    value: str,
+    *,
+    root: Path | None = None,
+    code: int = EXIT_PATH,
+) -> str:
+    if not path.is_relative_to(base) or project(path, base) != base:
+        raise path_error(
+            field, value, root or base, f"path belongs outside the Logbook project {base}",
+            code=code,
+        )
+    return path.relative_to(base).as_posix()
+
+
+def project_relative_path(base: Path, key: str, field: str) -> Path:
+    if not is_filesystem_path(key):
+        raise path_error(field, key, base, "expected a project-relative file key")
+    relative = Path(key)
+    if (
+        relative.is_absolute()
+        or relative == Path(".")
+        or ".." in relative.parts
+        or relative.as_posix() != key
+    ):
+        raise path_error(field, key, base, "expected a project-relative file key")
+    return base / relative
+
+
+def project_file(base: Path, key: str, field: str) -> Path:
+    candidate = project_relative_path(base, key, field)
+    project_key(candidate, base, field, key)
+    path = safe_path(base, key, field=field)
+    project_key(path, base, field, key)
+    return path
 
 
 def token(data: bytes, state: bytes | None) -> str:

@@ -1,10 +1,16 @@
 """Read first-start evidence and evaluate admission without mutating the run."""
 
+import hashlib
 from datetime import datetime, timezone
 
 from logbook_cli import execution as execution_records
-from logbook_cli import task_identity
-from logbook_cli.document import EXIT_REFUSED, LbError, require_preflight_clear
+from logbook_cli import state, task_identity
+from logbook_cli.document import (
+    EXIT_REFUSED,
+    LbError,
+    path_error,
+    require_preflight_clear,
+)
 from logbook_cli.services.preflight_findings import missing_skills, summarize
 from logbook_cli.services.preflight_plan import current_plan
 from logbook_cli.services.route_evidence import (
@@ -180,25 +186,30 @@ def _evaluate_evidence(
         if not observation_current(observation, machine):
             gap("preflight", "Recheck expired or mismatched environment evidence.")
             continue
-        if task is not None and observation.get("task_id") == task_id:
-            applicable = observation.get("skills")
+        task_observation = task is not None and observation.get("task_id") == task_id
+        applicable = observation.get("skills")
+        if task_observation:
             if (
                 observation.get("criteria_digest") != task_identity.criteria(task)
                 or not isinstance(applicable, list)
                 or not all(
                     isinstance(name, str) and name.strip() for name in applicable
                 )
-                or not inputs_current(doc, observation.get("inputs", {}))
             ):
-                gap("preflight", "Recheck current task criteria, skills and inputs.")
-            else:
-                for name in missing_skills(task, applicable):
-                    gap(
-                        "skill",
-                        f"Record the verified applicable skill {name} on the task.",
-                    )
-        elif doc is not None and not inputs_current(doc, observation.get("inputs", {})):
-            gap("preflight", "Recheck current route dependencies.")
+                gap("preflight", "Recheck current task criteria and skills.")
+                continue
+        try:
+            if (task_observation or doc is not None) and not inputs_current(
+                doc, observation.get("inputs", {})
+            ):
+                gap("preflight", "Recheck current input evidence.")
+                continue
+        except LbError as exc:
+            gap("preflight", str(exc))
+            continue
+        if task_observation:
+            for name in missing_skills(task, applicable):
+                gap("skill", f"Record the verified applicable skill {name} on the task.")
 
     grants = [
         row
@@ -214,22 +225,26 @@ def _evaluate_evidence(
 
 
 def inputs_current(doc, inputs):
-    """Check declared workspace files, including candidate manifests and skill definitions."""
-    import hashlib
-
-    from logbook_cli.document import safe_path
-
+    """Check declared input digests against files in the Logbook project."""
     if not isinstance(inputs, dict):
         return False
+    if not inputs:
+        return True
+    if doc is None:
+        return False
+    base = state.project(doc.path, doc.root)
+    field = "observations.inputs"
     for name, expected in inputs.items():
-        if not isinstance(name, str) or not isinstance(expected, str) or doc is None:
-            return False
-        path = safe_path(doc.root, name)
-        if (
-            not path.is_file()
-            or hashlib.sha256(path.read_bytes()).hexdigest() != expected
-        ):
-            return False
+        if not isinstance(expected, str):
+            raise path_error(field, name, base, "expected a SHA-256 digest string")
+        path = state.project_file(base, name, field)
+        try:
+            with state.open_regular(base, path) as source:
+                actual = hashlib.file_digest(source, "sha256").hexdigest()
+        except OSError as exc:
+            raise path_error(field, name, base, f"cannot read input file: {exc}") from exc
+        if actual != expected:
+            raise path_error(field, name, base, "SHA-256 digest does not match")
     return True
 
 

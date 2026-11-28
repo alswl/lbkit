@@ -304,7 +304,7 @@ def send_task(
 
     records.single_line(operation_id, "operation_id")
     doc, task = require_synced(root, log, task_id)
-    message = safe_path(doc.root, message_file).read_text()
+    message = safe_path(doc.root, message_file, field="--message-file").read_text()
     if not message.strip():
         raise LbError("send requires nonempty message", EXIT_REFUSED)
     with unified.writer(doc.root, doc.path, dry_run):

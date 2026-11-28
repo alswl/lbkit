@@ -114,7 +114,7 @@ def render(root, name, inputs_file, token):
     if info["issues"]:
         raise LbError("invalid template: " + "; ".join(info["issues"]), EXIT_REFUSED)
     try:
-        inputs = json.loads(safe_path(doc.root, inputs_file).read_text())
+        inputs = json.loads(safe_path(doc.root, inputs_file, field="--input-file").read_text())
         if not isinstance(inputs, dict) or set(inputs) != {
             "date",
             "working_directories",

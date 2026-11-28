@@ -122,7 +122,7 @@ def record_usage(root, log, thinking, input_file, token, dry_run):
     doc, target = dispatches.documents(root, log, thinking)
     dispatches.guard(doc, target, token, False)
     try:
-        data = json.loads(safe_path(doc.root, input_file).read_text())
+        data = json.loads(safe_path(doc.root, input_file, field="--input-file").read_text())
         validate_usage_payload(data)
     except (ValueError, TypeError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc

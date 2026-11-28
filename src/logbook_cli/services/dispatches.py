@@ -81,7 +81,7 @@ def create(root, log, thinking, input_file, token, dry_run):
     doc, target = documents(root, log, thinking)
     guard(doc, target, token, False)
     try:
-        data = json.loads(safe_path(doc.root, input_file).read_text())
+        data = json.loads(safe_path(doc.root, input_file, field="--input-file").read_text())
         keys = {
             "id",
             "task_id",

@@ -155,7 +155,7 @@ def event_context(run, document):
 
 def read_document(root, log, *, load_dependencies=True):
     base = root_path(str(root))
-    path = safe_path(base, str(log))
+    path = safe_path(base, str(log), field="LOG")
     doc = markdown_document(path.read_bytes(), path, base)
     target, value = unified.locate(base, path)
     doc.sync_status = sync_status(doc, value)
@@ -187,7 +187,7 @@ def read_document(root, log, *, load_dependencies=True):
 
 def sync_document(root, log, dry_run=False):
     base = root_path(str(root))
-    path = safe_path(base, str(log))
+    path = safe_path(base, str(log), field="LOG")
     with unified.writer(base, path, dry_run):
         target, value = unified.locate(base, path, required=True)
         data = path.read_bytes()

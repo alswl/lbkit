@@ -29,7 +29,7 @@ def bind(root, log, thinking, dispatch_id, input_file, token, dry_run):
     if dispatch["status"] in {"closed", "cancelled"}:
         raise LbError("cannot rebind a terminal dispatch", EXIT_REFUSED)
     try:
-        item = json.loads(safe_path(doc.root, input_file).read_text())
+        item = json.loads(safe_path(doc.root, input_file, field="--input-file").read_text())
         keys = {
             "machine",
             "workspace_id",
@@ -101,7 +101,7 @@ def control(
     dispatches.guard(doc, target, token, False, dispatch_id, dispatch["owner"])
     if action == "close":
         records.single_line(basis, "basis")
-    message = safe_path(doc.root, message_file).read_text() if message_file else None
+    message = safe_path(doc.root, message_file, field="--message-file").read_text() if message_file else None
     if action == "send" and (not message or not message.strip()):
         raise LbError("send requires a nonempty --message-file", EXIT_USAGE)
     if action == "send":
