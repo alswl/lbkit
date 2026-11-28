@@ -16,8 +16,9 @@ the Logbook path once; distinguish paths when referring to multiple files. A
 clickable file/line link may accompany the visible `L50` label. For several nearby
 items, use a useful range such as `L50–L58` rather than dumping every line.
 
-Obtain physical source lines from the current file and `log context --json` where
-available; reread after writes before reporting final positions. Cite the task's
+Obtain physical source lines from the current file and
+`log context LOG --no-link-content --json` where available. Reread after writes
+with the same option before reporting final positions. Cite the task's
 first line for task-level discussion, or the exact heading/annotation line when
 that is what needs review. Lines are navigation hints, not durable task identity
 or write authorization: retain task text/stage matching and CAS protections.

@@ -506,9 +506,9 @@ refused. Extract tokens from context JSON programmatically.
 | Write | Token source | Protected file |
 | --- | --- | --- |
 | `log execution record LOG` | `log execution context LOG --json`: `version_token` | Execution JSON |
-| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --json`: `version_token` | Thinking and its `lb/` state section |
+| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --no-link-content --json`: `version_token` | Thinking and its `lb/` state section |
 | `agent send LOG --thinking THINKING` | Thinking token plus execution token as `--expect-execution-version` | Thinking precondition and execution journal |
-| `log sync LOG` / `task note LOG` | `log context LOG --json`: `version_token` | Logbook Markdown and its `lb/` state section |
+| `log sync LOG` / `task note LOG` | `log context LOG --no-link-content --json`: `version_token` | Logbook Markdown and its `lb/` state section |
 
 Example: record an existing release instruction, then prepare the remaining
 package. Neither command sends a message:
@@ -520,7 +520,7 @@ package. Neither command sends a message:
   lb_json_token=$(python3 -c 'import json; print(json.load(open(".execution-context.json"))["version_token"])')
   lb log execution record log.md --input-file facts.json --expect-version "$lb_json_token" --json
 
-  lb log context thinking.md --json > .thinking-context.json
+  lb log context thinking.md --no-link-content --json > .thinking-context.json
   lb_thinking_token=$(python3 -c 'import json; print(json.load(open(".thinking-context.json"))["version_token"])')
   lb dispatch create log.md --thinking thinking.md --input-file dispatch.json --expect-version "$lb_thinking_token" --json
 )
