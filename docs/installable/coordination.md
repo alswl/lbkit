@@ -86,9 +86,12 @@ own execution authorization. On return, record the responsible party's judgment,
 boundaries, evidence and reported impact. Apply authorized scheduling changes and
 keep ordinary implementation waiting for its own readiness and authorization.
 
-lb-preflight may check coordination evidence and applicable prerequisites while
-design is pending. A green check establishes only its observed scope. A design
-dependency uses the existing route and evidence model.
+lb-preflight checks the responsible party's reported design pointer, version or
+digest when supplied, conclusion and scope. It does not read, extract from or
+hash design artifacts or repeat design verification. Applicable non-design
+inputs, current configuration and authorization evidence retain their readiness
+and integrity checks. A green check establishes only its observed scope. A
+design dependency uses the existing route and evidence model.
 
 ## Scoped takeover and execution handoff
 

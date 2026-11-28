@@ -137,7 +137,7 @@
         {
           "name": "assumptions",
           "type": "contains",
-          "check": "Thinking cites the reported pointer, source, pending decision, compatibility risk and affected Tasks. Green prerequisite findings do not establish design readiness. Trace shows no design body reads."
+          "check": "Thinking cites the reported pointer, source, pending decision, compatibility risk and affected Tasks. Green prerequisite findings do not establish design readiness. Trace shows no direct or delegated design artifact read, extraction, hashing or repeated verification."
         },
         {
           "name": "poc_boundary",
@@ -149,19 +149,19 @@
     {
       "id": 8,
       "axis": "Changed owner-reported scope invalidates affected preflight findings",
-      "prompt": "The Logbook and its version_token are unchanged since the supplied green preflight. The design owner now reports a new deliverable pointer whose scope changes import from file to streaming. The old preflight records the prior owner pointer and scope. The owner reports changed input and verification assumptions and that streaming compatibility has yet to be checked. Recheck using the current owner report, prior preflight, environment definitions and writable bound Thinking. Do not execute.",
+      "prompt": "The Logbook and its version_token are unchanged since the supplied green preflight. The design owner now reports a new deliverable pointer whose scope changes import from file to streaming. The owner report includes a version and digest for the new pointer. The old preflight records the prior owner pointer and scope. An applicable non-design input has a recorded expected digest that can be checked locally. The owner reports changed input and verification assumptions and that streaming compatibility has yet to be checked. Recheck using the current owner report, prior preflight, environment definitions and writable bound Thinking. Do not execute.",
       "expected_output": "Changed owner-reported scope invalidates affected preflight findings",
       "files": [],
       "assertions": [
         {
           "name": "spec_comparison",
           "type": "contains",
-          "check": "Trace compares the current owner-reported pointer, risk and scope with the prior recorded preflight basis, identifying affected import input and verification assumptions despite the unchanged Logbook token. It does not open either design body."
+          "check": "Trace compares the current owner-reported pointer, risk and scope with the prior recorded preflight basis, identifying affected import input and verification assumptions despite the unchanged Logbook token. Trace uses the report’s version and digest as attributed values and shows no direct or delegated read, extraction, hashing or repeated verification of either design artifact."
         },
         {
           "name": "fresh_coverage",
           "type": "contains",
-          "check": "Records checked and missing streaming readiness for affected Tasks, preserves prior observations as history and reuses applicable unaffected checks. The old overall green does not establish current readiness."
+          "check": "Records checked and missing streaming readiness for affected Tasks, preserves prior observations as history and reuses applicable unaffected checks. Trace verifies the applicable non-design input digest and the saved readiness evidence distinguishes it from the owner-reported design digest. The old overall green does not establish current readiness."
         }
       ]
     },
@@ -691,7 +691,7 @@
         {
           "name": "gate_preserved",
           "type": "contains",
-          "check": "Trace and snapshots demonstrate byte-identical design, no design body reads or workflow starts, no route restructuring or release of dependent work, and no POC or implementation execution."
+          "check": "Trace and snapshots demonstrate byte-identical design, no direct or delegated design artifact reads, extraction, hashing, repeated verification or workflow starts, no route restructuring or release of dependent work, and no POC or implementation execution."
         }
       ],
       "fixture_variant": "confirmed"

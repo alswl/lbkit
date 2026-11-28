@@ -977,7 +977,7 @@
     {
       "id": 59,
       "axis": "Existing design in a writable directory is coordinated by report",
-      "prompt": "Use only /lb-plan to revise the draft catalog export Task's delivery requirement. Use the product owner's accepted design pointer and scope in records/design-status.json. The catalog design directory is writable. Keep importer Tasks and the human review as they are. Save the revised draft with the catalog export review arrangement. No execution is authorized.",
+      "prompt": "Use only /lb-plan to revise the draft catalog export Task's delivery requirement. Use the product owner's accepted design pointer and scope in records/design-status.json. The catalog design directory is writable. Keep importer Tasks and the human review as they are. Save the revised draft and add a catalog export handoff Task after the existing human review. The handoff must wait for that review. No execution is authorized.",
       "expected_output": "Save the catalog coordination edit using the existing reported design pointer and applicable review. Preserve unrelated route and design bytes.",
       "files": [
         "fixtures/design-delivery.json"
@@ -988,6 +988,11 @@
           "name": "existing_report_reused",
           "type": "contains",
           "check": "Trace reads records/design-status.json. Saved catalog Task and bound Thinking identify the existing product design pointer, source and accepted scope, with a verifiable catalog export delivery requirement and applicable review. No new product design delivery is inserted for that accepted scope."
+        },
+        {
+          "name": "persisted_review_dependency",
+          "type": "contains",
+          "check": "Trace shows a protected dependency write using the current route reference. Final lb log route LOG --json identifies the saved handoff Task and contains the existing human review Task ID in its dependencies. Resolve both IDs from the saved route; prose, acceptance notes and a plan without a saved edge fail."
         },
         {
           "name": "protected_records",

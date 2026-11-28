@@ -69,9 +69,21 @@ supersede older limits only within their scope.
    Use `task note --replace-line` for existing annotations. For an authorized
    replacement, use atomic `task split` with the required reference mapping.
    Do not turn a proposal into execution or copy current Task state into Thinking.
-6. Read back the final saved Task bytes: outcomes, dependencies, skill choices,
-   human gates and design pointers must match the proposed route. Run applicable
-   structural checks. Parser success alone does not establish semantic completeness.
+   Persist authorized prerequisites as Task dependencies, including a required
+   human review before handoff. Use stable IDs for both Tasks, identifying any
+   missing IDs first. Read the graph and current `route_ref` with
+   `lb log route LOG --json`. Prefer the protected
+   [dependency command](../../docs/installable/lb-cli.md#markdown-ssot-and-new-run-commands):
+   preview and apply `lb task depends LOG --task-id ID --input-file FILE --expect-route ROUTE_REF`
+   with the full intended `{"depends_on": ["ID"]}` list, retaining unaffected
+   prerequisites. Use the current route reference for each edit. Review and
+   proposal-only modes do not write Task IDs or dependencies.
+6. Run `lb log route LOG --json` after saving. Check each changed Task by ID and
+   compare its `dependencies` with the intended prerequisite IDs. An Overview
+   note or Acceptance annotation does not create a dependency. If the graph
+   differs, correct it under the existing authority or report the specific
+   unsaved edge. Verify outcomes, skill choices, human gates and design pointers
+   in the saved route and run applicable structural checks.
 
 ## Judgment and exit
 
@@ -89,6 +101,5 @@ Use current Logbook line locators under the
 [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators).
 Reuse explicit confirmation already supplied; planning itself dispatches no work.
 
-After saving the route, read it back with `lb log route LOG --json`. Present the
-Stage order, deliverables, dependencies, owners, acceptance and human gates.
+From the saved route readback, present the Stage order, deliverables, dependencies, owners, acceptance and human gates.
 Record the human decision with its source and the reviewed route fingerprint.
