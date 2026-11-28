@@ -4,6 +4,18 @@ version: 0.6.1-dev
 description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 
+## Read handback state safely
+
+For local status and Logbook or Thinking structure, use
+`lb log context DOC --no-link-content --json` and
+`lb log check DOC --no-link-content --json` as applicable. Keep the option on
+every reread, including document token refresh and post-write checks. Do not
+invoke either command without it. If the CLI lacks the option, inspect the
+bound source and available `log route` structure. Use `log state` only on a
+build known to skip link content. Report partial coverage and leave any write
+requiring an unavailable token pending. Use execution context for execution
+tokens under the existing rules.
+
 ## New-run results and handback
 
 Preserve Task and original execution binding identity when reporting results.
