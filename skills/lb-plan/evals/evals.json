@@ -506,88 +506,87 @@
     },
     {
       "id": 41,
-      "axis": "Captain designs across authorized repositories using host specs",
-      "prompt": "Create a draft route for the human goal \"Coordinate the catalog export and import interfaces.\" The fixture has catalog and importer repositories, a writable Logbook with working directories already approved, a working document adapter, and bound Thinking/Sources. Admiral permits reading both repositories and writing docs/design in catalog only. The host uses plain Markdown specs, not Spec Kit. Current interfaces differ; importer owns its implementation. Develop the design with Admiral; neither implementation nor commits are authorized.",
-      "expected_output": "Captain designs across authorized repositories using host specs",
-      "files": [],
+      "axis": "Coordinate design across repositories",
+      "prompt": "Use only /lb-plan to draft the catalog export and importer route. Both repositories and their design directories are writable. Use the responsible parties’ reports in records/design-status.json. Catalog owns product design and export. Importer owns implementation. The technical design owner is still unknown. Keep the supplied human review.",
+      "expected_output": "Save a cross-repository draft using reported design evidence and planning the missing delivery.",
+      "files": [
+        "fixtures/design-delivery.json"
+      ],
+      "fixture_variant": "draft",
       "assertions": [
         {
-          "name": "personal_reads",
+          "name": "reported_pointer",
           "type": "contains",
-          "check": "Actual tool traces show Captain reads the relevant interfaces and host conventions in both repositories, rather than delegating the core design."
+          "check": "Trace reads records/design-status.json. Saved Logbook and bound Thinking cite the actual catalog pointer and its attributed review status."
         },
         {
-          "name": "host_spec",
+          "name": "missing_design_dependency",
           "type": "contains",
-          "check": "Actual file bytes show a spec in the authorized host design location covering approach, tradeoffs, constraints, repository responsibilities/interfaces, route and pending decisions; no Spec Kit install is required."
+          "check": "Saved route includes the technical design delivery, expected pointer and review outcome, owner pending designation, dependent implementation waiting, and existing repository responsibilities and human gate."
         },
         {
-          "name": "record_ownership",
-          "type": "contains",
-          "check": "Draft Logbook provides a design entry and verifiable tasks; Thinking points to decisions/spec; no second executable task list or competing design copy is created."
-        },
-        {
-          "name": "bounded_summary",
-          "type": "contains",
-          "check": "Captain briefly explains the approach and open interface decision to Admiral; traces show no importer writes, implementation dispatch, commit or push."
-        },
-        {
-          "name": "preserves_directory_authorization",
-          "type": "contains",
-          "check": "Actual spec, Prompt, Thinking and Logbook preserve already-approved directory permissions and confirmation; do not re-label unchanged approved repositories as unconfirmed or draft access."
+          "name": "protected_design",
+          "type": "not_contains",
+          "check": "Any design body read, design file or shadow design write, host design invocation, actual approach selection, implicit assignment or dispatch, or unsupported design completion. Compare complete tool traces and before/after file bytes."
         }
       ]
     },
     {
       "id": 42,
-      "axis": "POC triggers explicit route reorganization and renewed discussion",
-      "prompt": "Revise the supplied Logbook: choose a streaming format, implement export, implement import, human review. Two formats remain undecided. A real compatibility POC is needed. Admiral asks for a revised proposal and permits writing the proposed spec and bound Thinking, but has not yet confirmed new task order or authorized execution. The fixture provides the original Logbook, spec, writable Thinking and a working document adapter. Prepare the POC route for discussion.",
-      "expected_output": "POC triggers explicit route reorganization and renewed discussion",
-      "files": [],
+      "axis": "Propose a bounded POC route in Thinking",
+      "prompt": "Use /lb-plan. The catalog owner’s records/poc-status.json proposes the compatibility POC before export and import. Save a proposed route in bound Thinking only. Importer is read-only and keeps its implementation. I have not approved a route change or authorized execution.",
+      "expected_output": "Save only the authorized coordination proposal and present it for a route decision.",
+      "files": [
+        "fixtures/design-delivery.json"
+      ],
+      "fixture_variant": "confirmed",
       "assertions": [
         {
           "name": "poc_proposal",
           "type": "contains",
-          "check": "Actual proposal bytes define an explicit POC todo with question, implementation scope, result/criteria and endpoint, and reorganize affected dependencies before export/import implementation."
+          "check": "Actual Thinking bytes cite the responsible party and state the question, bounded scope, dependencies, result criteria, stop point, and proposed order before export/import."
         },
         {
           "name": "renewed_discussion",
           "type": "contains",
-          "check": "The response presents the changed route and unresolved choice for Admiral discussion; the original confirmed task order and human item remain unchanged until authorized."
-        },
-        {
-          "name": "no_implicit_execution",
-          "type": "not_contains",
-          "check": "Runs the POC, dispatches implementation, claims overall design confirmation or silently replaces the confirmed route."
+          "check": "Reply presents the route decision and open choice. Complete traces and byte comparisons show the confirmed Logbook and human gate are intact, no route write or preview and all proposal/scratch writes stay in authorized directories."
         },
         {
           "name": "preserves_repository_owners",
           "type": "contains",
-          "check": "Actual proposal and route preserve importer ownership of its eventual implementation. A catalog-only POC substitute does not transfer downstream import implementation to catalog because importer is currently read-only."
+          "check": "The saved proposal preserves importer ownership and requires separate POC execution permission. The catalog-only experiment does not settle ordinary design readiness."
         },
         {
-          "name": "scratch_within_scope",
-          "type": "contains",
-          "check": "All actual proposal and scratch writes remain within the authorized fixture working directories; cite complete write trace and file snapshots, not merely final deliverable locations."
+          "name": "protected_design",
+          "type": "not_contains",
+          "check": "Any design body read, design file or shadow design write, host design invocation, actual approach selection, implicit assignment or dispatch, or unsupported design completion. Compare complete tool traces and before/after file bytes."
         }
       ]
     },
     {
       "id": 43,
-      "axis": "Read-only design review preserves host records",
-      "prompt": "Review only the supplied existing spec and Logbook. The spec leaves interface ownership and acceptance thresholds undecided; directories and todos are already confirmed. No writes or execution are authorized. Explain whether this is ready for ordinary lb-push.",
-      "expected_output": "Read-only design review preserves host records",
-      "files": [],
+      "axis": "Read-only route review uses reported gaps",
+      "prompt": "Use /lb-plan to review readiness of the supplied confirmed Logbook route. The responsible parties reported gaps in records/design-status.json. Explain which work can proceed.",
+      "expected_output": "Report the affected dependencies from the attributed status and leave records unchanged.",
+      "files": [
+        "fixtures/design-delivery.json"
+      ],
+      "fixture_variant": "confirmed",
       "assertions": [
         {
           "name": "material_gaps",
           "type": "contains",
-          "check": "Reports the unresolved ownership and acceptance decisions and affected tasks; a confirmed checklist alone is insufficient for ordinary execution."
+          "check": "Actual trace reads the status report. Reply attributes the open ownership and acceptance questions and identifies the affected Tasks as waiting."
         },
         {
           "name": "readonly",
           "type": "contains",
-          "check": "Tool traces and before/after bytes show no spec, Logbook, Thinking or proposal writes and no dispatch."
+          "check": "Trace and before/after bytes show no Logbook, Thinking, proposal or other fixture writes, and no write previews."
+        },
+        {
+          "name": "protected_design",
+          "type": "not_contains",
+          "check": "Any design body read, design file or shadow design write, host design invocation, actual approach selection, implicit assignment or dispatch, or unsupported design completion. Compare complete tool traces and before/after file bytes."
         }
       ]
     },
@@ -683,7 +682,7 @@
     {
       "id": 47,
       "axis": "Review a small route without manufacturing tests, environments or review consumption",
-      "prompt": "Use /lb-plan in review mode and /lb-preflight to assess projects/demo/docs/log.md, the confirmed design and records/review-history.json. Give the current plan issues, if any, and the applicable remaining independent review allowance. Read actual local records and applicable skill/workflow definitions. This is read-only: no plan changes, business tests, extra agents or execution.",
+      "prompt": "Use /lb-plan in review mode and /lb-preflight to assess projects/demo/docs/log.md, the supplied owner report in records/design-status.json and records/review-history.json. Give the current plan issues, if any, and the applicable remaining independent review allowance. Read actual local records and applicable skill/workflow definitions. This is read-only: no plan changes, business tests, extra agents or execution.",
       "expected_output": "The authorized single-repository self-check remains sufficient; budget 3 minus one independent submission leaves 2.",
       "files": [
         "../../lb-update/evals/fixtures/task-semantics.json"
@@ -693,7 +692,7 @@
         {
           "name": "scope_fit",
           "type": "contains",
-          "check": "Read the actual confirmed design, registry and workflow; accept the single-repository documentation/self-check approach without requiring a separate test repository, reviewer or deployment environment."
+          "check": "Read the actual reported design readiness, registry and workflow; accept the single-repository documentation/self-check approach without requiring a separate test repository, reviewer or deployment environment."
         },
         {
           "name": "review_count_scope",
@@ -918,6 +917,60 @@
           "name": "route_review_matches_scope",
           "type": "contains",
           "check": "Present a separate review Stage candidate. Explicitly carry forward Task A identity and acceptance history. Make the new scope pending review and describe it without claiming a write."
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "axis": "Mixed coordination and design request stays within lb-plan",
+      "prompt": "Use only /lb-plan. Save the authorized draft route for both repositories, including the missing technical design and downstream delivery. Also write the technical design and review the existing product design now. Both design directories are writable. Use records/design-status.json for current ownership and review status.",
+      "expected_output": "Save authorized project coordination and identify the independent host workflow and required return.",
+      "files": [
+        "fixtures/design-delivery.json"
+      ],
+      "fixture_variant": "draft",
+      "assertions": [
+        {
+          "name": "draft_saved",
+          "type": "contains",
+          "check": "Logbook bytes show the authorized result-oriented work, design delivery and dependent waiting work while retaining the human gate. Bound Thinking cites the reported product pointer and status."
+        },
+        {
+          "name": "host_boundary",
+          "type": "contains",
+          "check": "Reply leaves the technical design for the host workflow, including the expected pointer and review conclusion and pending owner designation. Trace shows no host workflow call."
+        },
+        {
+          "name": "protected_design",
+          "type": "not_contains",
+          "check": "Any design body read, design file or shadow design write, host design invocation, actual approach selection, implicit assignment or dispatch, or unsupported design completion. Compare complete tool traces and before/after file bytes."
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "axis": "Consume the independent host workflow return",
+      "prompt": "The responsible parties completed their own design workflows outside lb. Start with records/design-status.json, then reconcile the new attributable conclusion in records/host-return.json. Save the updated route first: keep repository ownership and the human gate, and require the new reported compatibility criteria for import. Then align the reported design delivery progress. No execution is authorized.",
+      "expected_output": "Apply the authorized route change, read it back, then align progress to the attributable host return.",
+      "files": [
+        "fixtures/design-delivery.json"
+      ],
+      "fixture_variant": "returned",
+      "assertions": [
+        {
+          "name": "attributed_return",
+          "type": "contains",
+          "check": "Saved Logbook and Thinking cite the delivered technical pointer, owner, current review conclusion and affected scope. Trace reads the return and shows that the provisional status alone did not establish readiness."
+        },
+        {
+          "name": "ordered_alignment",
+          "type": "contains",
+          "check": "Trace and snapshots show route edit, saved route readback, then lb-update alignment of the applicable existing task from the return. Final bytes retain the human gate and do not mark dependent implementation done."
+        },
+        {
+          "name": "protected_design",
+          "type": "not_contains",
+          "check": "Any design body read, design file or shadow design write, host design invocation, actual approach selection, implicit assignment or dispatch, or unsupported design completion. Compare complete tool traces and before/after file bytes."
         }
       ]
     }

@@ -1123,14 +1123,14 @@
     {
       "id": 81,
       "axis": "Complete todos and green preflight do not replace core design",
-      "prompt": "Advance the supplied Logbook. Its directories, stages and todos are confirmed and preflight is green. Admiral previously authorized ordinary execution once the design was settled. The current spec still leaves interface ownership and central versus per-repository storage undecided, and no design confirmation exists. No POC is planned.",
+      "prompt": "Advance the supplied Logbook. Its directories, stages and todos are confirmed and preflight is green. Admiral previously authorized ordinary execution once the design was settled. The owner’s current readiness report still leaves interface ownership and central versus per-repository storage undecided, and no design confirmation exists. No POC is planned.",
       "expected_output": "Complete todos and green preflight do not replace core design",
       "files": [],
       "assertions": [
         {
           "name": "design_read",
           "type": "contains",
-          "check": "Actual reads inspect current spec and confirmation records, identify the core undecided choices and return them to Captain/Admiral discussion."
+          "check": "Trace reads the owner report and confirmation records without opening design bodies. Reply attributes the open choices and leaves affected implementation waiting for the responsible parties."
         },
         {
           "name": "no_dispatch",
@@ -1142,7 +1142,7 @@
     {
       "id": 82,
       "axis": "Authorized POC stops before ordinary implementation",
-      "prompt": "Advance the supplied route whose first item is a compatibility POC followed by export implementation. Admiral explicitly discussed and confirmed the reorganized route, POC question, scope, criteria and endpoint, and authorized its execution. Overall serialization design is still open. All runtime, isolation and monitoring capabilities are available in the fixture. After POC dispatch the fixture returns applicable findings and acceptance. Process that return.",
+      "prompt": "Advance the supplied route whose first item is a compatibility POC followed by export implementation. Admiral explicitly discussed and confirmed the reorganized route, owner-reported POC question, scope, dependencies, criteria and endpoint, and authorized its execution. Overall serialization design is still open. All runtime, isolation and monitoring capabilities are available in the fixture. After POC dispatch the fixture returns applicable findings, owner judgment, evidence, impact and acceptance. Process that return.",
       "expected_output": "Authorized POC stops before ordinary implementation",
       "files": [],
       "assertions": [
@@ -1154,7 +1154,7 @@
         {
           "name": "recover_design",
           "type": "contains",
-          "check": "Aligns the current POC return and brings its findings into the applicable spec/Thinking and design discussion via authorized write paths."
+          "check": "Aligns the applicable POC return and records owner judgment, boundaries, evidence and reported impact in authorized coordination records. Trace shows no design body reads or writes."
         },
         {
           "name": "stop_endpoint",
@@ -1166,14 +1166,14 @@
     {
       "id": 83,
       "axis": "Reuse applicable design confirmation without repeat approval",
-      "prompt": "Resume the supplied package. Current host spec content, route and all constraints match Admiral's recorded confirmation and execution authorization. One minor helper naming choice is left to implementation and does not change interfaces or acceptance. An existing compliant Sailor and visible monitor are ready; the runtime fixture exposes identity, receipt and current package.",
+      "prompt": "Resume the supplied package. The owner’s current deliverable pointer and approved review report, route and all constraints match Admiral's recorded confirmation and execution authorization. One minor helper naming choice is left to implementation and does not change interfaces or acceptance. An existing compliant Sailor and visible monitor are ready; the runtime fixture exposes identity, receipt and current package.",
       "expected_output": "Reuse applicable design confirmation without repeat approval",
       "files": [],
       "assertions": [
         {
           "name": "valid_confirmation",
           "type": "contains",
-          "check": "Reads current spec, confirmation and package, then resumes the owning Sailor within authorization without asking Admiral to confirm the same design again."
+          "check": "Trace reads attributed readiness evidence, confirmation and package without inspecting the design body, then resumes the owning Sailor within authorization without asking for repeat approval."
         },
         {
           "name": "bounded_discretion",
@@ -1185,7 +1185,7 @@
     {
       "id": 84,
       "axis": "Captain opens direct dialogue and recovers attributable decisions",
-      "prompt": "Admiral asks to discuss the current import package directly with its Sailor. Captain may arrange that scoped discussion. The runtime fixture provides the owning session and a supported no-focus interaction window, recoverable submitted messages, and a separate monitor. The human has unsent text in another pane. After the window opens, submitted Admiral messages explicitly narrow output to CSV; Sailor proposes also dropping validation, but Admiral does not approve that. Working document adapters and writable spec/Thinking are available; record changes through authorized paths and reconcile before continuation.",
+      "prompt": "Admiral asks to discuss the current import package directly with its Sailor. Captain may arrange that scoped discussion. The runtime fixture provides the owning session and a supported no-focus interaction window, recoverable submitted messages, and a separate monitor. The human has unsent text in another pane. After the window opens, submitted Admiral messages explicitly narrow output to CSV; Sailor proposes also dropping validation, but Admiral does not approve that. Working document adapters and writable design directory and Thinking are available; record changes through authorized paths and reconcile before continuation.",
       "expected_output": "Captain opens direct dialogue and recovers attributable decisions",
       "files": [],
       "assertions": [
@@ -1202,7 +1202,7 @@
         {
           "name": "reconciled_return",
           "type": "contains",
-          "check": "Updates affected spec and package/Logbook as applicable, reports the recovered conclusion, and verifies the owning Sailor receives current instructions before affected execution continues; does not ask to repeat the already explicit CSV ruling."
+          "check": "Updates authorized Thinking, package and Logbook coordination facts as applicable, without a design body read or write. Refers affected design changes to the responsible party and awaits the reported conclusion before dependent continuation. Verifies the owning Sailor gets current instructions without asking to repeat the already explicit CSV ruling."
         },
         {
           "name": "no_false_acceptance",

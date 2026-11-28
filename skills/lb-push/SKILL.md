@@ -33,7 +33,11 @@ explicit steering. Push means advancing work, not Git push. Read host rules,
 [configuration](../../docs/installable/configuration.md),
 [coordination](../../docs/installable/coordination.md),
 [document state](../../docs/installable/document-state.md), and the current
-Logbook/context, relevant design, preparation and execution records.
+Logbook/context, reported design readiness, preparation and execution records.
+Use the responsible party’s pointer, conclusions and applicable confirmation.
+Keep dependent work waiting if readiness is missing or stale. Check a POC’s own
+scope, dependencies, endpoint and execution authorization. Do not inspect design
+bodies or start host design workflows.
 Reuse applicable confirmation and authorization; do not ask again merely because
 an executor returned or the user asked for status.
 
@@ -42,6 +46,8 @@ an executor returned or the user asked for status.
 1. Reconcile current Task facts, dependencies, ownership and actual observations.
    Select the next authorized work. Unknown, paused and blocked tasks remain
    visible, with their actual exit conditions. A cancelled dependency is not done.
+   For a design delivery Task, wait for the host workflow return and keep its
+   dependents pending. Scheduling the design deliverable does not start it.
 2. Compose lb-plan/lb-preflight when the next step lacks a saved route or relevant
    preparation. Resolve CLI path arguments from the effective `--root`. Check
    saved `observations.inputs` from the Logbook project root and use lb-preflight

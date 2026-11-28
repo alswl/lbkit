@@ -9,7 +9,7 @@ Core cases: 39–43. Every assertion must pass under the shared evidence rules.
 
 Cases 39–40 cover generated annotations and preservation of historical human goals. Grade actual draft/edited bytes.
 
-Cases 41–43 cover personal repository design, explicit POC replanning and read-only review. Preserve approved directory permissions and implementation ownership; proposal scratch writes are subject to the same authorized-directory boundary.
+Cases 41–43 and 57–58 are core. They cover cross-repository coordination, bounded POC proposals, read-only route review, mixed coordination and design requests, and an independent host workflow return. Compare actual design bytes and complete traces, including reads and skill invocations. Design body inspection, design authorship or approach selection, host workflow invocation, implicit execution, and unsupported completion are vetoes. Verify the saved route, ownership and attributed readiness. For a mixed route/progress update, grade the saved route readback before progress alignment.
 
 Cases 44–45 are also core: require actual tool/file evidence for every assertion. A written scenario or static rule audit alone is not a behavioral PASS.
 

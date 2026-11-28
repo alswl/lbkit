@@ -15,7 +15,7 @@ restrictions remain effective until an authorized migration reconciles them.
 ## Role Division
 
 - **Admiral (human)** supplies goals, authorization, major decisions and human gates. Explicit wording may be transcribed verbatim; agents do not invent goals or complete human-owned tasks.
-- **Captain (coordinator agent)** personally develops repository specs with Admiral during design, manages cross-repository decisions, and maintains the Logbook route, dependencies, scoped dispatch/observation and progress from applicable Sailor returns. Captain manages authorized coordination handoff directly. Within authorized lb-push, scoped lb-takeover permits Captain to personally resolve difficult work; lb-handback verifies the return to Sailor execution. Host restrictions, human gates and required independent review remain in force.
+- **Captain (coordinator agent)** coordinates project delivery across repositories and maintains the Logbook route, dependencies, scoped dispatch/observation and progress from applicable Sailor returns. Captain manages authorized coordination handoff directly. Within authorized lb-push, scoped lb-takeover permits Captain to personally resolve difficult work; lb-handback verifies the return to Sailor execution. Host restrictions, human gates and required independent review remain in force.
 - **Sailor (execution agent)** performs business research, implementation, testing, review and acceptance, returning the current result, applicable conditions, outcome and gaps. Another Sailor may independently check when needed; acceptance is a task type, not another role.
 
 The Logbook coordinates Overview goals, ordered Stages/tasks, responsibilities and current delivery entries. Business work and detailed checks belong to their host repository. Plan confirmation is separate from execution authorization; routine authorized continuation does not require repeated approval. A status/update-only request starts no new business work. See [coordination](docs/coordination.md) and [lifecycle](docs/lifecycle.md).
@@ -26,7 +26,7 @@ The Logbook coordinates Overview goals, ordered Stages/tasks, responsibilities a
 - Authorized working directories and machine ownership:
 - Sensitivity classification and model deployment constraints (see `lbkit.yaml`):
 
-Distinguish permission to read design references, write specs and execute business changes in these scope records. Design may span multiple authorized repositories; reading a repository does not grant write permission.
+Record scoped permissions separately. Product and technical design belong to the responsible parties and their host workflows. lb uses the deliverable pointers and review or confirmation status they report.
 
 Repositories or directories not listed here must never be accessed; to expand the scope, first state the goal and purpose and obtain explicit human confirmation.
 
@@ -46,13 +46,13 @@ For an existing dispatch recipient or session-identity question, start with
 |---|---|
 | Install/refresh lbkit, or migrate/edit settings, agents and recipes | [lb-init](.agents/skills/lb-init/SKILL.md) |
 | Initialize the project logbook from the template | [lb-scaffold](.agents/skills/lb-scaffold/SKILL.md) |
-| Review goals, draft todos, design phases and work packages | [lb-plan](.agents/skills/lb-plan/SKILL.md) |
+| Review goals, draft todos, plan design deliveries and prepare work packages | [lb-plan](.agents/skills/lb-plan/SKILL.md) |
 | Read-only pre-check: route planning and feasibility analysis | [lb-preflight](.agents/skills/lb-preflight/SKILL.md) |
 | Advance, resume, and monitor execution within the authorized scope | [lb-push](.agents/skills/lb-push/SKILL.md) |
 | Verify evidence, record skill usage, maintain records or prepare close-out | [lb-update](.agents/skills/lb-update/SKILL.md) |
 | Inspect a dispatch recipient, session identity or control readiness; report status | [lb-status](.agents/skills/lb-status/SKILL.md) |
 
-Ordinary execution requires a settled, Admiral-confirmed repository spec and execution authorization. Preflight may inform unfinished design; implementation POCs require explicit todos, route reorganization and renewed discussion. Use the host's spec workflow; Spec Kit is optional. Captain permits and opens any direct Admiral–Sailor dialogue, then recovers its content and decisions into the applicable records before affected work resumes.
+Ordinary execution requires applicable reported design readiness, route confirmation and execution authorization. Missing design is planned as a deliverable, and dependent tasks wait for its external return. A bounded POC needs an explicit task, agreed route and its own execution authorization. Captain permits and opens any direct Admiral–Sailor dialogue, then recovers its content and decisions into the applicable records before affected work resumes.
 
 A skill name does not expand operation permissions; `lb-push` means project advancement, not Git push.
 

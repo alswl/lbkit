@@ -13,8 +13,8 @@ report pending writes and verification gaps instead of silently stopping or bypa
 
 Read the [coordination contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),
 [configuration](../../docs/installable/configuration.md), current Logbook, applicable
-spec/confirmation and host instructions. Captain retains coordination while
-executing directly. Status queries, progress refresh and read-only preflight do
+reported design readiness, deliverable pointers and host instructions. Captain
+retains coordination while executing directly. Status queries, progress refresh and read-only preflight do
 not authorize entry.
 
 A takeover request restricts delegation immediately; safe execution ownership is
@@ -26,8 +26,9 @@ a separate fact established in step 2.
    human can narrow it or set a release condition. Automatic takeover needs a
    problem requiring Captain's direct reasoning; one Sailor failure or an elapsed
    wait is insufficient. Existing authorization suffices; ask only for a real new
-   decision. Unsettled core design returns to lb-plan/Admiral; experiments still
-   need the bounded POC gate.
+   decision. Unsettled design goes to its responsible party. Use lb-plan for the
+   scheduling impact and leave dependent work waiting. Takeover supplies no
+   design authority. Experiments still need the bounded POC gate.
 2. With the lb CLI, read execution context and record the already-given takeover
    instruction as an [execution record](../../docs/installable/lb-cli.md#execution-state-in-project-json),
    adding a current ownership observation in the same batch when one exists. No

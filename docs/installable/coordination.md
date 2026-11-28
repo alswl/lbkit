@@ -31,13 +31,13 @@ locator does not create a new confirmation gate or require a Logbook edit.
 
 ## Roles, authorization and returns — US2
 
-Admiral is the human owner of goals, major tradeoffs, authorization and applicable human gates. Captain personally develops the design with Admiral, then maintains the route, dependencies/owners, authorized dispatch/monitoring, return alignment, progress and coordination handoff. Sailor explicitly accepts a self-contained work instruction and performs its implementation, investigation, testing or review without Logbook access; Captain checks completion and owns all Agent-side Logbook writes; scoped takeover below permits Captain to execute directly. Another Sailor may independently check a result when needed; this creates no separate acceptance role, default checker count or universal verification gate.
+Admiral is the human owner of goals, major tradeoffs, authorization and applicable human gates. Captain coordinates the work with Admiral and maintains the route, dependencies/owners, authorized dispatch/monitoring, return alignment, progress and coordination handoff. Sailor explicitly accepts a self-contained work instruction and performs its implementation, investigation, testing or review without Logbook access; Captain checks completion and owns all Agent-side Logbook writes; scoped takeover below permits Captain to execute directly. Another Sailor may independently check a result when needed; this creates no separate acceptance role, default checker count or universal verification gate.
 
 Plan confirmation is distinct from execution authorization. Existing authorization covers routine continuation, rework and recovery within its scope, without repeated per-step permission. A standalone status, formatting or read-only analysis request dispatches no business work. An ordinary status question during authorized execution does not revoke authorization: answer read-only, then continue. Explicit pause or read-only steering governs its stated scope. An explicit newer Admiral decision supersedes the conflicting older condition only within its scope; record that change in existing Thinking and preserve unrelated constraints.
 
 An executor return (Sailor, or Captain during scoped takeover) identifies the current Logbook/Stage/task/package, current result/revision, applicable inputs/conditions, acceptance outcome (passed, failed, incomplete or unknown), delivery entry, remaining responsibilities and limitations. It can be a message or existing host record. Captain checks correspondence, evidence applicability and completion against the instruction. Sailor supplies scoped business observations/tests; additional implementation remains subject to the takeover protocol below. Delivery receipt, instruction acceptance and completion checking are distinct facts. A file, delivery link, bare done claim or runtime exit is insufficient. Changed inputs/task/result route concrete rechecking to Sailor within existing execution authorization; a status-only request cannot start that rechecking.
 
-lb-update keeps reread (read-only default) and authorized refresh, with internal format/progress/close modes. It records current facts, applicable results and existing Task state while preserving the route. Only lb-plan changes Task membership or intended results, order, dependencies, planned responsibility/repositories, skill chains, goals, design or acceptance criteria. Explicit pause/resume, actual blockers, cancellation and reopening update an existing Task's state without selecting a different route. A blocked or paused Task supplies no authority to bypass dependencies or reassign work. For a request containing both route edits and progress updates, compose lb-plan first, read back the saved route and current token, then lb-update against the resulting conditions; existing explicit decisions need no repeated confirmation. Rereading an already-saved human route change acknowledges it without authorizing further edits.
+lb-update keeps reread (read-only default) and authorized refresh, with internal format/progress/close modes. It records current facts, applicable results and existing Task state while preserving the route. Only lb-plan changes Task membership or intended results, order, dependencies, planned responsibility/repositories, skill chains, goals, design dependencies or acceptance criteria. Explicit pause/resume, actual blockers, cancellation and reopening update an existing Task's state without selecting a different route. A blocked or paused Task supplies no authority to bypass dependencies or reassign work. For a request containing both route edits and progress updates, compose lb-plan first, read back the saved route and current token, then lb-update against the resulting conditions; existing explicit decisions need no repeated confirmation. Rereading an already-saved human route change acknowledges it without authorizing further edits.
 
 Progress aligns applicable returns. Close reconciles goals, explicit human rulings, skipped/cancelled dispositions and open responsibilities. Judge the task against its own agreed result, not the success of every operation it observes. A diagnosis task can complete with a supported failure finding and recommendation while the release or repair remains failed or pending. A task requiring successful execution remains incomplete when that required outcome is missing, conflicting, failed, incomplete or unknown. If the intended result is ambiguous, retain the facts and clarify the affected completion decision; do not silently redefine the task. Human tasks remain subject to protected ownership: agents may record actual human work starting but do not complete, cancel or change the gate. All CLI writes retain the current `version_token` CAS protection.
 
@@ -49,24 +49,53 @@ For configuration-driven operations, align evidence of what actually took effect
 
 ## Design state and execution readiness
 
-During lb-plan, Captain personally discusses the core ideas, alternatives, constraints and route with Admiral, reads relevant code and documents, and writes the design into one or more authorized project repositories. Captain owns the overall explanation and cross-repository decisions; delegating an investigation does not transfer that responsibility. Sailors normally own implementation, experiments, business testing and acceptance; the scoped takeover protocol below permits authorized direct execution by Captain.
+lb coordinates goals, Stages, Tasks, responsibility, dependencies, pending
+decisions, delivery requirements and acceptance arrangements. Product and
+technical design belong to the responsible parties in their own host workflows.
+Even in a writable directory, lb does not open design bodies to assess them,
+author or alter them, choose an approach, start a host design workflow, assign
+execution implicitly, or mark a design delivery complete on its own. An explicit
+design request belongs to the host workflow outside lb. Wait for its attributable
+return before arranging dependent work.
 
-Use the host's spec-driven workflow and existing design records; Spec Kit is optional. Choose an overall spec entry and, when several repositories contribute, identify each repository's responsibility, interfaces and dependencies. Distinguish permission to read reference repositories, write specs and execute business changes. Existing scoped authorization remains valid; choosing a repository or reading it grants no new write, commit or push permission.
+Record the responsible party's deliverable pointer, applicable review or
+confirmation status, reported constraints or gaps, and affected Tasks. A file's
+presence or directory permission is insufficient evidence. When a required
+design is missing, plan a design delivery Task with its expected return and
+acceptance arrangements. Use an established owner or leave ownership pending
+designation. Keep dependent Tasks waiting for the external conclusion. Missing
+or unresolved design evidence still permits an authorized route draft or read-only
+route review. Keep design prose in host records and coordination facts in the
+Logbook and bound Thinking.
 
-The repository spec is the authoritative design body. It covers the goal and boundaries, core approach and tradeoffs, constraints, responsibilities/interfaces, implementation and verification route, and pending decisions with affected tasks. Scale detail to the work and reuse applicable existing specs. Thinking records discussion, decisions and confirmation references; Sources can reference or incorporate the identified spec under host rules without becoming a competing editable design. The Logbook remains the scheduling authority, with design links and verifiable tasks rather than a duplicate spec or task database.
+Before ordinary lb-push execution, check the responsible party's reported
+readiness evidence for the current deliverable and affected scope. Required
+reviews or confirmations must be applicable, and route confirmation, human
+gates, preflight and independent execution authorization still apply. Reuse current
+decisions with their sources. Missing, ambiguous or stale evidence leaves
+dependent work waiting. When an external conclusion changes scope, interfaces
+or acceptance, bring its scheduling effects to lb-plan under route-edit authority.
 
-Before ordinary lb-push execution, Captain briefly explains the design, constraints, route and remaining decisions to Admiral, identifies the current spec content and applicable confirmation, and verifies that the core approach is settled. A complete todo list, parser check or green preflight is insufficient. Preserve existing explicit confirmation and execution authorization without asking again. Pending local details may remain when they do not leave the core route undecided. Choices affecting scope, interfaces or acceptance return to Captain's Logbook planning; Sailor chooses routine implementation details within the agreed boundaries. Judge changed facts and necessary redesign case by case, explaining affected work rather than applying an automatic full reset.
+A real POC may run before overall design readiness. Propose an explicit Task
+using the responsible party's reported question, bounded scope, dependencies,
+criteria, evidence to return and stopping point. Present affected ordering and
+dependencies for the route decision. Keep unapproved changes in an authorized
+proposal record or the reply. To start, lb-push needs the authorized POC route,
+applicable preflight, a clear reported basis for the bounded experiment and its
+own execution authorization. On return, record the responsible party's judgment,
+boundaries, evidence and reported impact. Apply authorized scheduling changes and
+keep ordinary implementation waiting for its own readiness and authorization.
 
-A POC may reach real implementation before the overall design is settled. Captain must add an explicit POC todo, reorganize affected tasks/dependencies and discuss the revised route with Admiral. Keep unconfirmed restructuring as a proposal; use authorized document operations for agreed changes and preserve human-owned text. The POC defines its question, scope, result/criteria and stopping point. Only after that route and POC execution are authorized may lb-push execute it through Sailor or a scoped Captain takeover. Its own design must be clear enough to execute and evaluate. On return, Captain brings findings back into the spec and discussion; POC completion does not authorize ordinary implementation or bypass existing human or 🔮 gates. lb-plan itself dispatches no execution.
-
-lb-preflight may inspect an unfinished design and report assumptions, coverage and gaps to the discussion. It does not confirm the design or perform a POC implicitly. Design state is a coordination concept, not a new CLI status, checkbox or 🔮 marker.
+lb-preflight may check coordination evidence and applicable prerequisites while
+design is pending. A green check establishes only its observed scope. A design
+dependency uses the existing route and evidence model.
 
 ## Scoped takeover and execution handoff
 
 Normal execution delegates business work to Sailor. Within an already authorized
 advancement flow, Captain automatically enters [lb-takeover](../../skills/lb-takeover/SKILL.md)
 when a direction-setting problem, coupled investigation or repeated ineffective
-repair needs Captain's direct reasoning and operation. Ordinary design discussion
+repair needs Captain's direct reasoning and operation. Ordinary planning discussion
 remains lb-plan; a routine failure, missing return or elapsed wait alone does not
 justify takeover. Explicit Admiral takeover/handoff instructions also select the
 mode. The switch itself needs no repeated approval and grants no additional
@@ -111,10 +140,10 @@ switch models by declaration; do not substitute a stronger sub-agent.
 
 At an automatic takeover's exit, run [lb-handback](../../skills/lb-handback/SKILL.md).
 During explicit takeover, close out each task and continue personally; hand back
-only under the release rule above. Recover the spec decisions, exact
+only under the release rule above. Recover reported design decisions and pointers, exact
 candidate/worktree and uncommitted state, performed checks/outcomes, failed
 approaches, remaining work, permissions, review counts and human gates in existing
-spec/Thinking/host records. lb CLI hosts record takeover instructions and ownership
+Thinking or existing host coordination records. lb CLI hosts record takeover instructions and ownership
 observations in [project execution JSON](lb-cli.md#execution-state-in-project-json);
 Thinking keeps reasoning and results. Non-CLI hosts use an equivalent protected
 checkpoint. Record verified ownership and the protected task status before business
@@ -184,7 +213,7 @@ Admiral and Sailor may converse directly when Captain permits the dialogue and o
 
 Captain retains coordination responsibility. Avoid competing task submissions while Admiral is using the entry; reconcile affected work before continuing it under changed instructions. Direct dialogue does not by itself authorize broader work, confirm acceptance or complete a human task. An explicit Admiral ruling made there remains authoritative within its scope; Captain's mediation must not discard or require repetition of that ruling.
 
-After the dialogue, Captain retrieves attributable submitted content and conclusions, separating Admiral decisions, Sailor proposals/observations and unresolved questions. A Sailor summary alone is not proof of a new human authorization. Preserve useful content or a durable source reference in existing host records, record concise conclusions in Thinking, and update the affected spec, Logbook and work package through their authorized write paths. Briefly report the recovered decisions, open points and next action, and verify the owning Sailor has the current instructions before affected execution continues. Missing or ambiguous content remains an explicit gap; leave dependent work pending rather than inventing consent. Recover the dialogue before closing its entry; no mandatory transcript archive is introduced.
+After the dialogue, Captain retrieves attributable submitted content and conclusions, separating Admiral decisions, Sailor proposals/observations and unresolved questions. A Sailor summary alone is not proof of a new human authorization. Preserve useful content or a durable source reference in existing host records, record concise conclusions in Thinking, and update authorized coordination facts in the Logbook and work package. Refer design changes to the responsible party and wait for its reported conclusion. Briefly report the recovered decisions, open points and next action, and verify the owning Sailor has the current instructions before affected execution continues. Missing or ambiguous content remains an explicit gap; leave dependent work pending rather than inventing consent. Recover the dialogue before closing its entry; no mandatory transcript archive is introduced.
 
 ## Authorized Git changes
 

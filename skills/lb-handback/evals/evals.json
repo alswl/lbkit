@@ -58,7 +58,7 @@
     {
       "id": 3,
       "axis": "Prepared handoff without execution permission",
-      "prompt": "Use lb-handback for projects/demo/docs/log.md. Captain has settled the design; only design/Thinking preparation is authorized, and no implementation execution is authorized. Prepare the actual remaining handoff under host rules without dispatch.",
+      "prompt": "Use lb-handback for projects/demo/docs/log.md. The design owner reported the approved pointer and scope; only coordination preparation in Thinking is authorized, and no implementation execution is authorized. Prepare the actual remaining handoff under host rules without dispatch.",
       "expected_output": "Prepared handoff without execution permission",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
@@ -67,7 +67,7 @@
         {
           "name": "prepared_only",
           "type": "contains",
-          "check": "Save an authorized design/Thinking handoff with remaining work, explicit not-sent state and needed execution authorization."
+          "check": "Save an authorized coordination handoff in Thinking with the owner-reported pointer and readiness, remaining work, explicit not-sent state and needed execution authorization."
         },
         {
           "name": "no_dispatch",

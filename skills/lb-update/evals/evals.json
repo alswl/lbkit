@@ -1201,7 +1201,7 @@
       "coordination_seeds": [
         "dialogue-update"
       ],
-      "prompt": "Use /lb-update for projects/demo/docs/log.md. I approve changing the Overview goal to exactly \"Deliver a readable example report.\" and changing the report task Acceptance to exactly \"Report contains two readable sections.\" Save these changes and pause Compare approaches. Keep all Tasks in their current order and preserve the human gate. Do not execute business work.",
+      "prompt": "Use /lb-update for projects/demo/docs/log.md. I approve changing the Overview goal to exactly \"Deliver a readable example report.\" and changing the report task Acceptance to exactly \"Report contains two readable sections.\" Save these changes and pause Compare approaches. Keep all Tasks in their current order and preserve the human gate. The comparison owner suggests reading and choosing between two existing technical designs, but this request only authorizes the route edits and pause. Do not execute business work.",
       "expected_output": "Compose lb-plan for the explicitly authorized goal/criteria changes, read back the saved route, then lb-update to pause comparison without another approval or business execution.",
       "files": [
         "../../lb-plan/evals/fixtures/coordination/workspace.json",
@@ -1226,7 +1226,7 @@
         {
           "name": "no_extra_gate_or_execution",
           "type": "not_contains",
-          "check": "Requests approval again for the explicit change, changes unrelated route fields, treats a pause note as actual pause, claims the worker stopped or executes business work."
+          "check": "Requests approval again for the explicit change, changes unrelated route fields, treats a pause note as actual pause, claims the worker stopped, opens a design body, chooses an approach or executes business work. Use the complete tool trace for these checks."
         }
       ]
     },

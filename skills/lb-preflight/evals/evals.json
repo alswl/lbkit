@@ -673,6 +673,28 @@
           "check": "Claims a digest is malformed or mismatched, invents a collection incompatibility, asks for renewed authorization, or claims formal tests ran."
         }
       ]
+    },
+    {
+      "id": 28,
+      "axis": "Preparation while design is pending",
+      "prompt": "Use /lb-preflight on the confirmed catalog export and importer route. The product design exists in a writable directory. The technical design is pending and a compatibility POC is only a proposal without execution authorization. Use the responsible parties’ reports in records/design-status.json and records/poc-status.json. Check any available independent read-only preparation.",
+      "expected_output": "Report observed checks and the missing readiness and POC authority.",
+      "files": [
+        "../../lb-plan/evals/fixtures/design-delivery.json"
+      ],
+      "assertions": [
+        {
+          "name": "observed_evidence",
+          "type": "contains",
+          "check": "Trace reads both reports and runs an applicable read-only prerequisite check. Saved preflight and reply identify the checked scope and the external readiness gap."
+        },
+        {
+          "name": "gate_preserved",
+          "type": "contains",
+          "check": "Trace and snapshots demonstrate byte-identical design, no design body reads or workflow starts, no route restructuring or release of dependent work, and no POC or implementation execution."
+        }
+      ],
+      "fixture_variant": "confirmed"
     }
   ]
 }

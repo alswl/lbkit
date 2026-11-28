@@ -9,7 +9,7 @@ description: "Check the current logbook route step by step against actual skill 
 ## Purpose and inputs
 
 Prepare the next Task and the known prerequisites of the confirmed route.
-Inputs are the current Logbook/context, relevant design, existing authorization,
+Inputs are the current Logbook/context, reported design readiness, existing authorization,
 and earlier preparation evidence.
 Preflight reports preparation; it does not grant execution authority.
 
@@ -23,10 +23,12 @@ A failed read is a specific gap; a guessed path is not evidence of absence.
 ## Scope and feasibility
 
 Read the current source, `log context --json`, `log check --json`, relevant
-specification and prior preparation. Select the actual next authorized step;
-`next_task` is a parse candidate, not an authorization or business judgment.
-Existing human gates remain binding. Unconfirmed design does not prohibit useful
-read-only preparation, but green does not confirm design or authorize implementation.
+reported deliverable pointers, review status and prior preparation. Select the
+actual next authorized coordination step. The `next_task` field is a parse
+candidate. Preserve human gates. Check reported design status and applicability
+without opening design bodies or invoking design previews. Useful read-only
+preparation may proceed while design is pending. Report missing readiness and
+keep dependent implementation waiting.
 
 Inspect the selected operation in detail. For each confirmed stage, inventory
 the prerequisites that affect its Tasks: authorization, work locations, skills,

@@ -47,7 +47,10 @@ Captain maintains the Logbook goal/route and coordination; Sailors normally exec
 Record what has happened, the applicable result and current Task state within
 the existing route. Only lb-plan changes that route: adding/removing/splitting
 Tasks, rewriting their intended results, reordering, dependencies, planned owners
-or repositories, selected skill chains, goals, design and acceptance criteria.
+or repositories, selected skill chains, goals, design dependencies and acceptance criteria.
+Record design delivery progress only from applicable attributed returns. Use their
+pointers and reported status without reading or editing design bodies. A missing
+or provisional return leaves dependent work waiting.
 Changing the route requires planning even when Admiral supplies exact wording;
 the decision authorizes the scoped lb-plan change without another confirmation.
 

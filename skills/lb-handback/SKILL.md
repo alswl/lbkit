@@ -41,7 +41,7 @@ Preserve running work outside the authorized handoff.
    failed operations, uncommitted edits and remaining work. Do not turn handoff
    into a completion claim or silently abandon the unresolved takeover objective.
    An explicit early handoff records the unresolved problem and human direction.
-2. Update existing spec/Thinking/host records within authorization. Identify the
+2. Update existing Thinking or existing host coordination records within authorization. Identify the
    exact repository/worktree/ref/candidate (including dirty changes), inputs,
    decisions, previous failed methods, checks/outcomes/limitations and open duties.
    Preserve task identities, review usage, first outcomes and human/POC gates.

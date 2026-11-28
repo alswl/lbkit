@@ -1,7 +1,7 @@
 ---
 name: lb-plan
 version: 0.6.1-dev
-description: "Create, revise or review a Logbook route. Use for adding/removing/splitting Tasks, changing outcomes, order, dependencies, planned responsibility, skill chains, goals, design or acceptance criteria, including route changes requested through lb-update. Personally develop repository specs with Admiral; does not dispatch execution."
+description: "Create, revise or review a Logbook route. Use for adding/removing/splitting Tasks, changing outcomes, order, dependencies, planned responsibility, skill chains, goals, design dependencies or acceptance criteria, including route changes requested through lb-update. Coordinate design delivery and readiness using responsible-party reports. Does not dispatch execution."
 ---
 
 ## Initialize and synchronize new runs
@@ -34,11 +34,13 @@ first, read back the saved route, then compose lb-update for the requested progr
 Reuse explicit decisions; a skill boundary adds no confirmation round. Rereading
 human changes alone acknowledges the saved route without creating a planning write.
 
-Read the host AGENTS.md, current source and `log context --json`. Recover the
+Read the host AGENTS.md, current Logbook, bound coordination records and
+`log context --json`. Recover the
 human goal and current constraints; preserve human-authored wording and decisions.
 A draft request authorizes saving proposed unfinished agent work. A proposal-only
-request restricted to spec/Thinking leaves Logbook bytes unchanged. Review writes
-nothing. Current instructions supersede older limits only within their scope.
+request restricted to an authorized coordination record leaves Logbook bytes
+unchanged. Review mode reports findings without writing. Current instructions
+supersede older limits only within their scope.
 
 ## Build and save the route
 
@@ -54,10 +56,15 @@ nothing. Current instructions supersede older limits only within their scope.
    reusable capabilities when a specialized chain is unsuitable. Built-in-only
    work is valid; do not invent a skill or new approval to fill a field. Save
    selected skills on their Tasks, not only in reasoning or a registry list.
-4. Develop necessary repository design with Admiral under the
-   [design contract](../../docs/installable/coordination.md#design-state-and-execution-readiness).
-   Reuse applicable specs and confirmations. Save concrete design links and open
-   choices in the authorized records; a narrow field repair needs no new design.
+4. Coordinate design delivery under the
+   [readiness contract](../../docs/installable/coordination.md#design-state-and-execution-readiness).
+   Use the responsible party's pointers and reported status. Plan missing
+   deliverables, leave unknown owners pending designation and show dependent work
+   waiting for external conclusions. Route an explicit design request to the
+   host's own workflow by naming the boundary and expected return in the reply.
+   Do not open, author, edit, assess or choose a design, launch the host workflow,
+   dispatch a design Task or declare a design done. Apply authorized route changes
+   in mixed requests before handing applicable progress to lb-update.
 5. Save the authorized route through supported CLI operations with current CAS.
    Use `task note --replace-line` for existing annotations. For an authorized
    replacement, use atomic `task split` with the required reference mapping.
