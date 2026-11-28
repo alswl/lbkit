@@ -17,6 +17,12 @@ from logbook_cli.commands.common import (
 )
 from logbook_cli.services import logbook
 
+NO_LINK_CONTENT = click.option(
+    "--no-link-content",
+    is_flag=True,
+    help="Check link paths without reading local link targets for verification.",
+)
+
 
 @click.command("list", help="List project logbooks.")
 @options(ROOT, PROJECTS, JSON)
@@ -25,9 +31,12 @@ def list_logs(root: str | None, projects_dir: str, json: bool) -> None:
 
 
 @click.command("context", help="Show context and the version token.")
-@options(ROOT, LOG, JSON)
-def context(root: str | None, log: str, json: bool) -> None:
-    finish(logbook.inspect(resolve_root(root), log), json)
+@options(ROOT, LOG, NO_LINK_CONTENT, JSON)
+def context(root: str | None, log: str, no_link_content: bool, json: bool) -> None:
+    finish(
+        logbook.inspect(resolve_root(root), log, no_link_content=no_link_content),
+        json,
+    )
 
 
 @click.command("check", help="Check one logbook or all project logbooks.")
@@ -36,12 +45,24 @@ def context(root: str | None, log: str, json: bool) -> None:
     PROJECTS,
     click.argument("log", required=False),
     click.option("--all", is_flag=True),
+    NO_LINK_CONTENT,
     JSON,
 )
 def check(
-    root: str | None, projects_dir: str, log: str | None, all: bool, json: bool
+    root: str | None,
+    projects_dir: str,
+    log: str | None,
+    all: bool,
+    no_link_content: bool,
+    json: bool,
 ) -> None:
-    finish(logbook.validate(resolve_root(root), log, all, projects_dir), json, "check")
+    finish(
+        logbook.validate(
+            resolve_root(root), log, all, projects_dir, no_link_content=no_link_content
+        ),
+        json,
+        "check",
+    )
 
 
 @click.command("state", help="Show structured state and derived summary.")

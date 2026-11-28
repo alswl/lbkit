@@ -55,7 +55,7 @@ def state_snapshot(doc: Document) -> dict:
         "preflight_blockers": doc.preflight,
         "next_task": None
         if lifecycle["value"] in {"paused", "completed", "terminated"}
-        else context(doc)["next_task"],
+        else context(doc, no_link_content=True)["next_task"],
         "stages": [
             {
                 "title": s.title,

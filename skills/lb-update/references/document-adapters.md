@@ -34,9 +34,15 @@ Run the following commands from the logbooks root directory; if the current dire
 ```sh
 bin/lb log list --json
 bin/lb log list --projects-dir '<project-root-relative-path>' --json
-bin/lb log context '<logbook-relative-path>' --json
-bin/lb log check '<logbook-relative-path>' --json
+bin/lb log context '<logbook-relative-path>' --no-link-content --json
+bin/lb log check '<logbook-relative-path>' --no-link-content --json
 ```
+
+For structural reads, keep `--no-link-content` on both commands. If the installed
+CLI lacks the option, use available `log route` structure and the Logbook
+source. Use `log state` only on a build known to skip local link content.
+Report that full context and checks were unavailable. Do not retry the default
+commands or derive a write token from these partial views.
 
 - When the user has already specified the logbook path, call `log context` directly. Use `log list` only when the logbook is not yet located and discovering the host project is allowed. Use the first discovery command for the default project root. For a non-default root, replace `<project-root-relative-path>` with the host's `settings.documents.project_root` relative to the approved logbooks root. Never pick one of several candidates yourself.
 - Read the logbook source and the authorization basis alongside. `log context` returns stages, task original text, line numbers, directories, and `version_token`; it does not contain full goals or authorization. `next_task` is only a parsed candidate — unknown states, skip records, or ambiguity must be verified against the source; never auto-skip items based on it. `bound_records` are body links only and cannot replace mind-forge metadata bindings.

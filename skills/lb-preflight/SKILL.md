@@ -22,8 +22,12 @@ A failed read is a specific gap; a guessed path is not evidence of absence.
 
 ## Scope and feasibility
 
-Read the current source, `log context --json`, `log check --json`, relevant
-responsible-party reports and prior preparation. For design readiness, check
+Read the current Logbook, `log context LOG --no-link-content --json`,
+`log check LOG --no-link-content --json`, relevant responsible-party reports
+and prior preparation. If the installed CLI lacks the option, use the available
+structural subset from `log route` and the Logbook source. Use `log state` only
+on a build known to skip local link content. Report the missing coverage.
+Do not retry with default context or check. For design readiness, check
 only the reported pointer, version or digest when supplied, conclusion and
 scope. Do not open, extract from, hash or otherwise inspect the design artifact,
 invoke a design preview or repeat design verification. Apply this boundary to

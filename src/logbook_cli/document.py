@@ -505,11 +505,13 @@ def links_for(doc: Document, stage: Stage | None = None) -> list[dict]:
     return links
 
 
-def context(doc: Document) -> dict:
+def context(doc: Document, *, no_link_content: bool = False) -> dict:
     from logbook_cli.link_records import observations
     from logbook_cli.task_identity import bindings, snapshot
 
-    verification_records, verification_errors = observations(doc, links_for(doc))
+    verification_records, verification_errors = observations(
+        doc, links_for(doc), no_link_content=no_link_content
+    )
     identity_errors = []
     try:
         managed = {
@@ -725,7 +727,7 @@ def resolve_link_target(
             return "ok", current
 
 
-def check(doc: Document) -> list[dict]:
+def check(doc: Document, *, no_link_content: bool = False) -> list[dict]:
     issues = []
     h1 = h1_count(doc)
     if h1 != 1:
@@ -845,11 +847,22 @@ def check(doc: Document) -> list[dict]:
         )
     except LbError as exc:
         issues.append(issue(doc, 1, "TASK_STATE_INVALID", exc.message))
-    from logbook_cli.link_records import observations, verified_lines
+    from logbook_cli.link_records import (
+        LINK_CONTENT_SKIPPED,
+        observations,
+        verified_lines,
+    )
 
     all_links = links_for(doc)
-    verification_records, metadata_errors = observations(doc, all_links)
+    verification_records, metadata_errors = observations(
+        doc, all_links, no_link_content=no_link_content
+    )
     verified_links = verified_lines(verification_records)
+    skipped_links = {
+        (row["line"], row["label"], row["target"])
+        for row in verification_records
+        if row["invalidation_reason"] == LINK_CONTENT_SKIPPED
+    }
     state_path = str(doc.state_path.relative_to(doc.root))
     issues.extend(
         {
@@ -870,6 +883,15 @@ def check(doc: Document) -> list[dict]:
                     link["line"],
                     "LINK_UNVERIFIED",
                     f"external link has no applicable verified observation: {link['target']}",
+                )
+            )
+        elif (link["line"], link["label"], link["target"]) in skipped_links:
+            issues.append(
+                issue(
+                    doc,
+                    link["line"],
+                    "LOCAL_LINK_CONTENT_UNCHECKED",
+                    f"{LINK_CONTENT_SKIPPED}: {link['target']}",
                 )
             )
         elif state in {"outside", "unreadable"}:
@@ -952,6 +974,7 @@ def issue(doc: Document, line: int, code: str, message: str) -> dict:
         "STAGE_PLACEHOLDER": ("stage_placeholder", "notice"),
         "LINK_UNVERIFIED": ("verification_limit", "notice"),
         "LOCAL_LINK_UNVERIFIED": ("verification_limit", "notice"),
+        "LOCAL_LINK_CONTENT_UNCHECKED": ("verification_limit", "notice"),
         "LOCAL_LINK_MISSING": ("broken_link", "error"),
         "STAGE_EMOJI": ("status", "error"),
         "SKIPPED_EXPLICIT": ("status", "error"),

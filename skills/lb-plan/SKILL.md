@@ -35,7 +35,10 @@ Reuse explicit decisions; a skill boundary adds no confirmation round. Rereading
 human changes alone acknowledges the saved route without creating a planning write.
 
 Read the host AGENTS.md, current Logbook, bound coordination records and
-`log context --json`. Recover the
+`log context LOG --no-link-content --json`. Use the same option for structural
+`log check` calls. If the installed CLI lacks the option, use available
+`log route` structure and the Logbook source. Use `log state` only on a build
+known to skip local link content. Report the missing check coverage. Recover the
 human goal and current constraints; preserve human-authored wording and decisions.
 A draft request authorizes saving proposed unfinished agent work. A proposal-only
 request restricted to an authorized coordination record leaves Logbook bytes

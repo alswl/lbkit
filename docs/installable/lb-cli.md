@@ -338,6 +338,21 @@ or write-protection refusal.
 | `stage_placeholder` | `notice` | `STAGE_PLACEHOLDER` for a [declared empty delivery Stage](logbook-format.md#status-and-links) |
 
 Checks run offline. Local link checks cover path existence within the root.
+By default, an otherwise applicable local link observation with a stored digest
+also rechecks the target bytes. For structure-only reads use
+`log context LOG --no-link-content --json` and
+`log check LOG --no-link-content --json` (also supported with `log check --all`).
+The option preserves structure, state, link occurrences and path diagnostics
+while skipping local target content reads for these observations. Context marks
+each skipped observation inapplicable with a reason. Check reports
+`LOCAL_LINK_CONTENT_UNCHECKED` as a verification-limit notice. Retained legacy
+history remains historical. Explicit link verification and readiness input
+integrity checks retain their own behavior. If an installed CLI lacks the option,
+use available `log route` structure and the Logbook source, and report partial
+coverage. The current `log state` skips local link content. Older builds may
+hash link targets when deriving state through context, so use that fallback
+only on a build known to skip the reads. Default context and check may read
+link target bytes.
 External and out-of-root link notices leave availability unknown. Keep run
 identity links in the Logbook even when they have no applicable verification.
 
