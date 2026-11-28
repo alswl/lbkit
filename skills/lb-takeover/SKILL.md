@@ -1,11 +1,11 @@
 ---
 name: lb-takeover
 version: 0.6.1-dev
-description: "Use when asked to take over or do the work yourself: the current main Agent personally executes the whole authorized advancement, including later tasks, until human-authorized release. Also used by lb-push for automatic, problem-specific takeover. Recover ownership safely; repeated entry is idempotent."
+description: "Use when Admiral explicitly instructs Captain to take over execution: the current main Agent personally executes the whole authorized advancement, including later tasks, until human-authorized release. Recover ownership safely; repeated entry is idempotent."
 ---
 
 Read the [document state and CLI failure recovery contract](../../docs/installable/document-state.md).
-If lb is unavailable or crashes, notify the user and take over safe authorized work;
+If lb is unavailable or crashes, notify the user and reconcile the available evidence;
 report pending writes and verification gaps instead of silently stopping or bypassing CAS.
 
 
@@ -23,15 +23,16 @@ a separate fact established in step 2.
 1. Identify the problem/task/package, why direct work is needed, permitted
    operations and the observable exit condition. Explicit takeover covers the
    whole currently authorized advancement, including later lb-push tasks; only the
-   human can narrow it or set a release condition. Automatic takeover needs a
-   problem requiring Captain's direct reasoning; one Sailor failure or an elapsed
-   wait is insufficient. Existing authorization suffices; ask only for a real new
-   decision. Unsettled design goes to its responsible party. Use lb-plan for the
+   human can narrow it or set a release condition. Verify the explicit Admiral
+   instruction before entering. Route a difficult problem or repeated failed
+   repairs through the owning Sailor or authorized reassignment while takeover
+   authority is absent. Use the shared contract for bounded direct edits. Unsettled design goes to its responsible party. Use lb-plan for the
    scheduling impact and leave dependent work waiting. Takeover supplies no
    design authority. Experiments still need the bounded POC gate.
 2. With the lb CLI, read execution context and record the already-given takeover
    instruction as an [execution record](../../docs/installable/lb-cli.md#execution-state-in-project-json),
-   adding a current ownership observation in the same batch when one exists. No
+   using the actual Captain subject as the recorded Captain identity and adding
+   a current ownership observation in the same batch when one exists. No
    extra confirmation or session metadata is needed. If this Captain already owns
    the scope, resume idempotently from the existing checkpoint, candidate, worktree
    and counters, after checking for actual conflicting operations. If no Sailor owns
@@ -71,8 +72,7 @@ a separate fact established in step 2.
    business operation remains failed. During explicit takeover, continue later
    tasks personally: completion, skill switches and interruption are not handback.
    Enter [lb-handback](../lb-handback/SKILL.md) only on an explicit Admiral release or
-   a met, previously authorized condition; automatic takeover enters it at its
-   scoped exit. Preparing a handback permits no dispatch. Handback is complete only
+   a met, previously authorized condition. Preparing a handback permits no dispatch. Handback is complete only
    after receipt/readiness and ownership/status reconciliation; then drop `👨‍✈️`
    from the very next message.
 
@@ -85,7 +85,9 @@ does not release advancement-wide takeover.
 In user-facing takeover findings, blockers and exit reports, apply the [locator guidance](../../docs/installable/coordination.md#human-facing-logbook-locators): identify the scoped Logbook task with its current `L50` position and name, and cite an exact status/criterion line when that is the subject of a decision. Keep runtime/worktree and result entries alongside it. This does not add a mode-switch confirmation.
 
 After interruption, reread the checkpoint and actual disk/runtime state before
-resuming. Reconcile pending commands and partial ownership changes; do not repeat
+resuming. An older automatic takeover checkpoint supplies evidence for audit,
+operation reconciliation and authorized handback. Recover an explicit Admiral
+instruction before resuming takeover business work. Reconcile pending commands and partial ownership changes; do not repeat
 side effects or silently resume stale Sailor work. Report the scoped executor,
 current result and next action briefly; switching modes does not reset counters,
 supply human confirmation for task state changes, or expand commit/push/publication authorization.

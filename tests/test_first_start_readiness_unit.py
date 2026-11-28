@@ -3,11 +3,78 @@ from pathlib import Path
 from unittest.mock import patch
 
 from logbook_cli.document import LbError, parse_text
+from logbook_cli.execution_facts import validate_fact, validate_new_fact
 from logbook_cli.services.preflight_plan import current_plan, declaration, grant_source
-from logbook_cli.services.readiness import _evaluate_evidence, evaluate
+from logbook_cli.services.readiness import _evaluate_evidence, evaluate, takeover_gap
 
 
 class FirstStartReadinessTests(unittest.TestCase):
+    def test_takeover_admission_requires_explicit_current_authority(self):
+        instruction = {
+            "id": "takeover", "kind": "takeover", "origin": "explicit",
+            "source": {"kind": "human_instruction", "ref": "owner message"},
+            "release_condition": None,
+        }
+        legacy = {
+            **instruction, "origin": "automatic",
+            "source": {"kind": "caller_judgment", "ref": "repair history"},
+        }
+        ownership = {
+            "id": "owner", "kind": "ownership", "takeover_id": "takeover",
+            "source": {"kind": "runtime_observation", "ref": "runtime check"},
+            "owner": "coordinator", "conflicts": False, "settled": True,
+        }
+        release = {
+            "id": "release", "kind": "delegation-release", "takeover_id": "takeover",
+            "source": instruction["source"], "scope": "task", "task_id": "A",
+            "recipient": "implementer", "condition_result_id": None,
+        }
+        validate_fact(legacy, [])
+        with self.assertRaisesRegex(LbError, "explicit human instruction"):
+            validate_new_fact(legacy, [])
+        validate_new_fact(instruction, [])
+        validate_new_fact(release, [legacy, ownership])
+        for facts, task_id, actor, reason in (
+            ([], "A", "coordinator", "explicit human"),
+            ([legacy, ownership], "A", "coordinator", "explicit human"),
+            ([instruction], "A", "coordinator", "sole execution ownership"),
+            ([instruction, {**ownership, "conflicts": True}], "A", "coordinator", "sole execution ownership"),
+            ([instruction, {**ownership, "owner": "other"}], "A", "other", "recorded Captain"),
+            ([instruction, ownership, release], "A", "coordinator", "authorized handoff"),
+            ([instruction, ownership, release], "B", "coordinator", None),
+            ([instruction, ownership], "A", "coordinator", None),
+        ):
+            with self.subTest(facts=facts, task_id=task_id, actor=actor):
+                gap = takeover_gap({"facts": facts, "captain": "coordinator"}, task_id, actor)
+                if reason is None:
+                    self.assertIsNone(gap)
+                else:
+                    self.assertIn(reason, gap or "")
+
+    def test_new_legacy_release_requires_human_authorized_condition(self):
+        judgment = {"kind": "caller_judgment", "ref": "repair history"}
+        human = {"kind": "human_instruction", "ref": "owner message"}
+        target = {"scope": "dispatch", "dispatch_id": "return", "recipient": "sailor"}
+        condition = {"id": "exit", "source": judgment, **target}
+        legacy = {
+            "id": "takeover", "kind": "takeover", "origin": "automatic",
+            "source": judgment, "release_condition": condition,
+        }
+        result = {
+            "id": "result", "kind": "condition-result", "takeover_id": "takeover",
+            "source": {"kind": "verified_result", "ref": "check", "verifier": "operator", "subject": "exit"},
+            "condition_id": "exit", "satisfied": True,
+        }
+        release = {
+            "id": "release", "kind": "delegation-release", "takeover_id": "takeover",
+            "source": judgment, "condition_result_id": "result", **target,
+        }
+        validate_fact(release, [legacy, result])
+        with self.assertRaisesRegex(LbError, "human-authorized condition"):
+            validate_new_fact(release, [legacy, result])
+        authorized = {**legacy, "release_condition": {**condition, "source": human}}
+        validate_new_fact(release, [authorized, result])
+
     def test_readiness_uses_cutover_graph_and_invalidates_old_task_scope(self):
         from logbook_cli.repository import markdown_document
         from logbook_cli.services.route_scope import route_scope

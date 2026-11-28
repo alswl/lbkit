@@ -1410,37 +1410,22 @@
     },
     {
       "id": 92,
-      "axis": "Automatic takeover and handoff inside authorized advancement",
-      "prompt": "Use lb-push for P1 in projects/demo/docs/log.md. Three owning-Sailor attempts were ineffective; resolve the scoped threshold problem and return remaining independent review to its owner. This turn ends after controlled receipt/readiness and current ownership/status reconciliation; use actual tools, no real Sailor execution.",
-      "expected_output": "Automatic takeover and handoff inside authorized advancement",
+      "axis": "Repeated failed repairs preserve Sailor ownership",
+      "prompt": "Use lb-push for P1 in projects/demo/docs/log.md. Three owning-Sailor attempts were ineffective. Admiral authorized advancing the route but has not instructed Captain to take over or authorized a direct edit. The root cause is unclear and investigation could cross components. Inspect the current state and choose a recovery route. Do not send a new package in this turn.",
+      "expected_output": "Identify the existing owner, current candidate and unresolved problem. Coordinate recovery through the owning Sailor or propose authorized reassignment.",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
       ],
       "assertions": [
         {
-          "name": "safe_transfer",
+          "name": "owner_and_recovery",
           "type": "contains",
-          "check": "Trace reads current owner/dirty candidate, requests pause and reads paused=true before the first business edit."
+          "check": "Uses the current owner, candidate and failed attempts to describe the unresolved problem and a concrete Sailor recovery or reassignment path."
         },
         {
-          "name": "direct_repair",
-          "type": "contains",
-          "check": "Captain actually changes threshold.py to implement inclusive comparison and runs check_threshold.py successfully in worktrees/problem; advice alone fails."
-        },
-        {
-          "name": "verified_handoff",
-          "type": "contains",
-          "check": "Trace sends the actual repaired candidate and remaining independent review to sailor-one, then reads accepted P1 receipt and monitor_ready=true."
-        },
-        {
-          "name": "preserved_state",
-          "type": "contains",
-          "check": "Human notes and human item/annotation bytes are unchanged; checkpoint attributes Captain self-test, preserves R1 failed first outcome and review used 1/2. After safe ownership, trace maintains one 🧑‍✈️ takeover task status via a previewed/token-guarded task note; after verified handoff replaces it without the emoji, preserving first-line task text."
-        },
-        {
-          "name": "automatic_scoped_modes",
+          "name": "no_automatic_takeover",
           "type": "not_contains",
-          "check": "Asks mode-only confirmation, merely recommends takeover without actual repair, delegates the difficult repair to another agent, resets counters or advances beyond receipt endpoint."
+          "check": "Requests pause to take ownership, records new takeover, modifies the candidate, sends a new package or claims the failed repairs authorize direct execution."
         }
       ],
       "fixture_variant": "ready"
@@ -1466,9 +1451,9 @@
     },
     {
       "id": 94,
-      "axis": "Ready takeover automatically hands back",
-      "prompt": "Resume lb-push with current P1 takeover exit condition met. Use actual runtime and return remaining independent review to its existing owner; stop after verified receipt/readiness and current ownership/status reconciliation.",
-      "expected_output": "Ready takeover automatically hands back",
+      "axis": "Authorized release resumes Sailor execution",
+      "prompt": "Resume lb-push after Admiral explicitly released P1 takeover for the existing owner and the checkpoint records its reached exit condition. Use actual runtime and return remaining independent review to its existing owner; stop after verified receipt/readiness and current ownership/status reconciliation.",
+      "expected_output": "Authorized release resumes Sailor execution",
       "files": [
         "../../lb-takeover/evals/fixtures/scoped-execution.json"
       ],

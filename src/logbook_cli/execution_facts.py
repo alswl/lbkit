@@ -215,6 +215,22 @@ def validate_fact(fact, prior):
             refuse("transport reconciliation requires a definite observed outcome")
 
 
+def validate_new_fact(fact, prior):
+    """Apply admission rules while keeping historical facts readable."""
+    validate_fact(fact, prior)
+    if fact["kind"] == "takeover" and fact["origin"] == "automatic":
+        refuse("new takeover requires an explicit human instruction")
+    if (
+        fact["kind"] == "delegation-release"
+        and fact["source"]["kind"] == "caller_judgment"
+    ):
+        takeover = referenced(prior, fact["takeover_id"], "takeover")
+        if takeover["release_condition"]["source"]["kind"] != "human_instruction":
+            refuse(
+                "new release requires a human instruction or a human-authorized condition"
+            )
+
+
 def project(facts, execution=None, *, task_id=None, dispatch_id=None):
     takeover = ownership = release = handoff = None
     for fact in facts:

@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime, timezone
 
 from logbook_cli import execution as execution_records
-from logbook_cli import state, task_identity
+from logbook_cli import execution_facts, state, task_identity
 from logbook_cli.document import (
     EXIT_REFUSED,
     LbError,
@@ -46,6 +46,23 @@ def unresolved_operation(execution, task_id, *, across_tasks=False):
     )
 
 
+def takeover_gap(execution, task_id, actor):
+    projected = execution_facts.project(
+        execution.get("facts", ()), execution, task_id=task_id
+    )
+    takeover = projected["takeover"]
+    if takeover is None or takeover["origin"] != "explicit":
+        return "Record the explicit human takeover instruction before Captain starts."
+    if projected["release"] is not None:
+        return "Reconcile the authorized handoff before any further Captain start in its scope."
+    if (
+        actor != execution.get("captain", "captain")
+        or projected["reported_owner"] != actor
+    ):
+        return "Verify the recorded Captain's sole execution ownership before starting."
+    return None
+
+
 def evaluate(doc, run, task_id, actor=None, action="dispatch"):
     identity = run["identity"]
     gaps = []
@@ -73,6 +90,10 @@ def evaluate(doc, run, task_id, actor=None, action="dispatch"):
         decision = "reconcile"
         gap("operation", "Reconcile the existing operation before starting.")
     else:
+        if action == "takeover":
+            reason = takeover_gap(execution, task_id, actor)
+            if reason:
+                gap("takeover", reason)
         try:
             require_preflight_clear(doc)
             scope = route_scope(doc)
@@ -312,7 +333,7 @@ def takeover_transition(
 def record_takeover(
     root, log, task_id, actor, operation_id, token, transition, evidence
 ):
-    from logbook_cli import execution_facts, unified
+    from logbook_cli import unified
     from logbook_cli.lifecycle import get
     from logbook_cli.repository import require_synced
     from logbook_cli.services.common import Result
@@ -346,14 +367,8 @@ def record_takeover(
             },
         )
         if may_start:
-            owner = execution_facts.project(ex["facts"], ex, task_id=task_id)[
-                "reported_owner"
-            ]
-            if owner != actor or get(doc)["value"] != "active":
-                raise LbError(
-                    "takeover requires active Logbook and observed sole ownership",
-                    EXIT_REFUSED,
-                )
+            if get(doc)["value"] != "active":
+                raise LbError("takeover requires active Logbook", EXIT_REFUSED)
             result = evaluate(doc, run, task_id, actor, "takeover")
             if result["decision"] != "ready":
                 raise LbError(

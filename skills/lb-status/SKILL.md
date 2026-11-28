@@ -50,7 +50,9 @@ A single snapshot does not prove stagnation. Report context or quota findings on
 when actually measured; they do not trigger cleanup or automatic session changes.
 
 For confirmed Captain takeover/handoff, show `👨‍✈️ Captain`, its scope and pending
-ownership. An emoji alone proves nothing. Task pause never proves its Sailor stopped.
+ownership. For an older automatic record, report historical ownership and any
+pending reconciliation or handback. Verify current explicit authority before
+describing Captain business execution as authorized. An emoji alone proves nothing. Task pause never proves its Sailor stopped.
 Preserve all human content and mark uncertainty rather than inventing completion.
 
 ## Build an evidence-based briefing

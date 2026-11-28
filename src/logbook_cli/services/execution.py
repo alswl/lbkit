@@ -64,7 +64,7 @@ def record(root, log, input_file, token, dry_run):
                         "fact ID already exists with different content"
                     )
                 continue
-            execution_facts.validate_fact(fact, value["facts"])
+            execution_facts.validate_new_fact(fact, value["facts"])
             if fact["kind"] == "handoff":
                 release = execution_facts.referenced(
                     value["facts"], fact["release_id"], "delegation-release"

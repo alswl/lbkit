@@ -1,7 +1,7 @@
 ---
 name: lb-push
 version: 0.6.1-dev
-description: "Advance or resume a confirmed Logbook through its authorized endpoint. Preserve explicit Captain takeover across subsequent tasks; otherwise dispatch Sailors or select automatic problem-specific takeover. Stop at human gates or concrete blockers. push means project advancement, not Git push; use lb-status for queries."
+description: "Advance or resume a confirmed Logbook through its authorized endpoint. Preserve explicit Captain takeover across subsequent tasks; otherwise coordinate Sailor execution and recovery. Stop at human gates or concrete blockers. push means project advancement, not Git push; use lb-status for queries."
 ---
 
 ## New-run CLI sequence
@@ -59,7 +59,12 @@ an executor returned or the user asked for status.
    its authorized scope and preserve pending handoff ownership. When advancing a
    takeover, check for an applicable release, executable work and an authorized
    available recipient. When all apply, enter [lb-handback](../lb-handback/SKILL.md).
-   A direction to retain control keeps Captain responsible. Ordinary delegation
+   A direction to retain control keeps Captain responsible for coordination.
+   Resolve blockers through the current Sailor, authorized reassignment or a
+   human decision. Apply the [bounded direct-edit exceptions](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff)
+   only within their stated limits. Recover prior automatic takeover records for
+   reconciliation or authorized handback; further takeover execution requires
+   an explicit Admiral instruction. Ordinary delegation
    uses the current Herdr skill and [collaboration reference](references/herdr.md).
    Do not add an executor or independent reviewer merely to complete a small
    authorized task; required independent checks still remain independent.
@@ -152,9 +157,9 @@ change, reuse applicable handoff evidence and recheck current identity,
 authorization and build. An observed first action on the same binding permits
 follow-up under the existing identity, delegation and delivery guards.
 Record delegation-only gaps as `action: dispatch` after checking the build
-identities of the launchers sharing the run. A Captain who is
-authorized to execute directly checks `--action takeover` against their own
-identity and prerequisites before taking the lb-takeover path.
+identities of the launchers sharing the run. After an explicit takeover
+instruction, Captain checks `--action takeover` against their own identity and
+prerequisites before the first business action.
 Keep version checks, transport, receipt and the first business action as separate
 evidence.
 When the runtime shows the action or establishes that it did not occur,

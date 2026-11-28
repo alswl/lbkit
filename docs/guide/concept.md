@@ -233,11 +233,11 @@ flowchart LR
 
 ## Scoped Captain execution
 
-Normal work goes to Sailor. During authorized lb-push, a difficult investigation,
-direction-setting problem or repeated ineffective repair can automatically enter
-[lb-takeover](../../skills/lb-takeover/SKILL.md). Captain verifies safe release of
-conflicting Sailor writes, then personally operates in the isolated business
-worktree. The scoped problem stays with Captain until its exit condition is met.
+Sailor implements the work. Captain may make an explicitly authorized change or
+a bounded local correction under the [coordination contract](../installable/coordination.md#scoped-takeover-and-execution-handoff).
+Only Admiral's explicit instruction activates [lb-takeover](../../skills/lb-takeover/SKILL.md).
+Captain then verifies safe release of conflicting Sailor writes before working
+in the isolated business worktree.
 [lb-handback](../../skills/lb-handback/SKILL.md) recovers the candidate, decisions,
 checks and remaining work, verifies the receiving Sailor's receipt/readiness,
 and returns to ordinary advancement. Existing scope and human gates still apply.

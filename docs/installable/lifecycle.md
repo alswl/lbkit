@@ -44,11 +44,9 @@ The skill flows apply to outcomes such as code, reports, and environments; stage
 
 ## Scoped execution-mode switching
 
-Within authorized advancement, lb-push automatically selects
-[lb-takeover](../../skills/lb-takeover/SKILL.md) when Captain must personally
-resolve a difficult scoped problem. At its exit condition,
-[lb-handback](../../skills/lb-handback/SKILL.md) verifies transfer back to Sailor
-and resumes normal advancement. Follow the [ownership protocol](coordination.md#scoped-takeover-and-execution-handoff);
+An explicit Admiral instruction activates [lb-takeover](../../skills/lb-takeover/SKILL.md).
+On authorized release, [lb-handback](../../skills/lb-handback/SKILL.md) verifies
+receipt, readiness and ownership before normal Sailor execution resumes. Follow the [ownership protocol](coordination.md#scoped-takeover-and-execution-handoff);
 status/update/preflight do not start mode switches. No new lifecycle enum is added.
 
 ## Current lifecycle and close-out operations
