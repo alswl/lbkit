@@ -26,7 +26,11 @@ retaining coordination, route decisions, monitoring, return alignment and human
 communication. Closing one task's status does not release takeover for later tasks.
 
 Read the [takeover contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),
-current Logbook, actual takeover checkpoint/result, spec and host authorization.
+current Logbook, actual takeover checkpoint and result, and host authorization.
+For design-dependent work, use the responsible party’s reported deliverable
+pointer, conclusions, applicable acceptance criteria and boundaries. Carry
+these into the package from the coordination records without opening or editing
+the design body.
 Resolve the coordination root separately from the business worktree and use the correct cwd for each operation. Use [execution rules](../lb-push/references/execution.md) for runtime operations and
 [document adapters](../lb-update/references/document-adapters.md) for guarded writes.
 
@@ -41,7 +45,7 @@ Preserve running work outside the authorized handoff.
    failed operations, uncommitted edits and remaining work. Do not turn handoff
    into a completion claim or silently abandon the unresolved takeover objective.
    An explicit early handoff records the unresolved problem and human direction.
-2. Update existing Thinking or existing host coordination records within authorization. Identify the
+2. Update Thinking or existing host coordination records within authorization. Identify the
    exact repository/worktree/ref/candidate (including dirty changes), inputs,
    decisions, previous failed methods, checks/outcomes/limitations and open duties.
    Preserve task identities, review usage, first outcomes and human/POC gates.

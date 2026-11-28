@@ -12,14 +12,15 @@ The lb-* entries serve the same logbook. Follow the boundaries in the consuming 
 
 ## Stages and Entries
 
-lb-plan coordinates design delivery through tasks, dependencies and acceptance arrangements. Responsible parties use their own host design workflows and report pointers and conclusions. lb-preflight checks applicable readiness evidence and prerequisites. Ordinary lb-push requires applicable reported design readiness, route confirmation and execution authorization. A POC follows the bounded [exception](coordination.md#design-state-and-execution-readiness). Returns and human close-out go through lb-update. lb-status remains available at any stage.
+lb-plan coordinates design delivery through tasks, dependencies and acceptance arrangements. Responsible parties use their own host design workflows and report pointers and conclusions. lb-preflight checks applicable readiness evidence and prerequisites. Ordinary execution and bounded POC execution both require a confirmed applicable route, ready preflight inputs and separate execution authorization. Ordinary execution requires applicable reported design readiness. A bounded POC may run before overall design readiness within its confirmed scope and stopping point. See the [coordination contract](coordination.md#design-state-and-execution-readiness). Returns and human close-out go through lb-update. lb-status remains available at any stage.
 
 The lifecycle is not a chapter template for logbooks. Numbers like `Stage 01` follow the real project's delivery breakdown; do not mechanically write "plan, push, update, status". Reuse valid artifacts, and do not plan from scratch when taking over or recovering from a disconnect.
 
 ## Handoffs and Changes
 
 - Goals, scope, dependencies, ownership, or acceptance criteria change: lb-plan states the impact and authorization, keeping unconfirmed proposals separate from the current path.
-- Applicable design readiness is reported and the route is confirmed (or this is the explicitly authorized POC exception), inputs are ready and this item is authorized: lb-push starts execution. A plan existing, having been shown, or having passed analysis does not by itself authorize the start.
+- lb-push starts ordinary work when its applicable route is confirmed, preflight inputs are ready, design readiness is reported and the work has its own execution authorization.
+- lb-push may start a bounded POC before overall design readiness once its applicable route is confirmed, its preflight inputs are ready and POC execution is separately authorized. Honor the POC scope, dependencies and stopping point.
 - A 🔮 pending-discussion item exists: the affected logbook stops advancing until a human adjudicates the blockers found by lb-preflight; it resumes after the human rewrites or removes the 🔮 in the logbook.
 - The current work package is returned: within the same authorization, lb-push may use lb-update's verification flow; the human need not retype the skill name, and no separate acceptance rule set is created.
 - Evidence is missing or implementation failed: lb-update records the gap on the original item. Inspection or rework already authorized within the original work package can continue via lb-push; new scope requires separate confirmation.

@@ -26,7 +26,7 @@ The Logbook coordinates Overview goals, ordered Stages/tasks, responsibilities a
 - Authorized working directories and machine ownership:
 - Sensitivity classification and model deployment constraints (see `lbkit.yaml`):
 
-Record scoped permissions separately. Product and technical design belong to the responsible parties and their host workflows. lb uses the deliverable pointers and review or confirmation status they report.
+Product and technical design belong to the responsible parties and their host workflows. Record permission to read design references, write design and execute business changes separately in the host scope records. Read access and directory registration do not grant write or execution permission. lb uses the deliverable pointers and review or confirmation status the owners report.
 
 Repositories or directories not listed here must never be accessed; to expand the scope, first state the goal and purpose and obtain explicit human confirmation.
 

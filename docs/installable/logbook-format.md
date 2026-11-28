@@ -34,7 +34,7 @@ The `工作目录：` block in Overview is a two-level list: the first level is 
 
 Directory paths are absolute paths on that machine or home-relative paths starting with `~/`; `~` always refers to the user home of the machine in that group. Paths go down to the approved directory root — no files, globs, repository shorthands, or unresolved variables — and no trailing `/`. Do not mix purpose, status, or permission notes into list items; necessary notes go outside the list. A machine with no directories gets no empty group. This logbook's project directory is in scope by default and need not be repeated as a machine path; if there are no other directories, the whole block reads exactly `工作目录：无额外目录（仅本日志项目目录）`.
 
-Record scoped permissions in existing authorization records outside the directory path list. Existing directory approval need not be repeated.
+Keep the host’s permissions for reading design references, writing design and executing business changes distinct in existing authorization records outside the directory path list. Directory registration and read permission do not grant write or execution permission. Existing directory approval need not be repeated. lb coordinates using owner-reported pointers and status.
 
 Formatting normalization is not authorization expansion: adding directories, removing directories, and changing machine ownership are maintained or confirmed by the user. Only adding backticks to confirmed entries, unifying indentation, or removing a trailing `/` — with machine and actual directory identity unchanged — counts as a formatting fix. For old logbooks not yet migrated, verify machine ownership from the original records; this format alone must not be used to presume that a bare path belongs to `local` or to some remote machine.
 

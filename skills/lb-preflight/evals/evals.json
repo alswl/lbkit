@@ -124,44 +124,44 @@
     },
     {
       "id": 7,
-      "axis": "Preflight informs an unfinished design without executing a POC",
-      "prompt": "Preflight the supplied draft spec and Logbook. Admiral has not chosen between two serialization formats. Read-only route checks and bound Thinking updates are authorized, with a working document adapter and accessible skill/environment definitions. Shared prerequisites can be checked now; compatibility requires a real implementation POC. No implementation or new Logbook marker is authorized.",
-      "expected_output": "Preflight informs an unfinished design without executing a POC",
+      "axis": "Check available prerequisites while design readiness is pending",
+      "prompt": "Preflight the supplied Logbook using the design owner’s readiness report. The report gives a draft deliverable pointer, the affected import tasks, an unresolved serialization decision and a compatibility risk requiring a real POC. Read-only route checks and bound Thinking updates are authorized, with a working document adapter and accessible skill/environment definitions. Shared prerequisites can be checked now; compatibility requires a real implementation POC. No implementation or new Logbook marker is authorized.",
+      "expected_output": "Check available prerequisites while design readiness is pending",
       "files": [],
       "assertions": [
         {
           "name": "useful_checks",
           "type": "contains",
-          "check": "Actually reads the available design, definitions and prerequisites and records useful coverage instead of refusing all preflight because design is unfinished."
+          "check": "Trace reads the owner report, applicable definitions and available prerequisites. The saved record shows the checks actually performed while design readiness remains pending."
         },
         {
           "name": "assumptions",
           "type": "contains",
-          "check": "Thinking identifies the spec content/assumptions examined and the affected undecided tasks; does not treat any green findings as design confirmation."
+          "check": "Thinking cites the reported pointer, source, pending decision, compatibility risk and affected Tasks. Green prerequisite findings do not establish design readiness. Trace shows no design body reads."
         },
         {
           "name": "poc_boundary",
           "type": "contains",
-          "check": "Routes the implementation POC to explicit planning, task reorganization and Admiral discussion; traces contain no POC implementation, business dispatch or unapproved 🔮 write."
+          "check": "Reports a POC route decision and separate execution authorization as pending. Traces contain no host design invocation, POC implementation, business dispatch or unapproved 🔮 write."
         }
       ]
     },
     {
       "id": 8,
-      "axis": "Spec-only changes invalidate affected preflight findings",
-      "prompt": "The Logbook and its version_token are unchanged since the supplied green preflight. Its referenced spec changed from file import to streaming import, altering input and verification assumptions. Preflight again using the available current spec, old spec/preflight record, environment definitions and writable bound Thinking. Do not execute.",
-      "expected_output": "Spec-only changes invalidate affected preflight findings",
+      "axis": "Changed owner-reported scope invalidates affected preflight findings",
+      "prompt": "The Logbook and its version_token are unchanged since the supplied green preflight. The design owner now reports a new deliverable pointer whose scope changes import from file to streaming. The old preflight records the prior owner pointer and scope. The owner reports changed input and verification assumptions and that streaming compatibility has yet to be checked. Recheck using the current owner report, prior preflight, environment definitions and writable bound Thinking. Do not execute.",
+      "expected_output": "Changed owner-reported scope invalidates affected preflight findings",
       "files": [],
       "assertions": [
         {
           "name": "spec_comparison",
           "type": "contains",
-          "check": "Actual reads compare current spec content with the prior preflight basis and identify affected import assumptions despite the unchanged Logbook token."
+          "check": "Trace compares the current owner-reported pointer, risk and scope with the prior recorded preflight basis, identifying affected import input and verification assumptions despite the unchanged Logbook token. It does not open either design body."
         },
         {
           "name": "fresh_coverage",
           "type": "contains",
-          "check": "Records current coverage/gaps for affected tasks, preserves prior observations as history, and does not reuse the old overall green as proof of current readiness."
+          "check": "Records checked and missing streaming readiness for affected Tasks, preserves prior observations as history and reuses applicable unaffected checks. The old overall green does not establish current readiness."
         }
       ]
     },
