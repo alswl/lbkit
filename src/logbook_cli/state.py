@@ -66,17 +66,23 @@ def project_key(
     return path.relative_to(base).as_posix()
 
 
-def project_file(base: Path, key: str, field: str) -> Path:
+def project_relative_path(base: Path, key: str, field: str) -> Path:
+    if not is_filesystem_path(key):
+        raise path_error(field, key, base, "expected a project-relative file key")
     relative = Path(key)
     if (
-        not is_filesystem_path(key)
-        or relative.is_absolute()
+        relative.is_absolute()
         or relative == Path(".")
         or ".." in relative.parts
         or relative.as_posix() != key
     ):
         raise path_error(field, key, base, "expected a project-relative file key")
-    project_key(base / relative, base, field, key)
+    return base / relative
+
+
+def project_file(base: Path, key: str, field: str) -> Path:
+    candidate = project_relative_path(base, key, field)
+    project_key(candidate, base, field, key)
     path = safe_path(base, key, field=field)
     project_key(path, base, field, key)
     return path

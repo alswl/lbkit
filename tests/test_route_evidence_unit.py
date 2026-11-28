@@ -211,7 +211,7 @@ class RouteEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(LbError, "identity.document_paths.*outside the Logbook project"):
                 read_bound_evidence(doc, identity)
 
-    def test_update_validates_new_inputs_and_preserves_historical_keys(self):
+    def test_update_checks_input_key_shape_without_reading_candidate_files(self):
         import hashlib
         from pathlib import Path
         from tempfile import TemporaryDirectory
@@ -243,17 +243,31 @@ class RouteEvidenceTests(unittest.TestCase):
                 patch("logbook_cli.repository.sync_status", return_value="synced"),
                 patch("logbook_cli.repository.edit_document") as edit,
             ):
-                proposed = {**previous, "observations": [
-                    *previous["observations"], {"source": "rechecked", "inputs": {"candidate": digest}},
-                ]}
-                update_evidence(doc, "project/thinking.md", proposed, dry_run=True)
-                self.assertEqual(parse_evidence(edit.call_args.args[1]), proposed)
-                invalid = {**previous, "observations": [
-                    *previous["observations"], {"source": "rechecked", "inputs": {"project/candidate": digest}},
-                ]}
-                with self.assertRaisesRegex(LbError, "observations.inputs.*project/candidate"):
-                    update_evidence(doc, "project/thinking.md", invalid, dry_run=True)
-                edit.assert_called_once()
+                observation = {
+                    "source": "preflight",
+                    "object": "inputs/build.txt",
+                    "clear_when": "restore the input file",
+                    "inputs": {"inputs/build.txt": digest, "candidate": "0" * 64},
+                }
+                for dry_run in (True, False):
+                    for status in ("blocked", "unverified", "not_applicable", "ready"):
+                        with self.subTest(dry_run=dry_run, status=status):
+                            proposed = {**previous, "observations": [
+                                *previous["observations"], {**observation, "status": status},
+                            ]}
+                            update_evidence(doc, "project/thinking.md", proposed, dry_run=dry_run)
+                            self.assertEqual(parse_evidence(edit.call_args.args[1]), proposed)
+                            self.assertIs(edit.call_args.args[2], dry_run)
+                edit.reset_mock()
+                for key in ("../candidate", str(project / "candidate"), "./candidate"):
+                    with self.subTest(key=key), self.assertRaises(LbError) as error:
+                        invalid = {**previous, "observations": [
+                            *previous["observations"], {**observation, "inputs": {key: digest}},
+                        ]}
+                        update_evidence(doc, "project/thinking.md", invalid, dry_run=True)
+                    for part in ("observations.inputs", key, str(project), "project-relative"):
+                        self.assertIn(part, str(error.exception))
+                edit.assert_not_called()
 
     def test_observation_action_is_optional_and_only_applies_to_task_observations(self):
         value = {

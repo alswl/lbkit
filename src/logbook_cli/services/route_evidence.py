@@ -198,7 +198,6 @@ def current_records(records, task_id, route_ref, scope_ref):
 
 def update_evidence(doc, thinking, proposed, dry_run=False):
     from logbook_cli.repository import edit_document, markdown_document, sync_status
-    from logbook_cli.services.readiness import inputs_current
 
     _, run = unified.locate(doc.root, doc.path, required=True)
     path = bound_thinking(doc, run["identity"], thinking)
@@ -208,9 +207,17 @@ def update_evidence(doc, thinking, proposed, dry_run=False):
     previous = parse_evidence(target.text)
     value = merge_evidence(previous, proposed, run["identity"]["run_id"])
     first_new = len(previous["observations"]) if previous is not None else 0
+    base = state.project(doc.path, doc.root)
+    field = "observations.inputs"
     for row in value["observations"][first_new:]:
-        if not inputs_current(doc, row.get("inputs", {})):
-            raise LbError("observations.inputs must match verified SHA-256 digests", EXIT_REFUSED)
+        inputs = row.get("inputs", {})
+        if not isinstance(inputs, dict):
+            raise LbError(
+                f"{field} (root {base}): expected a map of project-relative file keys",
+                EXIT_REFUSED,
+            )
+        for name in inputs:
+            state.project_relative_path(base, name, field)
     changed = replace_evidence(target.text, value)
     return edit_document(target, changed, dry_run)
 

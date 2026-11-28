@@ -948,10 +948,12 @@ clients read action-specific observations as common evidence.
 Readiness evidence can include stable `id` and an explicit `supersedes` for a
 same-scope record. Observations can supply an `inputs` map from project-relative
 file keys (for example, `inputs/candidate.json`) to SHA-256 digests. Use keys
-without absolute prefixes or parent traversal. The CLI checks new declarations
-and rereads applicable inputs for readiness, dispatch and takeover. An input
-that is missing, has changed, escapes through a symlink or belongs to a nested
-project cannot support readiness. Always resolve the saved key from the
+without absolute prefixes or parent traversal. `record-readiness` validates
+the map and key form of new observations and can save findings about missing
+files. Readiness, dispatch and takeover check files and digests for applicable
+ready observations. A missing file, a digest mismatch, an escaping symlink or
+a nested-project file blocks that evidence and identifies the input and its
+project root. Always resolve the saved key from the
 Logbook project root. Preserve historical observations and collect fresh
 evidence for in-flight observations recorded under the old invocation-root
 interpretation. For an environment-specific observation, `machine` pins it to

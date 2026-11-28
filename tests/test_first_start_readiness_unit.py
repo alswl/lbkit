@@ -343,7 +343,8 @@ class FirstStartReadinessTests(unittest.TestCase):
             (root / "later-input").write_text("changed")
             self.assertTrue(inputs_current(doc, evidence))
             path.write_bytes(b"B")
-            self.assertFalse(inputs_current(doc, evidence))
+            with self.assertRaisesRegex(LbError, "observations.inputs.*candidate.*SHA-256"):
+                inputs_current(doc, evidence)
 
     def test_input_keys_use_the_logbooks_project_and_reject_foreign_files(self):
         import hashlib
@@ -385,6 +386,58 @@ class FirstStartReadinessTests(unittest.TestCase):
             doc = parse_text(b"# Work\n", log, host)
             with self.assertRaisesRegex(LbError, "observations.inputs.*candidate.*does not exist"):
                 inputs_current(doc, {"candidate": digest})
+
+    def test_first_start_blocks_unresolved_findings_and_checks_ready_inputs(self):
+        import hashlib
+        from tempfile import TemporaryDirectory
+
+        from logbook_cli import task_identity
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "mind.yaml").touch()
+            doc = parse_text(b"# Work\n\n## Stage 01\n\n- [ ] Build\n", root / "log.md", root)
+            task = doc.stages[0].tasks[0]
+            basis = {"source": "fixture", "route_ref": "route", "task_id": "A"}
+            candidate = root / "build.txt"
+            candidate.write_bytes(b"snapshot")
+            digest = hashlib.sha256(b"snapshot").hexdigest()
+            for action in ("dispatch", "takeover"):
+                evidence = {
+                    "confirmations": [{**basis, "status": "confirmed"}],
+                    "grants": [{**basis, "actor": "worker", "action": action, "status": "granted"}],
+                }
+                for status, name, expected, reason in (
+                    ("blocked", "build.txt", digest, "restore the input file"),
+                    ("ready", "missing.txt", digest, "does not exist"),
+                    ("ready", "build.txt", "0" * 64, "SHA-256 digest does not match"),
+                    ("ready", "build.txt", digest, None),
+                ):
+                    with self.subTest(action=action, status=status, name=name, expected=expected):
+                        evidence["observations"] = [{
+                            **basis,
+                            "status": status,
+                            "object": name,
+                            "clear_when": "restore the input file",
+                            "criteria_digest": task_identity.criteria(task),
+                            "skills": [],
+                            "inputs": {name: expected},
+                        }]
+                        gaps = []
+                        _evaluate_evidence(
+                            evidence, "route", "A", "worker", action,
+                            lambda kind, message, *_: gaps.append((kind, message)),
+                            task=task, doc=doc,
+                        )
+                        if reason is None:
+                            self.assertEqual(gaps, [])
+                        else:
+                            self.assertEqual(len(gaps), 1)
+                            self.assertEqual(gaps[0][0], "preflight")
+                            self.assertIn(reason, gaps[0][1])
+                            if status == "ready":
+                                for part in ("observations.inputs", name, str(root)):
+                                    self.assertIn(part, gaps[0][1])
 
     def test_explicit_preflight_payload_is_relative_to_the_invocation_root(self):
         from tempfile import TemporaryDirectory

@@ -180,6 +180,7 @@ and cite the actual source of each observation. Pass `LOG`, `--thinking` and
 it. Use the Thinking document bound to that run. For file evidence, use keys
 relative to the Logbook's project root in `observations.inputs` and record the
 verified SHA-256 digests. Recollect affected in-flight observations recorded
-under the old invocation-root interpretation. Mark unverified external
+under the old invocation-root interpretation. Record missing input files as
+blocked findings with the condition that will clear them. Mark unverified external
 conditions as unverified. After applying, synchronize Thinking explicitly and read back the
 current outcome. See [the CLI contract](../../docs/installable/lb-cli.md#route-confirmation-and-task-readiness).
