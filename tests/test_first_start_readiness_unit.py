@@ -75,6 +75,23 @@ class FirstStartReadinessTests(unittest.TestCase):
         authorized = {**legacy, "release_condition": {**condition, "source": human}}
         validate_new_fact(release, [authorized, result])
 
+    def test_unbound_run_uses_only_the_settled_observed_owner(self):
+        instruction = {"kind": "takeover", "origin": "explicit"}
+        ownership = {
+            "kind": "ownership",
+            "source": {"kind": "runtime_observation"},
+            "owner": "coordinator",
+            "conflicts": False,
+            "settled": True,
+        }
+        unbound = {"facts": [instruction, ownership]}
+        self.assertIsNone(takeover_gap(unbound, "A", "coordinator"))
+        self.assertIsNotNone(takeover_gap(unbound, "A", "captain"))
+        self.assertIsNotNone(
+            takeover_gap({**unbound, "captain": "captain"}, "A", "coordinator")
+        )
+        self.assertIsNotNone(takeover_gap({"facts": [instruction]}, "A", "unknown"))
+
     def test_readiness_uses_cutover_graph_and_invalidates_old_task_scope(self):
         from logbook_cli.repository import markdown_document
         from logbook_cli.services.route_scope import route_scope

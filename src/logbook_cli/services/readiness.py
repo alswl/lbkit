@@ -55,9 +55,11 @@ def takeover_gap(execution, task_id, actor):
         return "Record the explicit human takeover instruction before Captain starts."
     if projected["release"] is not None:
         return "Reconcile the authorized handoff before any further Captain start in its scope."
+    owner = projected["reported_owner"]
     if (
-        actor != execution.get("captain", "captain")
-        or projected["reported_owner"] != actor
+        owner == "unknown"
+        or owner != actor
+        or ("captain" in execution and execution["captain"] != actor)
     ):
         return "Verify the recorded Captain's sole execution ownership before starting."
     return None

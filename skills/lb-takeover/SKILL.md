@@ -31,8 +31,9 @@ a separate fact established in step 2.
    design authority. Experiments still need the bounded POC gate.
 2. With the lb CLI, read execution context and record the already-given takeover
    instruction as an [execution record](../../docs/installable/lb-cli.md#execution-state-in-project-json),
-   using the actual Captain subject as the recorded Captain identity and adding
-   a current ownership observation in the same batch when one exists. No
+   binding the actual Captain subject on a fresh Run and adding a current
+   ownership observation in the same batch when one exists. For an existing
+   Run, preserve its bound identity and recover the current ownership evidence. No
    extra confirmation or session metadata is needed. If this Captain already owns
    the scope, resume idempotently from the existing checkpoint, candidate, worktree
    and counters, after checking for actual conflicting operations. If no Sailor owns

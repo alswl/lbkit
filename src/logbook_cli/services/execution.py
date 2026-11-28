@@ -43,7 +43,12 @@ def record(root, log, input_file, token, dry_run):
             )
         else:
             value = copy.deepcopy(old)
-            for key in ("name", "advancement", "captain"):
+            identity_fields = (
+                ("name", "advancement")
+                if doc.markdown_authority
+                else ("name", "advancement", "captain")
+            )
+            for key in identity_fields:
                 if key in payload and payload[key] != old[key]:
                     execution_facts.refuse(
                         "execution identity differs; do not replace existing advancement"
@@ -140,4 +145,11 @@ def record(root, log, input_file, token, dry_run):
                     provenance="caller_reported_runtime_observation",
                 )
             value["facts"].append(fact)
-        return Result(execution.write(doc, value["name"], value, token, dry_run))
+        bind_captain = doc.markdown_authority and "captain" in payload
+        if bind_captain:
+            value["captain"] = payload["captain"]
+        return Result(
+            execution.write(
+                doc, value["name"], value, token, dry_run, bind_captain=bind_captain
+            )
+        )

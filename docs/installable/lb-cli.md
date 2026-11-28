@@ -537,6 +537,12 @@ of empty bytes; `log context` also reports it under `execution`. Replaying an
 identical fact ID changes nothing; different content under an existing ID is
 refused.
 
+In a newly initialized Run, `log execution record` can bind `captain` to the
+actual Captain subject before execution facts or operations have been saved.
+It can save this identity and the initial facts in one token-guarded write.
+An established identity is immutable. A Run without an explicit identity uses
+the settled runtime owner for takeover admission.
+
 ```json
 {
   "thinking": "projects/example/thinking/delivery.md",
@@ -983,8 +989,9 @@ superseded in the same authorization scope.
 Captain first start uses `lb log takeover-start LOG --task-id ID --actor ACTOR
 --operation-id OP --expect-execution-version TOKEN --transition reserve --json`.
 Readiness for `--action takeover` and new reservations require the current
-explicit takeover fact, the recorded Captain as actor and a settled, conflict-free
-runtime ownership observation. An applicable release prevents a new Captain start
+explicit takeover fact and a settled, conflict-free runtime ownership observation
+matching the actor. If the Run has a bound Captain subject, the actor must also
+match it. An applicable release prevents a new Captain start
 in its scope. A reservation also requires an active Logbook and applicable route,
 preflight and action authorization. These checks use recorded evidence and cannot
 verify the real human instruction, repository permissions or filesystem ownership.
