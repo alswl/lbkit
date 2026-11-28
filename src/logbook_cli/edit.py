@@ -36,6 +36,7 @@ ADVISORY_ISSUES = {
     "SKIPPED_EXPLICIT",
     "LINK_UNVERIFIED",
     "LOCAL_LINK_UNVERIFIED",
+    "LOCAL_LINK_CONTENT_UNCHECKED",
     "STAGE_PLACEHOLDER",
 }
 
@@ -51,10 +52,12 @@ def introduced_issues(doc: Document, changed: str) -> list[dict]:
         return item["code"], message
 
     before = Counter(
-        identity(item) for item in check(doc) if item["code"] not in ADVISORY_ISSUES
+        identity(item)
+        for item in check(doc, no_link_content=True)
+        if item["code"] not in ADVISORY_ISSUES
     )
     introduced = []
-    for item in check(candidate):
+    for item in check(candidate, no_link_content=True):
         if item["code"] in ADVISORY_ISSUES:
             continue
         key = identity(item)

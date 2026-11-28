@@ -338,6 +338,7 @@ or write-protection refusal.
 | `stage_placeholder` | `notice` | `STAGE_PLACEHOLDER` for a [declared empty delivery Stage](logbook-format.md#status-and-links) |
 
 Checks run offline. Local link checks cover path existence within the root.
+Internal structural checks and edit previews skip link content and treat unchecked content as advisory.
 By default, an otherwise applicable local link observation with a stored digest
 also rechecks the target bytes. For structure-only reads use
 `log context LOG --no-link-content --json` and

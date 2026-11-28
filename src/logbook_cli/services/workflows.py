@@ -226,7 +226,9 @@ def instantiate(root, name, inputs_file, token, output, dry_run):
             EXIT_REFUSED,
         )
     candidate = parse_text(content.encode(), destination, base)
-    issues = [i for i in check(candidate) if i["code"] not in ADVISORY_ISSUES]
+    issues = [
+        i for i in check(candidate, no_link_content=True) if i["code"] not in ADVISORY_ISSUES
+    ]
     if issues:
         raise LbError(
             "invalid instance candidate: "
