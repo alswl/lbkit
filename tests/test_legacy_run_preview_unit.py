@@ -383,7 +383,7 @@ class LegacyRunPreviewTest(TestCase):
         obs_path.unlink()
         self.write("other/mind.yaml", "{}")
         self.write("other/docs/delivery.md", "# Another sample\n")
-        with self.assertRaisesRegex(LbError, "same project"):
+        with self.assertRaisesRegex(LbError, "--document.*outside the Logbook project"):
             self.preview("other/docs/delivery.md")
 
     def test_other_unified_run_cannot_share_the_proposed_identity(self):

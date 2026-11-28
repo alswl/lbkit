@@ -8,7 +8,7 @@ from logbook_cli.services.common import load
 
 
 def _input(doc, input_file):
-    with safe_path(doc.root, input_file).open("rb") as handle:
+    with safe_path(doc.root, input_file, field="--input-file").open("rb") as handle:
         raw = handle.read(1024 * 1024 + 1)
     try:
         if len(raw) > 1024 * 1024:

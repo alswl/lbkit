@@ -209,11 +209,22 @@ bin/lb skill history --since 2026-10-01   # skills actually invoked in Claude Co
 bin/lb skill extract --json   # 「技能：」 sub-lines not covered by any entry (skill chain or companion skill), listed verbatim with the todo's original text, completion status, and the work package pointing back to it
 ```
 
-`--root` defaults to the current directory and can confine every path to a synthetic repository or worktree:
+`--root` defaults to the current directory. Resolve explicit `LOG`,
+`--document`, `--thinking` and `--input-file` paths relative to that root.
+Absolute arguments must resolve inside it. A companion document must belong
+to the Logbook's project and, when used for an existing run, be bound to
+that run. The project root is the closest ancestor of the Logbook with
+`mind.yaml` within the invocation root, with the invocation root as the
+fallback. Saved document keys are relative to that project root.
 
 ```sh
-bin/lb --root /tmp/fixture log context projects/demo/docs/log.md --json
+bin/lb --root . log context projects/demo/docs/log.md --json
+bin/lb --root projects/demo log context docs/log.md --json
 ```
+
+With `projects/demo/mind.yaml`, both calls select the same Logbook and run.
+Markdown links remain relative to the document. A runtime binding's
+`working_directory` remains an absolute path on the bound machine.
 
 `log check`'s `DUPLICATE_TASK_TEXT` flags unclosed same-text tasks within one Stage (historical duplicates that are all checked no longer warn) — a preview that later write commands targeting the task's original text will be rejected as ambiguous. `local_target` runs expanduser ownership judgment on links starting with `~`; those outside the root still count as LOCAL_LINK_UNVERIFIED.
 
@@ -881,8 +892,11 @@ Keep the same operation ID when inspecting an uncertain result.
 containing `operation_id`. The current reply adapter checks the owned local
 Codex session journal against the live binding or approved environment. It accepts a
 completed assistant message for the exact preparation prompt and returns the
-Sailor's checked condition alongside the result. The cache expires after 30
-minutes. A known submitted check with no usable reply can be sent with a new
+Sailor's checked condition alongside the result. The temporary cache is keyed
+by the normalized Logbook project root and run ID. Results expire after 30
+minutes. If a still-current reply was previously cached under the invocation
+root, collect it again using its existing operation ID. A known submitted
+check with no usable reply can be sent with a new
 operation ID 30 minutes after the original intent. An unknown delivery still
 requires reconciliation.
 An unsupported host leaves the check unverified. The send journal and temporary
@@ -932,9 +946,15 @@ Before writing action-specific observations in a shared run, compare
 clients read action-specific observations as common evidence.
 
 Readiness evidence can include stable `id` and an explicit `supersedes` for a
-same-scope record. Observations can supply an `inputs` map from repository
-relative file paths to SHA-256 digests. The query and dispatch check reread
-those files. For an environment-specific observation, `machine` pins it to
+same-scope record. Observations can supply an `inputs` map from project-relative
+file keys (for example, `inputs/candidate.json`) to SHA-256 digests. Use keys
+without absolute prefixes or parent traversal. The CLI checks new declarations
+and rereads applicable inputs for readiness, dispatch and takeover. An input
+that is missing, has changed, escapes through a symlink or belongs to a nested
+project cannot support readiness. Always resolve the saved key from the
+Logbook project root. Preserve historical observations and collect fresh
+evidence for in-flight observations recorded under the old invocation-root
+interpretation. For an environment-specific observation, `machine` pins it to
 the dispatch binding's machine or to `local` for Captain execution.
 `expires_at` accepts a timestamp with timezone, after which the observation
 requires rechecking. A revoked authorization remains effective until explicitly

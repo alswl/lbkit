@@ -3,7 +3,14 @@
 import json
 import re
 
-from logbook_cli.document import EXIT_REFUSED, LbError, visible_lines
+from logbook_cli import state, unified
+from logbook_cli.document import (
+    EXIT_REFUSED,
+    LbError,
+    path_error,
+    safe_path,
+    visible_lines,
+)
 from logbook_cli.state import unique_object
 
 HEADING = "## 路线确认与预检"
@@ -137,28 +144,36 @@ def merge_evidence(previous, proposed, run_id):
 
 
 def bound_thinking(doc, identity, thinking):
-    from logbook_cli.document import safe_path
-
-    path = safe_path(doc.root, thinking)
-    if (
-        path == doc.path
-        or path.relative_to(doc.root).as_posix() not in identity["document_paths"]
-    ):
-        raise LbError("Thinking must be a companion bound to this run", EXIT_REFUSED)
+    path = safe_path(doc.root, thinking, field="--thinking")
+    unified.companion_key(doc.root, doc.path, path, identity, thinking)
     return path
 
 
 def read_bound_evidence(doc, identity):
+    base = state.project(doc.path, doc.root)
+    if doc.path.relative_to(base).as_posix() != identity["log_path"]:
+        raise LbError("route evidence requires the run's Logbook", EXIT_REFUSED)
     evidence = []
-    for name in identity.get("document_paths", ()):
-        if name != identity.get("log_path"):
-            path = bound_thinking(doc, identity, name)
-            value = parse_evidence(path.read_bytes().decode())
-            if value is not None:
-                evidence.append(value)
+    field = "identity.document_paths"
+    for name in identity["document_paths"]:
+        if name == identity["log_path"]:
+            continue
+        path = state.project_file(base, name, field)
+        if path != base / name:
+            raise path_error(field, name, base, "bound document path changed")
+        value = parse_evidence(_read_thinking(base, path, field, name).decode())
+        if value is not None:
+            evidence.append(value)
     if len(evidence) == 1 and evidence[0]["run_ref"] == identity["run_id"]:
         return evidence[0]
     return None
+
+
+def _read_thinking(base, path, field, original):
+    try:
+        return state.read_regular(base, path)
+    except OSError as exc:
+        raise path_error(field, original, base, f"cannot read bound document: {exc}") from exc
 
 
 def current_records(records, task_id, route_ref, scope_ref):
@@ -182,16 +197,20 @@ def current_records(records, task_id, route_ref, scope_ref):
 
 
 def update_evidence(doc, thinking, proposed, dry_run=False):
-    from logbook_cli import unified
     from logbook_cli.repository import edit_document, markdown_document, sync_status
+    from logbook_cli.services.readiness import inputs_current
 
     _, run = unified.locate(doc.root, doc.path, required=True)
     path = bound_thinking(doc, run["identity"], thinking)
-    target = markdown_document(path.read_bytes(), path, doc.root)
+    data = _read_thinking(doc.root, path, "--thinking", thinking)
+    target = markdown_document(data, path, doc.root)
     target.sync_status = sync_status(target, run)
-    value = merge_evidence(
-        parse_evidence(target.text), proposed, run["identity"]["run_id"]
-    )
+    previous = parse_evidence(target.text)
+    value = merge_evidence(previous, proposed, run["identity"]["run_id"])
+    first_new = len(previous["observations"]) if previous is not None else 0
+    for row in value["observations"][first_new:]:
+        if not inputs_current(doc, row.get("inputs", {})):
+            raise LbError("observations.inputs must match verified SHA-256 digests", EXIT_REFUSED)
     changed = replace_evidence(target.text, value)
     return edit_document(target, changed, dry_run)
 

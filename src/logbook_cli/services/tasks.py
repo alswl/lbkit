@@ -33,7 +33,7 @@ def list_tasks(
     human: bool,
 ) -> Result:
     base = root_path(root)
-    paths = [safe_path(base, log)] if log else discover(base, projects_dir)
+    paths = [safe_path(base, log, field="LOG")] if log else discover(base, projects_dir)
     states = {s.value: glyph for glyph, s in CHECKBOX.items()}
     return Result(
         [
@@ -285,7 +285,7 @@ def replace_bound(root, log, input_file, decision, token, dry_run):
     doc = writable(root, log, token)
     records.single_line(decision, "decision")
     try:
-        request = json.loads(safe_path(doc.root, input_file).read_text())
+        request = json.loads(safe_path(doc.root, input_file, field="--input-file").read_text())
         if set(request) != {"task_id", "replacements", "reference_changes"}:
             raise ValueError(
                 "replacement requires task_id, replacements, reference_changes"

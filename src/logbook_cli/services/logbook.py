@@ -45,7 +45,7 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
         raise LbError("check accepts either LOG or --all, not both", EXIT_USAGE)
     assert all or log is not None
     base = root_path(root)
-    paths = discover(base, projects_dir) if all else [safe_path(base, log or "")]
+    paths = discover(base, projects_dir) if all else [safe_path(base, log or "", field="LOG")]
     from logbook_cli.document import issue
     from logbook_cli.records import document_id
 
@@ -142,7 +142,7 @@ def record_readiness(root, log, thinking, input_file, dry_run):
     doc = load(root, log)
     try:
         payload = json.loads(
-            safe_path(doc.root, input_file).read_bytes(),
+            safe_path(doc.root, input_file, field="--input-file").read_bytes(),
             object_pairs_hook=state.unique_object,
         )
     except (OSError, ValueError) as exc:

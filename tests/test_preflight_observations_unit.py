@@ -2,11 +2,13 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import patch
 
 from logbook_cli.document import LbError
 from logbook_cli.services.preflight_observations import Cache, Observation
+from logbook_cli.services.self_check import _cache
 
 
 class PreflightCacheTests(TestCase):
@@ -83,6 +85,24 @@ class PreflightCacheTests(TestCase):
         )
         self.assertEqual(self.lookup(reviewer, now=later), newer)
         self.assertEqual(self.lookup(), self.row)
+
+    def test_self_check_cache_is_shared_by_project_root_and_host_root(self):
+        project = self.workspace / "project"
+        project.mkdir(parents=True)
+        (project / "mind.yaml").touch()
+        log = project / "log.md"
+        run = {"identity": {"run_id": self.run_id}}
+        host_doc = SimpleNamespace(root=self.workspace.resolve(), path=log.resolve())
+        project_doc = SimpleNamespace(root=project.resolve(), path=log.resolve())
+        self.assertTrue(_cache(host_doc, run).record(self.row, now=self.now))
+        self.assertEqual(self.lookup(cache=_cache(project_doc, run)), self.row)
+        self.assertIsNone(self.lookup())
+        self.assertIsNone(
+            self.lookup(cache=_cache(project_doc, {"identity": {"run_id": "b" * 32}}))
+        )
+        self.assertIsNone(
+            self.lookup(cache=_cache(project_doc, run), now=self.now + timedelta(minutes=5))
+        )
 
     def test_missing_or_corrupt_cache_can_be_repopulated(self):
         self.assertIsNone(self.lookup())

@@ -6,8 +6,8 @@ from pathlib import Path
 
 from logbook_cli.document import (
     Document,
-    LbError,
     parse,
+    path_error,
     require_preflight_clear,
     require_token,
     root_path,
@@ -29,7 +29,7 @@ def load(root: str, log: str, *, load_dependencies: bool = True) -> Document:
     from logbook_cli import unified
     from logbook_cli.repository import read_document
 
-    path = safe_path(base, log)
+    path = safe_path(base, log, field="LOG")
     _, value = unified.locate(base, path)
     return (
         read_document(base, path, load_dependencies=load_dependencies)
@@ -45,9 +45,14 @@ def recover(root: str, log: str, expected: str | None, dry_run: bool) -> Result:
 
     base = root_path(root)
     path = base / Path(log)
-    if path.is_symlink() or not path.resolve().is_relative_to(base):
-        raise LbError("recovery path must be inside root and not a symlink")
-    path = path.resolve()
+    try:
+        resolved = path.resolve()
+        symlink = path.is_symlink()
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise path_error("LOG", log, base, f"path cannot be resolved: {exc}") from exc
+    if symlink or not resolved.is_relative_to(base):
+        raise path_error("LOG", log, base, "recovery requires a non-symlink path inside the root")
+    path = resolved
     run, _ = unified.locate(base, path, recovering_dependencies=True)
     if run is not None and dependency_transaction.present(run):
         return Result(dependency_transaction.recover(base, path, expected, dry_run))

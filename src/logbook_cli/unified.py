@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from logbook_cli import state
-from logbook_cli.document import EXIT_REFUSED, LbError
+from logbook_cli.document import EXIT_REFUSED, LbError, path_error
 from logbook_cli.run_metrics import event_rows
 
 FORMAT = "task-document-projection"
@@ -261,7 +261,7 @@ def runs(root, directory, *, undecodable_markdown=None):
 
 def locate(root, log, *, required=False, recovering_dependencies=False):
     directory = state.directory(log, root)
-    relative = state.section(log, root)
+    relative = log.relative_to(directory.parent).as_posix()
     undecodable_markdown = []
     matches = [
         (path, value)
@@ -300,6 +300,21 @@ def locate(root, log, *, required=False, recovering_dependencies=False):
     if required:
         raise LbError("initialization_required: run log init-state", EXIT_REFUSED)
     return None, None
+
+
+def companion_key(root, log, path, identity, original):
+    base = state.project(log, root)
+    key = state.project_key(path, base, "--thinking", original, root=root, code=EXIT_REFUSED)
+    if (
+        log.relative_to(base).as_posix() != identity["log_path"]
+        or key == identity["log_path"]
+        or key not in identity["document_paths"]
+    ):
+        raise path_error(
+            "--thinking", original, root, "expected a companion bound to this Logbook run",
+            code=EXIT_REFUSED,
+        )
+    return key
 
 
 @contextmanager
@@ -391,13 +406,14 @@ def initialize(root, log, name, documents, dry_run=False):
 
     validate_name(name)
     base = state.project(log, root)
-    paths = sorted(
-        {
-            state.section(log, root),
-            *[str(safe_path(root, p).relative_to(base)) for p in documents],
-        }
-    )
-    selected = [safe_path(base, relative) for relative in paths]
+    log_key = log.relative_to(base).as_posix()
+    by_key = {log_key: log}
+    for original in documents:
+        path = safe_path(root, original, field="--document")
+        key = state.project_key(path, base, "--document", original, root=root)
+        by_key[key] = path
+    paths = sorted(by_key)
+    selected = [by_key[key] for key in paths]
     with initialization_writer(root, log, selected, dry_run) as directory:
         target = directory / (name + ".json")
         found, _ = locate(root, log)
@@ -412,21 +428,21 @@ def initialize(root, log, name, documents, dry_run=False):
             prior = read(target, root)
             if prior["identity"]["document_paths"] != paths or prior["identity"][
                 "log_path"
-            ] != state.section(log, root):
+            ] != log_key:
                 raise LbError("run identity conflict", EXIT_REFUSED)
             return {
                 "changed": False,
                 "path": str(target.relative_to(root)),
                 "dry_run": dry_run,
             }
-        for relative in paths:
-            found, _ = locate(root, base / relative)
+        for document in selected:
+            found, _ = locate(root, document)
             if found:
                 raise LbError(
                     "document already associated with another run", EXIT_REFUSED
                 )
-            if base / relative != log and execution.find_legacy(
-                root, base / relative, include_thinking=True
+            if document != log and execution.find_legacy(
+                root, document, include_thinking=True
             )[0] is not None:
                 raise LbError(
                     "associated document is bound to an old execution layout",
@@ -436,7 +452,7 @@ def initialize(root, log, name, documents, dry_run=False):
             "format": FORMAT,
             "identity": {
                 "run_id": uuid.uuid4().hex,
-                "log_path": state.section(log, root),
+                "log_path": log_key,
                 "document_paths": paths,
             },
             "documents": {},

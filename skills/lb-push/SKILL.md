@@ -43,8 +43,11 @@ an executor returned or the user asked for status.
    Select the next authorized work. Unknown, paused and blocked tasks remain
    visible, with their actual exit conditions. A cancelled dependency is not done.
 2. Compose lb-plan/lb-preflight when the next step lacks a saved route or relevant
-   preparation. Inspect concrete changed prerequisites; avoid repeated unchanged
-   plan/preflight cycles or unrelated environment sweeps. A real material choice,
+   preparation. Resolve CLI path arguments from the effective `--root`. Check
+   saved `observations.inputs` from the Logbook project root and use lb-preflight
+   to recollect affected in-flight observations recorded under the old
+   invocation-root interpretation. Inspect concrete changed prerequisites and
+   avoid repeated unchanged plan/preflight cycles or unrelated environment sweeps. A real material choice,
    human gate or unavailable dependency is a specific stopping reason.
 3. Execute within the established mode. Honor an explicit Captain takeover across
    its authorized scope and preserve pending handoff ownership. When advancing a

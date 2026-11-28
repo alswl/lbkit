@@ -6,7 +6,7 @@ import os
 import re
 
 from logbook_cli import execution, observation, state, unified
-from logbook_cli.document import EXIT_REFUSED, LbError, root_path
+from logbook_cli.document import EXIT_REFUSED, LbError, path_error, root_path
 from logbook_cli.services.common import Result
 
 PREVIEW_ONLY = "Migration apply is unavailable. This preview cannot be executed."
@@ -14,16 +14,16 @@ SIDECAR_SUFFIXES = tuple(suffix + ".json" for suffix in state.MARKDOWN_SUFFIXES)
 MISPLACED_SIDECAR = "legacy document section is in the wrong sidecar"
 
 
-def document(root, raw):
+def document(root, raw, field="LOG"):
     path = root / raw
     if not path.is_relative_to(root) or ".." in path.parts:
-        raise LbError("migration document must stay inside --root", EXIT_REFUSED)
+        raise path_error(field, raw, root, "expected a path inside the root", code=EXIT_REFUSED)
     try:
         with state.open_regular(root, path):
             pass
-    except OSError as exc:
-        raise LbError(
-            f"missing or unsafe migration document: {raw}", EXIT_REFUSED
+    except (OSError, ValueError) as exc:
+        raise path_error(
+            field, raw, root, f"missing or unsafe migration document: {exc}", code=EXIT_REFUSED
         ) from exc
     return path
 
@@ -392,7 +392,11 @@ def preview(root, log, name, documents, *, writers_locked=False):
     directory = state.directory(log_path, base)
     target = directory / (name + ".json")
     old_path, _, old = execution.find_legacy(base, log_path)
-    paths = {log_path, *(document(base, path) for path in documents)}
+    paths = {log_path}
+    for original in documents:
+        path = document(base, original, "--document")
+        state.project_key(path, project, "--document", original, root=base, code=EXIT_REFUSED)
+        paths.add(path)
     if old is not None:
         paths.add(project / old["thinking"])
     for path in sorted(paths):

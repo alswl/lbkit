@@ -45,6 +45,65 @@ class UnifiedTests(unittest.TestCase):
         unified.initialize(self.root, self.log, "work", [], True)
         self.assertFalse((self.root / "lb").exists())
 
+    def test_project_keys_are_the_same_from_host_and_project_roots(self):
+        project = self.root / "project"
+        project.mkdir()
+        (project / "mind.yaml").touch()
+        log = self.log.rename(project / "work.md")
+        companion = project / "thinking.md"
+        companion.touch()
+        host = unified.initialize(
+            self.root, log, "work", ["project/thinking.md"], dry_run=True
+        )
+        local = unified.initialize(
+            project, log, "work", ["thinking.md"], dry_run=True
+        )
+        self.assertEqual(host["state"]["identity"]["document_paths"], ["thinking.md", "work.md"])
+        self.assertEqual(
+            host["state"]["identity"]["document_paths"],
+            local["state"]["identity"]["document_paths"],
+        )
+
+    def test_locate_existing_project_keys_from_either_root(self):
+        project = self.root / "project"
+        (project / "lb").mkdir(parents=True)
+        (project / "mind.yaml").touch()
+        log = self.log.rename(project / "work.md")
+        companion = project / "thinking.md"
+        companion.touch()
+        run = {
+            "format": unified.FORMAT,
+            "identity": {
+                "run_id": "a" * 32, "log_path": "work.md",
+                "document_paths": ["thinking.md", "work.md"],
+            },
+            "documents": {},
+            "execution": {"operations": {}, "tasks": {}, "facts": []},
+            "monitoring": None,
+        }
+        target = project / "lb/work.json"
+        target.write_bytes(unified.encode(run))
+        for root in (self.root, project):
+            for document in (log, companion):
+                with self.subTest(root=root, document=document):
+                    self.assertEqual(unified.locate(root, document), (target, run))
+
+    def test_initialize_refuses_companions_in_another_project(self):
+        project = self.root / "project"
+        nested = project / "nested"
+        nested.mkdir(parents=True)
+        (project / "mind.yaml").touch()
+        (nested / "mind.yaml").touch()
+        (nested / "thinking.md").touch()
+        log = self.log.rename(project / "work.md")
+        (self.root / "thinking.md").touch()
+        for name in ("thinking.md", "project/nested/thinking.md"):
+            with self.subTest(name=name), self.assertRaises(LbError) as exc:
+                unified.initialize(self.root, log, "work", [name])
+            for part in ("--document", name, str(self.root), "outside the Logbook project"):
+                self.assertIn(part, str(exc.exception))
+        self.assertFalse((project / "lb").exists())
+
     def legacy_sidecar(self, relative, identity):
         path = state.path_for(self.root / relative, self.root)
         path.parent.mkdir(exist_ok=True)

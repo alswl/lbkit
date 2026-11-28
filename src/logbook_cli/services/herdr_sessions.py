@@ -18,7 +18,7 @@ def session_operation(root, input_file, action):
 
     base = root_path(root)
     try:
-        request = json.loads(safe_path(base, input_file).read_text())
+        request = json.loads(safe_path(base, input_file, field="--input-file").read_text())
         if not isinstance(request, dict):
             raise ValueError("object required")
         if action == "open":

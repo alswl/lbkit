@@ -26,7 +26,7 @@ def emit(value):
 
 
 def payload(root, filename):
-    return cfg.decode(safe_path(root.resolve(), filename).read_bytes())
+    return cfg.decode(safe_path(root.resolve(), filename, field="--input-file").read_bytes())
 
 
 @click.group(

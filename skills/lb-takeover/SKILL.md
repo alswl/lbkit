@@ -92,7 +92,11 @@ supply human confirmation for task state changes, or expand commit/push/publicat
 ## Check readiness before the first business action
 
 Run `lb log readiness LOG --task-id ID --actor ACTOR --action takeover --json`
-using the actual Captain's subject identifier. Apply current direct-execution
+using the actual Captain's subject identifier and a `LOG` path relative to the
+effective `--root` or an absolute path inside it. Recheck `observations.inputs`
+from the Logbook project root, even when invoking from a wider root. Use
+lb-preflight to recollect affected in-flight observations recorded under the
+old invocation-root interpretation. Apply current direct-execution
 authorization and shared and takeover-specific preflight. Record
 delegation-only handoff gaps with `action: dispatch` after checking the CLI
 versions and implementation digests of all launchers sharing the run. Keep the delegation version blocker,

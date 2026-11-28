@@ -383,7 +383,7 @@ def transition(
     }
     if action == "record-result":
         try:
-            data = json.loads(safe_path(doc.root, input_file).read_text())
+            data = json.loads(safe_path(doc.root, input_file, field="--input-file").read_text())
             if not isinstance(data, dict) or set(data) != {"candidate", "evidence"}:
                 raise ValueError(
                     'result requires {"candidate":"identity", "evidence":["reference"]}'

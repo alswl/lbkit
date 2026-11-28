@@ -10,6 +10,7 @@ from logbook_cli.document import (
     EXIT_USAGE,
     LbError,
     links_for,
+    path_error,
     require_preflight_clear,
     require_version_token,
     resolve_link_target,
@@ -82,25 +83,17 @@ def audit_links(doc):
 
 def thinking_path(doc, value):
     # The caller supplies the adapter-resolved companion, never a guessed name.
-    path = safe_path(doc.root, value)
+    path = safe_path(doc.root, value, field="--thinking")
     if path == doc.path:
-        raise LbError("Thinking cannot be the Logbook", EXIT_REFUSED)
-    return path
-
-
-def bound_companion(doc, path, run):
-    identity = run["identity"]
-    if (
-        state.section(doc.path, doc.root) != identity["log_path"]
-        or state.project(path, doc.root) != state.project(doc.path, doc.root)
-    ):
-        raise LbError(
-            "expected the Logbook and a companion in its project", EXIT_REFUSED
+        raise path_error(
+            "--thinking", value, doc.root, "Thinking cannot be the Logbook", code=EXIT_REFUSED
         )
-    key = state.section(path, doc.root)
-    if key not in identity["document_paths"] or key == identity["log_path"]:
-        raise LbError("Thinking must be a companion bound to this run", EXIT_REFUSED)
-    return key
+    if not doc.markdown_authority:
+        state.project_key(
+            path, state.project(doc.path, doc.root), "--thinking", value,
+            root=doc.root, code=EXIT_REFUSED,
+        )
+    return path
 
 
 def state_events(doc):
@@ -125,7 +118,7 @@ def metrics(root, log, thinking, run_id, scope):
     path = thinking_path(doc, thinking)
     if doc.markdown_authority:
         _, run = unified.locate(doc.root, doc.path, required=True)
-        bound_companion(doc, path, run)
+        unified.companion_key(doc.root, doc.path, path, run["identity"], thinking)
     record = load(root, str(path))
     if record.markdown_authority != doc.markdown_authority:
         raise LbError(
@@ -165,12 +158,12 @@ def check_event(record, item, token):
     return len(old) == len(all_events)
 
 
-def record_unified_event(doc, path, item, token, dry_run):
+def record_unified_event(doc, path, thinking, item, token, dry_run):
     with unified.writer(doc.root, doc.path, dry_run):
         doc = load(str(doc.root), str(doc.path))
         require_preflight_clear(doc)
         target, run = unified.locate(doc.root, doc.path, required=True)
-        key = bound_companion(doc, path, run)
+        key = unified.companion_key(doc.root, doc.path, path, run["identity"], thinking)
         record = load(str(doc.root), str(path))
         replay = check_event(record, item, token)
         prior = run.get("run_events", {}).get(key, [])
@@ -214,11 +207,11 @@ def record_event(root, log, thinking, event_file, token, dry_run):
     require_preflight_clear(doc)
     path = thinking_path(doc, thinking)
     try:
-        item = state.decode_json(safe_path(doc.root, event_file).read_bytes())
+        item = state.decode_json(safe_path(doc.root, event_file, field="--input-file").read_bytes())
     except (ValueError, TypeError) as exc:
         raise LbError(f"invalid run event: {exc}", EXIT_USAGE) from exc
     if doc.markdown_authority:
-        return record_unified_event(doc, path, item, token, dry_run)
+        return record_unified_event(doc, path, thinking, item, token, dry_run)
     record = load(root, str(path))
     if record.markdown_authority:
         raise LbError(

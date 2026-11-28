@@ -169,7 +169,7 @@ def record(root, ledger, input_file, token, dry_run, update=False):
             EXIT_REFUSED,
         )
     try:
-        item = validate(json.loads(safe_path(doc.root, input_file).read_text()))
+        item = validate(json.loads(safe_path(doc.root, input_file, field="--input-file").read_text()))
     except (ValueError, TypeError) as exc:
         raise LbError(str(exc), EXIT_USAGE) from exc
     old = records.read(doc, "retro")

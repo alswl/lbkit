@@ -241,7 +241,10 @@ class FirstStartReadinessTests(unittest.TestCase):
     def test_missing_route_and_unknown_operation_have_distinct_recovery(self):
         root = Path("/example")
         doc = parse_text(b"# Work\n", root / "log.md", root)
-        run = {"identity": {}, "execution": {"operations": {}}}
+        run = {
+            "identity": {"log_path": "log.md", "document_paths": ["log.md"]},
+            "execution": {"operations": {}},
+        }
         missing = evaluate(doc, run, "A")
         self.assertEqual(missing["decision"], "blocked")
         self.assertTrue(missing["recovery"])
@@ -335,12 +338,79 @@ class FirstStartReadinessTests(unittest.TestCase):
             root = Path(directory).resolve()
             path = root / "candidate"
             path.write_bytes(b"A")
-            doc = SimpleNamespace(root=root)
+            doc = SimpleNamespace(root=root, path=root / "log.md")
             evidence = {"candidate": hashlib.sha256(b"A").hexdigest()}
             (root / "later-input").write_text("changed")
             self.assertTrue(inputs_current(doc, evidence))
             path.write_bytes(b"B")
             self.assertFalse(inputs_current(doc, evidence))
+
+    def test_input_keys_use_the_logbooks_project_and_reject_foreign_files(self):
+        import hashlib
+        from tempfile import TemporaryDirectory
+
+        from logbook_cli.services.readiness import inputs_current
+
+        with TemporaryDirectory() as directory:
+            host = Path(directory).resolve()
+            project = host / "project"
+            nested = project / "nested"
+            nested.mkdir(parents=True)
+            (project / "mind.yaml").touch()
+            (nested / "mind.yaml").touch()
+            log = project / "log.md"
+            candidate = project / "candidate"
+            candidate.write_bytes(b"snapshot")
+            (nested / "candidate").write_bytes(b"snapshot")
+            decoy = host / "candidate"
+            decoy.write_bytes(b"snapshot")
+            digest = hashlib.sha256(b"snapshot").hexdigest()
+            for root in (host, project):
+                doc = parse_text(b"# Work\n", log, root)
+                self.assertTrue(inputs_current(doc, {"candidate": digest}))
+            (project / "escape").symlink_to(decoy)
+            (project / "nested-alias").symlink_to(nested / "candidate")
+            for key, reason in (
+                (str(candidate), "project-relative"),
+                ("../candidate", "project-relative"),
+                ("nested/candidate", "outside the Logbook project"),
+                ("nested-alias", "outside the Logbook project"),
+                ("escape", "escapes the root"),
+            ):
+                with self.subTest(key=key), self.assertRaises(LbError) as error:
+                    inputs_current(doc, {key: digest})
+                for part in ("observations.inputs", key, str(project), reason):
+                    self.assertIn(part, str(error.exception))
+            candidate.unlink()
+            doc = parse_text(b"# Work\n", log, host)
+            with self.assertRaisesRegex(LbError, "observations.inputs.*candidate.*does not exist"):
+                inputs_current(doc, {"candidate": digest})
+
+    def test_explicit_preflight_payload_is_relative_to_the_invocation_root(self):
+        from tempfile import TemporaryDirectory
+
+        from logbook_cli.services.agent_observation import _input
+
+        with TemporaryDirectory() as directory:
+            host = Path(directory).resolve()
+            project = host / "project"
+            project.mkdir()
+            (project / "mind.yaml").touch()
+            (host / "request.json").write_text('{"operation_id": "host"}')
+            (project / "request.json").write_text('{"operation_id": "project"}')
+            log = project / "log.md"
+            host_doc = parse_text(b"# Work\n", log, host)
+            project_doc = parse_text(b"# Work\n", log, project)
+            self.assertEqual(_input(host_doc, "request.json"), {"operation_id": "host"})
+            self.assertEqual(_input(project_doc, "request.json"), {"operation_id": "project"})
+            self.assertEqual(
+                _input(project_doc, str(project / "request.json")), {"operation_id": "project"}
+            )
+            argument = str(host / "request.json")
+            with self.assertRaises(LbError) as error:
+                _input(project_doc, argument)
+            for part in ("--input-file", argument, str(project), "escapes the root"):
+                self.assertIn(part, str(error.exception))
 
     def test_expiry_and_machine_changes_invalidate_ready_observation(self):
         from logbook_cli.services.readiness import observation_current

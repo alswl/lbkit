@@ -128,7 +128,7 @@ def init_state(root, log, name, document, dry_run, json):
 
     base = root_path(resolve_root(root))
     finish(
-        Result(unified.initialize(base, safe_path(base, log), name, document, dry_run)),
+        Result(unified.initialize(base, safe_path(base, log, field="LOG"), name, document, dry_run)),
         json,
     )
 

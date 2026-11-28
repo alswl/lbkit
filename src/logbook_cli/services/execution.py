@@ -16,7 +16,7 @@ def record(root, log, input_file, token, dry_run):
     doc = load(root, log, load_dependencies=False)
     try:
         payload = json.loads(
-            safe_path(doc.root, input_file).read_text(),
+            safe_path(doc.root, input_file, field="--input-file").read_text(),
             object_pairs_hook=execution.unique_keys,
         )
     except ValueError as exc:

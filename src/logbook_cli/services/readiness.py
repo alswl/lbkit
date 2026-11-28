@@ -1,10 +1,16 @@
 """Read first-start evidence and evaluate admission without mutating the run."""
 
+import hashlib
 from datetime import datetime, timezone
 
 from logbook_cli import execution as execution_records
-from logbook_cli import task_identity
-from logbook_cli.document import EXIT_REFUSED, LbError, require_preflight_clear
+from logbook_cli import state, task_identity
+from logbook_cli.document import (
+    EXIT_REFUSED,
+    LbError,
+    path_error,
+    require_preflight_clear,
+)
 from logbook_cli.services.preflight_findings import missing_skills, summarize
 from logbook_cli.services.preflight_plan import current_plan
 from logbook_cli.services.route_evidence import (
@@ -214,21 +220,25 @@ def _evaluate_evidence(
 
 
 def inputs_current(doc, inputs):
-    """Check declared workspace files, including candidate manifests and skill definitions."""
-    import hashlib
-
-    from logbook_cli.document import safe_path
-
+    """Check declared input digests against files in the Logbook project."""
     if not isinstance(inputs, dict):
         return False
+    if not inputs:
+        return True
+    if doc is None:
+        return False
+    base = state.project(doc.path, doc.root)
+    field = "observations.inputs"
     for name, expected in inputs.items():
-        if not isinstance(name, str) or not isinstance(expected, str) or doc is None:
+        if not isinstance(name, str) or not isinstance(expected, str):
             return False
-        path = safe_path(doc.root, name)
-        if (
-            not path.is_file()
-            or hashlib.sha256(path.read_bytes()).hexdigest() != expected
-        ):
+        path = state.project_file(base, name, field)
+        try:
+            with state.open_regular(base, path) as source:
+                actual = hashlib.file_digest(source, "sha256").hexdigest()
+        except OSError as exc:
+            raise path_error(field, name, base, f"cannot read input file: {exc}") from exc
+        if actual != expected:
             return False
     return True
 
