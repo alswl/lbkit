@@ -9,7 +9,7 @@ description: "Check the current logbook route step by step against actual skill 
 ## Purpose and inputs
 
 Prepare the next Task and the known prerequisites of the confirmed route.
-Inputs are the current Logbook/context, relevant design, existing authorization,
+Inputs are the current Logbook/context, reported design readiness, existing authorization,
 and earlier preparation evidence.
 Preflight reports preparation; it does not grant execution authority.
 
@@ -22,11 +22,20 @@ A failed read is a specific gap; a guessed path is not evidence of absence.
 
 ## Scope and feasibility
 
-Read the current source, `log context --json`, `log check --json`, relevant
-specification and prior preparation. Select the actual next authorized step;
-`next_task` is a parse candidate, not an authorization or business judgment.
-Existing human gates remain binding. Unconfirmed design does not prohibit useful
-read-only preparation, but green does not confirm design or authorize implementation.
+Read the current Logbook, `log context LOG --no-link-content --json`,
+`log check LOG --no-link-content --json`, relevant responsible-party reports
+and prior preparation. If the installed CLI lacks the option, use the available
+structural subset from `log route` and the Logbook source. Use `log state` only
+on a build known to skip local link content. Report the missing coverage.
+Do not retry with default context or check. For design readiness, check
+only the reported pointer, version or digest when supplied, conclusion and
+scope. Do not open, extract from, hash or otherwise inspect the design artifact,
+invoke a design preview or repeat design verification. Apply this boundary to
+delegated checks and evidence collection. Continue applicable integrity and
+readiness checks for non-design inputs, current configuration and authorization
+evidence. Select the actual next authorized coordination step. The `next_task`
+field is a parse candidate. Preserve human gates. Report missing design readiness
+and keep dependent implementation waiting while authorized preparation proceeds.
 
 Inspect the selected operation in detail. For each confirmed stage, inventory
 the prerequisites that affect its Tasks: authorization, work locations, skills,
@@ -151,8 +160,8 @@ Report these findings for the selected step:
   evidence still applies on the same machine.
 
 Base blockers on observed evidence. Check any claimed mismatch in a structured
-value with a deterministic read-only check when possible. For hashes, compare
-the observed and expected values and validate the format mechanically before
+value with a deterministic read-only check when possible. For eligible non-design
+input hashes, compare observed and expected values and validate the format before
 reporting a length or content mismatch. Carry forward a successful recorded
 collection when it covers the exact selectors and there is no observed
 incompatibility with the planned runner. If compatibility is an explicit
@@ -177,9 +186,11 @@ Record task readiness in the bound Thinking document with
 Review the proposed update before applying. Carry forward the recorded history
 and cite the actual source of each observation. Pass `LOG`, `--thinking` and
 `--input-file` relative to the effective `--root`, or use absolute paths inside
-it. Use the Thinking document bound to that run. For file evidence, use keys
-relative to the Logbook's project root in `observations.inputs` and record the
-verified SHA-256 digests. Recollect affected in-flight observations recorded
+it. Use the Thinking document bound to that run. For applicable non-design file
+evidence, use keys relative to the Logbook's project root in
+`observations.inputs` and record the verified SHA-256 digests. Keep an
+owner-reported design digest with its attributed report. Do not dereference the
+design pointer or record its digest as verified input integrity evidence. Recollect affected in-flight observations recorded
 under the old invocation-root interpretation. Record missing input files as
 blocked findings with the condition that will clear them. Mark unverified external
 conditions as unverified. After applying, synchronize Thinking explicitly and read back the

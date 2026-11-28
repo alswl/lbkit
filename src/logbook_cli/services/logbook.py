@@ -27,18 +27,26 @@ def list_logs(root: str, projects_dir: str) -> Result:
     )
 
 
-def inspect(root: str, log: str, view: str = "context") -> Result:
+def inspect(
+    root: str, log: str, view: str = "context", *, no_link_content: bool = False
+) -> Result:
     doc = load(root, log)
     from logbook_cli.execution import view as execution_view
 
-    result = state_snapshot(doc) if view == "state" else context(doc)
+    result = (
+        state_snapshot(doc)
+        if view == "state"
+        else context(doc, no_link_content=no_link_content)
+    )
     result["execution"] = execution_view(doc)
     if doc.markdown_authority:
         result["sync_status"] = doc.sync_status
     return Result(result)
 
 
-def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result:
+def validate(
+    root: str, log: str | None, all: bool, projects_dir: str, *, no_link_content: bool = False
+) -> Result:
     if not all and not log:
         raise LbError("check requires LOG or --all", EXIT_USAGE)
     if all and log:
@@ -50,7 +58,9 @@ def validate(root: str, log: str | None, all: bool, projects_dir: str) -> Result
     from logbook_cli.records import document_id
 
     docs = [parse(path, base) for path in paths]
-    problems = [problem for doc in docs for problem in check(doc)]
+    problems = [
+        problem for doc in docs for problem in check(doc, no_link_content=no_link_content)
+    ]
     identities: dict[str, str] = {}
     for doc in docs:
         identity = document_id(doc)

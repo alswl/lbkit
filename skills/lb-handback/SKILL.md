@@ -4,6 +4,18 @@ version: 0.6.1-dev
 description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 
+## Read handback state safely
+
+For local status and Logbook or Thinking structure, use
+`lb log context DOC --no-link-content --json` and
+`lb log check DOC --no-link-content --json` as applicable. Keep the option on
+every reread, including document token refresh and post-write checks. Do not
+invoke either command without it. If the CLI lacks the option, inspect the
+bound source and available `log route` structure. Use `log state` only on a
+build known to skip link content. Report partial coverage and leave any write
+requiring an unavailable token pending. Use execution context for execution
+tokens under the existing rules.
+
 ## New-run results and handback
 
 Preserve Task and original execution binding identity when reporting results.
@@ -26,7 +38,11 @@ retaining coordination, route decisions, monitoring, return alignment and human
 communication. Closing one task's status does not release takeover for later tasks.
 
 Read the [takeover contract](../../docs/installable/coordination.md#scoped-takeover-and-execution-handoff),
-current Logbook, actual takeover checkpoint/result, spec and host authorization.
+current Logbook, actual takeover checkpoint and result, and host authorization.
+For design-dependent work, use the responsible party’s reported deliverable
+pointer, conclusions, applicable acceptance criteria and boundaries. Carry
+these into the package from the coordination records without opening or editing
+the design body.
 Resolve the coordination root separately from the business worktree and use the correct cwd for each operation. Use [execution rules](../lb-push/references/execution.md) for runtime operations and
 [document adapters](../lb-update/references/document-adapters.md) for guarded writes.
 
@@ -41,7 +57,7 @@ Preserve running work outside the authorized handoff.
    failed operations, uncommitted edits and remaining work. Do not turn handoff
    into a completion claim or silently abandon the unresolved takeover objective.
    An explicit early handoff records the unresolved problem and human direction.
-2. Update existing spec/Thinking/host records within authorization. Identify the
+2. Update Thinking or existing host coordination records within authorization. Identify the
    exact repository/worktree/ref/candidate (including dirty changes), inputs,
    decisions, previous failed methods, checks/outcomes/limitations and open duties.
    Preserve task identities, review usage, first outcomes and human/POC gates.

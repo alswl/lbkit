@@ -33,7 +33,7 @@ Logbooks remain possible, report that ambiguity rather than choosing by name.
 
 ## Read and judge
 
-Read `log context --json`, `log check --json`, current source and relevant returns.
+Read the current source and relevant returns. Use the [structure-only CLI read workflow](../lb-update/references/document-adapters.md#cli-invocation-in-this-repository) for Logbook context and checks.
 Use lifecycle and canonical Task facts, not heading emoji or stale prose, to report
 progress. Distinguish done, cancelled, blocked, pause and unknown; unknown/pause
 items remain visible but are not schedulable. Hard dependencies and human gates

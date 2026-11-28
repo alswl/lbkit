@@ -338,6 +338,22 @@ or write-protection refusal.
 | `stage_placeholder` | `notice` | `STAGE_PLACEHOLDER` for a [declared empty delivery Stage](logbook-format.md#status-and-links) |
 
 Checks run offline. Local link checks cover path existence within the root.
+Internal structural checks and edit previews skip link content and treat unchecked content as advisory.
+By default, an otherwise applicable local link observation with a stored digest
+also rechecks the target bytes. For structure-only reads use
+`log context LOG --no-link-content --json` and
+`log check LOG --no-link-content --json` (also supported with `log check --all`).
+The option preserves structure, state, link occurrences and path diagnostics
+while skipping local target content reads for these observations. Context marks
+each skipped observation inapplicable with a reason. Check reports
+`LOCAL_LINK_CONTENT_UNCHECKED` as a verification-limit notice. Retained legacy
+history remains historical. Explicit link verification and readiness input
+integrity checks retain their own behavior. If an installed CLI lacks the option,
+use available `log route` structure and the Logbook source, and report partial
+coverage. The current `log state` skips local link content. Older builds may
+hash link targets when deriving state through context, so use that fallback
+only on a build known to skip the reads. Default context and check may read
+link target bytes.
 External and out-of-root link notices leave availability unknown. Keep run
 identity links in the Logbook even when they have no applicable verification.
 
@@ -490,9 +506,9 @@ refused. Extract tokens from context JSON programmatically.
 | Write | Token source | Protected file |
 | --- | --- | --- |
 | `log execution record LOG` | `log execution context LOG --json`: `version_token` | Execution JSON |
-| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --json`: `version_token` | Thinking and its `lb/` state section |
+| `dispatch create LOG --thinking THINKING` / `agent bind` | `log context THINKING --no-link-content --json`: `version_token` | Thinking and its `lb/` state section |
 | `agent send LOG --thinking THINKING` | Thinking token plus execution token as `--expect-execution-version` | Thinking precondition and execution journal |
-| `log sync LOG` / `task note LOG` | `log context LOG --json`: `version_token` | Logbook Markdown and its `lb/` state section |
+| `log sync LOG` / `task note LOG` | `log context LOG --no-link-content --json`: `version_token` | Logbook Markdown and its `lb/` state section |
 
 Example: record an existing release instruction, then prepare the remaining
 package. Neither command sends a message:
@@ -504,7 +520,7 @@ package. Neither command sends a message:
   lb_json_token=$(python3 -c 'import json; print(json.load(open(".execution-context.json"))["version_token"])')
   lb log execution record log.md --input-file facts.json --expect-version "$lb_json_token" --json
 
-  lb log context thinking.md --json > .thinking-context.json
+  lb log context thinking.md --no-link-content --json > .thinking-context.json
   lb_thinking_token=$(python3 -c 'import json; print(json.load(open(".thinking-context.json"))["version_token"])')
   lb dispatch create log.md --thinking thinking.md --input-file dispatch.json --expect-version "$lb_thinking_token" --json
 )

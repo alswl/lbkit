@@ -6,15 +6,21 @@ from pathlib import Path
 from unittest.mock import patch
 
 from logbook_cli.document import (
+    LbError,
     check,
     context,
     links_for,
     parse_text,
     stage_state,
 )
-from logbook_cli.link_records import digest, occurrence, task_binding
+from logbook_cli.edit import require_valid_candidate
+from logbook_cli.link_records import digest, local_digest, occurrence, task_binding
+from logbook_cli.repository import markdown_document
+from logbook_cli.services import tasks
 from logbook_cli.services.closeout import audit_links
 from logbook_cli.services.logbook import validate
+from logbook_cli.usage import work_dirs
+from logbook_cli.views import state_snapshot
 
 
 class DiagnosticTests(unittest.TestCase):
@@ -140,6 +146,88 @@ class DiagnosticTests(unittest.TestCase):
             {row["invalidation_reason"] for row in audit["link_verifications"]},
             {"recorded link target or label no longer present"},
         )
+
+    def test_structure_only_skips_applicable_local_link_digest(self):
+        (self.root / "design.md").write_text("A local deliverable")
+        doc = self.document(
+            "## 🛫 Stage 01 Delivery\n"
+            "- [ ] Deliver\n"
+            "[Design](design.md)\n"
+            "[Gone](missing.md)\n"
+        )
+        link = links_for(doc)[0]
+        row = {
+            "label": link["label"],
+            "target": link["target"],
+            "anchor": occurrence(doc, link)["anchor"],
+            "binding": None,
+            "bound_task": None,
+            "observed_at": "2026-01-01T00:00:00Z",
+            "observer": "reviewer",
+            "basis": "Earlier observation",
+            "outcome": "verified",
+            "result_identity": None,
+            "local_digest": local_digest(doc, link["target"]),
+        }
+        row["record_id"] = digest(row)
+        records = {"link-verification": {row["record_id"]: row}}
+        doc.metadata = records
+
+        with patch("logbook_cli.link_records.local_digest", wraps=local_digest) as probe:
+            self.assertTrue(context(doc)["link_verifications"][0]["applicable"])
+            self.assertEqual({item["code"] for item in check(doc)}, {"LOCAL_LINK_MISSING"})
+            self.assertTrue(audit_links(doc)["link_verifications"][0]["applicable"])
+            self.assertEqual(probe.call_count, 3)
+            probe.reset_mock()
+
+            view = context(doc, no_link_content=True)
+            self.assertEqual(view["next_task"]["text"], "Deliver")
+            self.assertEqual(state_snapshot(doc)["next_task"], view["next_task"])
+            self.assertEqual(view["related_links"], links_for(doc))
+            observation = view["link_verifications"][0]
+            self.assertFalse(observation["applicable"])
+            self.assertEqual(observation["target_status"], "ok")
+            self.assertIn("bytes not checked", observation["invalidation_reason"])
+            findings = {item["code"]: item for item in check(doc, no_link_content=True)}
+            self.assertEqual(findings["LOCAL_LINK_CONTENT_UNCHECKED"]["severity"], "notice")
+            self.assertEqual(findings["LOCAL_LINK_MISSING"]["severity"], "error")
+            probe.assert_not_called()
+
+            candidate = doc.text + "- [ ] Another delivery\n"
+            require_valid_candidate(doc, candidate)
+            previous = parse_text(
+                doc.text.replace("[Design](design.md)\n", "").encode(),
+                doc.path,
+                doc.root,
+                source=doc,
+            )
+            require_valid_candidate(previous, doc.text)
+            with self.assertRaisesRegex(LbError, "LOCAL_LINK_MISSING"):
+                require_valid_candidate(doc, candidate + "[Missing](another.md)\n")
+
+            with patch.object(tasks, "load", return_value=doc):
+                self.assertEqual(
+                    tasks.next_task(str(self.root), self.path.name).value,
+                    view["next_task"],
+                )
+            with (
+                patch("logbook_cli.usage.discover", return_value=[self.path]),
+                patch("logbook_cli.usage.parse", return_value=doc),
+            ):
+                self.assertEqual(work_dirs(self.root, "projects"), [self.root])
+            probe.assert_not_called()
+
+            current = markdown_document(doc.data, doc.path, doc.root)
+            current.legacy_metadata = records
+            for no_link_content in (False, True):
+                history = context(current, no_link_content=no_link_content)[
+                    "link_verifications"
+                ][0]
+                self.assertFalse(history["applicable"])
+                self.assertIn("historical evidence only", history["invalidation_reason"])
+                findings = check(current, no_link_content=no_link_content)
+                self.assertIn("LOCAL_LINK_MISSING", {item["code"] for item in findings})
+            probe.assert_not_called()
 
     def test_hidden_empty_and_duplicate_declarations_do_not_waive_empty_stage(self):
         for declaration, invalid in (

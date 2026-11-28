@@ -50,7 +50,7 @@ def list_tasks(
 
 
 def next_task(root: str, log: str) -> Result:
-    return Result(context(load(root, log))["next_task"])
+    return Result(context(load(root, log), no_link_content=True)["next_task"])
 
 
 def depends(root, log, task_id, input_file, expect_route, dry_run=False):

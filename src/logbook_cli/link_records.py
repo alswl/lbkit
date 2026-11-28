@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from logbook_cli.document import Document
 
 OUTCOMES = {"verified", "unavailable", "revoked"}
+LINK_CONTENT_SKIPPED = "local target bytes not checked (--no-link-content)"
 
 
 def digest(value: object) -> str:
@@ -201,7 +202,9 @@ def decode_observations(groups: dict, source: str) -> tuple[list[dict], list[dic
     return rows, errors
 
 
-def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dict]]:
+def observations(
+    doc: Document, links: list[dict], *, no_link_content: bool = False
+) -> tuple[list[dict], list[dict]]:
     from logbook_cli.document import resolve_link_target
 
     records, errors, _ = comment_records(doc)
@@ -255,7 +258,9 @@ def observations(doc: Document, links: list[dict]) -> tuple[list[dict], list[dic
                 "unreadable": "local target could not be inspected",
             }.get(target_status)
         if reason is None and not historical and record.get("local_digest"):
-            if local_digest(doc, record["target"]) != record["local_digest"]:
+            if no_link_content:
+                reason = LINK_CONTENT_SKIPPED
+            elif local_digest(doc, record["target"]) != record["local_digest"]:
                 reason = "local delivery bytes changed or disappeared"
         if reason is None and historical:
             reason = "retained legacy observation is historical evidence only"

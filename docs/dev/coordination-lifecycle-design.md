@@ -1,8 +1,13 @@
 # Coordination and lifecycle boundaries
 
+Product and technical design remain in the responsible parties' host workflows.
+The existing route and evidence model carries delivery Tasks, dependencies,
+reported pointers and attributed readiness. lb skills use those coordination
+facts without inspecting design bodies or invoking a host design workflow.
+
 ## Responsibilities
 
-Admiral owns goals and authorization. Captain designs the route with Admiral,
+Admiral owns goals and authorization. Captain plans the route with Admiral,
 coordinates assignments and maintains the Logbook. Sailor performs scoped work
 and returns applicable results. Captain checks completion; a runtime exit, send
 receipt or bare completion claim does not prove acceptance. Additional independent

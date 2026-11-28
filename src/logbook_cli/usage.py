@@ -13,7 +13,7 @@ import json
 import re
 from pathlib import Path
 
-from logbook_cli.document import context, discover, parse
+from logbook_cli.document import discover, parse, workdirs
 
 COMMAND_RE = re.compile(r"<command-name>/?([\w:.-]+)</command-name>")
 SKILL_READ_RE = re.compile(r"skills/([\w.-]+)/SKILL\.md")
@@ -22,7 +22,7 @@ SKILL_READ_RE = re.compile(r"skills/([\w.-]+)/SKILL\.md")
 def work_dirs(root: Path, projects_dir: str, machine: str | None = None) -> list[Path]:
     dirs = {root}
     for path in discover(root, projects_dir):
-        for group in context(parse(path, root))["work_directories"]:
+        for group in workdirs(parse(path, root)):
             if group["machine"] != "local" and not (
                 machine
                 and group.get("group_kind") == "named"
