@@ -298,7 +298,7 @@ def require_token(doc, path, data, token):
         )
 
 
-def write(doc, name, value, token, dry_run):
+def write(doc, name, value, token, dry_run, *, bind_captain=False):
     if doc.markdown_authority:
         from logbook_cli import unified
 
@@ -314,14 +314,22 @@ def write(doc, name, value, token, dry_run):
             execution_facts.validate_fact(fact, prior)
             prior.append(fact)
         ex = envelope["execution"]
+        binding_added = False
+        if bind_captain:
+            captain = value["captain"]
+            execution_facts.text(captain)
+            if "captain" not in ex and not (ex["facts"] or ex["operations"]):
+                ex["captain"] = captain
+                binding_added = True
+            elif captain != old["captain"]:
+                raise LbError("execution Captain identity already established", EXIT_REFUSED)
         ex.update(
             facts=value["facts"],
             operations={op["id"]: op for op in value["operations"]},
         )
-        for key in ("captain", "advancement"):
-            if value.get(key) != old.get(key):
-                ex[key] = value[key]
-        changed = value != old
+        if value.get("advancement") != old.get("advancement"):
+            ex["advancement"] = value["advancement"]
+        changed = binding_added or value != old
         if changed and not dry_run:
             unified.publish_run(doc.root, target, envelope, requires_dependencies=False)
         return {

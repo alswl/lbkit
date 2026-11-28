@@ -96,12 +96,27 @@ design dependency uses the existing route and evidence model.
 
 ## Scoped takeover and execution handoff
 
-Normal execution delegates business work to Sailor. Within an already authorized
-advancement flow, Captain automatically enters [lb-takeover](../../skills/lb-takeover/SKILL.md)
-when a direction-setting problem, coupled investigation or repeated ineffective
-repair needs Captain's direct reasoning and operation. Ordinary planning discussion
-remains lb-plan; a routine failure, missing return or elapsed wait alone does not
-justify takeover. Explicit Admiral takeover/handoff instructions also select the
+Sailor implements work in the target repository by default. Captain coordinates,
+reads and verifies within scope, records observations, and assigns authorized
+repairs to the owning Sailor. A writable directory, a request to inspect, review
+or advance, and a failed or blocked check give Captain no business write
+authority. For direction-setting problems, coupled investigations or repeated
+failed repairs, coordinate recovery, transfer or reassignment. Only an explicit
+Admiral instruction activates [lb-takeover](../../skills/lb-takeover/SKILL.md).
+Apply an instruction already given without asking again. Takeover remains subject
+to actual execution, repository, model/provider, Git and publication permissions.
+
+Captain may directly make a specified change when Admiral explicitly requests
+or permits Captain to change that repository, task or scope. Captain may also
+correct a small error in the current task when the target is clear, the impact
+is local and the result can be verified immediately. Apply stricter repository
+rules, preserve the current candidate and keep a single writer in both cases.
+The permission covers the change and its verification. The work package stays
+with Sailor. If investigation, broader changes or possible concurrent writes
+emerge, return to coordination and obtain new explicit authority if Captain
+needs to proceed.
+
+Explicit Admiral takeover/handoff instructions also select the
 mode. The switch itself needs no repeated approval and grants no additional
 execution, repository, model/provider, Git or publication permissions. Host rules
 that forbid direct execution still apply.
@@ -119,8 +134,7 @@ reviewers alike. Continue ordinary next tasks personally. Leave a required
 independent review pending and report the conflict; Captain self-tests do not
 satisfy it. Work outside this advancement need not stop; reconcile conflicting
 ownership without killing operations or discarding changes. A release covers only
-the scope Admiral names. Automatic problem-specific takeover stays bounded to its
-problem/package and never overrides an explicit takeover.
+the scope Admiral names.
 
 Captain remains coordinator and becomes its direct executor, with a stated reason,
 allowed operations and observable exit condition. Recover the current candidate,
@@ -142,9 +156,12 @@ is not a gate. Explicit host model/data restrictions still apply to each actual
 operation; a concrete capability gap blocks only that operation. A skill cannot
 switch models by declaration; do not substitute a stronger sub-agent.
 
-At an automatic takeover's exit, run [lb-handback](../../skills/lb-handback/SKILL.md).
-During explicit takeover, close out each task and continue personally; hand back
-only under the release rule above. Recover reported design decisions and pointers, exact
+Treat older automatic takeover records as history and reconcile their observed
+ownership, outstanding operations and audit trail. Use
+[lb-handback](../../skills/lb-handback/SKILL.md) with applicable release
+authorization to settle their transfer. Start further Captain business work only
+under current authority. During explicit takeover, close out each task and
+continue personally until the authorized endpoint or release. Recover reported design decisions and pointers, exact
 candidate/worktree and uncommitted state, performed checks/outcomes, failed
 approaches, remaining work, permissions, review counts and human gates in existing
 Thinking or existing host coordination records. lb CLI hosts record takeover instructions and ownership
@@ -200,8 +217,7 @@ user-facing progress update and final reply, including during pending handback,
 and recover this state from the checkpoint after interruption. Explicit takeover
 keeps the prefix across tasks; unknown or conflicting ownership drops the prefix
 but keeps the restriction. Stop when the advancement ends or an authorized release
-is reconciled; automatic takeover stops when ownership and task status are
-reconciled. The marker reports ownership; it grants no authority.
+is reconciled. The marker reports ownership; it grants no authority.
 
 Captain's direct result uses the same task/result/conditions/outcome/limitations
 fields as a Sailor return and records Captain as the executor. Self-checks may

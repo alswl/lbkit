@@ -23,6 +23,11 @@ that assurance applies to transport only. A saved binding is not a live observat
 - State lives in project `lb/<name>.json`, with explicit Logbook/Thinking bindings.
 - Explicit takeover restricts the entire authorized advancement. Task completion,
   skill switches, missing session/model metadata and restart do not release it.
+- New first-start reservations require explicit takeover as well as the action
+  grant and sole observed Captain ownership. Retained automatic facts can still
+  support readback, operation reconciliation and authorized handback. No state
+  migration is needed. Use aligned launchers because older binaries lack the
+  explicit takeover guard.
 - Human instructions already in the conversation can be recorded directly. Recording
   them is not a request for renewed permission. Unknown authorization is a blocker;
   an unrecorded but already available instruction is a recording task.

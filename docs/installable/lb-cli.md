@@ -537,6 +537,12 @@ of empty bytes; `log context` also reports it under `execution`. Replaying an
 identical fact ID changes nothing; different content under an existing ID is
 refused.
 
+In a newly initialized Run, `log execution record` can bind `captain` to the
+actual Captain subject before execution facts or operations have been saved.
+It can save this identity and the initial facts in one token-guarded write.
+An established identity is immutable. A Run without an explicit identity uses
+the settled runtime owner for takeover admission.
+
 ```json
 {
   "thinking": "projects/example/thinking/delivery.md",
@@ -559,7 +565,7 @@ Sources are `{kind, ref}`; `verified_result` also requires `verifier` and `subje
 
 | Fact kind | Other required fields | Meaning |
 | --- | --- | --- |
-| `takeover` | `source`, `origin: explicit/automatic`, `release_condition` | Restricts delegation for the whole advancement. Explicit origin requires `human_instruction`. |
+| `takeover` | `source`, `origin: explicit/automatic`, `release_condition` | Restricts delegation for the whole advancement. New facts require explicit origin and a `human_instruction` source. |
 | `ownership` | `source`, `takeover_id`, `owner`, `conflicts`, `settled` | Only a runtime observation with no conflict and settled operations yields a reported owner. |
 | `condition-result` | `source`, `takeover_id`, `condition_id`, `satisfied` | Verified check of a previously authorized release condition, not a new grant. |
 | `delegation-release` | `source`, `takeover_id`, `recipient`, `scope`, `condition_result_id`, and `task_id` for `task` or `dispatch_id` for `dispatch`/`advancement` | Human instruction (`condition_result_id: null`), or caller judgment citing a satisfied condition result. |
@@ -567,10 +573,12 @@ Sources are `{kind, ref}`; `verified_result` also requires `verifier` and `subje
 | `transport-resolution` | `source`, `operation_id`, `outcome: submitted/not_submitted` | Resolves an unknown send; never retries it. |
 
 `release_condition` is null or an object with `id`, `source`, `recipient`, `scope`
-and the same target field as the release. Explicit takeover requires a human
-instruction. An automatic takeover condition can release its nominated Task or
-Dispatch. A release through a condition must match its recipient, target and
-scope exactly. Automatic takeover cannot replace a retained explicit restriction.
+and the same target field as the release. A new release through a condition
+requires a human-authorized condition and must match its recipient, target and
+scope exactly. Existing automatic takeover facts and historical releases remain
+readable and replayable. Retain their audit trail, resolve in-flight operations
+and reconcile authorized handoffs. Automatic origin provides no first-start
+authority.
 
 Each `handoff` observation is `{status, source}`: receipt `accepted/unknown/rejected`,
 readiness `ready/unknown/not_ready`, ownership `recipient/captain/unknown/conflict`.
@@ -980,9 +988,19 @@ superseded in the same authorization scope.
 
 Captain first start uses `lb log takeover-start LOG --task-id ID --actor ACTOR
 --operation-id OP --expect-execution-version TOKEN --transition reserve --json`.
+Readiness for `--action takeover` and new reservations require the current
+explicit takeover fact and a settled, conflict-free runtime ownership observation
+matching the actor. If the Run has a bound Captain subject, the actor must also
+match it. An applicable release prevents a new Captain start
+in its scope. A reservation also requires an active Logbook and applicable route,
+preflight and action authorization. These checks use recorded evidence and cannot
+verify the real human instruction, repository permissions or filesystem ownership.
+The coordination contract governs bounded direct edits outside takeover.
+
 A successful new reservation returns `may_start: true`. Resolve the same
 operation with `--transition started` or `--transition not_started` and
-`--evidence SOURCE`. An existing reservation returns `may_start: false`.
+`--evidence SOURCE`. An existing reservation returns `may_start: false`. Existing operations from
+legacy automatic takeover can still be resolved from observed evidence.
 
 The route query also returns `source_digest` for auditing and `task_scopes`
 for an explicitly reviewed Task scope. An evidence row with `scope` equal to

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from logbook_cli import legacy_migration, state, unified
+from logbook_cli import execution, legacy_migration, state, unified
 from logbook_cli.document import LbError
 from logbook_cli.repository import (
     markdown_document,
@@ -40,6 +40,40 @@ class UnifiedTests(unittest.TestCase):
         other.write_text("# Other\n")
         with self.assertRaises(LbError):
             unified.initialize(self.root, other, "work", [], False)
+
+    def test_execution_writer_binds_captain_only_before_history(self):
+        doc = markdown_document(self.log.read_bytes(), self.log, self.root)
+        path = self.root / "lb/work.json"
+        old = {"captain": "captain", "facts": [], "operations": []}
+        for section, actor, allowed, changed in (
+            ({}, "coordinator", True, True),
+            ({}, "captain", True, True),
+            ({"captain": "captain"}, "coordinator", False, False),
+            ({"captain": "coordinator"}, "coordinator", True, False),
+            ({"operations": {"existing": {}}}, "coordinator", False, False),
+            ({"facts": [{"id": "historical"}]}, "coordinator", False, False),
+        ):
+            with self.subTest(section=section, actor=actor):
+                runtime = {"facts": [], "operations": {}} | section
+                envelope = {"identity": {}, "execution": runtime}
+                raw = unified.section_content(envelope, "execution")
+                token = hashlib.sha256(raw).hexdigest()
+                observed = {**old, "captain": runtime.get("captain", "captain")}
+                with (
+                    patch.object(execution, "read", return_value=(path, raw, observed)),
+                    patch.object(unified, "locate", return_value=(path, envelope)),
+                    patch.object(unified, "publish_run") as publish,
+                ):
+                    args = (doc, "work", {**observed, "captain": actor}, token, False)
+                    if allowed:
+                        result = execution.write(*args, bind_captain=True)
+                        self.assertEqual(result["changed"], changed)
+                        self.assertEqual(runtime["captain"], actor)
+                        self.assertEqual(publish.called, changed)
+                    else:
+                        with self.assertRaisesRegex(LbError, "identity already established"):
+                            execution.write(*args, bind_captain=True)
+                        publish.assert_not_called()
 
     def test_dry_run_does_not_create_directory(self):
         unified.initialize(self.root, self.log, "work", [], True)

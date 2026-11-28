@@ -1,7 +1,7 @@
 ---
 name: lb-handback
 version: 0.6.1-dev
-description: "Return execution to Sailor when the human permits delegation, a human-authorized release condition is met, or an automatic problem-specific takeover ends. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
+description: "Return execution to Sailor when the human permits delegation or a human-authorized release condition is met. Completing a task does not release explicit Captain takeover. Verify receipt, readiness and ownership reconciliation; Captain retains coordination. Use lb-update for Sailor returns, not this skill."
 ---
 
 ## Read handback state safely
@@ -50,7 +50,11 @@ Before selecting an executor, recover the release permission: an explicit human
 instruction to resume dispatch or a met, previously authorized release condition.
 Task completion, old checkpoints, prior parallel approval and later lb-push do not
 release explicit takeover. Preparation-only permits read-only runtime inspection.
-Preserve running work outside the authorized handoff.
+Preserve running work outside the authorized handoff. For a legacy automatic
+takeover, recover the audit trail and reconcile actual ownership and pending
+operations. Use existing applicable release evidence or obtain a human release
+before a new transfer. Keep business writes with the authorized Sailor once
+receipt, readiness and ownership are reconciled.
 
 1. Reconcile what Captain actually resolved against the takeover exit condition
    and Admiral's current instructions. Separate verified facts, hypotheses,
